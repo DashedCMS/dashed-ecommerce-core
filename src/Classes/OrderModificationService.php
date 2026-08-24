@@ -5,8 +5,8 @@ namespace Dashed\DashedEcommerceCore\Classes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
@@ -308,10 +308,9 @@ class OrderModificationService
 
         foreach ($lines as $line) {
             $source = $sources->get($line['order_product_id'] ?? null);
-            // discount en is_pre_order horen bij de bronregel: het bedrag dat op
-            // dít product is afgesproken en de nalevering van dít product. Op een
-            // ander product hebben ze geen betekenis meer, dus ze volgen dezelfde
-            // overname-regel als de sku.
+            // is_pre_order hoort bij de bronregel: de nalevering van dít
+            // product. Op een ander product heeft dat geen betekenis meer, dus
+            // het volgt dezelfde overname-regel als de sku.
             $inherited = self::lineFollowsSource($line, $source) ? $source : null;
 
             $order->orderProducts()->create([
@@ -322,12 +321,55 @@ class OrderModificationService
                 'vat_rate' => (float) ($line['vat_rate'] ?? 21),
                 'product_extras' => $line['product_extras'] ?? [],
                 'sku' => self::skuForLine($line, $source),
-                'discount' => $line['discount'] ?? $inherited?->discount ?? 0,
+                'discount' => self::discountForLine($line, $source),
                 'is_pre_order' => $line['is_pre_order'] ?? $inherited?->is_pre_order ?? 0,
             ]);
         }
 
         $order->load('orderProducts');
+    }
+
+    /**
+     * De korting die op deze regel is afgegaan, zoals hij weggeschreven wordt.
+     *
+     * De regelprijs is de prijs ná korting (zie OrderTotalsCalculator), dus deze
+     * waarde bepaalt niet wat de klant betaalt maar alleen hoe het subtotaal en
+     * de kortingsregel op de factuur zijn opgebouwd. Drie gevallen:
+     *
+     * 1. De aanroeper geeft zelf een korting mee. Die wint altijd.
+     * 2. De regel gaat nog over hetzelfde product als de bronregel: de korting
+     *    schaalt mee met de prijs. Halveert de beheerder het regeltotaal, of
+     *    verdubbelt hij het aantal, dan hoort de korting die in dat regeltotaal
+     *    verwerkt zit dezelfde kant op te bewegen. Bij een procentuele code is
+     *    die verhouding precies het percentage van de code.
+     * 3. De regel hangt aan een ánder product, of is nieuw. Dan is er geen
+     *    basis: de korting hoorde bij het oude product. De beheerder heeft de
+     *    prijs van deze regel zelf bepaald, dus daar wordt geen korting bij
+     *    verzonnen. Een afgeleid bedrag zou hier juist mis kunnen gaan: een
+     *    zelf toegevoegde verzendkostenregel valt in de winkelwagen buiten een
+     *    procentuele code, maar is als nieuwe regel niet als kostenregel te
+     *    herkennen.
+     *
+     * @param  array<string, mixed>  $line
+     */
+    public static function discountForLine(array $line, ?OrderProduct $source): float
+    {
+        if (($line['discount'] ?? null) !== null) {
+            return round((float) $line['discount'], 2);
+        }
+
+        if (! self::lineFollowsSource($line, $source)) {
+            return 0.0;
+        }
+
+        $sourceDiscount = (float) ($source->discount ?? 0);
+        $sourcePrice = (float) ($source->price ?? 0);
+
+        if ($sourceDiscount <= 0 || $sourcePrice <= 0) {
+            return 0.0;
+        }
+
+        return round($sourceDiscount * ((float) ($line['price'] ?? 0)) / $sourcePrice, 2);
     }
 
     /**

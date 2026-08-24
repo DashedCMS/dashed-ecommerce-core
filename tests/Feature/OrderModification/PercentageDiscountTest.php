@@ -2,13 +2,10 @@
 
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
@@ -43,28 +40,6 @@ function amountCode(float $amount = 15.0): DiscountCode
     ]);
 }
 
-function percentageProduct(float $price = 100.0): Product
-{
-    Queue::fake();
-
-    $group = ProductGroup::create([
-        'name' => ['en' => 'Group'], 'slug' => ['en' => 'pct-group-' . uniqid()],
-        'short_description' => ['en' => ''], 'description' => ['en' => ''],
-        'content' => ['en' => ''], 'search_terms' => ['en' => ''],
-        'site_ids' => ['site'],
-    ]);
-
-    return Product::withoutEvents(fn () => Product::create([
-        'product_group_id' => $group->id,
-        'name' => ['en' => 'Kortingsproduct'],
-        'slug' => ['en' => 'pct-' . uniqid()],
-        'site_ids' => ['site'],
-        'price' => $price, 'current_price' => $price, 'vat_rate' => 21,
-        'use_stock' => false, 'stock' => 0,
-        'images' => [],
-    ]));
-}
-
 /**
  * @param  array<int, array<string, mixed>>  $lines
  */
@@ -89,15 +64,16 @@ function orderWithCode(?DiscountCode $code, array $lines, float $discount = 0.0)
     return $order->fresh();
 }
 
-it('herberekent een procentuele korting over het nieuwe subtotaal', function () {
-    // Order stond op 100 met 10% (= 10 korting). Er komt 100 bij, dus de
-    // korting hoort 20 te worden. Bleef hij op 10 staan, dan betaalde de klant
-    // 10 te veel.
+it('haalt de korting van een procentuele code uit de regels zelf', function () {
+    // Product::getShoppingCartItemPrice() verwerkt een procentuele code al per
+    // regel, dus de regelprijs is de prijs ná korting en de regelkorting staat
+    // ernaast. De order telt die twee bij elkaar op; hij herberekent het
+    // percentage niet nog een keer.
     $code = percentageCode(10.0);
     $order = orderWithCode($code, [
-        ['price' => 100.0],
-        ['price' => 100.0],
-    ], discount: 10.0);
+        ['price' => 90.0, 'discount' => 10.0],
+        ['price' => 90.0, 'discount' => 10.0],
+    ], discount: 20.0);
 
     OrderTotalsCalculator::recalculate($order);
 
@@ -106,9 +82,27 @@ it('herberekent een procentuele korting over het nieuwe subtotaal', function () 
         ->and(round($order->total, 2))->toBe(180.0);
 });
 
+it('verhoogt het totaal met precies de regelprijs wanneer er een regel bij komt', function () {
+    // De beheerder bepaalt bij een wijziging zelf wat een regel de klant kost.
+    // Zou de code er alsnog een percentage af halen, dan wijkt het totaal af van
+    // wat er in het scherm staat: precies de gemelde fout.
+    $code = percentageCode(12.5);
+    $order = orderWithCode($code, [
+        ['price' => 90.0, 'discount' => 10.0],
+        ['price' => 25.0],
+    ], discount: 10.0);
+
+    OrderTotalsCalculator::recalculate($order);
+
+    expect(round($order->total, 2))->toBe(115.0)
+        ->and(round($order->discount, 2))->toBe(10.0)
+        ->and(round($order->subtotal, 2))->toBe(125.0);
+});
+
 it('bevriest een kortingscode met een vast bedrag', function () {
     // Bij een vast bedrag is bevriezen juist correct: dat bedrag is bij het
-    // afrekenen afgesproken en beweegt niet mee met de inhoud.
+    // afrekenen afgesproken, staat niet in de regelprijzen verwerkt en beweegt
+    // niet mee met de inhoud.
     $code = amountCode(15.0);
     $order = orderWithCode($code, [
         ['price' => 100.0],
@@ -118,7 +112,8 @@ it('bevriest een kortingscode met een vast bedrag', function () {
     OrderTotalsCalculator::recalculate($order);
 
     expect(round($order->subtotal, 2))->toBe(200.0)
-        ->and(round($order->discount, 2))->toBe(15.0);
+        ->and(round($order->discount, 2))->toBe(15.0)
+        ->and(round($order->total, 2))->toBe(185.0);
 });
 
 it('laat een order zonder kortingscode ongemoeid', function () {
@@ -129,15 +124,15 @@ it('laat een order zonder kortingscode ongemoeid', function () {
     expect(round($order->discount, 2))->toBe(25.0);
 });
 
-it('rekent een procentuele korting niet over verzend- en betaalkosten', function () {
-    // Net als in de winkelwagen: een procentuele code geldt over de producten,
-    // niet over de kosten-regels. 10% over 100 = 10, niet 10% over 112,50.
+it('geeft verzend- en betaalkosten geen korting', function () {
+    // In de winkelwagen valt een procentuele code buiten de kostenregels, dus
+    // die regels komen zonder eigen korting de order op en houden hem ook.
     $code = percentageCode(10.0);
     $order = orderWithCode($code, [
-        ['price' => 100.0],
+        ['price' => 90.0, 'discount' => 10.0],
         ['price' => 7.5, 'sku' => 'shipping_costs', 'name' => 'Verzendkosten'],
         ['price' => 5.0, 'sku' => 'payment_costs', 'name' => 'Betaalkosten'],
-    ]);
+    ], discount: 10.0);
 
     OrderTotalsCalculator::recalculate($order);
 
@@ -146,57 +141,9 @@ it('rekent een procentuele korting niet over verzend- en betaalkosten', function
         ->and(round($order->total, 2))->toBe(102.5);
 });
 
-it('past een procentuele korting alleen toe op de producten waarvoor de code geldt', function () {
-    // valid_for = 'products' met één gekoppeld product: de andere regel telt
-    // niet mee, precies zoals Product::getShoppingCartItemPrice() het doet.
-    $eligible = percentageProduct(100.0);
-    $other = percentageProduct(100.0);
-
-    $code = percentageCode(10.0, validFor: 'products');
-    $code->products()->attach($eligible->id);
-
-    $order = orderWithCode($code, [
-        ['price' => 100.0, 'product_id' => $eligible->id],
-        ['price' => 100.0, 'product_id' => $other->id],
-    ]);
-
-    OrderTotalsCalculator::recalculate($order);
-
-    expect(round($order->subtotal, 2))->toBe(200.0)
-        ->and(round($order->discount, 2))->toBe(10.0);
-});
-
-it('geeft een losse regel zonder product geen procentuele korting als de code aan producten gebonden is', function () {
-    $eligible = percentageProduct(100.0);
-    $code = percentageCode(10.0, validFor: 'products');
-    $code->products()->attach($eligible->id);
-
-    $order = orderWithCode($code, [
-        ['price' => 100.0, 'product_id' => null],
-    ]);
-
-    OrderTotalsCalculator::recalculate($order);
-
-    expect(round($order->discount, 2))->toBe(0.0);
-});
-
-it('rondt per stuk af, net als de winkelwagen', function () {
-    // 3 stuks van samen 100,00 => 33,3333 per stuk. De winkelwagen rondt de
-    // kortingsprijs per stuk af (30,00) en vermenigvuldigt dan pas.
-    $code = percentageCode(10.0);
-    $order = orderWithCode($code, [
-        ['price' => 100.0, 'quantity' => 3],
-    ]);
-
-    OrderTotalsCalculator::recalculate($order);
-
-    // 100 - (round(33.3333 * 0.9, 2) * 3) = 100 - (30.00 * 3) = 10.00
-    expect(round($order->discount, 2))->toBe(10.0);
-});
-
-it('topt een herrekende procentuele korting nog steeds af op het subtotaal', function () {
-    $code = percentageCode(100.0);
-    $order = orderWithCode($code, [['price' => 50.0]]);
+it('topt een vaste korting af op wat er aan regels overblijft', function () {
+    $code = amountCode(80.0);
+    $order = orderWithCode($code, [['price' => 50.0]], discount: 80.0);
 
     OrderTotalsCalculator::recalculate($order);
 

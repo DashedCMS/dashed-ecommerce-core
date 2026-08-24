@@ -55,6 +55,7 @@ class ModifyOrder extends Page implements HasSchemas
                 'name' => $orderProduct->name,
                 'quantity' => (int) $orderProduct->quantity,
                 'price' => (float) $orderProduct->price,
+                'discount' => (float) ($orderProduct->discount ?? 0),
                 'vat_rate' => (float) ($orderProduct->vat_rate ?? 21),
                 'product_extras' => $orderProduct->product_extras ?? [],
             ])->values()->all(),
@@ -152,7 +153,7 @@ class ModifyOrder extends Page implements HasSchemas
                                         $product = $state ? Product::find($state) : null;
                                         if ($product) {
                                             $set('name', $product->name);
-                                            self::setLineTotalFromProduct($product, $get('quantity'), $set);
+                                            $this->setLineTotalFromProduct($product, $get('quantity'), $set);
                                         }
                                     })
                                     ->live()
@@ -181,7 +182,9 @@ class ModifyOrder extends Page implements HasSchemas
                                         // catalogusprijs van het gekoppelde product.
                                         if ($previousQuantity > 0 && $previousPrice !== null && $previousPrice !== '') {
                                             $unitPrice = (float) $previousPrice / $previousQuantity;
-                                            $set('price', round($unitPrice * $newQuantity, 2));
+                                            $newPrice = round($unitPrice * $newQuantity, 2);
+                                            $set('price', $newPrice);
+                                            self::scaleLineDiscount($set, $get, (float) $previousPrice, $newPrice);
 
                                             return;
                                         }
@@ -189,15 +192,21 @@ class ModifyOrder extends Page implements HasSchemas
                                         $productId = $get('product_id');
                                         $product = $productId ? Product::find($productId) : null;
                                         if ($product) {
-                                            self::setLineTotalFromProduct($product, $state, $set);
+                                            $this->setLineTotalFromProduct($product, $state, $set);
                                         }
                                     }),
                                 TextInput::make('price')
                                     ->label(__('Regeltotaal'))
-                                    ->helperText(__('Het totaal van deze regel, niet de stuksprijs'))
+                                    ->helperText(__('Het totaal van deze regel zoals de klant het betaalt, dus inclusief een eventuele korting en niet de stuksprijs'))
                                     ->numeric()
                                     ->required()
-                                    ->prefix('€'),
+                                    ->prefix('€')
+                                    ->live(onBlur: true)
+                                    // De korting is het deel van deze prijs dat de klant niet
+                                    // betaalt. Halveert de beheerder het regeltotaal, dan hoort
+                                    // dat deel mee te halveren; bleef het staan, dan claimt de
+                                    // factuur een korting die niet meer in de prijs zit.
+                                    ->afterStateUpdated(fn ($state, $old, callable $set, Get $get) => self::scaleLineDiscount($set, $get, (float) $old, (float) $state)),
                                 TextInput::make('vat_rate')
                                     ->label(__('BTW'))
                                     ->numeric()
@@ -208,6 +217,11 @@ class ModifyOrder extends Page implements HasSchemas
                                 // extras van een ongewijzigde regel de round-trip te laten
                                 // overleven (writeLines() herbouwt alle regels vanaf nul).
                                 Hidden::make('product_extras'),
+                                // De korting die in de regelprijs verwerkt zit. Niet bewerkbaar:
+                                // de beheerder stelt de prijs vast, niet de opbouw daarvan. Wel
+                                // in de staat, omdat hij het subtotaal en de kortingsregel op de
+                                // factuur bepaalt en met elke prijswijziging meebeweegt.
+                                Hidden::make('discount'),
                             ])
                             ->columns(4)
                             ->addActionLabel(__('Regel toevoegen'))
@@ -257,7 +271,7 @@ class ModifyOrder extends Page implements HasSchemas
      * weergavevoorkeur) en is ongevoelig voor prijsgroep/custom-pricing van
      * de ingelogde gebruiker, dus voor elke beheerder identiek.
      */
-    protected static function setLineTotalFromProduct(Product $product, mixed $quantity, callable $set): void
+    protected function setLineTotalFromProduct(Product $product, mixed $quantity, callable $set): void
     {
         // current_price is nullable en wordt pas gevuld zodra
         // Product::calculatePrices() ooit gedraaid heeft. Zonder fallback
@@ -267,7 +281,48 @@ class ModifyOrder extends Page implements HasSchemas
         $unitPrice = (float) $unitPrice;
         $quantity = max(1, (int) ($quantity ?? 1));
 
-        $set('price', round($unitPrice * $quantity, 2));
+        // De catalogusprijs is de prijs vóór een kortingscode, terwijl dit veld
+        // de prijs is die de klant betaalt. Draagt de order een procentuele
+        // code, dan hoort die er dus meteen op: zonder dit rekent een product
+        // dat aan een bestelling met 10% korting wordt toegevoegd stilzwijgend
+        // de volle prijs. Per stuk afronden en dan pas vermenigvuldigen, net als
+        // de winkelwagen (Product::getShoppingCartItemPrice() stap 10), zodat
+        // een regel via dit scherm op dezelfde cent uitkomt als via de shop.
+        $percentage = OrderTotalsCalculator::percentageForProduct($this->order, $product->id);
+        $discountedUnitPrice = $percentage > 0
+            ? round($unitPrice * (100 - $percentage) / 100, 2)
+            : $unitPrice;
+
+        $price = round($discountedUnitPrice * $quantity, 2);
+
+        $set('price', $price);
+        $set('discount', round($unitPrice * $quantity - $price, 2));
+    }
+
+    /**
+     * Laat de korting van een regel meebewegen met zijn prijs.
+     *
+     * De regelprijs is de prijs ná korting, dus de korting is een deel van wat
+     * er vóór korting stond. Verandert het regeltotaal, dan verandert dat deel
+     * evenredig mee; bij een procentuele code blijft de verhouding daarmee
+     * precies het percentage van de code. Wordt de prijs op nul gezet, dan
+     * blijft er geen korting over om te verdelen.
+     */
+    protected static function scaleLineDiscount(callable $set, Get $get, float $previousPrice, float $newPrice): void
+    {
+        $discount = (float) ($get('discount') ?? 0);
+
+        if ($discount <= 0) {
+            return;
+        }
+
+        if ($previousPrice <= 0 || $newPrice <= 0) {
+            $set('discount', 0.0);
+
+            return;
+        }
+
+        $set('discount', round($discount * $newPrice / $previousPrice, 2));
     }
 
     /**
@@ -295,17 +350,13 @@ class ModifyOrder extends Page implements HasSchemas
 
         $inPlace = OrderModificationService::canModifyInPlace($this->order);
 
-        $newSubtotal = round(
-            collect($state['lines'] ?? [])->sum(fn (array $line) => (float) ($line['price'] ?? 0)),
-            2
-        );
         // Via dezelfde methode als OrderTotalsCalculator::recalculate() straks
-        // gebruikt, zodat de bevestiging niet iets anders kan tonen dan er
-        // weggeschreven wordt. Bij een procentuele kortingscode wordt de korting
-        // hier dus al over het nieuwe subtotaal herrekend.
-        $discountBreakdown = OrderTotalsCalculator::discountBreakdownForLines($this->order, $this->confirmationLines($state));
-        $discount = $discountBreakdown['discount'];
-        $newTotal = round($newSubtotal - $discount, 2);
+        // gebruikt, en over regels die net zo zijn samengesteld als writeLines()
+        // ze wegschrijft, zodat de bevestiging niet iets anders kan tonen dan er
+        // weggeschreven wordt.
+        $breakdown = OrderTotalsCalculator::breakdownForLines($this->order, $this->confirmationLines($state));
+        $discount = $breakdown['discount'];
+        $newTotal = $breakdown['total'];
         $oldTotal = (float) $this->order->total;
         $difference = round($newTotal - $oldTotal, 2);
 
@@ -330,9 +381,9 @@ class ModifyOrder extends Page implements HasSchemas
             ? __('De klant ontvangt een wijzigingsmail.')
             : __('De klant ontvangt geen wijzigingsmail.');
 
-        // De korting expliciet noemen zodra er een is: bij een procentuele code
-        // beweegt hij mee met de nieuwe regels en dan moet de beheerder kunnen
-        // zien welk bedrag er daadwerkelijk toegepast wordt.
+        // De korting expliciet noemen zodra er een is. De regelprijzen zijn de
+        // prijzen ná korting, dus dit bedrag verlaagt het nieuwe totaal niet
+        // nog een keer; het laat zien hoe het subtotaal is opgebouwd.
         $discountSentence = $discount > 0.005
             ? ' ' . __('Toegepaste korting: :bedrag.', ['bedrag' => CurrencyHelper::formatPrice($discount)])
             : '';
@@ -341,8 +392,8 @@ class ModifyOrder extends Page implements HasSchemas
         // het verschil kwijt; bij een cadeaubon is dat echt saldo dat niet
         // automatisch terugkomt. Dat hoort de beheerder te zien vóór hij
         // bevestigt, niet pas achteraf in het orderlogboek.
-        $capSentence = $discountBreakdown['reduced_by'] > 0.005
-            ? ' ' . __('Let op: :zin', ['zin' => lcfirst(OrderTotalsCalculator::cappedDiscountSentence($this->order, $discountBreakdown))])
+        $capSentence = $breakdown['reduced_by'] > 0.005
+            ? ' ' . __('Let op: :zin', ['zin' => lcfirst(OrderTotalsCalculator::cappedDiscountSentence($this->order, $breakdown))])
             : '';
 
         return $this->routeDescription($inPlace, (bool) ($state['credit_old_order'] ?? $this->order->hasRealInvoice()))
@@ -359,17 +410,16 @@ class ModifyOrder extends Page implements HasSchemas
 
     /**
      * De regels uit de formulierstaat in de vorm die
-     * OrderTotalsCalculator::discountForLines() verwacht. De sku staat niet in
-     * het formulier (die is niet bewerkbaar) maar is wel nodig om verzend- en
-     * betaalkosten van een procentuele korting uit te sluiten. Hij wordt bepaald
-     * met exact dezelfde methode als writeLines() straks gebruikt
-     * (OrderModificationService::skuForLine()), zodat de bevestiging geen
-     * kortingsbedrag kan tonen dat afwijkt van wat er weggeschreven wordt: een
-     * regel waarop de beheerder het product omzette, telt hier dan net zo goed
-     * als een gewone productregel mee in plaats van als kostenregel.
+     * OrderTotalsCalculator::breakdownForLines() verwacht.
+     *
+     * De korting per regel staat niet in het formulier (die is niet bewerkbaar)
+     * maar bepaalt wel het subtotaal en de kortingsregel. Hij wordt hier met
+     * exact dezelfde methode bepaald als writeLines() straks gebruikt
+     * (OrderModificationService::discountForLine()), zodat de bevestiging geen
+     * bedrag kan tonen dat afwijkt van wat er weggeschreven wordt.
      *
      * @param  array<string, mixed>  $state
-     * @return array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>
+     * @return array<int, array{price: float, discount: float}>
      */
     protected function confirmationLines(array $state): array
     {
@@ -378,9 +428,7 @@ class ModifyOrder extends Page implements HasSchemas
         return collect($state['lines'] ?? [])
             ->map(fn (array $line) => [
                 'price' => (float) ($line['price'] ?? 0),
-                'quantity' => (int) ($line['quantity'] ?? 1),
-                'product_id' => $line['product_id'] ?? null,
-                'sku' => OrderModificationService::skuForLine($line, $sourceLines->get($line['order_product_id'] ?? null)),
+                'discount' => OrderModificationService::discountForLine($line, $sourceLines->get($line['order_product_id'] ?? null)),
             ])
             ->all();
     }
@@ -413,6 +461,10 @@ class ModifyOrder extends Page implements HasSchemas
                 'name' => $line['name'],
                 'quantity' => (int) $line['quantity'],
                 'price' => (float) $line['price'],
+                // Meegeven en niet aan writeLines() overlaten: de formulierstaat
+                // is hier de bron, en die heeft de korting al met elke prijs- en
+                // aantalwijziging mee laten schalen.
+                'discount' => (float) ($line['discount'] ?? 0),
                 'vat_rate' => (float) $line['vat_rate'],
                 'product_extras' => $line['product_extras'] ?? [],
             ])

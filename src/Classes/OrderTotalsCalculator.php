@@ -4,32 +4,34 @@ namespace Dashed\DashedEcommerceCore\Classes;
 
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 
 /**
  * Herberekent de totalen van een order op basis van zijn eigen orderregels.
  *
- * Conventie gelijk aan de factuur (resources/views/invoices/invoice.blade.php):
- * subtotal is de som van de regeltotalen voor korting, total is subtotal minus
- * de korting. Verzendkosten en betaalkosten zijn gewone orderregels en tellen
- * dus vanzelf mee.
+ * De regelprijs is de prijs ná een procentuele kortingscode. Dat is geen keuze
+ * van deze klasse maar de conventie van de hele webshop: Checkout::createOrder()
+ * zet per regel `price = discountedPrice` en `discount = originalPrice -
+ * discountedPrice`, omdat Product::getShoppingCartItemPrice() een procentuele
+ * code al per regel verwerkt. Een vast bedrag (of cadeaubon) gaat er juist niet
+ * per regel af; dat staat alleen als `discount` op de order zelf.
+ *
+ * Daaruit volgt:
+ *
+ *   subtotal = som(regelprijs + regelkorting)
+ *   discount = som(regelkorting) + de vaste korting op orderniveau
+ *   total    = som(regelprijs)   - diezelfde vaste korting
+ *
+ * Wie de regelprijs als prijs vóór korting leest en de korting van het
+ * regeltotaal aftrekt, trekt een procentuele code dus een tweede keer af.
  */
 class OrderTotalsCalculator
 {
-    /**
-     * Regels die geen product zijn maar kosten. Een procentuele kortingscode
-     * geldt in de winkelwagen alleen over cart items, nooit over verzend- of
-     * betaalkosten; die uitzondering geldt hier net zo.
-     */
-    public const COST_SKUS = ['shipping_costs', 'payment_costs', 'product_costs'];
-
     public static function recalculate(Order $order): void
     {
         $inclusive = (bool) Customsetting::get('taxes_prices_include_taxes');
 
-        $subtotal = 0.0;
         $vatPerRate = [];
         $lines = [];
 
@@ -38,8 +40,6 @@ class OrderTotalsCalculator
         foreach ($order->orderProducts()->get() as $line) {
             $price = (float) $line->price;
             $rate = (float) ($line->vat_rate ?? 0);
-
-            $subtotal += $price;
 
             $vat = $inclusive
                 ? $price / (100 + $rate) * $rate
@@ -50,21 +50,21 @@ class OrderTotalsCalculator
 
             $lines[] = [
                 'price' => $price,
-                'quantity' => (int) $line->quantity,
-                'product_id' => $line->product_id,
-                'sku' => $line->sku,
+                'discount' => (float) ($line->discount ?? 0),
             ];
         }
 
-        $breakdown = self::discountBreakdownForLines($order, $lines);
-        $discount = $breakdown['discount'];
+        $breakdown = self::breakdownForLines($order, $lines);
 
-        // De korting drukt de btw proportioneel, ook bij gemengde tarieven.
-        $factor = $subtotal > 0 ? ($subtotal - $discount) / $subtotal : 1.0;
+        // De btw hoort te gaan over wat de klant betaalt. Een regelkorting zit
+        // al in de regelprijs verwerkt en is hierboven dus al verrekend; alleen
+        // een vaste korting op orderniveau drukt de btw nog, en die drukt hem
+        // proportioneel, ook bij gemengde tarieven.
+        $factor = $breakdown['net'] > 0 ? $breakdown['total'] / $breakdown['net'] : 1.0;
 
-        $order->subtotal = round($subtotal, 2);
-        $order->discount = round($discount, 2);
-        $order->total = round($subtotal - $discount, 2);
+        $order->subtotal = $breakdown['subtotal'];
+        $order->discount = $breakdown['discount'];
+        $order->total = $breakdown['total'];
         $order->btw = round(array_sum($vatPerRate) * $factor, 2);
         $order->vat_percentages = array_map(
             fn (float $amount): float => round($amount * $factor, 2),
@@ -112,123 +112,117 @@ class OrderTotalsCalculator
     }
 
     /**
-     * Het kortingsbedrag dat bij deze regels hoort.
+     * De totalen die bij deze regels horen.
      *
-     * Een kortingscode met een vast bedrag blijft staan zoals hij op de order
-     * is vastgelegd: dat bedrag is bij het afrekenen afgesproken en hoort niet
-     * mee te bewegen met een wijziging. Een procentuele code moet dat juist
-     * wél, anders houdt een order met 10% korting na het toevoegen van een
-     * product zijn oude euro-bedrag en betaalt de klant te veel.
+     * Elke regel is een array met price (wat de klant voor die regel betaalt) en
+     * discount (wat er op die regel is afgegaan), zodat zowel opgeslagen
+     * orderregels als de nog niet opgeslagen regels uit het wijzigformulier hier
+     * doorheen kunnen.
      *
-     * Een korting kan nooit groter zijn dan het subtotaal. Wordt een order zo
-     * aangepast dat er minder overblijft dan de korting, dan zakt de korting
-     * mee naar het subtotaal; zonder die aftopping zou het totaal negatief
-     * worden terwijl de btw op nul blijft staan.
+     * Een vaste korting blijft staan zoals hij op de order is vastgelegd: dat
+     * bedrag is bij het afrekenen afgesproken en hoort niet mee te bewegen met
+     * een wijziging. Hij kan alleen nooit groter zijn dan wat er aan regels
+     * overblijft; wordt een order zo aangepast dat er minder overblijft, dan
+     * zakt de korting mee. Zonder die aftopping zou het totaal negatief worden
+     * terwijl de btw op nul blijft staan.
      *
-     * Elke regel is een array met price, quantity, product_id en sku, zodat
-     * zowel opgeslagen orderregels als de nog niet opgeslagen regels uit het
-     * wijzigformulier hier doorheen kunnen.
-     *
-     * @param  array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>  $lines
+     * @param  array<int, array{price?: float|null, discount?: float|null}>  $lines
+     * @return array{net: float, subtotal: float, discount: float, total: float, uncapped: float, reduced_by: float}
      */
-    public static function discountForLines(Order $order, array $lines): float
+    public static function breakdownForLines(Order $order, array $lines): array
     {
-        return self::discountBreakdownForLines($order, $lines)['discount'];
-    }
+        $net = 0.0;
+        $lineDiscount = 0.0;
 
-    /**
-     * Hetzelfde bedrag als discountForLines(), maar met het bedrag vóór de
-     * aftopping erbij. Die twee lopen alleen uiteen wanneer er minder op de
-     * bestelling overblijft dan de korting; wie dat verschil wil melden (het
-     * orderlogboek, de bevestigingsstap) heeft beide getallen nodig.
-     *
-     * @param  array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>  $lines
-     * @return array{discount: float, uncapped: float, reduced_by: float}
-     */
-    public static function discountBreakdownForLines(Order $order, array $lines): array
-    {
-        $subtotal = array_sum(array_map(fn (array $line): float => (float) ($line['price'] ?? 0), $lines));
+        foreach ($lines as $line) {
+            $net += (float) ($line['price'] ?? 0);
+            $lineDiscount += (float) ($line['discount'] ?? 0);
+        }
 
-        $discountCode = $order->discountCode;
+        $net = round($net, 2);
+        $lineDiscount = round($lineDiscount, 2);
 
-        $uncapped = $discountCode && $discountCode->type === 'percentage'
-            ? self::percentageDiscountForLines($discountCode, $lines)
-            : (float) ($order->discount ?? 0);
-
-        $uncapped = round($uncapped, 2);
-        $discount = round(min($uncapped, $subtotal), 2);
+        $uncapped = round(self::orderLevelDiscount($order), 2);
+        $capped = round(min($uncapped, $net), 2);
 
         return [
-            'discount' => $discount,
-            'uncapped' => $uncapped,
-            'reduced_by' => round($uncapped - $discount, 2),
+            'net' => $net,
+            'subtotal' => round($net + $lineDiscount, 2),
+            'discount' => round($lineDiscount + $capped, 2),
+            'total' => round($net - $capped, 2),
+            // uncapped telt de regelkortingen mee zodat hij naast 'discount'
+            // gelegd kan worden in de melding over een aftopping; alleen de
+            // korting op orderniveau kan afgetopt worden, want een regelkorting
+            // zit al in de regelprijs verwerkt.
+            'uncapped' => round($lineDiscount + $uncapped, 2),
+            'reduced_by' => round($uncapped - $capped, 2),
         ];
     }
 
     /**
-     * Zelfde regels als Product::getShoppingCartItemPrice() stap 10, de plek
-     * waar de winkelwagen een procentuele code toepast: per regel bepalen of de
-     * code geldig is (op alles, of alleen op bepaalde categorieën/producten) en
-     * dan per stuk afronden voordat er weer met het aantal vermenigvuldigd
-     * wordt. Een regel zonder gekoppeld product telt daar als custom item: die
-     * krijgt alleen korting wanneer de code niet tot categorieën of producten
-     * beperkt is.
+     * Het kortingspercentage dat de code van deze order op dit product geeft, of
+     * 0 wanneer er niets geldt.
      *
-     * @param  array<int, array{price: float, quantity: int, product_id: int|null, sku: string|null}>  $lines
+     * Zelfde afweging als Product::getShoppingCartItemPrice() stap 10, de plek
+     * waar de winkelwagen een procentuele code toepast: de code kan tot
+     * bepaalde categorieën of producten beperkt zijn, en een regel zonder
+     * gekoppeld product telt daar als custom item dat alleen korting krijgt als
+     * de code niet zo beperkt is.
+     *
+     * Alleen bedoeld om een prijs uit te rekenen die de klant zou betalen (het
+     * wijzigscherm vult daarmee de regelprijs bij het kiezen van een product).
+     * De totalen van een bestaande order lopen hier niet doorheen: daar zit het
+     * percentage al in de regelprijs verwerkt.
      */
-    protected static function percentageDiscountForLines(DiscountCode $discountCode, array $lines): float
+    public static function percentageForProduct(Order $order, ?int $productId): float
     {
+        $discountCode = $order->discountCode;
+
+        if (! $discountCode || $discountCode->type !== 'percentage') {
+            return 0.0;
+        }
+
         $percentage = (float) $discountCode->discount_percentage;
 
         if ($percentage <= 0) {
             return 0.0;
         }
 
-        $discount = 0.0;
-
-        foreach ($lines as $line) {
-            if (in_array($line['sku'] ?? null, self::COST_SKUS, true)) {
-                continue;
-            }
-
-            $price = (float) ($line['price'] ?? 0);
-            $quantity = (int) ($line['quantity'] ?? 0);
-
-            if ($price <= 0 || $quantity <= 0) {
-                continue;
-            }
-
-            if (! self::codeAppliesToLine($discountCode, $line['product_id'] ?? null)) {
-                continue;
-            }
-
-            $unitPrice = $price / $quantity;
-            $discountedUnitPrice = round($unitPrice * (100 - $percentage) / 100, 2);
-
-            $discount += $price - ($discountedUnitPrice * $quantity);
-        }
-
-        return max($discount, 0.0);
-    }
-
-    protected static function codeAppliesToLine(DiscountCode $discountCode, ?int $productId): bool
-    {
         $product = $productId ? Product::find($productId) : null;
 
         if (! $product) {
-            return ! in_array($discountCode->valid_for, ['categories', 'products'], true);
+            return in_array($discountCode->valid_for, ['categories', 'products'], true) ? 0.0 : $percentage;
         }
 
         if ($discountCode->valid_for === 'categories') {
             return $discountCode->productCategories()
                 ->whereIn('product_category_id', $product->productCategories()->pluck('product_category_id'))
-                ->exists();
+                ->exists() ? $percentage : 0.0;
         }
 
         if ($discountCode->valid_for === 'products') {
-            return $discountCode->products()->where('product_id', $product->id)->exists();
+            return $discountCode->products()->where('product_id', $product->id)->exists() ? $percentage : 0.0;
         }
 
-        return true;
+        return $percentage;
+    }
+
+    /**
+     * De korting die niet in de regelprijzen zit en er dus nog van het totaal af
+     * moet.
+     *
+     * Bij een procentuele code is dat niets: die is bij het afrekenen al per
+     * regel verwerkt (Product::getShoppingCartItemPrice() stap 10) en zou er
+     * hier een tweede keer afgaan. Bij een vast bedrag, een cadeaubon of een
+     * handmatig ingevulde korting staat het bedrag alleen op de order zelf en
+     * gaat het er hier dus wél af.
+     */
+    protected static function orderLevelDiscount(Order $order): float
+    {
+        if ($order->discountCode?->type === 'percentage') {
+            return 0.0;
+        }
+
+        return (float) ($order->discount ?? 0);
     }
 }

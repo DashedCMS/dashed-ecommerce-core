@@ -25,6 +25,11 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         $providers = [
+            // Levert Laravel's basis-migraties (users, cache, jobs) plus de
+            // stub-tabellen voor het privé media-library-package. dashed-core
+            // heeft alleen ALTER-migraties op `users`, dus zonder deze provider
+            // faalt elke test al op migrate:fresh.
+            TestbenchLaravelMigrationsServiceProvider::class,
             DashedCoreServiceProvider::class,
             DashedPagesServiceProvider::class,
             DashedEcommerceCoreServiceProvider::class,
@@ -50,5 +55,36 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+
+        // De 'dashed'-disk is in een echte app een DigitalOcean Spaces-bucket
+        // (config/filesystems.php van de app zelf). De Testbench-skeleton kent
+        // hem niet, terwijl o.a. Order::createInvoice() erop schrijft; lokaal
+        // in de test-storage is voor deze suite genoeg.
+        config()->set('filesystems.disks.dashed', [
+            'driver' => 'local',
+            'root' => storage_path('app/dashed'),
+            'throw' => false,
+        ]);
+
+        // Standaard draait de suite op Testbench's in-memory sqlite. Een deel
+        // van de migraties van dit package kan sqlite niet uitvoeren
+        // (dropForeign op naam, enum-kolommen wijzigen), dus met
+        // DB_TEST_CONNECTION=mysql draait dezelfde suite op MySQL: dezelfde
+        // engine als productie.
+        if (env('DB_TEST_CONNECTION') === 'mysql') {
+            config()->set('database.connections.testing', [
+                'driver' => 'mysql',
+                'host' => env('DB_TEST_HOST', '127.0.0.1'),
+                'port' => env('DB_TEST_PORT', '3306'),
+                'database' => env('DB_TEST_DATABASE', 'dashed_ec_core_test'),
+                'username' => env('DB_TEST_USERNAME', 'root'),
+                'password' => env('DB_TEST_PASSWORD', ''),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+                'prefix' => '',
+                'strict' => false,
+                'engine' => null,
+            ]);
+        }
     }
 }
