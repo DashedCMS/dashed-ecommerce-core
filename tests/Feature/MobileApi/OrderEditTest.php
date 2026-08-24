@@ -1,8 +1,31 @@
 <?php
 
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Event;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+
+/**
+ * Faket exact de custom order-events die de modify/replace-flow uitstuurt
+ * (niet Eloquent's interne model-events — die staan hier niet in en blijven
+ * dus gewoon echt lopen). Zonder dit draaien de geregistreerde listeners
+ * (PrintDocumentsAfterPaidOrder, QueueAbandonedCartEmailsForOrderListener,
+ * automation-triggers, …) live mee in de test, met mail/queue-bijwerkingen
+ * die in CI kunnen falen of ongewenst spul versturen.
+ */
+function fakeOrderModificationEvents(): void
+{
+    Event::fake([
+        OrderModifiedEvent::class,
+        OrderMarkedAsPaidEvent::class,
+        OrderCancelledEvent::class,
+        InvoiceCreatedEvent::class,
+    ]);
+}
 
 function makeEditableOrder(array $attributes = [], string $siteId = 'site'): Order
 {
@@ -192,6 +215,7 @@ it('weigert een modify-preview zonder de orders.write ability', function () {
 
 it('past een productwijziging in-place toe voor een onbetaalde, bewerkbare order', function () {
     $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    fakeOrderModificationEvents();
     // Onbetaald, geen echt factuurnummer, geen geslaagde betaling → canModifyInPlace() true.
     $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
     $orderProduct = OrderProduct::create([
@@ -231,6 +255,7 @@ it('past een productwijziging in-place toe voor een onbetaalde, bewerkbare order
 
 it('vervangt een betaalde order door een nieuwe met creditorder bij een productwijziging', function () {
     $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    fakeOrderModificationEvents();
     // Al betaald met een echt factuurnummer → canModifyInPlace() false, isModifiable() true.
     $order = makeEditableOrder(['status' => 'paid']);
     $orderProduct = OrderProduct::create([
@@ -267,6 +292,10 @@ it('vervangt een betaalde order door een nieuwe met creditorder bij een productw
     expect($replacement)->not->toBeNull()
         ->and($replacement->orderProducts()->count())->toBe(1)
         ->and((float) $replacement->total)->toBe(20.00);
+
+    // De service-uitkomst staat los van of de listeners live draaien: het
+    // event wordt nog steeds (gefaket) uitgestuurd voor de nieuwe order.
+    Event::assertDispatched(OrderModifiedEvent::class, fn ($event) => $event->newOrder->id === $replacementId);
 });
 
 it('weigert een modify voor een order die niet meer bewerkbaar is', function () {
@@ -302,4 +331,65 @@ it('weigert modify zonder de orders.write ability', function () {
             ['name' => 'X', 'quantity' => 1, 'price' => 1],
         ],
     ], ['X-Site-Id' => 'site'])->assertStatus(403);
+});
+
+it('weigert een order_product_id die bij een andere order hoort in de modify-preview', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $order = makeEditableOrder();
+    $other = makeEditableOrder();
+    $foreignOrderProduct = OrderProduct::create([
+        'order_id' => $other->id,
+        'name' => 'Vreemd product',
+        'quantity' => 1,
+        'price' => 10.00,
+        'discount' => 5.00,
+        'vat_rate' => 21,
+    ]);
+
+    $res = $this->postJson("/api/v1/orders/{$order->id}/modify/preview", [
+        'lines' => [
+            [
+                'order_product_id' => $foreignOrderProduct->id,
+                'name' => 'Vreemd product',
+                'quantity' => 1,
+                'price' => 10.00,
+                'vat_rate' => 21,
+            ],
+        ],
+    ], ['X-Site-Id' => 'site']);
+
+    $res->assertStatus(422)->assertJsonValidationErrors(['lines.0.order_product_id']);
+});
+
+it('weigert een order_product_id die bij een andere order hoort bij modify', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    fakeOrderModificationEvents();
+    $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
+    $other = makeEditableOrder();
+    $foreignOrderProduct = OrderProduct::create([
+        'order_id' => $other->id,
+        'name' => 'Vreemd product',
+        'quantity' => 1,
+        'price' => 10.00,
+        'discount' => 0,
+        'vat_rate' => 21,
+    ]);
+
+    $res = $this->patchJson("/api/v1/orders/{$order->id}/modify", [
+        'lines' => [
+            [
+                'order_product_id' => $foreignOrderProduct->id,
+                'name' => 'Vreemd product',
+                'quantity' => 1,
+                'price' => 10.00,
+                'vat_rate' => 21,
+            ],
+        ],
+    ], ['X-Site-Id' => 'site']);
+
+    $res->assertStatus(422)->assertJsonValidationErrors(['lines.0.order_product_id']);
+
+    // Niet gemuteerd: de vreemde order en zijn regel blijven ongewijzigd.
+    expect($order->fresh()->orderProducts()->count())->toBe(0)
+        ->and($foreignOrderProduct->fresh()->order_id)->toBe($other->id);
 });

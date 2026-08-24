@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
@@ -189,13 +188,28 @@ class OrderController extends Controller
      * line-vorm die `OrderModificationService` verwacht. Gedeeld tussen
      * `modifyPreview` (muteert niets) en de daadwerkelijke wijzig-actie.
      *
+     * `$model` is nodig om een meegegeven `order_product_id` te scopen: zonder
+     * die check zou een cliënt een orderproduct-id van een ándere order kunnen
+     * meesturen en zo diens sku/discount/is_pre_order (via `writeLines()`'s
+     * bronregel-overname) op déze order laten overnemen, of in de preview de
+     * korting van een vreemd orderproduct laten afleiden.
+     *
      * @return array<int, array<string, mixed>>
      */
-    private function validatedModifyLines(Request $request): array
+    private function validatedModifyLines(Request $request, Order $model): array
     {
+        $orderProductIds = $model->orderProducts()->withTrashed()->pluck('id')->all();
+
         $data = $request->validate([
             'lines' => ['required', 'array', 'min:1'],
-            'lines.*.order_product_id' => ['sometimes', 'nullable', 'integer'],
+            'lines.*.order_product_id' => [
+                'sometimes', 'nullable', 'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($orderProductIds): void {
+                    if ($value !== null && ! in_array((int) $value, $orderProductIds, true)) {
+                        $fail('Dit orderproduct hoort niet bij deze bestelling.');
+                    }
+                },
+            ],
             'lines.*.product_id' => ['sometimes', 'nullable', 'integer'],
             'lines.*.name' => ['required', 'string', 'max:255'],
             'lines.*.quantity' => ['required', 'integer', 'min:1'],
@@ -226,13 +240,13 @@ class OrderController extends Controller
     public function modifyPreview(Request $request, int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
-        $lines = $this->validatedModifyLines($request);
+        $lines = $this->validatedModifyLines($request, $model);
 
         // breakdownForLines verwacht [{price, discount}] — leid de korting af
         // zoals OrderModificationService::writeLines dat ook doet.
-        $previewLines = array_map(static function (array $l): array {
+        $previewLines = array_map(static function (array $l) use ($model): array {
             $source = $l['order_product_id']
-                ? OrderProduct::find($l['order_product_id'])
+                ? $model->orderProducts()->withTrashed()->find($l['order_product_id'])
                 : null;
 
             return [
@@ -271,7 +285,7 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Deze bestelling kan niet meer gewijzigd worden.'], 422);
         }
 
-        $lines = $this->validatedModifyLines($request);
+        $lines = $this->validatedModifyLines($request, $model);
         $options = $request->validate([
             'send_customer_email' => ['sometimes', 'boolean'],
             'customer_note' => ['sometimes', 'nullable', 'string'],
