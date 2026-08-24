@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderReturnController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductInsightsController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\SalesAnalysisController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductGroupController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosConceptController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DiscountController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosConceptController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderReturnController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductGroupController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\SalesAnalysisController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\AutomationRuleController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductInsightsController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
 
 /**
  * Mobiele kassa: dezelfde PointOfSaleApiController als de web-kassa, maar onder
@@ -138,6 +138,7 @@ Route::prefix('api/v1')
 
         Route::get('orders/{order}', [OrderController::class, 'show'])->middleware('ability:orders.read');
         Route::patch('orders/{order}', [OrderController::class, 'update'])->middleware('ability:orders.write');
+        Route::patch('orders/{order}/details', [OrderController::class, 'updateDetails'])->middleware('ability:orders.write');
         Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');
         Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return', [OrderController::class, 'returnOrder'])->middleware('ability:orders.write');

@@ -142,6 +142,45 @@ class OrderController extends Controller
         return $this->detail($model);
     }
 
+    /**
+     * Bewerk klant- en adresgegevens (spiegelt de velden van de CMS-`EditOrder`-
+     * pagina: klantgegevens, verzendadres, bedrijfsinformatie, factuuradres).
+     */
+    public function updateDetails(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'first_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'last_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'phone_number' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'company_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'btw_id' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'note' => ['sometimes', 'nullable', 'string'],
+            'street' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'house_nr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'zip_code' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'country' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'invoice_street' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'invoice_house_nr' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'invoice_zip_code' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'invoice_city' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'invoice_country' => ['sometimes', 'nullable', 'string', 'max:255'],
+        ]);
+
+        $model->fill($data)->save();
+
+        activity()
+            ->performedOn($model)
+            ->causedBy($request->user())
+            ->withProperties($data)
+            ->log('mobile-api: ordergegevens bewerkt');
+
+        return $this->detail($model);
+    }
+
     /** Markeer de bestelling als betaald (zoals Filament "Markeer als betaald"). */
     public function markAsPaid(Request $request, int $order): OrderResource
     {
