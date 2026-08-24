@@ -142,23 +142,27 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
-            Action::make('edit')
-                ->hiddenLabel()
-                ->icon('heroicon-s-pencil-square')
-                ->tooltip(__('Bewerk bestelling'))
-                ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
-            Action::make('modify')
+            ActionGroup::make([
+                Action::make('edit')
+                    ->label(__('Gegevens wijzigen'))
+                    ->icon('heroicon-o-identification')
+                    ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
+                Action::make('modify')
+                    ->label(__('Producten wijzigen'))
+                    ->icon('heroicon-o-shopping-bag')
+                    // De route-check hoort hier echt bij: draait er nog een oude
+                    // route-cache, dan bestaat deze pagina niet en gooit route()
+                    // een exception. Omdat de knop bij het renderen van de
+                    // orderpagina wordt opgebouwd, haalt dat de hele bestelling
+                    // onderuit in plaats van alleen de knop.
+                    ->visible(fn (): bool => Route::has('filament.dashed.resources.orders.modify')
+                        && $this->record->isModifiable())
+                    ->url(fn () => route('filament.dashed.resources.orders.modify', ['record' => $this->record->id])),
+            ])
                 ->label(__('Bestelling wijzigen'))
                 ->icon('heroicon-o-pencil-square')
                 ->color('warning')
-                // De route-check hoort hier echt bij: draait er nog een oude
-                // route-cache, dan bestaat deze pagina niet en gooit route()
-                // een exception. Omdat de knop bij het renderen van de
-                // orderpagina wordt opgebouwd, haalt dat de hele bestelling
-                // onderuit in plaats van alleen de knop.
-                ->visible(fn (): bool => Route::has('filament.dashed.resources.orders.modify')
-                    && $this->record->isModifiable())
-                ->url(fn () => route('filament.dashed.resources.orders.modify', ['record' => $this->record->id])),
+                ->button(),
             ActionGroup::make([
                 Action::make('Factuur')
                     ->tooltip(__('Download de factuur als PDF'))
