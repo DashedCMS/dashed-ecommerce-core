@@ -78,4 +78,19 @@ class PosConceptController extends Controller
 
         return response()->json(['success' => true]);
     }
+
+    /** Kopieer een bestaande order naar de kassa-cart (zoals de CMS-actie "Kopiëren naar kassa"). */
+    public function copyOrderToCart(Request $request): JsonResponse
+    {
+        $order = Order::thisSite()->find((int) $request->input('orderId'));
+        $posCart = POSCart::where('identifier', (string) $request->input('posIdentifier'))->first();
+
+        if (! $order || ! $posCart) {
+            return response()->json(['message' => 'Bestelling of kassa-sessie niet gevonden.'], 404);
+        }
+
+        ConceptOrderService::copyIntoCart($posCart, $order, (bool) $request->input('copyCustomerDetails', true));
+
+        return response()->json(['success' => true]);
+    }
 }

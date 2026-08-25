@@ -73,6 +73,7 @@ Route::prefix('api/v1')
             Route::get('concepts', [PosConceptController::class, 'index']);
             Route::post('save-concept', [PosConceptController::class, 'save']);
             Route::post('load-concept', [PosConceptController::class, 'load']);
+            Route::post('copy-order-to-cart', [PosConceptController::class, 'copyOrderToCart']);
 
             // Dagafsluiting / kasstaat (Z-rapport): één open sessie per user + site + dag.
             Route::post('open-day', [PosRegisterSessionController::class, 'openDay']);
