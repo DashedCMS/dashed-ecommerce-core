@@ -208,6 +208,15 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             cms()->emailBlock('discount-code', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\DiscountCodeBlock::class);
         }
 
+        // Zelfde guard als bij de nieuwsbriefblokken hierboven, plus een op
+        // het register zelf: dit pakket kan tegen een oudere nieuwsbrief
+        // draaien die de AI-generator nog niet kent.
+        if (app()->bound('newsletter') && class_exists(\Dashed\DashedNewsletter\Ai\SearchToolRegistry::class)) {
+            \Dashed\DashedNewsletter\Facades\Newsletter::registerSearchTool(new \Dashed\DashedEcommerceCore\Ai\NewsletterTools\ProductSearchTool());
+            \Dashed\DashedNewsletter\Facades\Newsletter::registerSearchTool(new \Dashed\DashedEcommerceCore\Ai\NewsletterTools\ProductGroupSearchTool());
+            \Dashed\DashedNewsletter\Facades\Newsletter::registerSearchTool(new \Dashed\DashedEcommerceCore\Ai\NewsletterTools\CategorySearchTool());
+        }
+
         cms()
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail::class)
