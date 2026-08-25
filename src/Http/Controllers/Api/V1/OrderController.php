@@ -19,6 +19,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
 
 class OrderController extends Controller
 {
@@ -332,6 +333,26 @@ class OrderController extends Controller
 
         activity()->performedOn($model)->causedBy($request->user())
             ->log('mobile-api: bevestigingsmail verstuurd');
+
+        return response()->json(['success' => true]);
+    }
+
+    /** Genereer de factuur-PDF opnieuw (zelfde guard als de Filament-actie). */
+    public function regenerateInvoice(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        if (empty($model->invoice_id) || in_array($model->invoice_id, ['PROFORMA', 'RETURN'], true)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deze bestelling heeft geen definitieve factuur om te regenereren.',
+            ], 422);
+        }
+
+        (new RegenerateInvoiceAction())->handle($model);
+
+        activity()->performedOn($model)->causedBy($request->user())
+            ->log('mobile-api: factuur opnieuw gegenereerd');
 
         return response()->json(['success' => true]);
     }

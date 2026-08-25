@@ -143,6 +143,7 @@ Route::prefix('api/v1')
         Route::patch('orders/{order}/modify', [OrderController::class, 'modify'])->middleware('ability:orders.write');
         Route::post('orders/{order}/mark-as-paid', [OrderController::class, 'markAsPaid'])->middleware('ability:orders.write');
         Route::post('orders/{order}/send-confirmation', [OrderController::class, 'sendConfirmation'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/regenerate-invoice', [OrderController::class, 'regenerateInvoice'])->middleware('ability:orders.write');
         Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return', [OrderController::class, 'returnOrder'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return-label', [ShipmentController::class, 'returnLabel'])->middleware('ability:orders.write');
