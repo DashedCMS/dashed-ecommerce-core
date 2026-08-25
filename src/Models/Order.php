@@ -452,6 +452,22 @@ class Order extends Model
         return (float) max(0, $this->total - $paid);
     }
 
+    /**
+     * De bestelling is volledig gedekt door geregistreerde betalingen, maar de
+     * status is blijven hangen op een niet-betaalde waarde (bijv. handmatig
+     * teruggezet naar 'wachten op bevestiging' terwijl de PSP-betaling al
+     * binnen was). Annuleringen, retouren en concepten blijven met rust: dat
+     * zijn bewuste eindstatussen, geen achterlopende.
+     */
+    public function needsPaidStatusCorrection(): bool
+    {
+        if (in_array($this->status, ['paid', 'cancelled', 'return'], true) || $this->isConcept()) {
+            return false;
+        }
+
+        return $this->total > 0 && $this->outstandingAmount() <= 0;
+    }
+
     public function isReturnStatus(): bool
     {
         if ($this->status == 'return') {

@@ -292,6 +292,28 @@ class ViewOrder extends ViewRecord
 
                         $this->redirect(route('filament.dashed.resources.orders.view', ['record' => $this->record->id]));
                     }),
+                Action::make('markAsPaid')
+                    ->label(__('Markeer als betaald'))
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    // De betalingen dekken het totaal al, alleen de status is
+                    // blijven hangen. Zonder deze knop is er geen weg terug:
+                    // "handmatige betaling registreren" verbergt zichzelf
+                    // terecht, want er staat niets meer open.
+                    ->visible(fn (): bool => $this->record->needsPaidStatusCorrection())
+                    ->requiresConfirmation()
+                    ->modalHeading(__('Bestelling op betaald zetten?'))
+                    ->modalDescription(__('De betalingen dekken het totaalbedrag al; alleen de status loopt achter. Die wordt nu bijgewerkt naar betaald.'))
+                    ->action(function () {
+                        $this->record->changeStatus('paid');
+
+                        Notification::make()
+                            ->title(__('Bestelling op betaald gezet'))
+                            ->success()
+                            ->send();
+
+                        $this->redirect(route('filament.dashed.resources.orders.view', ['record' => $this->record->id]));
+                    }),
                 RegisterManualPaymentAction::make($this->record),
                 SendPaymentLinkAction::make($this->record),
                 RegisterRefundAction::make($this->record),

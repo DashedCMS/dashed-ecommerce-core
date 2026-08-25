@@ -42,6 +42,22 @@ class OrderAbandonmentAnalyzer
             );
         }
 
+        // Geen afhaker: de bestelling is volledig betaald en alleen de status
+        // loopt achter. Zie Order::needsPaidStatusCorrection().
+        if ($order->needsPaidStatusCorrection()) {
+            return new OrderAbandonmentDiagnosis(
+                'paid_but_status_stale',
+                'Volledig betaald — status niet bijgewerkt',
+                'high',
+                $this->withRecoveryContext($order, [
+                    'Er staat ' . CurrencyHelper::formatPrice($order->total - $order->outstandingAmount())
+                        . ' aan betalingen geregistreerd op een totaal van ' . CurrencyHelper::formatPrice($order->total)
+                        . '; er staat niets meer open.',
+                    'Zet de bestelling met "Markeer als betaald" alsnog op de juiste status.',
+                ]),
+            );
+        }
+
         if ($order->status === 'partially_paid') {
             return new OrderAbandonmentDiagnosis(
                 'partial_payment',

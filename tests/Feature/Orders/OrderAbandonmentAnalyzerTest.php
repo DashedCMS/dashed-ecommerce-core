@@ -86,3 +86,30 @@ it('flags an order with no payment attempt at all', function () {
     expect((new OrderAbandonmentAnalyzer())->analyze($order->fresh())?->cause)
         ->toBe('no_payment_attempt');
 });
+
+it('flags a fully paid order whose status lagged behind', function () {
+    $order = makeOrder('waiting_for_confirmation', 31.90);
+    OrderPayment::create([
+        'order_id' => $order->id,
+        'psp' => 'paynl',
+        'amount' => 31.90,
+        'status' => 'paid',
+    ]);
+
+    $d = (new OrderAbandonmentAnalyzer())->analyze($order->fresh());
+
+    expect($d?->cause)->toBe('paid_but_status_stale');
+    expect(implode(' ', $d->evidence))->toContain('niets meer open');
+});
+
+it('keeps calling a cancelled order cancelled, even when it was paid', function () {
+    $order = makeOrder('cancelled', 31.90);
+    OrderPayment::create([
+        'order_id' => $order->id,
+        'psp' => 'paynl',
+        'amount' => 31.90,
+        'status' => 'paid',
+    ]);
+
+    expect((new OrderAbandonmentAnalyzer())->analyze($order->fresh())?->cause)->toBe('cancelled');
+});
