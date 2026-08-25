@@ -47,7 +47,7 @@ class OrderAbandonmentAnalyzer
         if ($order->needsPaidStatusCorrection()) {
             return new OrderAbandonmentDiagnosis(
                 'paid_but_status_stale',
-                'Volledig betaald — status niet bijgewerkt',
+                'Betaald — status liep achter',
                 'high',
                 $this->withRecoveryContext($order, [
                     'Er staat ' . CurrencyHelper::formatPrice($order->total - $order->outstandingAmount())
