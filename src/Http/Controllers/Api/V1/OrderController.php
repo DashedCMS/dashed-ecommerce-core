@@ -319,6 +319,23 @@ class OrderController extends Controller
         return $this->detail($model);
     }
 
+    /** Stuur (opnieuw) de bevestigingsmail van de order naar de klant. */
+    public function sendConfirmation(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'email' => ['sometimes', 'nullable', 'email'],
+        ]);
+
+        Orders::sendNotification($model, $data['email'] ?? null, $request->user());
+
+        activity()->performedOn($model)->causedBy($request->user())
+            ->log('mobile-api: bevestigingsmail verstuurd');
+
+        return response()->json(['success' => true]);
+    }
+
     /**
      * Registreer een (gedeeltelijke) retour/RMA voor de bestelling. Hergebruikt
      * de centrale Order::registerReturn-logica (voorraad-terugboeking + status).
