@@ -4,11 +4,14 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables
 
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\TernaryFilter;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OpenOrderProductsTable
@@ -17,6 +20,33 @@ class OpenOrderProductsTable
     {
         return $table
             ->columns([
+                ImageColumn::make('image')
+                    ->label('')
+                    ->getStateUsing(function ($record, $livewire) {
+                        // Eén medialookup per pagina in plaats van per rij,
+                        // zelfde aanpak als in ProductResource.
+                        static $preloadedPage = null;
+                        $currentPage = $livewire->getTablePage() ?? 1;
+
+                        if ($preloadedPage !== $currentPage) {
+                            $preloadedPage = $currentPage;
+
+                            try {
+                                $ids = $livewire->getTableRecords()
+                                    ->map(fn ($row) => self::imageIdFor($row, $livewire->activeTab ?? null))
+                                    ->filter()
+                                    ->values()
+                                    ->all();
+
+                                if ($ids) {
+                                    mediaHelper()->preloadMediaUrls($ids, 'original');
+                                }
+                            } catch (\Throwable $e) {
+                            }
+                        }
+
+                        return self::imageUrlFor($record, $livewire->activeTab ?? null);
+                    }),
                 TextColumn::make('order.invoice_id')
                     ->label(__('Bestelling'))
                     ->searchable()
@@ -248,5 +278,50 @@ class OpenOrderProductsTable
             }, shouldOpenInNewTab: true)
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
+    }
+
+    /**
+     * De media-id van de foto die bij deze rij hoort, of null.
+     *
+     * Op het tabblad gegroepeerd per productgroep staat in de kolom product_id
+     * geen product-id maar de product_group_id: de subquery in
+     * ListOpenOrderProducts aliast die er zelf in. Wie daar $record->product
+     * leest, krijgt het product dat toevallig dat id draagt en dus een foto van
+     * een heel ander artikel. Vandaar de splitsing op het actieve tabblad.
+     */
+    public static function imageIdFor(OrderProduct $record, ?string $activeTab): ?string
+    {
+        if ($activeTab === 'grouped_product_group') {
+            return $record->product_id
+                ? ProductGroup::find($record->product_id)?->firstImage
+                : null;
+        }
+
+        return $record->product?->firstImage;
+    }
+
+    /**
+     * De URL van de foto die bij deze rij hoort, of null.
+     *
+     * getSingleMedia() geeft een echte medialibrary-item terug, maar laat een
+     * niet-numerieke string ongewijzigd door als URL. Allebei worden hier
+     * afgehandeld, zodat een handmatig ingevulde URL net zo goed werkt als een
+     * media-id.
+     */
+    public static function imageUrlFor(OrderProduct $record, ?string $activeTab): ?string
+    {
+        $imageId = self::imageIdFor($record, $activeTab);
+
+        if (! $imageId) {
+            return null;
+        }
+
+        $media = mediaHelper()->getSingleMedia($imageId, 'original');
+
+        if (is_string($media)) {
+            return $media ?: null;
+        }
+
+        return $media->url ?? null;
     }
 }
