@@ -408,10 +408,12 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
         $search = str($data['search'] ?? null)->trim()->toString();
 
+        // Bewust geen eigen select: de prijs komt uit priceForUser(), en die
+        // leest current_price. Met een smalle kolomlijst gaf dit endpoint een
+        // prijs van nul terug.
         $products = Product::handOrderShowable()
             ->search($search)
             ->limit(25)
-            ->select(['id', 'name', 'images', 'price'])
             ->get()
             ->map(function ($product) {
                 return [
@@ -1989,7 +1991,24 @@ class PointOfSaleApiController extends Controller
             }
             $item->model = $model;
 
-            if ($customerUser && $model) {
+            // Een klant- of prijsgroepprijs mag een prijs die een mens zelf
+            // heeft ingetypt niet overschrijven. isCustomPrice en customProduct
+            // staan alleen op een regel waar dat gebeurd is: de kassamedewerker
+            // die de regelprijs aanpast (POSPage::submitChangeProductForm) of
+            // een los ingevoerd product. Een regel die gewoon uit de catalogus
+            // in de kassabon komt draagt ze niet, dus die krijgt de klantprijs
+            // nog steeds.
+            //
+            // Zonder deze uitzondering viel de handmatige prijs terug op de
+            // catalogusprijs zodra er een klant aan de kassabon hing, wat
+            // gebeurt zodra je een bestelling met klantgegevens naar de kassa
+            // kopieert. Dat raakte niet alleen het scherm: het afrekenen loopt
+            // langs dezelfde berekening, dus de klant werd ook echt het oude
+            // bedrag in rekening gebracht.
+            $hasManualPrice = (bool) ($chosenProduct['isCustomPrice'] ?? false)
+                || (bool) ($chosenProduct['customProduct'] ?? false);
+
+            if ($customerUser && $model && ! $hasManualPrice) {
                 $options = (array) ($item->options ?? []);
                 $options['singlePrice'] = (float) $model->priceForUser($customerUser);
                 $options['isCustomPrice'] = true;
