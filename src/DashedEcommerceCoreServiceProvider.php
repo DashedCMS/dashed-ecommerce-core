@@ -1473,9 +1473,6 @@ MARKDOWN,
             $schedule->command(ClearOldCarts::class)
                 ->hourly()
                 ->withoutOverlapping();
-            $schedule->command(PruneCartLogs::class)
-                ->dailyAt('03:15')
-                ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class)
                 ->dailyAt('08:00')
                 ->withoutOverlapping();
@@ -1516,9 +1513,6 @@ MARKDOWN,
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand::class)
                 ->everyMinute()
                 ->withoutOverlapping();
-
-            $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\CleanupOldPrintJobsCommand::class)
-                ->dailyAt('03:00');
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class)
                 ->everyFiveMinutes();
@@ -2125,10 +2119,11 @@ MARKDOWN,
                 // Geen eigen opruimer, bewust: de generieke TabelOpruimer verwijdert
                 // rechtstreeks in de database. EcommerceActionLog::deleted herberekent
                 // add_to_cart_count en remove_from_cart_count op het gekoppelde product
-                // over de overgebleven regels. Zou die listener wel afgaan tijdens het
-                // opruimen, dan kelderen levenslange producttellers tot alleen wat binnen
-                // de bewaartermijn valt, en draaien er per verwijderde rij twee aggregaties
-                // over de hele tabel: tweehonderdduizend queries bij honderdduizend rijen.
+                // over de overgebleven regels, en dat zijn twee aggregaties over de hele
+                // tabel per verwijderde rij: tweehonderdduizend queries bij honderdduizend
+                // rijen. Dat de tellers laag komen te staan voorkomt deze keuze niet, want
+                // dezelfde herberekening hangt ook aan saved en draait dus bij de
+                // eerstvolgende add-to-cart alsnog over wat er over is.
                 ->termijn(
                     Termijn::make('ecommerce_action_logs', 180, 'created_at')
                         ->label(__('Handelingenlogboek bewaren (dagen)'))
