@@ -25,11 +25,12 @@ use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
 // Belangrijk: in je controller gebruikte je Dashed\DashedCore\Models\User.
 // Hier stond App\Models\User. Dat kan, maar kies 1.
 // Ik trek ‘m gelijk met jullie core.
-use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\Address\AddressLookup;
@@ -637,11 +638,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->searchable()
                     ->preload()
                     ->getSearchResultsUsing(function (string $search) {
-                        return User::where(function ($q) use ($search) {
-                            $q->where('first_name', 'like', "%{$search}%")
-                                ->orWhere('last_name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                        })
+                        return TokenizedSearch::apply(User::query(), $search, ['first_name', 'last_name', 'email'])
                             ->limit(50)
                             ->get()
                             ->mapWithKeys(fn ($user) => [

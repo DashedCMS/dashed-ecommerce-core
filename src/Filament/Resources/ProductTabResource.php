@@ -10,7 +10,6 @@ use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
@@ -22,6 +21,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\EditProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\ListProductTab;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\CreateProductTab;
@@ -64,7 +64,7 @@ class ProductTabResource extends Resource
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->label(__('Gekoppelde producten'))
-                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(Product::class, $search))
                             ->searchable()
                             ->multiple()
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
@@ -78,7 +78,7 @@ class ProductTabResource extends Resource
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->label(__('Gekoppelde categorieen'))
-                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(ProductCategory::class, $search))
                             ->searchable()
                             ->multiple()
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)

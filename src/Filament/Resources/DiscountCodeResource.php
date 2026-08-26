@@ -9,7 +9,6 @@ use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
 use Filament\Actions\BulkActionGroup;
@@ -26,6 +25,7 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\EditDiscountCode;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\ListDiscountCodes;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\CreateDiscountCode;
@@ -162,7 +162,7 @@ class DiscountCodeResource extends Resource
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(Product::class, $search))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label(__('Selecteer producten waar deze kortingscode voor geldt'))
                             ->required()
@@ -170,7 +170,7 @@ class DiscountCodeResource extends Resource
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(ProductCategory::class, $search))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label(__('Selecteer categorieën waar deze kortingscode voor geldt'))
                             ->required(fn (Get $get) => $get('valid_for') == 'categories')

@@ -145,7 +145,7 @@ class ModifyOrder extends Page implements HasSchemas
                                     // site_id van de order ook zorgvuldig terug.
                                     ->getSearchResultsUsing(fn (string $search) => Product::query()
                                         ->thisSite($this->order->site_id)
-                                        ->where('name', 'LIKE', "%{$search}%")
+                                        ->search($search)
                                         ->limit(25)
                                         ->get()
                                         ->mapWithKeys(fn (Product $product) => [$product->id => $product->name])

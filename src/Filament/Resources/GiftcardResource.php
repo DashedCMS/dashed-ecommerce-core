@@ -10,7 +10,6 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
@@ -26,6 +25,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\EditGiftcard;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ViewGiftcard;
 use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\ListGiftcards;
@@ -126,7 +126,7 @@ class GiftcardResource extends Resource
                         Select::make('products')
                             ->relationship('products', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(Product::class, $search))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label(__('Selecteer producten waar deze cadeaukaart voor geldt'))
                             ->required()
@@ -134,7 +134,7 @@ class GiftcardResource extends Resource
                         Select::make('productCategories')
                             ->relationship('productCategories', 'name')
                             ->multiple()
-                            ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                            ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(ProductCategory::class, $search))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
                             ->label(__('Selecteer categorieën waar deze cadeaukaart voor geldt'))
                             ->required(fn (Get $get) => $get('valid_for') == 'categories')

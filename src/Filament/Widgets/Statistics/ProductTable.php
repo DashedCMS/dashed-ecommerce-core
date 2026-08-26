@@ -44,7 +44,7 @@ class ProductTable extends TableWidget
                 $orderProducts = OrderProduct::whereIn('order_id', $orderIds)->get();
                 $this->orderProducts = $orderProducts;
 
-                return Product::whereRaw('LOWER(name) like ?', '%' . strtolower($this->graphData['filters']['search']) . '%');
+                return Product::search($this->graphData['filters']['search']);
             })
             ->columns([
                 TextColumn::make('name')

@@ -10,7 +10,6 @@ use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
-use Illuminate\Support\Facades\DB;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -21,6 +20,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Filament\Concerns\HasCustomBlocksTab;
 use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
+use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\EditProductExtra;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\ListProductExtra;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource\Pages\CreateProductExtra;
@@ -57,7 +57,7 @@ class ProductExtraResource extends Resource
                     Select::make('productGroups')
                         ->relationship('productGroups', 'name')
                         ->label(__('Gekoppelde product groepen'))
-                        ->getSearchResultsUsing(fn (string $search) => ProductGroup::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(ProductGroup::class, $search))
                         ->searchable()
                         ->multiple()
                         ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
@@ -71,7 +71,7 @@ class ProductExtraResource extends Resource
                     Select::make('products')
                         ->relationship('products', 'name')
                         ->label(__('Gekoppelde producten'))
-                        ->getSearchResultsUsing(fn (string $search) => Product::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(Product::class, $search))
                         ->searchable()
                         ->multiple()
                         ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)
@@ -85,7 +85,7 @@ class ProductExtraResource extends Resource
                     Select::make('productCategories')
                         ->relationship('productCategories', 'name')
                         ->label(__('Gekoppelde categorieen'))
-                        ->getSearchResultsUsing(fn (string $search) => ProductCategory::where(DB::raw('lower(name)'), 'like', '%' . strtolower($search) . '%')->limit(50)->pluck('name', 'id'))
+                        ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(ProductCategory::class, $search))
                         ->searchable()
                         ->multiple()
                         ->getOptionLabelFromRecordUsing(fn ($record) => $record->nameWithParents)

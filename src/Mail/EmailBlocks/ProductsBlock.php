@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Mail\EmailBlocks;
 
 use Filament\Forms\Components\Select;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Forms\Components\Builder\Block;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
 
 class ProductsBlock extends EmailBlock
@@ -35,7 +35,7 @@ class ProductsBlock extends EmailBlock
                     ->multiple()
                     ->searchable()
                     ->getSearchResultsUsing(fn (string $search): array => Product::public()
-                        ->where('name', 'like', "%{$search}%")
+                        ->search($search)
                         ->limit(20)
                         ->pluck('name', 'id')
                         ->all())

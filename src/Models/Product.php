@@ -27,6 +27,7 @@ use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
+use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -281,6 +282,11 @@ class Product extends Model
 
     /**
      * Zoeken + relevance score, zonder "lekkende" ORs die je prijsfilters slopen.
+     *
+     * Het woord-voor-woord matchen zelf zit in TokenizedSearch, zodat elke plek
+     * in het CMS waar je producten zoekt hetzelfde doet. Hier staat alleen wat
+     * eigen is aan een product: de prijsfilters, de exacte streepjescode-match
+     * en het meezoeken in de productgroep.
      */
     public function scopeSearch($query, ?string $search = null)
     {
@@ -295,78 +301,15 @@ class Product extends Model
             $query->where('price', '<=', $maxPrice);
         }
 
-        if (! filled($search)) {
-            return $query;
-        }
+        $columns = TokenizedSearch::translatableColumns($this);
 
-        $needle = trim(mb_strtolower($search));
-
-        // Kolommen in de volgorde die jij belangrijk vindt
-        $columns = collect(self::getTranslatableAttributes())
-            ->reject(fn ($attr) => method_exists($this, $attr)) // sla relaties over
-            ->values()
-            ->all();
-
-        // Slim multi-term: elk woord moet ergens matchen (eigen velden of
-        // productgroep), ALLE woorden samen (AND). Zo vindt "15cm 4 kinderen" een
-        // product waarin die woorden los en in willekeurige volgorde voorkomen.
-        // Een exacte streepjescode/SKU-match op de volledige zoekterm blijft apart
-        // meetellen (barcode-scan is één waarde).
-        $terms = preg_split('/\s+/', $needle, -1, PREG_SPLIT_NO_EMPTY) ?: [$needle];
-
-        // Alles wat met search te maken heeft in 1 group (zodat min/max prijs netjes blijft werken)
-        $query->where(function ($group) use ($columns, $terms, $search) {
-
-            // Exacte streepjescode/SKU/artikelcode-match op de volledige zoekterm.
-            $group->where('sku', $search)
-                ->orWhere('ean', $search)
-                ->orWhere('article_code', $search);
-
-            // Of: elk woord matcht ergens (eigen velden of productgroep-velden).
-            $group->orWhere(function ($all) use ($columns, $terms) {
-                foreach ($terms as $term) {
-                    $all->where(function ($outer) use ($columns, $term) {
-                        // Eigen velden.
-                        $outer->where(function ($q) use ($columns, $term) {
-                            foreach ($columns as $i => $col) {
-                                $q->{$i === 0 ? 'whereRaw' : 'orWhereRaw'}("LOWER(`{$col}`) LIKE ?", ["%{$term}%"]);
-                            }
-                        });
-                        // Of productgroep-velden.
-                        $outer->orWhereHas('productGroup', function ($q) use ($columns, $term) {
-                            $q->where(function ($qq) use ($columns, $term) {
-                                foreach ($columns as $i => $col) {
-                                    $qq->{$i === 0 ? 'whereRaw' : 'orWhereRaw'}("LOWER(`{$col}`) LIKE ?", ["%{$term}%"]);
-                                }
-                            });
-                        });
-                    });
-                }
-            });
-        });
-
-        // Relevance score
-        $cases = [];
-        $bindings = [];
-
-        $topWeight = count($columns) + 10;
-
-        foreach (['sku', 'ean', 'article_code'] as $exactField) {
-            $cases[] = "CASE WHEN {$exactField} = ? THEN {$topWeight} ELSE 0 END";
-            $bindings[] = $search;
-        }
-
-        foreach ($columns as $idx => $col) {
-            $weight = count($columns) - $idx;
-            $cases[] = "CASE WHEN LOWER(`{$col}`) LIKE ? THEN {$weight} ELSE 0 END";
-            $bindings[] = "%{$needle}%";
-        }
-
-        $query->select($query->getQuery()->columns ?: ['*'])
-            ->selectRaw('('.implode(' + ', $cases).') as relevance', $bindings)
-            ->orderByDesc('relevance');
-
-        return $query;
+        return TokenizedSearch::apply(
+            $query,
+            $search,
+            $columns,
+            exactColumns: ['sku', 'ean', 'article_code'],
+            relations: ['productGroup' => $columns],
+        );
     }
 
     public function scopeSearchOld($query, ?string $search = null)
@@ -1800,10 +1743,7 @@ class Product extends Model
                 ->helperText(__('Kies een product om de voorraad van dit product mee te synchroniseren'))
                 ->searchable()
                 ->getSearchResultsUsing(function (string $query, $record) {
-                    return Product::where(function ($q) use ($query) {
-                        $q->where('name->nl', 'like', "%{$query}%")
-                            ->orWhere('name->en', 'like', "%{$query}%");
-                    })
+                    return Product::search($query)
                         ->when($record, fn ($q) => $q->where('id', '!=', $record->id))
                         ->whereNull('stock_source_product_id')
                         ->limit(50)

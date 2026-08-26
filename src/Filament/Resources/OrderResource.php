@@ -40,6 +40,7 @@ use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Livewire\Features\SupportFileUploads\WithFileUploads;
+use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
@@ -143,11 +144,7 @@ class OrderResource extends Resource
                     ->getSearchResultsUsing(function (string $search) {
                         $userModel = config('auth.providers.users.model', User::class);
 
-                        return $userModel::where(function ($q) use ($search) {
-                            $q->where('first_name', 'like', "%{$search}%")
-                                ->orWhere('last_name', 'like', "%{$search}%")
-                                ->orWhere('email', 'like', "%{$search}%");
-                        })
+                        return TokenizedSearch::apply($userModel::query(), $search, ['first_name', 'last_name', 'email'])
                             ->limit(50)
                             ->get()
                             ->mapWithKeys(fn ($u) => [
