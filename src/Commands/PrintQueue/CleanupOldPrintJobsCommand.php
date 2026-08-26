@@ -5,33 +5,23 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Commands\PrintQueue;
 
 use Illuminate\Console\Command;
-use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\PrintJob;
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 
+/**
+ * Verouderd: afdrukopdrachten staan aangemeld in het bewaartermijnenregister
+ * en worden nu opgeruimd door dashed:prune. Dit command blijft bestaan als
+ * alias, zodat een bestaande cronregel op een productieserver niet in één
+ * klap kapot gaat.
+ */
 class CleanupOldPrintJobsCommand extends Command
 {
     protected $signature = 'print-queue:cleanup-old-jobs';
 
-    protected $description = 'Verwijder oude done/cancelled en zeer oude failed PrintJobs';
+    protected $description = 'Verouderd. Gebruik dashed:prune. Verwijder oude done/cancelled en zeer oude failed PrintJobs';
 
     public function handle(): int
     {
-        $doneRetention = (int) Customsetting::get('print_queue.job_retention_days', null, '90');
-        $failedRetention = (int) Customsetting::get('print_queue.failed_job_retention_days', null, '365');
-
-        $deletedDone = PrintJob::query()
-            ->whereIn('status', [PrintJobStatus::Done->value, PrintJobStatus::Cancelled->value])
-            ->where('updated_at', '<', now()->subDays($doneRetention))
-            ->delete();
-
-        $deletedFailed = PrintJob::query()
-            ->where('status', PrintJobStatus::Failed->value)
-            ->where('failed_at', '<', now()->subDays($failedRetention))
-            ->delete();
-
-        $this->info("Deleted {$deletedDone} done/cancelled jobs and {$deletedFailed} ancient failed jobs.");
-
-        return self::SUCCESS;
+        return $this->call('dashed:prune', [
+            '--only' => 'print_jobs',
+        ]);
     }
 }

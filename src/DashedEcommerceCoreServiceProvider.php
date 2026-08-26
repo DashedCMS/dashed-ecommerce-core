@@ -10,13 +10,16 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Dashed\DashedCore\Classes\Locales;
 use Spatie\LaravelPackageTools\Package;
+use Dashed\DashedCore\Retention\Termijn;
 use Filament\Forms\Components\TextInput;
+use Dashed\DashedCore\Retention\Retention;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
 use Dashed\DashedEcommerceCore\Commands\ClearOldCarts;
 use Dashed\DashedEcommerceCore\Commands\PruneCartLogs;
@@ -2076,6 +2079,89 @@ MARKDOWN,
 
             $this->loadRoutesFrom(__DIR__ . '/../routes/mobile-api.php');
         }
+
+        self::registreerBewaartermijnen();
+    }
+
+    /**
+     * De logboeken van dashed-ecommerce-core aanmelden bij het bewaartermijnenregister.
+     *
+     * Statisch en apart van bootingPackage(), zodat een test hem opnieuw kan
+     * aanroepen na app(RetentionRegistry::class)->flush(). Deze __()-aanroepen
+     * mogen niet in registeringPackage() staan: die fase draait voordat de
+     * vertaalservice klaarstaat en zou de hele boot laten klappen.
+     */
+    public static function registreerBewaartermijnen(): void
+    {
+        cms()->registerRetention(
+            Retention::make('cart_logs')
+                ->label(__('Winkelwagenlogboek'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__cart_logs')
+                ->termijn(
+                    Termijn::make('cart_logs', 90, 'created_at')
+                        ->label(__('Winkelwagenlogboek bewaren (dagen)'))
+                        ->uitleg(__('Wat er in winkelwagens gebeurde. Standaard: 90 dagen.'))
+                )
+        );
+
+        cms()->registerRetention(
+            Retention::make('api_subscription_logs')
+                ->label(__('Aanmeldingen bij externe diensten'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__api_subscription_logs')
+                ->termijn(
+                    Termijn::make('api_subscription_logs', 90, 'created_at')
+                        ->label(__('Aanmeldlogboek bewaren (dagen)'))
+                        ->uitleg(__('Elke poging om een e-mailadres door te zetten naar een externe dienst, geslaagd of niet. Standaard: 90 dagen.'))
+                )
+        );
+
+        cms()->registerRetention(
+            Retention::make('ecommerce_action_logs')
+                ->label(__('Handelingenlogboek webshop'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__ecommerce_action_logs')
+                // Geen eigen opruimer, bewust: de generieke TabelOpruimer verwijdert
+                // rechtstreeks in de database. EcommerceActionLog::deleted herberekent
+                // add_to_cart_count en remove_from_cart_count op het gekoppelde product
+                // over de overgebleven regels. Zou die listener wel afgaan tijdens het
+                // opruimen, dan kelderen levenslange producttellers tot alleen wat binnen
+                // de bewaartermijn valt, en draaien er per verwijderde rij twee aggregaties
+                // over de hele tabel: tweehonderdduizend queries bij honderdduizend rijen.
+                ->termijn(
+                    Termijn::make('ecommerce_action_logs', 180, 'created_at')
+                        ->label(__('Handelingenlogboek bewaren (dagen)'))
+                        ->uitleg(__('Handelingen op producten, groepen en bestellingen. Standaard: 180 dagen.'))
+                )
+        );
+
+        cms()->registerRetention(
+            Retention::make('print_jobs')
+                ->label(__('Afdrukopdrachten'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__print_jobs')
+                ->termijn(
+                    // Gemeten vanaf updated_at, niet created_at: een opdracht
+                    // die lang in de wachtrij stond is pas afgerond op het
+                    // moment dat hij op done of cancelled kwam te staan.
+                    Termijn::make('print_jobs', 90, 'updated_at')
+                        ->label(__('Afgeronde afdrukopdrachten bewaren (dagen)'))
+                        ->uitleg(__('Afgeronde en geannuleerde opdrachten. Standaard: 90 dagen.'))
+                        ->instellingssleutel('print_queue.job_retention_days')
+                        ->filter(fn ($query) => $query->whereIn('status', [
+                            PrintJobStatus::Done->value,
+                            PrintJobStatus::Cancelled->value,
+                        ]))
+                )
+                ->termijn(
+                    Termijn::make('print_jobs_failed', 365, 'failed_at')
+                        ->label(__('Mislukte afdrukopdrachten bewaren (dagen)'))
+                        ->uitleg(__('Langer dan de afgeronde, want een mislukte opdracht wil je nog kunnen nakijken. Standaard: 365 dagen.'))
+                        ->instellingssleutel('print_queue.failed_job_retention_days')
+                        ->filter(fn ($query) => $query->where('status', PrintJobStatus::Failed->value))
+                )
+        );
     }
 
     public static function builderBlocks()
