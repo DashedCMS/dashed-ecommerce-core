@@ -20,6 +20,7 @@ use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -58,8 +59,9 @@ class ModifyOrder extends Page implements HasSchemas
                 'price' => (float) $orderProduct->price,
                 'discount' => (float) ($orderProduct->discount ?? 0),
                 'vat_rate' => (float) ($orderProduct->vat_rate ?? 21),
-                'product_extras' => $orderProduct->product_extras ?? [],
+                'product_extras' => self::extrasForForm($orderProduct->product_extras ?? []),
             ])->values()->all(),
+            'modify_in_place' => false,
             'send_customer_email' => true,
             'already_shipped' => false,
             'products_must_be_returned' => false,
@@ -152,6 +154,13 @@ class ModifyOrder extends Page implements HasSchemas
                                         ->all())
                                     ->getOptionLabelUsing(fn ($value) => Product::find($value)?->name)
                                     ->afterStateUpdated(function ($state, callable $set, Get $get) {
+                                        // De gekozen opties horen bij het oude product. Op een
+                                        // ander product betekenen ze niets meer, en hun toeslag
+                                        // zit niet in de nieuwe catalogusprijs die hieronder
+                                        // gezet wordt. Zonder dit blijven ze stilzwijgend aan de
+                                        // regel hangen en komen ze op de factuur terug.
+                                        $set('product_extras', []);
+
                                         $product = $state ? Product::find($state) : null;
                                         if ($product) {
                                             $set('name', $product->name);
@@ -215,10 +224,49 @@ class ModifyOrder extends Page implements HasSchemas
                                     ->required()
                                     ->default(21)
                                     ->suffix('%'),
-                                // Niet bewerkbaar in deze eerste versie; bestaat alleen om de
-                                // extras van een ongewijzigde regel de round-trip te laten
-                                // overleven (writeLines() herbouwt alle regels vanaf nul).
-                                Hidden::make('product_extras'),
+                                // De gekozen opties van deze regel. Niet toevoegbaar of
+                                // verwijderbaar: welke extra's een product heeft ligt bij het
+                                // product vast, hier verander je alleen wat er gekozen is.
+                                Repeater::make('product_extras')
+                                    ->label(__('Gekozen opties'))
+                                    ->addable(false)
+                                    ->deletable(false)
+                                    ->reorderable(false)
+                                    ->generateUuidUsing(false)
+                                    ->columnSpanFull()
+                                    ->columns(2)
+                                    ->visible(fn (Get $get) => filled($get('product_extras')))
+                                    ->schema([
+                                        // De canonieke staat van een ingang. De twee
+                                        // bewerkvelden hieronder schrijven hierin; welke van de
+                                        // twee zichtbaar is hangt af van de soort extra.
+                                        Hidden::make('name'),
+                                        Hidden::make('path'),
+                                        Hidden::make('price'),
+                                        // Een optie-extra: de id is de ProductExtraOption. De
+                                        // keuzelijst toont de zusteropties van dezelfde extra.
+                                        Select::make('id')
+                                            ->label(fn (Get $get) => $get('name') ?: __('Optie'))
+                                            ->options(fn (Get $get) => self::siblingOptions($get('id')))
+                                            ->selectablePlaceholder(false)
+                                            ->live()
+                                            ->visible(fn (Get $get) => is_numeric($get('id')))
+                                            ->afterStateUpdated(function ($state, $old, callable $set, Get $get) {
+                                                $this->applyExtraOptionChange($state, $old, $set, $get);
+                                            }),
+                                        // Een invulveld of tekstvak: de id is
+                                        // 'product-extra-<id>' en er valt niets te kiezen,
+                                        // alleen te herschrijven. Bij een geupload bestand
+                                        // staat de waarde vast: een ander bestand kiezen loopt
+                                        // via de uploadstroom van de winkel, niet hier.
+                                        // dehydrated() omdat een disabled veld anders uit de
+                                        // staat valt en de bestandsnaam kwijtraakt.
+                                        TextInput::make('value')
+                                            ->label(fn (Get $get) => $get('name') ?: __('Waarde'))
+                                            ->disabled(fn (Get $get) => filled($get('path')))
+                                            ->dehydrated()
+                                            ->visible(fn (Get $get) => ! is_numeric($get('id'))),
+                                    ]),
                                 // De korting die in de regelprijs verwerkt zit. Niet bewerkbaar:
                                 // de beheerder stelt de prijs vast, niet de opbouw daarvan. Wel
                                 // in de staat, omdat hij het subtotaal en de kortingsregel op de
@@ -233,22 +281,29 @@ class ModifyOrder extends Page implements HasSchemas
                     ->columnSpanFull(),
                 Section::make(__('Opties'))
                     ->schema([
+                        // Alleen op de vervangroute: haalt de order de gewone
+                        // in-plaats-route al, dan is er niets te kiezen.
+                        Toggle::make('modify_in_place')
+                            ->label(__('Deze bestelling zelf aanpassen'))
+                            ->helperText(__('Alleen mogelijk zolang het totaalbedrag, de producten en de aantallen gelijk blijven. Gebruik dit om een gekozen optie te corrigeren zonder vervangende bestelling en creditfactuur.'))
+                            ->live()
+                            ->visible(! $inPlace && $this->order->isModifiable() && ! $this->order->replaced_by_order_id),
                         Toggle::make('credit_old_order')
                             ->label(__('Creditfactuur maken voor de oude bestelling'))
                             ->helperText(__('Standaard aan wanneer de bestelling een echt factuurnummer heeft'))
-                            ->visible(! $inPlace),
+                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
                         Toggle::make('already_shipped')
                             ->label(__('De oude producten zijn al verzonden en komen niet terug'))
                             ->helperText(__('Hiermee blijft de voorraad van de oude regels afgeboekt'))
-                            ->visible(! $inPlace),
+                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
                         Toggle::make('deduct_new_stock')
                             ->label(__('Voorraad van de nieuwe bestelling afboeken'))
                             ->helperText(__('Zet dit uit bij een administratieve correctie waarbij er niets nieuws verzonden wordt'))
                             ->default(true)
-                            ->visible(! $inPlace),
+                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
                         Toggle::make('products_must_be_returned')
                             ->label(__('De producten moeten terugkomen van de klant'))
-                            ->visible(! $inPlace),
+                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
                         Select::make('old_order_fulfillment_status')
                             ->label(__('Status van de oude bestelling'))
                             ->helperText(__('De oude bestelling is vervangen en hoeft niet meer opgepakt te worden. De klant krijgt hiervan geen statusmail.'))
@@ -256,7 +311,7 @@ class ModifyOrder extends Page implements HasSchemas
                             ->default('handled')
                             ->selectablePlaceholder(false)
                             ->required()
-                            ->visible(! $inPlace),
+                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
                         Toggle::make('send_customer_email')
                             ->label(__('Klant een wijzigingsmail sturen')),
                         Textarea::make('customer_note')
@@ -266,6 +321,155 @@ class ModifyOrder extends Page implements HasSchemas
                     ->columnSpanFull(),
             ])
             ->statePath('data');
+    }
+
+    /**
+     * De opgeslagen extras zoals het formulier ze wil zien: elke ingang met de
+     * vijf sleutels die de winkelwagen ook wegschrijft, zodat de velden in de
+     * repeater altijd een staat vinden om op te staan.
+     *
+     * @param  array<int, array<string, mixed>>  $extras
+     * @return array<int, array<string, mixed>>
+     */
+    protected static function extrasForForm(array $extras): array
+    {
+        return collect($extras)
+            ->map(fn ($extra) => [
+                'id' => $extra['id'] ?? null,
+                'name' => $extra['name'] ?? '',
+                'value' => $extra['value'] ?? '',
+                'path' => $extra['path'] ?? '',
+                'price' => (float) ($extra['price'] ?? 0),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * De keuzelijst voor een optie-extra: alle opties van dezelfde ProductExtra
+     * als de nu gekozen optie, dus precies waar de klant uit had kunnen kiezen.
+     *
+     * withTrashed() op de huidige optie zodat een oude bestelling met een
+     * inmiddels verwijderde optie zijn keuzelijst nog kan opbouwen; de opties om
+     * naar over te stappen komen wel gewoon uit de levende set.
+     *
+     * @return array<int, string>
+     */
+    protected static function siblingOptions(mixed $optionId): array
+    {
+        if (! is_numeric($optionId)) {
+            return [];
+        }
+
+        $option = ProductExtraOption::withTrashed()->with('productExtra.productExtraOptions')->find($optionId);
+
+        if (! $option?->productExtra) {
+            return [];
+        }
+
+        $options = $option->productExtra->productExtraOptions
+            ->mapWithKeys(fn (ProductExtraOption $sibling) => [$sibling->id => $sibling->value])
+            ->all();
+
+        // De huidige keuze hoort er altijd in te staan, ook als hij intussen
+        // verwijderd is. Anders staat het veld leeg en lijkt er niets gekozen.
+        if (! array_key_exists($option->id, $options)) {
+            $options[$option->id] = $option->value;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Verwerkt het kiezen van een andere optie: de naam, de waarde en de
+     * stuksprijs van de ingang volgen de nieuwe optie, en het regeltotaal
+     * beweegt mee met het prijsverschil.
+     *
+     * De rekenregel is die van de winkelwagen (Product::getShoppingCartItemPrice,
+     * stap 8): de optieprijs telt per stuk, tenzij de optie
+     * calculate_only_1_quantity draagt, dan één keer voor de hele regel. De
+     * basisprijs van de ProductExtra zelf blijft buiten beschouwing: beide
+     * opties hangen aan dezelfde extra, dus die valt tegen elkaar weg.
+     */
+    protected function applyExtraOptionChange(mixed $state, mixed $old, callable $set, Get $get): void
+    {
+        $new = is_numeric($state) ? ProductExtraOption::withTrashed()->find($state) : null;
+
+        if (! $new) {
+            return;
+        }
+
+        $oldPrice = (float) ($get('price') ?? 0);
+        $newPrice = (float) $new->priceForUser();
+
+        $set('name', $new->productExtra?->name ?? $get('name'));
+        $set('value', $new->value);
+        $set('price', $newPrice);
+
+        $quantity = max(1, (int) ($get('../../quantity') ?? 1));
+        $times = $new->calculate_only_1_quantity ? 1 : $quantity;
+        $difference = round(($newPrice - $oldPrice) * $times, 2);
+
+        if (abs($difference) < 0.005) {
+            return;
+        }
+
+        $previousLinePrice = (float) ($get('../../price') ?? 0);
+        $newLinePrice = round($previousLinePrice + $difference, 2);
+
+        $set('../../price', $newLinePrice);
+
+        $discount = (float) ($get('../../discount') ?? 0);
+        if ($discount > 0 && $previousLinePrice > 0 && $newLinePrice > 0) {
+            $set('../../discount', round($discount * $newLinePrice / $previousLinePrice, 2));
+        }
+    }
+
+    /**
+     * De extras van een regel zoals ze weggeschreven worden.
+     *
+     * De formulierstaat is hier niet compleet en dat is opzet: per ingang is
+     * maar één bewerkveld zichtbaar, en Filament levert een verborgen veld niet
+     * mee in getState(). Bij een optie-ingang ontbreekt daardoor de waarde, bij
+     * een tekstingang de id. Wat er ontbreekt komt van de bronregel, en bij een
+     * optie-ingang worden naam, waarde en prijs sowieso opnieuw uit de gekozen
+     * optie gehaald: dan kan de opgeslagen JSON nooit iets anders beweren dan
+     * de optie die er echt gekozen is.
+     *
+     * @param  array<int, array<string, mixed>>  $formExtras
+     * @param  array<int, array<string, mixed>>  $sourceExtras
+     * @return array<int, array<string, mixed>>
+     */
+    protected static function extrasForWriting(array $formExtras, array $sourceExtras): array
+    {
+        $sourceExtras = array_values($sourceExtras);
+
+        return collect(array_values($formExtras))
+            ->map(function ($extra, $index) use ($sourceExtras) {
+                $entry = array_merge($sourceExtras[$index] ?? [], array_filter(
+                    $extra,
+                    fn ($value) => $value !== null,
+                ));
+
+                if (is_numeric($entry['id'] ?? null)) {
+                    $option = ProductExtraOption::withTrashed()->find($entry['id']);
+
+                    if ($option) {
+                        $entry['name'] = $option->productExtra?->name ?? ($entry['name'] ?? '');
+                        $entry['value'] = $option->value;
+                        $entry['price'] = (float) $option->priceForUser();
+                    }
+                }
+
+                return [
+                    'id' => $entry['id'] ?? null,
+                    'name' => $entry['name'] ?? '',
+                    'value' => $entry['value'] ?? '',
+                    'path' => $entry['path'] ?? '',
+                    'price' => (float) ($entry['price'] ?? 0),
+                ];
+            })
+            ->all();
     }
 
     /**
@@ -358,7 +562,14 @@ class ModifyOrder extends Page implements HasSchemas
     {
         $state = $this->modifyOrderForm->getState();
 
-        $inPlace = OrderModificationService::canModifyInPlace($this->order);
+        $inPlace = $this->willModifyInPlace($state);
+
+        // De beheerder vroeg om zelf-aanpassen maar de regels laten dat niet
+        // toe. Dat hoort hij te lezen vóór hij bevestigt, niet pas in de
+        // melding daarna.
+        $blockedSentence = (($state['modify_in_place'] ?? false) && ! $inPlace)
+            ? ' ' . __('Let op: zelf aanpassen kan hier niet, want het totaalbedrag, de producten of de aantallen veranderen. De wijziging wordt geweigerd.')
+            : '';
 
         // Via dezelfde methode als OrderTotalsCalculator::recalculate() straks
         // gebruikt, en over regels die net zo zijn samengesteld als writeLines()
@@ -423,9 +634,63 @@ class ModifyOrder extends Page implements HasSchemas
             ])
             . $discountSentence
             . $capSentence
+            . $blockedSentence
             . ' ' . $moneySentence
             . ' ' . $emailSentence
             . $oldStatusSentence;
+    }
+
+    /**
+     * De regels uit de formulierstaat in de vorm waarin ze weggeschreven worden.
+     *
+     * Zowel submit() als de bevestigingsmodal gaan hierlangs. Dat is geen
+     * netheid maar noodzaak: de modal beslist mee of de wijziging in plaats mag
+     * (canModifyInPlaceKeepingTotals leest product, aantal en de gekozen
+     * opties), en zou hij daarvoor een andere samenstelling gebruiken dan
+     * submit(), dan kan het scherm een route aankondigen die er niet komt.
+     *
+     * @param  array<string, mixed>  $state
+     * @return array<int, array<string, mixed>>
+     */
+    protected function linesFromState(array $state): array
+    {
+        $sourceLines = $this->order->orderProducts->keyBy('id');
+
+        return collect($state['lines'] ?? [])
+            ->map(fn (array $line) => [
+                'order_product_id' => $line['order_product_id'] ?? null,
+                'product_id' => $line['product_id'] ?? null,
+                'name' => $line['name'] ?? '',
+                'quantity' => (int) ($line['quantity'] ?? 1),
+                'price' => (float) ($line['price'] ?? 0),
+                // Meegeven en niet aan writeLines() overlaten: de formulierstaat
+                // is hier de bron, en die heeft de korting al met elke prijs- en
+                // aantalwijziging mee laten schalen.
+                'discount' => (float) ($line['discount'] ?? 0),
+                'vat_rate' => (float) ($line['vat_rate'] ?? 21),
+                'product_extras' => self::extrasForWriting(
+                    $line['product_extras'] ?? [],
+                    $sourceLines->get($line['order_product_id'] ?? null)?->product_extras ?? [],
+                ),
+            ])
+            ->all();
+    }
+
+    /**
+     * De route die deze wijziging werkelijk neemt: de automatische in-plaats-
+     * route, of de uitdrukkelijke keuze van de beheerder wanneer de wijziging
+     * financieel en qua voorraad niets verandert.
+     *
+     * @param  array<string, mixed>  $state
+     */
+    protected function willModifyInPlace(array $state): bool
+    {
+        if (OrderModificationService::canModifyInPlace($this->order)) {
+            return true;
+        }
+
+        return ($state['modify_in_place'] ?? false)
+            && OrderModificationService::canModifyInPlaceKeepingTotals($this->order, $this->linesFromState($state));
     }
 
     /**
@@ -474,21 +739,7 @@ class ModifyOrder extends Page implements HasSchemas
 
         $state = $this->modifyOrderForm->getState();
 
-        $lines = collect($state['lines'] ?? [])
-            ->map(fn (array $line) => [
-                'order_product_id' => $line['order_product_id'] ?? null,
-                'product_id' => $line['product_id'] ?? null,
-                'name' => $line['name'],
-                'quantity' => (int) $line['quantity'],
-                'price' => (float) $line['price'],
-                // Meegeven en niet aan writeLines() overlaten: de formulierstaat
-                // is hier de bron, en die heeft de korting al met elke prijs- en
-                // aantalwijziging mee laten schalen.
-                'discount' => (float) ($line['discount'] ?? 0),
-                'vat_rate' => (float) $line['vat_rate'],
-                'product_extras' => $line['product_extras'] ?? [],
-            ])
-            ->all();
+        $lines = $this->linesFromState($state);
 
         if (! count($lines)) {
             Notification::make()
@@ -510,6 +761,23 @@ class ModifyOrder extends Page implements HasSchemas
         ];
 
         if (OrderModificationService::canModifyInPlace($this->order)) {
+            OrderModificationService::applyInPlace($this->order, $lines, $options);
+            $target = $this->order;
+        } elseif ($state['modify_in_place'] ?? false) {
+            // De beheerder heeft uitdrukkelijk om zelf-aanpassen gevraagd. Kan
+            // dat niet, dan is stilzwijgend een vervangende bestelling met
+            // creditfactuur maken het verkeerde antwoord: dat is precies wat
+            // hij niet wilde. Dus weigeren en zeggen waarom.
+            if (! OrderModificationService::canModifyInPlaceKeepingTotals($this->order, $lines)) {
+                Notification::make()
+                    ->title(__('Deze bestelling kan niet zelf aangepast worden'))
+                    ->body(__('Zelf aanpassen kan alleen zolang het totaalbedrag, de producten en de aantallen gelijk blijven. Pas de regels aan, of zet de schakelaar uit om een vervangende bestelling te maken.'))
+                    ->danger()
+                    ->send();
+
+                return;
+            }
+
             OrderModificationService::applyInPlace($this->order, $lines, $options);
             $target = $this->order;
         } else {

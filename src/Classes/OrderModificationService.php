@@ -37,9 +37,119 @@ class OrderModificationService
             && ! $order->orderPayments()->where('status', 'paid')->exists();
     }
 
+    /**
+     * De tweede in-plaats-route: een bestelling die de gewone route niet haalt
+     * (betaald, of met een echte factuur) mag toch zichzelf aanpassen zolang de
+     * wijziging geen financiële en geen voorraadgevolgen heeft. Het geval
+     * waarvoor dit bestaat is een gekozen productoptie corrigeren: de klant
+     * krijgt een andere kleur, het bedrag blijft hetzelfde, en een vervangende
+     * bestelling met creditfactuur zou daar volstrekt buiten verhouding staan.
+     *
+     * Drie eisen, en de derde is de minst vanzelfsprekende.
+     *
+     * 1. Het nieuwe totaal is gelijk aan het huidige, uitgerekend met dezelfde
+     *    methode die het scherm in de bevestiging toont en die recalculate()
+     *    straks gebruikt.
+     * 2. Per regel blijven het product en het aantal gelijk, en er komt geen
+     *    regel bij of af. Een gelijk totaal zegt namelijk niets over voorraad:
+     *    product A inruilen voor een even duur product B laat de afgeboekte
+     *    voorraad stil verkeerd achter, want applyInPlace() boekt niets af of
+     *    terug. Bij een betaalde order is die voorraad al van de plank.
+     * 3. De uitkomst van resolveSkipStock() blijft per regel gelijk. Een optie
+     *    kan skip_stock dragen, en die vlag bepaalt of de regel überhaupt
+     *    meetelde bij het afboeken. Slaat hij om, dan klopt de voorraad na de
+     *    wijziging niet meer met wat er ooit is afgeboekt, ook al verandert er
+     *    geen cent.
+     *
+     * @param  array<int, array<string, mixed>>  $lines
+     */
+    public static function canModifyInPlaceKeepingTotals(Order $order, array $lines): bool
+    {
+        if (! $order->isModifiable() || $order->replaced_by_order_id) {
+            return false;
+        }
+
+        // Een bestelling zonder regels is geen ongewijzigde bestelling maar een
+        // lege: nul regels tegen nul regels komt op een gelijk totaal uit en zou
+        // anders door deze guard glippen.
+        if (! $lines) {
+            return false;
+        }
+
+        $sources = $order->orderProducts()->get();
+
+        if ($sources->count() !== count($lines)) {
+            return false;
+        }
+
+        $usedSourceIds = [];
+
+        foreach ($lines as $line) {
+            $sourceId = $line['order_product_id'] ?? null;
+            $source = $sourceId ? $sources->firstWhere('id', $sourceId) : null;
+
+            // Elke bronregel mag precies één keer voorkomen. Zonder deze check
+            // zou twee keer dezelfde regel plus een verdwenen regel op een
+            // gelijk aantal uitkomen terwijl de bestelling wel degelijk anders
+            // wordt.
+            if (! $source || in_array($source->id, $usedSourceIds, true)) {
+                return false;
+            }
+
+            $usedSourceIds[] = $source->id;
+
+            if ((int) ($line['product_id'] ?? 0) !== (int) ($source->product_id ?? 0)) {
+                return false;
+            }
+
+            if ((int) ($line['quantity'] ?? 0) !== (int) $source->quantity) {
+                return false;
+            }
+
+            if (self::skipStockForLine($line) !== (bool) $source->skip_stock) {
+                return false;
+            }
+        }
+
+        $total = OrderTotalsCalculator::breakdownForLines($order, self::linesWithDiscount($order, $lines, $sources))['total'];
+
+        return abs($total - (float) $order->total) < 0.005;
+    }
+
+    /**
+     * Of de gekozen opties op deze regel de voorraad met rust laten, bepaald met
+     * exact dezelfde regel als OrderProduct::creating straks toepast. Het model
+     * wordt hier alleen gevuld, nooit opgeslagen.
+     *
+     * @param  array<string, mixed>  $line
+     */
+    protected static function skipStockForLine(array $line): bool
+    {
+        return (new OrderProduct(['product_extras' => $line['product_extras'] ?? []]))->resolveSkipStock();
+    }
+
+    /**
+     * De regels met hun korting erbij, zoals writeLines() ze straks wegschrijft.
+     * Nodig omdat breakdownForLines() de regelkorting meeneemt in het subtotaal.
+     *
+     * @param  array<int, array<string, mixed>>  $lines
+     * @return array<int, array{price: float, discount: float}>
+     */
+    protected static function linesWithDiscount(Order $order, array $lines, $sources): array
+    {
+        $byId = $sources->keyBy('id');
+
+        return collect($lines)
+            ->map(fn (array $line) => [
+                'price' => (float) ($line['price'] ?? 0),
+                'discount' => self::discountForLine($line, $byId->get($line['order_product_id'] ?? null)),
+            ])
+            ->all();
+    }
+
     public static function applyInPlace(Order $order, array $lines, array $options = []): Order
     {
-        if (! self::canModifyInPlace($order)) {
+        if (! self::canModifyInPlace($order) && ! self::canModifyInPlaceKeepingTotals($order, $lines)) {
             throw new \LogicException('Deze bestelling kan niet in plaats aangepast worden.');
         }
 
