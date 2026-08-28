@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Support;
 
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
@@ -62,15 +63,18 @@ class MobileOrderActions
                     ['name' => 'delivery_company', 'label' => 'Vervoersbedrijf', 'type' => 'text', 'required' => false],
                     ['name' => 'code', 'label' => 'Track & trace code', 'type' => 'text', 'required' => true],
                     ['name' => 'link', 'label' => 'Link', 'type' => 'text', 'required' => false],
+                    ['name' => 'mail_customer', 'label' => 'Klant mailen over deze track & trace', 'type' => 'checkbox', 'default' => fn (Order $o) => (bool) Customsetting::get('track_and_trace_mail_enabled', null, '1', $o->locale)],
                 ],
                 'visible' => fn (Order $o) => true,
                 'handle' => function (Order $o, array $data): void {
-                    $o->trackAndTraces()->create([
+                    $trackAndTrace = $o->trackAndTraces()->make([
                         'supplier' => 'Handmatig',
                         'delivery_company' => $data['delivery_company'] ?? null,
                         'code' => $data['code'] ?? '',
                         'url' => $data['link'] ?? null,
                     ]);
+                    $trackAndTrace->mailCustomer = array_key_exists('mail_customer', $data) ? (bool) $data['mail_customer'] : null;
+                    $trackAndTrace->save();
                     OrderLog::createLog(orderId: $o->id, tag: 'order.track-and-trace-added', note: 'Track & trace toegevoegd via de app.');
                 },
             ],

@@ -1731,16 +1731,23 @@ class Order extends Model
         return $this->discount - $this->discountTax;
     }
 
-    public function addTrackAndTrace(?string $supplier = null, ?string $deliveryCompany = null, ?string $code = null, ?string $url = null, ?string $expectedDeliveryDate = null): void
+    /**
+     * $mailCustomer laat de aanroeper de track & trace-mail forceren of
+     * onderdrukken. Null (de integraties die een label aanmaken) laat de
+     * instelling track_and_trace_mail_enabled beslissen.
+     */
+    public function addTrackAndTrace(?string $supplier = null, ?string $deliveryCompany = null, ?string $code = null, ?string $url = null, ?string $expectedDeliveryDate = null, ?bool $mailCustomer = null): void
     {
         if (! $this->trackAndTraces()->where('supplier', $supplier)->where('delivery_company', $deliveryCompany)->where('code', $code)->exists()) {
-            $this->trackAndTraces()->create([
+            $trackAndTrace = $this->trackAndTraces()->make([
                 'supplier' => $supplier,
                 'delivery_company' => $deliveryCompany,
                 'code' => $code,
                 'url' => $url,
                 'expected_delivery_date' => $expectedDeliveryDate,
             ]);
+            $trackAndTrace->mailCustomer = $mailCustomer;
+            $trackAndTrace->save();
         }
     }
 

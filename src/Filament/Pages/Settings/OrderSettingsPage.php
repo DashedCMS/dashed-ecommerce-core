@@ -103,6 +103,8 @@ class OrderSettingsPage extends Page
         $formData["invoice_printer_connector_descriptor"] = Customsetting::get('invoice_printer_connector_descriptor', null, '');
 
         foreach ($locales as $locale) {
+            $formData["track_and_trace_mail_enabled_{$locale['id']}"] = (bool) Customsetting::get('track_and_trace_mail_enabled', null, '1', $locale['id']);
+
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 $formData["fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}"] = Customsetting::get('fulfillment_status_' . $fulfillmentStatus . '_enabled', null, false, $locale['id']) ? true : false;
             }
@@ -302,6 +304,17 @@ class OrderSettingsPage extends Page
                     ->helperText(__('Vink hieronder aan welke fulfillment-status wijzigingen een mail naar de klant triggeren. De onderwerp- en inhoud-velden beheer je per status via de E-mail templates.')),
             ];
 
+            $newSchema = array_merge($newSchema, [
+                Toggle::make("track_and_trace_mail_enabled_{$locale['id']}")
+                    ->label(__('Mail klant bij een nieuwe track & trace'))
+                    ->helperText(__('Staat dit uit, dan krijgt de klant geen aparte mail zodra er een verzendlabel wordt aangemaakt. De trackingcode zit ook in de fulfillment-statusmails hieronder, dus zet bijvoorbeeld "Ingepakt" aan om de klant op dat moment te informeren. Voeg je zelf een track & trace toe, dan kies je per keer of de klant een mail krijgt.'))
+                    ->reactive()
+                    ->columnSpan([
+                        'default' => 1,
+                        'lg' => 2,
+                    ]),
+            ]);
+
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 $newSchema = array_merge($newSchema, [
                     Toggle::make("fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}")
@@ -434,6 +447,8 @@ class OrderSettingsPage extends Page
         Customsetting::set('order_flow_max_sends_per_run', (int) ($this->form->getState()['order_flow_max_sends_per_run'] ?? 0));
 
         foreach ($locales as $locale) {
+            Customsetting::set('track_and_trace_mail_enabled', (bool) ($this->form->getState()["track_and_trace_mail_enabled_{$locale['id']}"] ?? true), null, $locale['id']);
+
             foreach (Orders::getFulfillmentStatusses() as $fulfillmentStatus => $name) {
                 Customsetting::set('fulfillment_status_' . $fulfillmentStatus . '_enabled', $this->form->getState()["fulfillment_status_{$fulfillmentStatus}_enabled_{$locale['id']}"], null, $locale['id']);
             }
