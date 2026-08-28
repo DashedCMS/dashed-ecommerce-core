@@ -14,7 +14,9 @@ beforeEach(function () {
 
 class TestOrderMail extends Mailable
 {
-    public function __construct(public Order $order) {}
+    public function __construct(public Order $order)
+    {
+    }
 
     public function build()
     {
@@ -24,7 +26,9 @@ class TestOrderMail extends Mailable
 
 class TestReturnMail extends Mailable
 {
-    public function __construct(public OrderReturn $orderReturn) {}
+    public function __construct(public OrderReturn $orderReturn)
+    {
+    }
 
     public function build()
     {

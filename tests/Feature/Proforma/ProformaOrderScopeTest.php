@@ -1,4 +1,5 @@
 <?php
+
 // tests/Feature/Proforma/ProformaOrderScopeTest.php
 
 use Dashed\DashedEcommerceCore\Models\Order;

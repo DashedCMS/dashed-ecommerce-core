@@ -5,8 +5,8 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 use Illuminate\Support\Str;
 use Dashed\DashedAi\Facades\Ai;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductFinder;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductFinder;
 use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
 
 function rankProduct(string $name, float $price = 10.0): Product
@@ -32,7 +32,9 @@ function rankFinder(int $resultCount = 2): ProductFinder
 }
 
 it('rankt de door de AI gekozen producten met redenen, gecapt op result_count', function () {
-    $a = rankProduct('Alpha'); $b = rankProduct('Beta'); $c = rankProduct('Gamma');
+    $a = rankProduct('Alpha');
+    $b = rankProduct('Beta');
+    $c = rankProduct('Gamma');
     $candidates = collect([$a, $b, $c]);
 
     Ai::shouldReceive('hasProvider')->andReturn(true);
@@ -65,7 +67,9 @@ it('filtert onbekende ids uit de AI-output', function () {
 });
 
 it('valt terug op de eerste N kandidaten als de AI null/leeg teruggeeft', function () {
-    $a = rankProduct('Alpha'); $b = rankProduct('Beta'); $c = rankProduct('Gamma');
+    $a = rankProduct('Alpha');
+    $b = rankProduct('Beta');
+    $c = rankProduct('Gamma');
     Ai::shouldReceive('hasProvider')->andReturn(true);
     Ai::shouldReceive('json')->once()->andReturn(null);
 
@@ -92,7 +96,8 @@ it('geeft een lege lijst zonder kandidaten', function () {
 });
 
 it('valt terug bij niet-array rijen in de AI-output (geen crash)', function () {
-    $a = rankProduct('Alpha'); $b = rankProduct('Beta');
+    $a = rankProduct('Alpha');
+    $b = rankProduct('Beta');
     Ai::shouldReceive('hasProvider')->andReturn(true);
     Ai::shouldReceive('json')->once()->andReturn(['results' => ['Alpha', 'Beta']]); // scalars, ongeldig
 

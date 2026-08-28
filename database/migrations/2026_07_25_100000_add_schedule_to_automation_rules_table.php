@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
@@ -14,6 +15,7 @@ return new class () extends Migration {
             $table->json('schedule')->nullable()->after('actions');
         });
     }
+
     public function down(): void
     {
         if (! Schema::hasColumn('dashed__automation_rules', 'schedule')) {

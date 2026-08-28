@@ -1,9 +1,10 @@
 <?php
+
 // database/migrations/2026_06_29_120000_add_proforma_fields_to_orders.php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
 
 return new class () extends Migration {
     public function up(): void

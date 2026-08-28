@@ -7,11 +7,11 @@ namespace Dashed\DashedEcommerceCore\Support\Automation;
 use Throwable;
 use Illuminate\Cache\NoLock;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Contracts\Cache\Lock as CacheLock;
 use Dashed\DashedMobileApi\MobileApiRegistry;
+use Illuminate\Contracts\Cache\Lock as CacheLock;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
 
@@ -238,6 +238,7 @@ class AutomationEngine
             } catch (Throwable $e) {
                 $results[] = ['key' => $key, 'ok' => false, 'message' => $e->getMessage()];
                 $error = $e->getMessage();
+
                 break;
             }
         }

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
-use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;
-use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Jobs\RunAutomationRuleJob;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Support\Automation\AutomationEngine;
@@ -146,7 +146,8 @@ it('runs the actions of a matched rule in order', function () {
 
 it('stops at the first failing action and logs status failed with the results up to that point', function () {
     $neverCalled = false;
-    registerSpyAction('spy_ok', function () {});
+    registerSpyAction('spy_ok', function () {
+    });
     registerSpyAction('spy_fail', function () {
         throw new RuntimeException('kapot');
     });
@@ -509,8 +510,10 @@ it('MINOR: preserves the results already collected when something escapes runAct
     };
     app()->instance(MobileApiRegistry::class, $registry);
 
-    registerSpyAction('ok_action', function () {});
-    registerSpyAction('boom_action', function () {});
+    registerSpyAction('ok_action', function () {
+    });
+    registerSpyAction('boom_action', function () {
+    });
 
     $order = makeAutomationOrder();
     $rule = makeAutomationRule(['actions' => [['key' => 'ok_action'], ['key' => 'boom_action']]]);

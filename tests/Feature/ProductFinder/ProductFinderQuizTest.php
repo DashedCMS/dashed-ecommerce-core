@@ -1,16 +1,16 @@
 <?php
 
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Models\User;
-use Dashed\DashedEcommerceCore\Classes\CartHelper;
-use Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder\ProductFinderQuiz;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductFinder;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Illuminate\Support\Str;
+use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Classes\CartHelper;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductFinder;
+use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder\ProductFinderQuiz;
 
 uses(RefreshDatabase::class);
 
@@ -65,9 +65,10 @@ beforeEach(function () {
     // quiz-flow getest wordt zonder AI.
     $this->fakeResults = [];
     app()->bind(ProductFinderMatcher::class, function () {
-        return new class($this->fakeResults) extends ProductFinderMatcher
-        {
-            public function __construct(private array $results) {}
+        return new class ($this->fakeResults) extends ProductFinderMatcher {
+            public function __construct(private array $results)
+            {
+            }
 
             public function match(ProductFinder $finder, array $answers): array
             {

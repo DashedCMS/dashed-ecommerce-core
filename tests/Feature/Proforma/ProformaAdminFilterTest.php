@@ -62,8 +62,10 @@ it('default status filter would exclude concept proformas (confirming the overri
 
 function makeLivewireStub(bool $proformaActive): object
 {
-    return new class($proformaActive) {
-        public function __construct(private bool $active) {}
+    return new class ($proformaActive) {
+        public function __construct(private bool $active)
+        {
+        }
 
         public function getTableFilterState(string $name): ?array
         {

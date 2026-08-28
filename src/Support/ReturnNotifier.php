@@ -50,6 +50,7 @@ class ReturnNotifier
         if (! class_exists(self::CENTER)) {
             return;
         }
+
         try {
             app(self::CENTER)->push()
                 ->type($type)

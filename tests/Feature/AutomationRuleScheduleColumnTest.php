@@ -1,4 +1,5 @@
 <?php
+
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 
 it('slaat een schedule-array op en leest die terug als array', function () {
