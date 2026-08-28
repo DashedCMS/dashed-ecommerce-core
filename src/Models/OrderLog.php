@@ -3,17 +3,15 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Dashed\DashedCore\Models\User;
-use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class OrderLog extends Model
 {
     use SoftDeletes;
-    use LogsActivity;
 
-    protected static $logFillable = true;
+    // Bewust geen LogsActivity: dit is zelf een logboek, en elke regel hier nog
+    // eens in het activiteitenlogboek zetten leverde alleen een tweede kopie op.
 
     protected $table = 'dashed__order_logs';
 
@@ -167,11 +165,6 @@ class OrderLog extends Model
         }
 
         return ($this->user ? $this->user->name : ($this->is_system ? 'Systeem' : $this->order->name)) . ' ' . $string;
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults();
     }
 
     public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false): void

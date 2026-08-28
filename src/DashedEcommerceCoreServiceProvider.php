@@ -121,6 +121,16 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // De proforma-checkout-view van dit package gebruikt <x-checkout-master>. Dat component is
+        // projectspecifiek (clean checkout-layout) en ontbrak op de meeste sites, waardoor
+        // `php artisan view:cache` bij elke deploy afbrak met "Unable to locate a class or view for
+        // component [checkout-master]". Deze fallback-map zorgt dat het component altijd resolvet.
+        // Blade doorzoekt resources/views/components van het project eerst, dus een eigen
+        // checkout-master.blade.php overschrijft deze default nog steeds.
+        \Illuminate\Support\Facades\Blade::anonymousComponentPath(
+            __DIR__ . '/../resources/views/component-fallbacks'
+        );
+
         // Elke verzonden order-mail (klant of beheerder, ongeacht CMS/app/command/job)
         // wordt via deze listener bij de order gelogd. De order wordt afgeleid uit de
         // publieke mailable-properties (order/orderReturn/trackAndTrace).
