@@ -23,6 +23,11 @@ class ProductExtraOption extends Model
         'value',
         'price',
         'calculate_only_1_quantity',
+        'skip_stock',
+    ];
+
+    protected $casts = [
+        'skip_stock' => 'boolean',
     ];
 
     public $translatable = [

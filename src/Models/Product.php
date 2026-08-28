@@ -27,7 +27,6 @@ use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
-use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -37,6 +36,7 @@ use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Events\Products\ProductSavedEvent;
@@ -574,6 +574,7 @@ class Product extends Model
 
             $reservedStock = (int) OrderProduct::whereIn('product_id', $groupProductIds)
                 ->whereIn('order_id', $pendingOrderIds)
+                ->where('skip_stock', 0)
                 ->sum('quantity');
 
             foreach ($syncGroup as $groupProduct) {
@@ -581,8 +582,10 @@ class Product extends Model
                 $groupProduct->saveQuietly();
             }
         } else {
+            // Een regel die de voorraad niet afboekt, reserveert hem ook niet.
             $this->reserved_stock = (int) OrderProduct::where('product_id', $this->id)
                 ->whereIn('order_id', $pendingOrderIds)
+                ->where('skip_stock', 0)
                 ->sum('quantity');
 
             $this->saveQuietly();

@@ -222,6 +222,9 @@ class ProductExtra extends Model
                     mediaHelper()->field('image', 'Afbeelding'),
                     Toggle::make('calculate_only_1_quantity')
                         ->label(__('Deze extra maar 1x meetellen, ook al worden er meerdere van het product gekocht')),
+                    Toggle::make('skip_stock')
+                        ->label(__('Voorraad niet aanpassen als deze optie gekozen wordt'))
+                        ->helperText(__('De voorraad van het product wordt niet afgeboekt bij een bestelling en niet teruggeboekt bij een annulering of retour. Het aantal verkopen blijft wel gewoon meetellen, en het product blijft onbestelbaar als het op is.')),
                 ])
                 ->columnSpan(2),
         ];

@@ -818,19 +818,21 @@ class Order extends Model
     {
         foreach ($this->orderProducts as $orderProduct) {
             if ($orderProduct->product) {
-                if ($orderProduct->product->use_stock) {
+                // Een gekozen productoptie kan de voorraad met rust laten; de
+                // verkoopteller loopt dan wel gewoon door.
+                if ($orderProduct->product->use_stock && ! $orderProduct->skip_stock) {
                     $orderProduct->product->stock = $orderProduct->product->stock - $orderProduct->quantity;
                 }
                 $orderProduct->product->purchases = $orderProduct->product->purchases + $orderProduct->quantity;
                 $orderProduct->product->save();
-                if ($orderProduct->product->parent && $orderProduct->product->parent->use_parent_stock) {
+                if (! $orderProduct->skip_stock && $orderProduct->product->parent && $orderProduct->product->parent->use_parent_stock) {
                     if ($orderProduct->product->parent->use_stock) {
                         $orderProduct->product->parent->stock = $orderProduct->product->parent->stock - $orderProduct->quantity;
                     }
                     $orderProduct->product->parent->save();
                 }
 
-                if ($orderProduct->product->stockSyncGroup()) {
+                if (! $orderProduct->skip_stock && $orderProduct->product->stockSyncGroup()) {
                     SyncProductStockJob::dispatch($orderProduct->product)->onQueue('ecommerce');
                 }
             }
@@ -870,7 +872,7 @@ class Order extends Model
     {
         foreach ($this->orderProducts as $orderProduct) {
             if ($orderProduct->product) {
-                if ($orderProduct->product->use_stock) {
+                if ($orderProduct->product->use_stock && ! $orderProduct->skip_stock) {
                     if ($orderProduct->quantity < 0) {
                         $orderProduct->product->stock = $orderProduct->product->stock - $orderProduct->quantity;
                     } else {
@@ -885,7 +887,7 @@ class Order extends Model
                     }
                 }
                 $orderProduct->product->save();
-                if ($orderProduct->product->parent && $orderProduct->product->parent->use_parent_stock) {
+                if (! $orderProduct->skip_stock && $orderProduct->product->parent && $orderProduct->product->parent->use_parent_stock) {
                     if ($orderProduct->product->parent->use_stock) {
                         if ($orderProduct->product->quantity < 0) {
                             $orderProduct->product->parent->stock = $orderProduct->product->parent->stock - $orderProduct->quantity;
@@ -896,7 +898,7 @@ class Order extends Model
                     }
                 }
 
-                if ($orderProduct->product->stockSyncGroup()) {
+                if (! $orderProduct->skip_stock && $orderProduct->product->stockSyncGroup()) {
                     SyncProductStockJob::dispatch($orderProduct->product)->onQueue('ecommerce');
                 }
             }
@@ -1016,6 +1018,12 @@ class Order extends Model
     {
         $product = $orderProduct->product;
         if (! $product) {
+            return;
+        }
+
+        // Spiegelt deductStock(): boekte deze regel nooit af, dan boekt hij
+        // ook niets terug.
+        if ($orderProduct->skip_stock) {
             return;
         }
 

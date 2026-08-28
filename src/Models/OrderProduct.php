@@ -39,6 +39,7 @@ class OrderProduct extends Model
         'product_extras' => 'array',
         'hidden_options' => 'array',
         'returned_quantity' => 'integer',
+        'skip_stock' => 'boolean',
     ];
 
     public function scopeSearch($query, ?string $search)
@@ -55,6 +56,8 @@ class OrderProduct extends Model
         parent::boot();
 
         static::creating(function ($orderProduct) {
+            $orderProduct->skip_stock = $orderProduct->resolveSkipStock();
+
             if ($orderProduct->product) {
                 $orderProduct->vat_rate = $orderProduct->product->vat_rate;
                 $orderProduct->btw = $orderProduct->price / (100 + ($orderProduct->vat_rate ?? 21)) * ($orderProduct->vat_rate ?? 21);
@@ -79,6 +82,39 @@ class OrderProduct extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
+    }
+
+    /**
+     * Laat minstens een van de gekozen productopties de voorraad met rust?
+     *
+     * Bewust een momentopname bij het aanmaken van de regel, geen live lookup:
+     * afboeken en terugboeken moeten hetzelfde zeggen. Wordt de vlag op de
+     * optie later omgezet, dan zou een live lookup bij annuleren voorraad
+     * terugboeken die er nooit af is gegaan.
+     */
+    public function resolveSkipStock(): bool
+    {
+        $productExtras = $this->product_extras;
+
+        if (! is_array($productExtras) || ! $productExtras) {
+            return false;
+        }
+
+        // Extras zonder opties (invulveld, upload) staan in de JSON met een
+        // id als 'product-extra-12' en hebben dus geen optie om op te zoeken.
+        $optionIds = collect($productExtras)
+            ->pluck('id')
+            ->filter(fn ($id) => is_numeric($id))
+            ->all();
+
+        if (! $optionIds) {
+            return false;
+        }
+
+        return ProductExtraOption::withTrashed()
+            ->whereIn('id', $optionIds)
+            ->where('skip_stock', 1)
+            ->exists();
     }
 
     public function product()

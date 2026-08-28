@@ -1,8 +1,8 @@
 <?php
 
+use Illuminate\Http\UploadedFile;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedFiles\Classes\MediaHelper;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -25,8 +25,7 @@ function bindFakeMediaHelper(): void
     // dispatch (de side-effect die we wíllen) gebeurt zonder die SQL op SQLite.
     Queue::fake();
 
-    $fake = new class extends MediaHelper
-    {
+    $fake = new class () extends MediaHelper {
         public int $nextId = 9000;
 
         public function __construct()
