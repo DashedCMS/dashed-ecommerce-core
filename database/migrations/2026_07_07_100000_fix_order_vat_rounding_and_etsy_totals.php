@@ -1,10 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Twee losse data-correcties die samen de BTW-uitsplitsing in de
      * verzamelfactuur/BTW-export laten kloppen (ex-btw × tarief == btw):

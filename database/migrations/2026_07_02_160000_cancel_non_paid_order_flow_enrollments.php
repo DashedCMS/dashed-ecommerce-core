@@ -3,8 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Dashed\DashedEcommerceCore\Models\OrderFlowEnrollment;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * Ruim bestaande inschrijvingen op die nooit in de opvolg-flow hadden mogen
      * zitten: proforma-/retour-facturen en niet-betaalde orders. Die zijn er

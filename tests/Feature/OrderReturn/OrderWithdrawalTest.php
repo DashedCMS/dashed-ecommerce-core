@@ -4,11 +4,11 @@ use Livewire\Livewire;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
-use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 
 it('finds an order and shows the confirm step', function () {
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-1001']);

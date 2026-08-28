@@ -12,8 +12,7 @@ use Illuminate\Database\Migrations\Migration;
  * de getelde kas, de verwachte kas, het verschil en een snapshot van de
  * omzet per betaalmethode.
  */
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         if (Schema::hasTable('dashed__pos_register_sessions')) {

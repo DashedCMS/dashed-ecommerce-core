@@ -4,9 +4,9 @@ use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Event;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 /**

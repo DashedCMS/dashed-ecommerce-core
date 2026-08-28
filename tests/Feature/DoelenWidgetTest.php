@@ -1,7 +1,7 @@
 <?php
 
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget;
 
 function makeDoelenPaidOrder(float $total): Order

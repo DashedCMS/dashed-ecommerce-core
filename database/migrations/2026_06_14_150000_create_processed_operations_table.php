@@ -13,8 +13,7 @@ use Illuminate\Database\Migrations\Migration;
  * op_id en passen we de mutatie NIET nog eens toe (voorkomt dubbel inboeken),
  * maar geven we het eerder bewaarde resultaat terug.
  */
-return new class extends Migration
-{
+return new class () extends Migration {
     public function up(): void
     {
         if (Schema::hasTable('dashed__processed_operations')) {

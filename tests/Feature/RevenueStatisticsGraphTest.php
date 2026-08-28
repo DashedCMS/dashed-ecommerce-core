@@ -1,11 +1,11 @@
 <?php
 
 use App\Models\User;
+use Livewire\Livewire;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Livewire\Livewire;
 
 function makeGraphOrder(string $createdAt, float $total): Order
 {

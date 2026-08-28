@@ -7,8 +7,8 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 use Symfony\Component\Mailer\Exception\TransportException;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 
 function mailFailureProduct(): Product
 {

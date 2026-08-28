@@ -5,9 +5,9 @@ namespace Dashed\DashedEcommerceCore\Mail\EmailBlocks;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Builder\Block;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
-use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 
 class DiscountCodeBlock extends EmailBlock
 {

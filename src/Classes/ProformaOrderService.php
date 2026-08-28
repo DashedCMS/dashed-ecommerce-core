@@ -6,7 +6,6 @@ use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Mail\ProformaCheckoutMail;

@@ -2,10 +2,9 @@
 
 // tests/Feature/Proforma/PosProformaActionTest.php
 
-use Illuminate\Support\Facades\Mail;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Mail\ProformaCheckoutMail;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;

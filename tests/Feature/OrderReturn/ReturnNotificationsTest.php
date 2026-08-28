@@ -3,9 +3,9 @@
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
-use Dashed\DashedMobileApi\Support\NotificationCenter;
 use Dashed\DashedMobileApi\Support\PushNotification;
 use Dashed\DashedEcommerceCore\Support\ReturnNotifier;
+use Dashed\DashedMobileApi\Support\NotificationCenter;
 
 /** Spy die de opgebouwde push vastlegt zonder Expo te raken. */
 class ReturnPushSpy extends PushNotification

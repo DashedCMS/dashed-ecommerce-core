@@ -1,10 +1,9 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Migrations\Migration;
 
-return new class extends Migration
-{
+return new class () extends Migration {
     /**
      * POS-orders kregen de verzend-BTW niet in het header-btw-veld:
      * calculatePosCartTotals() berekent 'vat' enkel over de productregels,

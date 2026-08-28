@@ -5,8 +5,8 @@ use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedMobileApi\Support\PushNotification;
-use Dashed\DashedEcommerceCore\Support\MobileOrderActions;
 use Dashed\DashedMobileApi\Support\NotificationCenter;
+use Dashed\DashedEcommerceCore\Support\MobileOrderActions;
 
 /** Spy die de opgebouwde push vastlegt zonder Expo te raken. */
 class NotifyPushSpy extends PushNotification

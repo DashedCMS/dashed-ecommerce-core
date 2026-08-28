@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
-use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
 
 /**

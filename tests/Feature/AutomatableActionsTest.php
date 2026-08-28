@@ -1,16 +1,16 @@
 <?php
 
-use Illuminate\Support\Facades\Http;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Http;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedMobileApi\MobileApiRegistry;
+use Dashed\DashedEcommerceCore\Models\Printer;
+use Dashed\DashedMobileApi\Models\DeviceToken;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\PrintJob;
-use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedMobileApi\MobileApiRegistry;
-use Dashed\DashedMobileApi\Models\DeviceToken;
 use Dashed\DashedEcommerceCore\Support\Automation\LabelCreator;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
 

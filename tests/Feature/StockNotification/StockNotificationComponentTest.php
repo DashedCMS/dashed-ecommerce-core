@@ -1,10 +1,10 @@
 <?php
 
-use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification as StockNotificationComponent;
+use Livewire\Livewire;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\StockNotification;
-use Livewire\Livewire;
+use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification as StockNotificationComponent;
 
 function stockNotificationGroup(): ProductGroup
 {

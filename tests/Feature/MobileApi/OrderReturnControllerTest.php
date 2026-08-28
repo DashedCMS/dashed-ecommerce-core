@@ -6,9 +6,9 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 /**
  * Bouwt een order + één orderproduct + een retour met één regel op de gegeven site.

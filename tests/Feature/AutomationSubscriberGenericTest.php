@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Queue;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedMobileApi\MobileApiRegistry;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Jobs\RunAutomationRuleJob;

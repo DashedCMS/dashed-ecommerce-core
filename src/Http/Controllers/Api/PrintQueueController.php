@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api;
 
-use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
-use Dashed\DashedEcommerceCore\Enums\PrintJobType;
-use Dashed\DashedEcommerceCore\Enums\PrinterType;
-use Dashed\DashedEcommerceCore\Http\Requests\MarkJobFailedRequest;
-use Dashed\DashedEcommerceCore\Http\Resources\PrintJobResource;
-use Dashed\DashedEcommerceCore\Models\Printer;
-use Dashed\DashedEcommerceCore\Models\PrintJob;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Dashed\DashedEcommerceCore\Models\Printer;
 use Symfony\Component\HttpFoundation\Response;
+use Dashed\DashedEcommerceCore\Models\PrintJob;
+use Dashed\DashedEcommerceCore\Enums\PrinterType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobType;
+use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Http\Resources\PrintJobResource;
+use Dashed\DashedEcommerceCore\Http\Requests\MarkJobFailedRequest;
 
 class PrintQueueController extends Controller
 {

@@ -6,12 +6,12 @@ namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\Rule;
-use Illuminate\Routing\Controller;
-use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;

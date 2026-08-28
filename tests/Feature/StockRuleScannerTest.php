@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Support\Facades\Queue;
+use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Models\AutomationRuleRun;

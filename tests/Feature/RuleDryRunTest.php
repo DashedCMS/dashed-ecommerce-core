@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedMobileApi\MobileApiRegistry;
 use Dashed\DashedEcommerceCore\Models\AutomationRule;
 use Dashed\DashedEcommerceCore\Support\Automation\RuleDryRun;
 use Dashed\DashedEcommerceCore\Support\Automation\AutomationContext;

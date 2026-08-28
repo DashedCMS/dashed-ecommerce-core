@@ -2,9 +2,7 @@
 
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Event;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 
 function makeCmsActionOrder(array $attributes = [], string $siteId = 'site'): Order
 {

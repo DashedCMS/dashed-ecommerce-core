@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;

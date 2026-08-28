@@ -15,8 +15,8 @@ use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\ReturnStatusController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
-use Dashed\DashedEcommerceCore\Controllers\Frontend\RemainderPaymentController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\ProformaCheckoutController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\RemainderPaymentController;
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])

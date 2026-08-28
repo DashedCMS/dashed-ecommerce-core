@@ -1,10 +1,10 @@
 <?php
 
-use Dashed\DashedCore\Mail\EmailBlocks\OrderSummaryBlock;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedCore\Mail\EmailBlocks\OrderSummaryBlock;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 

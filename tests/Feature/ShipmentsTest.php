@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder;
 use Dashed\DashedEcommerceVeloyd\Models\VeloydOrder;
+use Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder;
 
 /**
  * Verzend-hub (GET api/v1/shipments): geaggregeerd overzicht van alle zendingen

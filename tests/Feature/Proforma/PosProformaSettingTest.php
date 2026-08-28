@@ -3,7 +3,6 @@
 use Livewire\Livewire;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedCore\Models\Customsetting;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 
 it('stores the pos_allow_proforma setting', function () {

@@ -4,11 +4,11 @@ uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
 
 use Illuminate\Support\Str;
 use Dashed\DashedAi\Facades\Ai;
-use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedEcommerceCore\Models\ProductFinder;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Models\ProductFinder;
+use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedEcommerceCore\Services\ProductFinder\ProductFinderMatcher;
 
 function candProduct(string $name, array $overrides = []): Product

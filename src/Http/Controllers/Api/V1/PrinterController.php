@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
-use Illuminate\Support\Facades\URL;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\URL;
 use Dashed\DashedEcommerceCore\Models\Printer;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

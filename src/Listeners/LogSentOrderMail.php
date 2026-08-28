@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners;
 
-use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Mail\Events\MessageSent;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 

@@ -6,9 +6,9 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedEcommerceCore\Models\Product;
 
 /**
  * Lichte, gerichte prijs-herberekening: draait alleen Product::calculatePrices()

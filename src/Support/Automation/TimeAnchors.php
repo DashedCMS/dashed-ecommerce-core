@@ -6,8 +6,8 @@ namespace Dashed\DashedEcommerceCore\Support\Automation;
 
 use Carbon\Carbon;
 use InvalidArgumentException;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedEcommerceCore\Models\Order;
 
 /**
  * Ankermomenten voor tijd-gebaseerde automatiseringsregels ("N dagen na

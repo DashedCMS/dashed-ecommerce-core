@@ -1,9 +1,9 @@
 <?php
 
 use App\Models\User;
-use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Livewire\Livewire;
+use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\RevenueStatisticsPage;
 
 function makeRevenueOrder(string $status, float $total): Order
 {

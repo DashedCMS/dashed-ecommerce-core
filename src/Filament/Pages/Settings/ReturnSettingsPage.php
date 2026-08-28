@@ -14,9 +14,9 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedPages\Models\Page as PageModel;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
-use Dashed\DashedPages\Models\Page as PageModel;
 
 class ReturnSettingsPage extends Page
 {

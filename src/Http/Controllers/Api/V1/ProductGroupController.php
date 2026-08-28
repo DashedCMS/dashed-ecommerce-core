@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
-use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Illuminate\Routing\Controller;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\ProductCategoryResource;
 

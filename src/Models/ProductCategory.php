@@ -3,19 +3,19 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Facades\App;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Locales;
-use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedCore\Classes\FragmentCache;
-use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedCore\Classes\FragmentCache;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
+use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
