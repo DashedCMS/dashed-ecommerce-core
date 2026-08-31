@@ -33,6 +33,9 @@ class ModifyOrder extends Page implements HasSchemas
     public Order $order;
     public ?array $data = [];
 
+    /** @var array<string, bool> */
+    protected array $routeMemo = [];
+
     public function mount($record): void
     {
         $this->order = Order::findOrFail($record);
@@ -61,7 +64,6 @@ class ModifyOrder extends Page implements HasSchemas
                 'vat_rate' => (float) ($orderProduct->vat_rate ?? 21),
                 'product_extras' => self::extrasForForm($orderProduct->product_extras ?? []),
             ])->values()->all(),
-            'modify_in_place' => false,
             'send_customer_email' => true,
             'already_shipped' => false,
             'products_must_be_returned' => false,
@@ -109,18 +111,19 @@ class ModifyOrder extends Page implements HasSchemas
 
     public function modifyOrderForm(Schema $schema): Schema
     {
-        $inPlace = OrderModificationService::canModifyInPlace($this->order);
-
         return $schema
             ->schema([
                 Section::make(__('Wat er gaat gebeuren'))
                     ->schema([
                         TextEntry::make('route')
                             ->hiddenLabel()
-                            // Bij het renderen van de banner is er nog geen
-                            // formulierstaat; de schakelaar staat dan nog op zijn
-                            // default. De modal leest wél de actuele staat.
-                            ->state($this->routeDescription($inPlace, $this->order->hasRealInvoice())),
+                            // Volgt de regels live: zodra een aanpassing het
+                            // totaal, een product of een aantal verandert, slaat
+                            // de banner om naar de vervangroute.
+                            ->state(fn (Get $get) => $this->routeDescription(
+                                $this->routeIsInPlace($get),
+                                (bool) ($get('credit_old_order') ?? $this->order->hasRealInvoice()),
+                            )),
                     ])
                     ->columnSpanFull(),
                 Section::make(__('Regels'))
@@ -281,29 +284,26 @@ class ModifyOrder extends Page implements HasSchemas
                     ->columnSpanFull(),
                 Section::make(__('Opties'))
                     ->schema([
-                        // Alleen op de vervangroute: haalt de order de gewone
-                        // in-plaats-route al, dan is er niets te kiezen.
-                        Toggle::make('modify_in_place')
-                            ->label(__('Deze bestelling zelf aanpassen'))
-                            ->helperText(__('Alleen mogelijk zolang het totaalbedrag, de producten en de aantallen gelijk blijven. Gebruik dit om een gekozen optie te corrigeren zonder vervangende bestelling en creditfactuur.'))
-                            ->live()
-                            ->visible(! $inPlace && $this->order->isModifiable() && ! $this->order->replaced_by_order_id),
+                        // De volgende velden horen alleen bij de vervangroute.
+                        // Blijven totaal, producten en aantallen gelijk, dan
+                        // wordt de bestelling zelf aangepast en is er geen oude
+                        // bestelling om iets mee te doen.
                         Toggle::make('credit_old_order')
                             ->label(__('Creditfactuur maken voor de oude bestelling'))
                             ->helperText(__('Standaard aan wanneer de bestelling een echt factuurnummer heeft'))
-                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
                         Toggle::make('already_shipped')
                             ->label(__('De oude producten zijn al verzonden en komen niet terug'))
                             ->helperText(__('Hiermee blijft de voorraad van de oude regels afgeboekt'))
-                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
                         Toggle::make('deduct_new_stock')
                             ->label(__('Voorraad van de nieuwe bestelling afboeken'))
                             ->helperText(__('Zet dit uit bij een administratieve correctie waarbij er niets nieuws verzonden wordt'))
                             ->default(true)
-                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
                         Toggle::make('products_must_be_returned')
                             ->label(__('De producten moeten terugkomen van de klant'))
-                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
                         Select::make('old_order_fulfillment_status')
                             ->label(__('Status van de oude bestelling'))
                             ->helperText(__('De oude bestelling is vervangen en hoeft niet meer opgepakt te worden. De klant krijgt hiervan geen statusmail.'))
@@ -311,7 +311,7 @@ class ModifyOrder extends Page implements HasSchemas
                             ->default('handled')
                             ->selectablePlaceholder(false)
                             ->required()
-                            ->visible(fn (Get $get) => ! $inPlace && ! $get('modify_in_place')),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
                         Toggle::make('send_customer_email')
                             ->label(__('Klant een wijzigingsmail sturen')),
                         Textarea::make('customer_note')
@@ -564,13 +564,6 @@ class ModifyOrder extends Page implements HasSchemas
 
         $inPlace = $this->willModifyInPlace($state);
 
-        // De beheerder vroeg om zelf-aanpassen maar de regels laten dat niet
-        // toe. Dat hoort hij te lezen vóór hij bevestigt, niet pas in de
-        // melding daarna.
-        $blockedSentence = (($state['modify_in_place'] ?? false) && ! $inPlace)
-            ? ' ' . __('Let op: zelf aanpassen kan hier niet, want het totaalbedrag, de producten of de aantallen veranderen. De wijziging wordt geweigerd.')
-            : '';
-
         // Via dezelfde methode als OrderTotalsCalculator::recalculate() straks
         // gebruikt, en over regels die net zo zijn samengesteld als writeLines()
         // ze wegschrijft, zodat de bevestiging niet iets anders kan tonen dan er
@@ -634,7 +627,6 @@ class ModifyOrder extends Page implements HasSchemas
             ])
             . $discountSentence
             . $capSentence
-            . $blockedSentence
             . ' ' . $moneySentence
             . ' ' . $emailSentence
             . $oldStatusSentence;
@@ -677,9 +669,11 @@ class ModifyOrder extends Page implements HasSchemas
     }
 
     /**
-     * De route die deze wijziging werkelijk neemt: de automatische in-plaats-
-     * route, of de uitdrukkelijke keuze van de beheerder wanneer de wijziging
-     * financieel en qua voorraad niets verandert.
+     * De route die deze wijziging werkelijk neemt. In plaats zodra dat kan:
+     * omdat de bestelling nog geen echte factuur heeft, of omdat de wijziging
+     * financieel en qua voorraad niets verandert (gelijk totaal, per regel
+     * hetzelfde product, aantal en skip_stock). Pas als geen van beide opgaat
+     * komt er een vervangende bestelling met verrekening.
      *
      * @param  array<string, mixed>  $state
      */
@@ -689,8 +683,22 @@ class ModifyOrder extends Page implements HasSchemas
             return true;
         }
 
-        return ($state['modify_in_place'] ?? false)
-            && OrderModificationService::canModifyInPlaceKeepingTotals($this->order, $this->linesFromState($state));
+        return OrderModificationService::canModifyInPlaceKeepingTotals($this->order, $this->linesFromState($state));
+    }
+
+    /**
+     * Dezelfde vraag vanuit een schemaclosure, tegen de actuele formulierstaat.
+     *
+     * Wordt per render door de banner en vijf zichtbaarheidsclosures gesteld,
+     * en canModifyInPlaceKeepingTotals leest daarvoor de bronregels en rekent
+     * het totaal na. Daarom één keer per regelstaat, niet zes keer.
+     */
+    protected function routeIsInPlace(Get $get): bool
+    {
+        $lines = $get('lines') ?? [];
+        $key = md5(serialize($lines));
+
+        return $this->routeMemo[$key] ??= $this->willModifyInPlace(['lines' => $lines]);
     }
 
     /**
@@ -760,24 +768,7 @@ class ModifyOrder extends Page implements HasSchemas
             'old_order_fulfillment_status' => $state['old_order_fulfillment_status'] ?? 'handled',
         ];
 
-        if (OrderModificationService::canModifyInPlace($this->order)) {
-            OrderModificationService::applyInPlace($this->order, $lines, $options);
-            $target = $this->order;
-        } elseif ($state['modify_in_place'] ?? false) {
-            // De beheerder heeft uitdrukkelijk om zelf-aanpassen gevraagd. Kan
-            // dat niet, dan is stilzwijgend een vervangende bestelling met
-            // creditfactuur maken het verkeerde antwoord: dat is precies wat
-            // hij niet wilde. Dus weigeren en zeggen waarom.
-            if (! OrderModificationService::canModifyInPlaceKeepingTotals($this->order, $lines)) {
-                Notification::make()
-                    ->title(__('Deze bestelling kan niet zelf aangepast worden'))
-                    ->body(__('Zelf aanpassen kan alleen zolang het totaalbedrag, de producten en de aantallen gelijk blijven. Pas de regels aan, of zet de schakelaar uit om een vervangende bestelling te maken.'))
-                    ->danger()
-                    ->send();
-
-                return;
-            }
-
+        if ($this->willModifyInPlace($state)) {
             OrderModificationService::applyInPlace($this->order, $lines, $options);
             $target = $this->order;
         } else {

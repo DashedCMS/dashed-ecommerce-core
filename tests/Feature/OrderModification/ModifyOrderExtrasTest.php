@@ -103,7 +103,6 @@ it('schrijft de nieuw gekozen optie weg', function () {
 
     Livewire::test(ModifyOrder::class, ['record' => $order->id])
         ->set('data.lines.0.product_extras.0.id', (string) $blauw->id)
-        ->set('data.modify_in_place', true)
         ->set('data.send_customer_email', false)
         ->call('submit');
 
@@ -151,9 +150,9 @@ it('leegt de extras zodra er een ander product op de regel komt', function () {
         ->assertSet('data.lines.0.product_extras', []);
 });
 
-// ── De schakelaar ──────────────────────────────────────────────────────────
+// ── De route ───────────────────────────────────────────────────────────────
 
-it('maakt een vervangende bestelling wanneer de schakelaar uit blijft', function () {
+it('past een betaalde bestelling zelf aan zolang het bedrag gelijk blijft', function () {
     [$order, , , , $blauw] = extrasPageOrder();
 
     Livewire::test(ModifyOrder::class, ['record' => $order->id])
@@ -161,20 +160,42 @@ it('maakt een vervangende bestelling wanneer de schakelaar uit blijft', function
         ->set('data.send_customer_email', false)
         ->call('submit');
 
-    expect($order->fresh()->replaced_by_order_id)->not->toBeNull();
+    // Geen schakelaar nodig: gelijk totaal, zelfde product en aantal, dus geen
+    // vervangende bestelling en geen creditfactuur.
+    expect($order->fresh()->replaced_by_order_id)->toBeNull()
+        ->and(Order::count())->toBe(1)
+        ->and($order->fresh()->orderProducts()->first()->product_extras[0]['value'])->toBe('Blauw');
 });
 
-it('weigert de schakelaar wanneer het bedrag wel verandert', function () {
+it('maakt een vervangende bestelling zodra het bedrag wel verandert', function () {
     [$order, , , , $blauw] = extrasPageOrder(blauwPrijs: 15.0);
 
     Livewire::test(ModifyOrder::class, ['record' => $order->id])
         ->set('data.lines.0.product_extras.0.id', (string) $blauw->id)
-        ->set('data.modify_in_place', true)
         ->set('data.send_customer_email', false)
         ->call('submit');
 
-    // Niet in plaats aangepast en ook niet geklapt: het scherm valt terug op
-    // een nette melding en laat de bestelling met rust.
-    expect($order->fresh()->replaced_by_order_id)->toBeNull()
-        ->and($order->fresh()->orderProducts()->first()->product_extras[0]['value'])->toBe('Rood');
+    $vervanger = Order::find($order->fresh()->replaced_by_order_id);
+
+    expect($vervanger)->not->toBeNull()
+        ->and($order->fresh()->orderProducts()->first()->product_extras[0]['value'])->toBe('Rood')
+        ->and($vervanger->orderProducts()->first()->product_extras[0]['value'])->toBe('Blauw');
+});
+
+it('kent geen schakelaar meer om zelf aan te passen', function () {
+    [$order] = extrasPageOrder();
+
+    Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->assertFormFieldDoesNotExist('modify_in_place', 'modifyOrderForm');
+});
+
+it('verbergt de opties van de vervangroute zolang het bedrag gelijk blijft', function () {
+    [$order, , , , $blauw] = extrasPageOrder();
+
+    Livewire::test(ModifyOrder::class, ['record' => $order->id])
+        ->assertFormFieldHidden('credit_old_order', 'modifyOrderForm')
+        ->assertFormFieldHidden('old_order_fulfillment_status', 'modifyOrderForm')
+        ->set('data.lines.0.quantity', 2)
+        ->assertFormFieldVisible('credit_old_order', 'modifyOrderForm')
+        ->assertFormFieldVisible('old_order_fulfillment_status', 'modifyOrderForm');
 });
