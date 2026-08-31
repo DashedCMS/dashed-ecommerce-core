@@ -137,6 +137,7 @@ class OpenOrderProductController extends Controller
         $rows = (clone $base)
             ->select([
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
+                'op.product_extras',
                 'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at',
                 'o.first_name', 'o.last_name', 'o.email',
             ])
@@ -156,6 +157,7 @@ class OpenOrderProductController extends Controller
                 'product_id' => $r->product_id ? (int) $r->product_id : null,
                 'name' => $r->name,
                 'sku' => $r->sku,
+                'options' => $this->extrasLine($r->product_extras),
                 'quantity' => (int) $r->quantity,
                 'stock' => $p ? (int) $p['stock'] : null,
                 'image_url' => $p['image_url'] ?? null,
@@ -233,6 +235,25 @@ class OpenOrderProductController extends Controller
         }
 
         return $this->respond($data, $total, $perPage, $page);
+    }
+
+    /**
+     * Gekozen productopties als één regel, gelijk aan de Filament-kolom
+     * (OpenOrderProductsTable::description): "Naam: Waarde | Naam: Waarde".
+     * De query-builder levert product_extras als rauwe JSON-string (geen cast).
+     */
+    private function extrasLine(mixed $raw): ?string
+    {
+        $extras = is_string($raw) ? json_decode($raw, true) : $raw;
+        if (! is_array($extras) || ! $extras) {
+            return null;
+        }
+
+        $line = collect($extras)
+            ->map(fn ($option) => ($option['name'] ?? '') . ': ' . ($option['value'] ?? ''))
+            ->implode(' | ');
+
+        return trim($line) !== ':' && $line !== '' ? $line : null;
     }
 
     /**
