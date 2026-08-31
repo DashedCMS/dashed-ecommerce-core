@@ -49,12 +49,22 @@ class TestCase extends Orchestra
             $providers[] = \Dashed\DashedMobileApi\DashedMobileApiServiceProvider::class;
         }
 
+        // Sanctum levert de 'sanctum'-guard waarmee de MobileApi-tests
+        // authenticeren (actingAs(..., 'sanctum')).
+        if (class_exists(\Laravel\Sanctum\SanctumServiceProvider::class)) {
+            $providers[] = \Laravel\Sanctum\SanctumServiceProvider::class;
+        }
+
         return $providers;
     }
 
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+
+        // De sanctum-guard bestaat alleen in een echte app-config; hier nodig
+        // voor de MobileApi-routes (auth:sanctum) en actingAs(..., 'sanctum').
+        config()->set('auth.guards.sanctum', ['driver' => 'sanctum', 'provider' => 'users']);
 
         // De 'dashed'-disk is in een echte app een DigitalOcean Spaces-bucket
         // (config/filesystems.php van de app zelf). De Testbench-skeleton kent
