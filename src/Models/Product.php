@@ -11,7 +11,6 @@ use Dashed\DashedPages\Models\Page;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Gloudemans\Shoppingcart\CartItem;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;

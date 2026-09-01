@@ -244,12 +244,12 @@ trait CreateManualOrderActions
                 $attributes['options'] = $options;
 
                 if (! $isCustomProduct && $product?->id) {
-                    \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes)->associate(Product::class);
+                    cartHelper()->addToCart($product->id, (int) $chosenProduct['quantity'], $attributes);
                 } else {
                     $attributes['customProduct'] = true;
                     $attributes['vat_rate'] = $chosenProduct['vat_rate'];
                     $attributes['singlePrice'] = $chosenProduct['singlePrice'];
-                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $attributes);
+                    cartHelper()->addCustomProduct($chosenProduct['name'], (int) $chosenProduct['quantity'], (float) $productPrice, $attributes);
                 }
             }
         }
@@ -308,7 +308,6 @@ trait CreateManualOrderActions
         $this->updateInfo(false);
         $this->loading = true;
         cartHelper()->setCartType($this->cartInstance);
-        \Cart::instance($this->cartInstance)->content();
         cartHelper()->removeInvalidItems(false);
 
         cartHelper()->initialize();

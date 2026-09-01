@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Storage;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -147,13 +146,18 @@ class CartController extends Controller
             }
         }
 
+        $attributes = [
+            'discountPrice' => $productPrice,
+            'originalPrice' => $productPrice,
+            'options' => $options,
+        ];
+
         foreach ($cartItems as $cartItem) {
-            //Todo: the comparison for options does not work
-            if ($cartItem->model->id == $product->id && $options == $cartItem->options) {
+            if (($cartItem->model->id ?? $cartItem->id) == $product->id && $options == ($cartItem->options['options'] ?? [])) {
                 $newQuantity = $cartItem->qty + $quantity;
 
                 if ($product->limit_purchases_per_customer && $newQuantity > $product->limit_purchases_per_customer_limit) {
-                    Cart::update($cartItem->rowId, $product->limit_purchases_per_customer_limit);
+                    cartHelper()->changeQuantity($cartItem->rowId, (int) $product->limit_purchases_per_customer_limit);
 
                     ShoppingCart::removeInvalidItems();
 
@@ -162,14 +166,14 @@ class CartController extends Controller
                     ]))->withInput();
                 }
 
-                Cart::update($cartItem->rowId, $newQuantity);
+                cartHelper()->changeQuantity($cartItem->rowId, (int) $newQuantity);
                 $cartUpdated = true;
             }
         }
 
         if (! $cartUpdated) {
             if ($product->limit_purchases_per_customer && $quantity > $product->limit_purchases_per_customer_limit) {
-                Cart::add($product->id, $product->name, $product->limit_purchases_per_customer_limit, $productPrice, $options)->associate(Product::class);
+                cartHelper()->addToCart($product->id, (int) $product->limit_purchases_per_customer_limit, $attributes);
 
                 ShoppingCart::removeInvalidItems();
 
@@ -178,7 +182,7 @@ class CartController extends Controller
                 ]))->withInput();
             }
 
-            Cart::add($product->id, $product->name, $quantity, $productPrice, $options)->associate(Product::class);
+            cartHelper()->addToCart($product->id, (int) $quantity, $attributes);
         }
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
@@ -204,7 +208,7 @@ class CartController extends Controller
 
         if (! $quantity) {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                Cart::remove($rowId);
+                cartHelper()->removeItem((string) $rowId);
             }
 
             ShoppingCart::removeInvalidItems();
@@ -212,8 +216,7 @@ class CartController extends Controller
             return redirect()->back()->with('success', Translation::get('product-removed-from-cart', 'cart', 'The product has been removed from your cart'));
         } else {
             if (ShoppingCart::hasCartitemByRowId($rowId)) {
-                $cartItem = Cart::get($rowId);
-                Cart::update($rowId, ($cartItem->qty - $cartItem->qty + $quantity));
+                cartHelper()->changeQuantity((string) $rowId, (int) $quantity);
             }
 
             ShoppingCart::removeInvalidItems();
@@ -225,7 +228,7 @@ class CartController extends Controller
     public function removeFromCart(Request $request, $rowId)
     {
         if (ShoppingCart::hasCartitemByRowId($rowId)) {
-            Cart::remove($rowId);
+            cartHelper()->removeItem((string) $rowId);
         }
 
         ShoppingCart::removeInvalidItems();

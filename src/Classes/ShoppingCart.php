@@ -2,14 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Exception;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedPages\Models\Page;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Gloudemans\Shoppingcart\Facades\Cart;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -69,9 +67,9 @@ class ShoppingCart
         return url(route('dashed.frontend.start-transaction'));
     }
 
-    public static function cartItemsCount()
+    public static function cartItemsCount(): int
     {
-        return Cart::count();
+        return (int) collect(cartHelper()->getCartItems() ?? [])->sum(fn ($item) => (int) ($item->qty ?? 0));
     }
 
     public static function getAvailableShippingMethods($countryName, string $shippingAddress = '', $paymentMethod = null, ?float $orderTotalOverride = null)
@@ -512,15 +510,10 @@ class ShoppingCart
         return $paymentMethods;
     }
 
-    public static function hasCartitemByRowId($rowId)
+    public static function hasCartitemByRowId($rowId): bool
     {
-        try {
-            Cart::get($rowId);
-
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
+        return collect(cartHelper()->getCartItems() ?? [])
+            ->contains(fn ($item) => (string) ($item->rowId ?? '') === (string) $rowId);
     }
 
     public static function getCrossSellAndSuggestedProducts(

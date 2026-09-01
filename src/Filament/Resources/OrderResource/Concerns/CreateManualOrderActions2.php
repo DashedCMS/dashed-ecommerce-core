@@ -241,12 +241,18 @@ trait CreateManualOrderActions2
                 }
 
                 if ($product->id ?? false) {
-                    \Cart::instance($this->cartInstance)->add($product->id, $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options)->associate(Product::class);
+                    cartHelper()->addToCart($product->id, (int) $chosenProduct['quantity'], [
+                        'discountPrice' => $productPrice,
+                        'originalPrice' => $productPrice,
+                        'options' => $options,
+                    ]);
                 } else {
-                    $options['customProduct'] = true;
-                    $options['vat_rate'] = $chosenProduct['vat_rate'];
-                    $options['singlePrice'] = $chosenProduct['singlePrice'];
-                    \Cart::instance($this->cartInstance)->add($chosenProduct['customId'], $product->name ?? $chosenProduct['name'], $chosenProduct['quantity'], $productPrice, $options);
+                    cartHelper()->addCustomProduct($product->name ?? $chosenProduct['name'], (int) $chosenProduct['quantity'], (float) $productPrice, [
+                        'customProduct' => true,
+                        'vat_rate' => $chosenProduct['vat_rate'],
+                        'singlePrice' => $chosenProduct['singlePrice'],
+                        'options' => $options,
+                    ]);
                 }
             }
         }
@@ -364,7 +370,6 @@ trait CreateManualOrderActions2
         $this->updateInfo(false);
         $this->loading = true;
         ShoppingCart::setInstance($this->cartInstance);
-        \Cart::instance($this->cartInstance)->content();
         ShoppingCart::removeInvalidItems(checkStock: false);
 
         $cartItems = ShoppingCart::cartItems($this->cartInstance);

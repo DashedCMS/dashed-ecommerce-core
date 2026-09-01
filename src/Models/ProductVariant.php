@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Carbon\Carbon;
 use Dashed\DashedCore\Classes\Sites;
-use Gloudemans\Shoppingcart\CartItem;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\SoftDeletes;

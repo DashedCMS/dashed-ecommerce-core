@@ -472,6 +472,7 @@ class CartHelper
 
         $o->rowId = (string) $item->id;
         $o->id = $item->product_id; // gloudemans: id = product_id
+        $o->name = $item->name;
         $o->qty = (int) $item->quantity;
         $o->price = (float) ($item->unit_price ?? 0.0);
 
@@ -1470,6 +1471,39 @@ class CartHelper
         });
 
         CartActivityLogger::productAdded($loggedCart, $loggedProduct, $quantity, $loggedOptions);
+
+        $this->updateData();
+
+        return [
+            'status' => 'success',
+            'message' => Translation::get('product-added-to-cart', static::$cartType, 'The product has been added to your cart'),
+        ];
+    }
+
+    /**
+     * Voeg een vrij product toe, zonder Product-model: een handmatige orderregel
+     * uit het CMS bijvoorbeeld. product_id blijft leeg; prijs en btw staan in de
+     * opties, precies waar Product::getShoppingCartItemPrice() ze leest.
+     */
+    public function addCustomProduct(string $name, int $quantity, float $unitPrice, array $options = []): array
+    {
+        $quantity = max(1, $quantity);
+        $options = $this->normalizeOptions(array_merge($options, [
+            'customProduct' => true,
+            'singlePrice' => $unitPrice,
+        ]));
+
+        $cart = $this->getOrCreateCart();
+
+        CartItemModel::create([
+            'cart_id' => $cart->id,
+            'product_id' => null,
+            'name' => $name,
+            'unit_price' => $unitPrice,
+            'quantity' => $quantity,
+            'options' => $options,
+            'options_hash' => $this->optionsHash($options),
+        ]);
 
         $this->updateData();
 

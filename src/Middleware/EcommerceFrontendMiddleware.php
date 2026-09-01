@@ -16,8 +16,6 @@ class EcommerceFrontendMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-        \Cart::instance('default')->count();
-
         return $next($request);
     }
 }
