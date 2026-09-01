@@ -101,7 +101,7 @@ class ProductsBlock extends EmailBlock
     public static function renderProducts($products, int $columns, array $context): string
     {
         return view('dashed-ecommerce-core::emails.blocks.products', [
-            'products' => $products->map(function (Product $product): array {
+            'products' => $products->map(function (Product $product) use ($context): array {
                 // getSingleMedia() geeft '' terug als er geen afbeelding is, en
                 // een object met een url-eigenschap als die er wel is (geen
                 // getFullUrl()-methode, dat is een ander mediapakket).
@@ -109,7 +109,7 @@ class ProductsBlock extends EmailBlock
 
                 return [
                     'name' => $product->name,
-                    'url' => $product->getUrl(),
+                    'url' => self::absoluteUrl($product->getUrl(), $context),
                     'image' => is_object($media) ? ($media->url ?? '') : '',
                     'price' => $product->current_price ?? $product->price,
                 ];
