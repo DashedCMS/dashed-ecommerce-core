@@ -18,6 +18,25 @@ use Illuminate\Support\Collection as SupportCollection;
 
 class ShoppingCart
 {
+    /**
+     * Optionele correctie op de orderwaarde waartegen de minimale en maximale
+     * orderwaarde van verzendmethodes getoetst worden. Een webshop registreert
+     * hiermee een eigen regel (bijvoorbeeld: een groot product in de wagen
+     * telt altijd als een "normale" bestelling, ook al is het bedrag laag).
+     * De closure krijgt de berekende orderwaarde en de cartregels en geeft de
+     * waarde terug die voor de toetsing gebruikt moet worden. Geldt alleen
+     * voor de wagen-gebaseerde aanroep; bij een expliciet meegegeven totaal
+     * (proforma) is er geen wagen om naar te kijken.
+     *
+     * @var (\Closure(float, mixed): float)|null
+     */
+    protected static ?\Closure $shippingOrderValueResolver = null;
+
+    public static function resolveShippingOrderValueUsing(?\Closure $resolver): void
+    {
+        static::$shippingOrderValueResolver = $resolver;
+    }
+
     public static function getApplyDiscountCodeUrl()
     {
         return url(route('dashed.frontend.cart.apply-discount-code'));
@@ -202,6 +221,10 @@ class ShoppingCart
                     $activeDiscountCode = cartHelper()->getDiscountCode();
                     if ($activeDiscountCode) {
                         $total += cartHelper()->getDiscount();
+                    }
+
+                    if (static::$shippingOrderValueResolver) {
+                        $total = (float) (static::$shippingOrderValueResolver)((float) $total, $cartItems);
                     }
                 }
 
