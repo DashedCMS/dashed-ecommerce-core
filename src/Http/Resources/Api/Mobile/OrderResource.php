@@ -85,6 +85,9 @@ class OrderResource extends JsonResource
             'vat_percentages' => $this->vat_percentages,
             'vat_reverse_charge' => (bool) $this->vat_reverse_charge,
             'payment_method' => $this->paymentMethod,
+            // Naam in de actieve taal (HasTranslations); withTrashed op de
+            // relatie, dus ook zichtbaar als de methode inmiddels weg is.
+            'shipping_method' => $this->shippingMethod?->name,
             'payments' => $this->whenLoaded('orderPayments', fn () => $this->orderPayments->map(fn ($p) => [
                 'id' => $p->id,
                 'method' => $p->psp ?: ($p->payment_method ?? null),
