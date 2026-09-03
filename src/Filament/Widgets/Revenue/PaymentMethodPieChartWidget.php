@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class PaymentMethodPieChartWidget extends ChartWidget
@@ -43,38 +42,38 @@ class PaymentMethodPieChartWidget extends ChartWidget
         $formats = Dashboard::getFormatsByStep($steps);
         $startFormat = $formats['startFormat'];
         $endFormat = $formats['endFormat'];
-        $addFormat = $formats['addFormat'];
 
         $data = Cache::remember("payment-pie-chart-data-{$startDate}-{$endDate}-{$steps}", 60 * 60, function () use ($startDate, $endDate, $startFormat, $endFormat) {
-            $paymentMethods = OrderPayment::whereNotNull('payment_method')->distinct('payment_method')->pluck('payment_method');
-            $orderPayments = OrderPayment::where('created_at', '>=', $startDate->$startFormat())->where('created_at', '<=', $endDate->$endFormat())->get();
-            foreach ($orderPayments as $orderPayment) {
-                if (! $orderPayment->payment_method_id) {
-                    $correctPaymentMethod = PaymentMethod::where('psp', $orderPayment->psp)->where('name', 'LIKE', '%' . $orderPayment->payment_method . '%')->first();
-                    if ($correctPaymentMethod) {
-                        $orderPayment->payment_method_id = $correctPaymentMethod->id;
-                        $orderPayment->save();
-                    }
-                }
-            }
+            // Eén gegroepeerde telling van de betaalde betalingen in de periode.
+            // Eerder laadde deze widget elke betaling van de periode als model en
+            // schreef er ook nog een ontbrekend payment_method_id bij: een
+            // dashboard hoort te lezen, en de taart groepeert toch op naam.
+            $rows = OrderPayment::query()
+                ->paid()
+                ->whereNotNull('payment_method')
+                ->where('created_at', '>=', $startDate->copy()->$startFormat())
+                ->where('created_at', '<=', $endDate->copy()->$endFormat())
+                ->toBase()
+                ->selectRaw('payment_method, COUNT(*) as aantal')
+                ->groupBy('payment_method')
+                ->orderBy('payment_method')
+                ->get();
 
             $pieData = [];
             $pieColors = [];
             $pieLabels = [];
 
-            foreach ($paymentMethods as $paymentMethod) {
-                $pieData[] = OrderPayment::paid()->where('payment_method', $paymentMethod)->count();
-                $pieLabels[] = $paymentMethod;
+            foreach ($rows as $row) {
+                $pieData[] = (int) $row->aantal;
+                $pieLabels[] = $row->payment_method;
                 $pieColors[] = '#' . str_pad(dechex(mt_rand(0, 0xFFFFFF)), 6, '0', STR_PAD_LEFT);
             }
 
-            $data = [
+            return [
                 'pieData' => $pieData,
                 'pieColors' => $pieColors,
                 'pieLabels' => $pieLabels,
             ];
-
-            return $data;
         });
 
         return [

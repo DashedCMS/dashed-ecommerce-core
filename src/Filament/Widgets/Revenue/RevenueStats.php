@@ -5,13 +5,12 @@ namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class RevenueStats extends StatsOverviewWidget
 {
-    //    protected string $view = 'dashed-ecommerce-core::widgets.revenue-stats-widget';
     public ?array $filters = [];
 
     protected $listeners = [
@@ -35,7 +34,6 @@ class RevenueStats extends StatsOverviewWidget
 
     protected function getCards(): array
     {
-
         $startDate = $this->filters['startDate'] ? Carbon::parse($this->filters['startDate']) : now()->subMonth();
         $endDate = $this->filters['endDate'] ? Carbon::parse($this->filters['endDate']) : now();
         $steps = $this->filters['steps'] ?? 'per_day';
@@ -43,37 +41,25 @@ class RevenueStats extends StatsOverviewWidget
         $formats = Dashboard::getFormatsByStep($steps);
         $startFormat = $formats['startFormat'];
         $endFormat = $formats['endFormat'];
-        $addFormat = $formats['addFormat'];
 
-        $statistics = [];
+        $inPeriod = fn () => Order::query()
+            ->where('created_at', '>=', $startDate->copy()->$startFormat())
+            ->where('created_at', '<=', $endDate->copy()->$endFormat());
 
-        $normalOrders = Order::where('created_at', '>=', $startDate->$startFormat())->where('created_at', '<=', $endDate->$endFormat())->isPaid()->get();
-        $statistics['normal'] = [
-            'orders' => $normalOrders->count(),
-            'products' => OrderProduct::whereIn('order_id', $normalOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
-            'orderAmount' => $normalOrders->sum('total'),
-        ];
-        $statistics['normal']['averageOrderAmount'] = $normalOrders->count() ? CurrencyHelper::formatPrice($statistics['normal']['orderAmount'] / $statistics['normal']['orders']) : CurrencyHelper::formatPrice(0);
-        $statistics['normal']['orderAmount'] = CurrencyHelper::formatPrice($statistics['normal']['orderAmount']);
+        $normal = OrderStatistics::totals($inPeriod()->isPaid());
+        $return = OrderStatistics::totals($inPeriod()->isReturn());
 
-        $normalReturnOrders = Order::where('created_at', '>=', $startDate->$startFormat())->where('created_at', '<=', $endDate->$endFormat())->isReturn()->get();
-        $statistics['normalReturn'] = [
-            'orders' => $normalReturnOrders->count(),
-            'products' => OrderProduct::whereIn('order_id', $normalReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
-            'orderAmount' => $normalReturnOrders->sum('total'),
-        ];
-        $statistics['normalReturn']['averageOrderAmount'] = $normalReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['normalReturn']['orderAmount'] / $statistics['normalReturn']['orders']) : CurrencyHelper::formatPrice(0);
-        $statistics['normalReturn']['orderAmount'] = CurrencyHelper::formatPrice($statistics['normalReturn']['orderAmount']);
+        $average = fn (array $totals) => CurrencyHelper::formatPrice($totals['orders'] ? $totals['amount'] / $totals['orders'] : 0);
 
         return [
-            StatsOverviewWidget\Stat::make('Aantal bestellingen', $statistics['normal']['orders'])
-                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['orders']])),
-            StatsOverviewWidget\Stat::make('Totaal bedrag', $statistics['normal']['orderAmount'])
-                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['orderAmount']])),
-            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $statistics['normal']['averageOrderAmount'])
-                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['averageOrderAmount']])),
-            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $statistics['normal']['products'])
-                ->description(__(':waarde retour', ['waarde' => $statistics['normalReturn']['products']])),
+            StatsOverviewWidget\Stat::make('Aantal bestellingen', $normal['orders'])
+                ->description(__(':waarde retour', ['waarde' => $return['orders']])),
+            StatsOverviewWidget\Stat::make('Totaal bedrag', CurrencyHelper::formatPrice($normal['amount']))
+                ->description(__(':waarde retour', ['waarde' => CurrencyHelper::formatPrice($return['amount'])])),
+            StatsOverviewWidget\Stat::make('Gemiddelde waarde per order', $average($normal))
+                ->description(__(':waarde retour', ['waarde' => $average($return)])),
+            StatsOverviewWidget\Stat::make('Aantal producten verkocht', $normal['products'])
+                ->description(__(':waarde retour', ['waarde' => $return['products']])),
         ];
     }
 }

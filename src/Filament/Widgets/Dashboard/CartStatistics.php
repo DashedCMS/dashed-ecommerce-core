@@ -18,18 +18,21 @@ class CartStatistics extends StatsOverviewWidget
 
     protected function getCards(): array
     {
-        $activeCarts = Cart::whereHas('items')->get();
-        $cartItems = CartItem::whereIn('cart_id', $activeCarts->pluck('id'))->get();
+        $activeCarts = Cart::query()->whereHas('items')->count();
 
-        $cartItemsValue = 0;
-        foreach ($cartItems as $cartItem) {
-            $cartItemsValue += $cartItem->unit_price * $cartItem->quantity;
-        }
+        // Eén som in de database; de winkelwagentabel groeit met elke bezoeker
+        // en alle regels als modellen inladen om ze op te tellen is precies wat
+        // het dashboard traag en zwaar maakte.
+        $totals = CartItem::query()
+            ->whereHas('cart')
+            ->toBase()
+            ->selectRaw('COALESCE(SUM(quantity), 0) as quantity, COALESCE(SUM(unit_price * quantity), 0) as value')
+            ->first();
 
         return [
-            StatsOverviewWidget\Stat::make('Aantal actieve winkelwagens', $activeCarts->count()),
-            StatsOverviewWidget\Stat::make('Aantal producten in winkelwagens', $cartItems->sum('quantity')),
-            StatsOverviewWidget\Stat::make('Waarde in winkelwagens', CurrencyHelper::formatPrice($cartItemsValue)),
+            StatsOverviewWidget\Stat::make('Aantal actieve winkelwagens', $activeCarts),
+            StatsOverviewWidget\Stat::make('Aantal producten in winkelwagens', (int) ($totals->quantity ?? 0)),
+            StatsOverviewWidget\Stat::make('Waarde in winkelwagens', CurrencyHelper::formatPrice((float) ($totals->value ?? 0))),
         ];
     }
 }

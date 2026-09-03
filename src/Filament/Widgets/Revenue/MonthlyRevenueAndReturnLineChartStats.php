@@ -4,15 +4,11 @@ namespace Dashed\DashedEcommerceCore\Filament\Widgets\Revenue;
 
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Facades\Cache;
-use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Widgets\Concerns\InteractsWithfilters;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 {
-    //    use InteractsWithfilters;
-
     protected int|string|array $columnSpan = 'full';
     protected ?string $maxHeight = '300px';
     public ?array $filters = [];
@@ -33,58 +29,41 @@ class MonthlyRevenueAndReturnLineChartStats extends ChartWidget
 
     protected function getData(): array
     {
-        //        $statistics = Cache::remember('monthly-revenue-and-return-line-chart-stats', 60 * 60, function () {
-        $statistics = [];
-
         $startDate = $this->filters['startDate'] ? Carbon::parse($this->filters['startDate']) : now()->subMonth();
         $endDate = $this->filters['endDate'] ? Carbon::parse($this->filters['endDate']) : now();
-
         $steps = $this->filters['steps'] ?? 'per_day';
-        $formats = Dashboard::getFormatsByStep($steps);
-        $startFormat = $formats['startFormat'];
-        $endFormat = $formats['endFormat'];
-        $addFormat = $formats['addFormat'];
 
-        while ($startDate < $endDate) {
-            $data = number_format(Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->sum('total'), 2, '.', '');
-            $returnData = number_format(Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isReturn()->sum('total'), 2, '.', '');
-            $combinedData = number_format($data + $returnData, 2, '.', '');
-            $statistics['data'][] = $data;
-            $statistics['returnData'][] = $returnData;
-            $statistics['combinedData'][] = $combinedData;
-            if ($this->filters['steps'] == 'per_hour') {
-                $statistics['labels'][] = $startDate->format('d-m-Y H:i');
-            } else {
-                $statistics['labels'][] = $startDate->format('d-m-Y');
-            }
-            $startDate->$addFormat();
-        }
+        // Eén query voor de hele lijn; een som per stap was er twee per punt,
+        // per uur over een jaar ruim zeventienduizend.
+        $series = OrderStatistics::perStep($startDate, $endDate, $steps);
 
-        //            return $statistics;
-        //        });
+        $format = fn (float $value) => number_format($value, 2, '.', '');
+        $data = array_map($format, $series['paid']);
+        $returnData = array_map($format, $series['return']);
+        $combinedData = array_map(fn ($paid, $return) => $format($paid + $return), $series['paid'], $series['return']);
 
         return [
             'datasets' => [
                 [
                     'label' => 'Verkopen',
-                    'data' => $statistics['data'],
+                    'data' => $data,
                     'backgroundColor' => '#196400',
                     'borderColor' => '#196400',
                 ],
                 [
                     'label' => 'Retouren',
-                    'data' => $statistics['returnData'],
+                    'data' => $returnData,
                     'backgroundColor' => '#a80000',
                     'borderColor' => '#a80000',
                 ],
                 [
                     'label' => 'Verkopen + retouren',
-                    'data' => $statistics['combinedData'],
+                    'data' => $combinedData,
                     'backgroundColor' => '#ffbb00',
                     'borderColor' => '#ffbb00',
                 ],
             ],
-            'labels' => $statistics['labels'],
+            'labels' => $series['labels'],
         ];
     }
 

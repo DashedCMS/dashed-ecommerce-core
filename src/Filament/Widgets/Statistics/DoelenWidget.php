@@ -26,9 +26,13 @@ class DoelenWidget extends Widget
         foreach (self::PERIODS as $key => $label) {
             [$start, $end] = $this->range($key);
 
-            $paid = Order::whereBetween('created_at', [$start, $end])->isPaid()->get(['id', 'total']);
-            $revenue = round((float) $paid->sum('total'), 2);
-            $orders = $paid->count();
+            $paid = Order::whereBetween('created_at', [$start, $end])
+                ->isPaid()
+                ->toBase()
+                ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')
+                ->first();
+            $revenue = round((float) ($paid->revenue ?? 0), 2);
+            $orders = (int) ($paid->orders ?? 0);
 
             $revenueTarget = (float) Customsetting::get('dashboard_revenue_target_' . $key);
             $ordersTarget = (int) Customsetting::get('dashboard_orders_target_' . $key);
