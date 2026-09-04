@@ -33,7 +33,9 @@ class OrderLog extends Model
         parent::boot();
 
         static::creating(function ($orderLog) {
-            $orderLog->is_system = str($orderLog->note)->contains('system');
+            // Een expliciet gezette is_system blijft staan; de notitie-heuristiek
+            // is de terugval voor oude aanroepen die de vlag niet zelf zetten.
+            $orderLog->is_system = $orderLog->is_system || str($orderLog->note)->contains('system');
             $orderLog->url = url()->current();
         });
     }
@@ -154,6 +156,10 @@ class OrderLog extends Model
             $string = 'Retour afgehandeld';
         } elseif ($this->tag == 'order.return-label-failed') {
             $string = 'Retourlabel mislukt';
+        } elseif ($this->tag == 'order.labelstatus.synced') {
+            $string = 'heeft de labelstatussen van de zendingen bijgewerkt.';
+        } elseif ($this->tag == 'order.trackandtrace.updated') {
+            $string = 'heeft een track & trace-statusupdate van de vervoerder verwerkt.';
         } elseif ($this->tag == 'order.packed') {
             $string = 'heeft de bestelling ingepakt.';
         } elseif ($this->tag == 'order.unpacked') {
@@ -167,7 +173,7 @@ class OrderLog extends Model
         return ($this->user ? $this->user->name : ($this->is_system ? 'Systeem' : $this->order->name)) . ' ' . $string;
     }
 
-    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false): void
+    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false, ?bool $isSystem = null): void
     {
         if ($isDebugLog && ! config('dashed-ecommerce-core.debug_logs_enabled', false)) {
             return;
@@ -181,6 +187,9 @@ class OrderLog extends Model
         $orderLog->images = $images;
         $orderLog->public_for_customer = $publicForCustomer;
         $orderLog->is_debug_log = $isDebugLog;
+        if (! is_null($isSystem)) {
+            $orderLog->is_system = $isSystem;
+        }
         $orderLog->save();
     }
 }

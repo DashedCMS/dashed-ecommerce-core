@@ -603,13 +603,8 @@ class OrderResource extends Resource
                                     return;
                                 }
 
+                                // changeFulfillmentStatus() logt de wijziging zelf in de orderlogs.
                                 $record->changeFulfillmentStatus($data['fulfillmentStatus']);
-
-                                $orderLog = new OrderLog();
-                                $orderLog->order_id = $record->id;
-                                $orderLog->user_id = Auth::user()->id;
-                                $orderLog->tag = 'order.changed-fulfillment-status-to-'.$data['fulfillmentStatus'];
-                                $orderLog->save();
 
                                 Notification::make()
                                     ->success()

@@ -1098,7 +1098,7 @@ class Order extends Model
         //            });
     }
 
-    public function changeFulfillmentStatus($newStatus)
+    public function changeFulfillmentStatus($newStatus, ?string $note = null)
     {
         $oldStatus = $this->fulfillment_status;
 
@@ -1108,6 +1108,18 @@ class Order extends Model
 
         $this->fulfillment_status = $newStatus;
         $this->save();
+
+        // Elke fulfilment-statuswijziging hoort in het orderlogboek, juist ook
+        // de automatische vanuit track & trace-syncs en koppelingen. De
+        // handmatige schermen loggen daarom niet meer zelf; zonder ingelogde
+        // gebruiker is dit per definitie een systeemregel.
+        $orderLog = new OrderLog();
+        $orderLog->order_id = $this->id;
+        $orderLog->user_id = auth()->user()->id ?? null;
+        $orderLog->tag = 'order.changed-fulfillment-status-to-' . $newStatus;
+        $orderLog->note = $note;
+        $orderLog->is_system = auth()->guest();
+        $orderLog->save();
 
         // Trigger order-opvolg-flows op elke fulfillment-status-wijziging. De
         // listener filtert op flows die expliciet voor deze nieuwe status

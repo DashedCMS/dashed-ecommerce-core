@@ -36,14 +36,27 @@ class OrderTrackAndTrace extends Model
         parent::boot();
 
         static::created(function ($trackAndTrace) {
+            // Elke nieuwe track & trace-regel hoort in het orderlogboek, ook
+            // (juist) de automatisch aangemaakte vanuit een labelkoppeling.
+            $orderLog = new OrderLog();
+            $orderLog->order_id = $trackAndTrace->order->id;
+            $orderLog->user_id = auth()->user()->id ?? null;
+            $orderLog->tag = 'order.track-and-trace.created';
+            $orderLog->note = trim(($trackAndTrace->delivery_company ?: $trackAndTrace->supplier) . ': ' . $trackAndTrace->code);
+            $orderLog->is_system = auth()->guest();
+            $orderLog->save();
+
             if ($trackAndTrace->order->email && $trackAndTrace->shouldMailCustomer()) {
                 try {
                     Mail::to($trackAndTrace->order->email)->send(new TrackandTraceMail($trackAndTrace));
+
+                    OrderLog::createLog(orderId: $trackAndTrace->order->id, tag: 'order.t&t.send', isSystem: auth()->guest());
                 } catch (\Exception $e) {
                     $orderLog = new OrderLog();
                     $orderLog->order_id = $trackAndTrace->order->id;
                     $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
                     $orderLog->tag = 'order.t&t.not-send';
+                    $orderLog->is_system = auth()->guest();
                     $orderLog->save();
                 }
             }
