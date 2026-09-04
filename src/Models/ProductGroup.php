@@ -42,6 +42,7 @@ class ProductGroup extends Model
         'variation_index' => 'array',
         'images' => 'array',
         'missing_variations' => 'array',
+        'excluded_variations' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -208,17 +209,84 @@ class ProductGroup extends Model
             ->with(['productExtraOptions']);
     }
 
+    /**
+     * Alle combinaties die nog niet bestaan en niet zijn uitgesloten. Dit is
+     * de enige bron voor de badge, de vinklijst en de job zonder selectie,
+     * zodat een uitsluiting overal tegelijk geldt.
+     */
     public function missingVariations(): array
     {
         $variations = $this->possibleVariations();
+        $excluded = $this->excludedVariations();
 
         foreach ($variations as $variationKey => $variation) {
-            if ($this->variationExists($variation)) {
+            if ($this->variationExists($variation) || in_array(static::normalizeVariation($variation), $excluded, true)) {
                 unset($variations[$variationKey]);
             }
         }
 
         return $variations;
+    }
+
+    /**
+     * Uitgesloten combinaties, elk als gesorteerde lijst van
+     * product_filter_option_id's zodat de filtervolgorde niet meetelt.
+     *
+     * @return array<int, array<int, int>>
+     */
+    public function excludedVariations(): array
+    {
+        return collect($this->excluded_variations ?? [])
+            ->map(fn ($variation) => static::normalizeVariation((array) $variation))
+            ->filter(fn ($variation) => count($variation))
+            ->unique(fn ($variation) => implode('-', $variation))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<int, int>>  $variations
+     */
+    public function excludeVariations(array $variations): void
+    {
+        $this->saveExcludedVariations(array_merge($this->excludedVariations(), $variations));
+    }
+
+    /**
+     * @param  array<int, array<int, int>>  $variations
+     */
+    public function restoreVariations(array $variations): void
+    {
+        $restore = collect($variations)->map(fn ($v) => static::normalizeVariation((array) $v))->all();
+
+        $this->saveExcludedVariations(
+            collect($this->excludedVariations())
+                ->reject(fn ($variation) => in_array($variation, $restore, true))
+                ->all()
+        );
+    }
+
+    private function saveExcludedVariations(array $variations): void
+    {
+        $this->excluded_variations = collect($variations)
+            ->map(fn ($variation) => static::normalizeVariation((array) $variation))
+            ->filter(fn ($variation) => count($variation))
+            ->unique(fn ($variation) => implode('-', $variation))
+            ->values()
+            ->all();
+        $this->missing_variations = $this->missingVariations();
+        $this->saveQuietly();
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public static function normalizeVariation(array $variation): array
+    {
+        $ids = array_values(array_unique(array_map('intval', array_values($variation))));
+        sort($ids);
+
+        return $ids;
     }
 
     public function variationExists(array $array): bool

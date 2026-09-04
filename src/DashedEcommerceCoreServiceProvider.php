@@ -1018,7 +1018,7 @@ MARKDOWN,
                 ],
                 [
                     'heading' => 'Variaties automatisch aanmaken',
-                    'body' => 'Bovenaan een groep staat de actie "Ontbrekende variaties aanmaken". Die bekijkt de filters die je op de groep hebt gezet (zoals Maat en Kleur) en maakt in een keer alle combinaties aan die nog niet bestaan. Een badge laat zien hoeveel combinaties er ontbreken.',
+                    'body' => 'Bovenaan een groep staat de actie "Ontbrekende variaties aanmaken". Die bekijkt de filters die je op de groep hebt gezet (zoals Maat en Kleur) en maakt in een keer alle combinaties aan die nog niet bestaan. Een badge laat zien hoeveel combinaties er ontbreken. Combinaties die je nooit wilt verkopen vink je uit en sluit je met de schakelaar onderin uit; ze tellen dan niet meer mee. Via de knop "Uitgesloten variaties" zet je ze later weer terug.',
                 ],
                 [
                     'heading' => 'AI beschrijvingen',

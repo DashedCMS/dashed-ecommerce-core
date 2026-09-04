@@ -213,13 +213,65 @@ class ProductGroupResource extends Resource
                             ->options(static::missingVariationOptions($record))
                             ->columns(2)
                             ->bulkToggleable(),
+                        Toggle::make('exclude_unchecked')
+                            ->label(__('Niet-aangevinkte variaties uitsluiten van toekomstige voorstellen'))
+                            ->helperText(__('Uitgesloten variaties tellen niet meer mee en staan niet meer in deze lijst. Terugzetten kan via de knop "Uitgesloten variaties".'))
+                            ->default(false),
                     ])
                     ->action(function (array $data, $record) {
-                        $variations = collect($data['variations'] ?? [])
-                            ->map(fn ($key) => array_values(array_filter(array_map('intval', explode('-', (string) $key)))))
-                            ->filter(fn ($ids) => count($ids))
-                            ->values()
-                            ->all();
+                        $allKeys = array_keys(static::missingVariationOptions($record));
+                        $checkedKeys = array_values(array_intersect($allKeys, $data['variations'] ?? []));
+                        $variations = static::variationsFromKeys($checkedKeys);
+
+                        $excluded = 0;
+                        if ($data['exclude_unchecked'] ?? false) {
+                            $toExclude = static::variationsFromKeys(array_values(array_diff($allKeys, $checkedKeys)));
+                            $excluded = count($toExclude);
+                            if ($excluded) {
+                                $record->excludeVariations($toExclude);
+                            }
+                        }
+
+                        if (! count($variations) && ! $excluded) {
+                            Notification::make()
+                                ->title(__('Geen variaties geselecteerd'))
+                                ->warning()
+                                ->send();
+
+                            return;
+                        }
+
+                        if (count($variations)) {
+                            CreateMissingProductVariationsJob::dispatch($record, $variations)
+                                ->onQueue('ecommerce');
+                        }
+
+                        $title = count($variations)
+                            ? __(':aantal variatie(s) worden aangemaakt, refresh de pagina om de voortgang te zien', ['aantal' => count($variations)])
+                            : __(':aantal variatie(s) uitgesloten', ['aantal' => $excluded]);
+
+                        Notification::make()
+                            ->title($title)
+                            ->body(count($variations) && $excluded ? __(':aantal variatie(s) uitgesloten', ['aantal' => $excluded]) : null)
+                            ->success()
+                            ->send();
+                    }),
+                \Filament\Actions\Action::make('restoreExcludedVariations')
+                    ->label(fn ($record) => __('Uitgesloten variaties (:aantal)', ['aantal' => count($record->excludedVariations())]))
+                    ->color('gray')
+                    ->visible(fn ($livewire, $record) => count($record->excludedVariations()) && $livewire instanceof EditProductGroup)
+                    ->modalHeading(__('Uitgesloten variaties'))
+                    ->modalDescription(__('Deze variaties worden niet meer voorgesteld. Vink aan welke je weer wilt laten voorstellen.'))
+                    ->modalSubmitActionLabel(__('Geselecteerde terugzetten'))
+                    ->form(fn ($record) => [
+                        CheckboxList::make('variations')
+                            ->label(__('Terug te zetten variaties'))
+                            ->options(static::excludedVariationOptions($record))
+                            ->columns(2)
+                            ->bulkToggleable(),
+                    ])
+                    ->action(function (array $data, $record) {
+                        $variations = static::variationsFromKeys($data['variations'] ?? []);
 
                         if (! count($variations)) {
                             Notification::make()
@@ -230,11 +282,10 @@ class ProductGroupResource extends Resource
                             return;
                         }
 
-                        CreateMissingProductVariationsJob::dispatch($record, $variations)
-                            ->onQueue('ecommerce');
+                        $record->restoreVariations($variations);
 
                         Notification::make()
-                            ->title(__(':aantal variatie(s) worden aangemaakt, refresh de pagina om de voortgang te zien', ['aantal' => count($variations)]))
+                            ->title(__(':aantal variatie(s) worden weer voorgesteld', ['aantal' => count($variations)]))
                             ->success()
                             ->send();
                     }),
@@ -663,9 +714,42 @@ class ProductGroupResource extends Resource
      */
     public static function missingVariationOptions($record): array
     {
-        $missing = $record->missingVariations();
+        return static::variationOptions($record->missingVariations());
+    }
 
-        $allOptionIds = collect($missing)
+    /**
+     * Zelfde vorm als missingVariationOptions(), maar voor de uitgesloten
+     * combinaties, zodat de terugzet-modal dezelfde leesbare lijst toont.
+     *
+     * @return array<string, string>
+     */
+    public static function excludedVariationOptions($record): array
+    {
+        return static::variationOptions($record->excludedVariations());
+    }
+
+    /**
+     * Zet een vinklijst-key ("12-34") terug om naar de optie-id's.
+     *
+     * @param  array<int, string>  $keys
+     * @return array<int, array<int, int>>
+     */
+    public static function variationsFromKeys(array $keys): array
+    {
+        return collect($keys)
+            ->map(fn ($key) => array_values(array_filter(array_map('intval', explode('-', (string) $key)))))
+            ->filter(fn ($ids) => count($ids))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @param  array<int, array<int, int>>  $variations
+     * @return array<string, string>
+     */
+    private static function variationOptions(array $variations): array
+    {
+        $allOptionIds = collect($variations)
             ->flatMap(fn ($variation) => array_values($variation))
             ->unique()
             ->all();
@@ -676,7 +760,7 @@ class ProductGroupResource extends Resource
             ->keyBy('id');
 
         $result = [];
-        foreach ($missing as $variation) {
+        foreach ($variations as $variation) {
             $optionIds = array_values($variation);
             $key = implode('-', $optionIds);
             $label = collect($optionIds)
