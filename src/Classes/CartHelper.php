@@ -360,6 +360,14 @@ class CartHelper
         // 90 dagen is prima
         Cookie::queue($cookieName, $token, 60 * 24 * 90);
 
+        // Het nieuwe token ook op het huidige verzoek zetten: de cookie zelf
+        // komt pas bij het volgende verzoek mee. Zonder dit maakt elke
+        // volgende aanroep in ditzelfde verzoek (een tweede addToCart, of
+        // getCart() gevolgd door addToCart met lockForUpdate) wéér een nieuw
+        // token en dus een nieuwe, lege winkelwagen aan; de bezoeker houdt
+        // dan alleen het laatst toegevoegde product over.
+        request()->cookies->set($cookieName, $token);
+
         return $token;
     }
 
