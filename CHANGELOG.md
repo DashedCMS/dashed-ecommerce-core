@@ -23,6 +23,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - Recommendation engine with 7 placement adapters (cart/checkout/product-detail/3 mailables/popup). See docs/recommendations.md.
 
 ### Fixed
+- **Verkoopdoelen-widget gaf een fout bij het lazy laden op het dashboard.** `DoelenWidget` stond wel in de `dashboardWidgets`-builder maar niet in `->widgets([...])` van de plugin, en was dus nergens als Livewire-component geregistreerd. Zolang de grid elke widget in de paginarequest zelf mountte viel dat niet op, maar sinds het lazy laden (dashed-core v4.56.0) vraagt de browser de inhoud in een eigen `livewire/update`-verzoek op, en Livewire kon de componentnaam toen niet meer naar de klasse terugvertalen: een 419 (release token mismatch) in plaats van de widget. De widget staat nu in de widgetlijst van de plugin, en `DashboardWidgetRegistrationTest` in de root controleert voortaan voor elke widget in de builder dat de naam terug te vinden is.
 - **Fatal error op de productdetailpagina onder PHP 8.4.** `CrossSellVariantPicker` herdeclareerde de property `$addedVia` met een andere default (`'cross_sell'`) dan de trait `ProductCartActions` (`null`). PHP 8.4 beschouwt dat als een incompatibele compositie en gooit een fatal error (`define the same property ($addedVia) ... the definition differs and is considered incompatible`). De property-default is verwijderd; de waarde wordt nu in `mount()` gezet.
 
 ## v4.82.1 - 2026-07-20

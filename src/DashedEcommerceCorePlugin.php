@@ -36,6 +36,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductFinderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ShippingClassResource;
+use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportInvoicesPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Exports\ExportProductsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderSettingsPage;
@@ -131,6 +132,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 OrderAttributionStatsWidget::class,
                 PrintQueueWidget::class,
                 OrderOutstandingStatsWidget::class,
+                DoelenWidget::class,
             ])
             ->resources([
                 PaymentMethodResource::class,
