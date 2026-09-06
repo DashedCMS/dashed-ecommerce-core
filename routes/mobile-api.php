@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Illuminate\Support\Facades\Route;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrintJobController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DiscountController;
@@ -183,6 +184,10 @@ Route::prefix('api/v1')
 
         // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
         // de print-queue + de daemon op de Pi/NAS.
+        // Print-wachtrij (CMS Print queue): bekijken + retry/cancel per taak.
+        Route::get('print-jobs', [PrintJobController::class, 'index'])->middleware('ability:orders.write');
+        Route::post('print-jobs/{id}/retry', [PrintJobController::class, 'retry'])->middleware('ability:orders.write');
+        Route::post('print-jobs/{id}/cancel', [PrintJobController::class, 'cancel'])->middleware('ability:orders.write');
         Route::get('printers', [PrinterController::class, 'index'])->middleware('ability:orders.write');
         Route::post('printers', [PrinterController::class, 'store'])->middleware('ability:orders.write');
         Route::patch('printers/{printer}', [PrinterController::class, 'update'])->middleware('ability:orders.write');
