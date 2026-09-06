@@ -19,6 +19,7 @@ class OrderSummaryResource extends JsonResource
             'invoice_id' => $this->invoice_id,
             'status' => $this->status,
             'fulfillment_status' => $this->fulfillment_status,
+            'is_priority' => (bool) $this->is_priority,
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             'created_at' => optional($this->created_at)->toIso8601String(),

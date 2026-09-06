@@ -31,6 +31,7 @@ class OrderResource extends JsonResource
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             'email' => $this->email,
             'order_origin' => $this->order_origin,
+            'is_priority' => (bool) $this->is_priority,
             'created_at' => optional($this->created_at)->toIso8601String(),
             'products' => OrderProductResource::collection($this->whenLoaded('orderProducts')),
         ];

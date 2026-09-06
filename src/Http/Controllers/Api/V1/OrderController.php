@@ -50,6 +50,11 @@ class OrderController extends Controller
             $query->unhandled();
         }
 
+        // Alleen prioriteit-orders (handmatige markering, zie ook Filament-filter).
+        if ($request->boolean('priority')) {
+            $query->where('is_priority', true);
+        }
+
         $this->applyArrayFilter($query, 'status', $request->query('status'));
         $this->applyFulfillmentFilter($query, $request->query('fulfillment_status'));
         $this->applyRetourFilter($query, $request->query('retour_status'));
@@ -1474,6 +1479,16 @@ class OrderController extends Controller
         if ($values) {
             $query->whereIn($column, $values);
         }
+    }
+
+    /** Markeer/ontmarkeer een bestelling als prioriteit (zelfde vlag als het CMS). */
+    public function togglePriority(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $on = $request->has('on') ? $request->boolean('on') : ! $model->is_priority;
+        $model->forceFill(['is_priority' => $on])->save();
+
+        return response()->json(['data' => ['id' => $model->id, 'is_priority' => (bool) $model->is_priority]]);
     }
 
     private function applyFulfillmentFilter(Builder $query, mixed $value): void

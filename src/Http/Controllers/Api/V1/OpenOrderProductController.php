@@ -118,6 +118,11 @@ class OpenOrderProductController extends Controller
             }
         }
 
+        // Alleen prioriteit-orders (handmatige markering).
+        if ($request->boolean('priority')) {
+            $query->where('o.is_priority', true);
+        }
+
         SmartSearch::apply($query, $request->query('search'), ['op.name', 'o.invoice_id']);
 
         return $query;
@@ -138,7 +143,7 @@ class OpenOrderProductController extends Controller
             ->select([
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
                 'op.product_extras',
-                'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at',
+                'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at', 'o.is_priority',
                 'o.first_name', 'o.last_name', 'o.email',
             ])
             ->orderBy($sortColumn, $sortDir)
@@ -162,6 +167,7 @@ class OpenOrderProductController extends Controller
                 'stock' => $p ? (int) $p['stock'] : null,
                 'image_url' => $p['image_url'] ?? null,
                 'order_origin' => $r->order_origin,
+                'is_priority' => (bool) $r->is_priority,
                 'fulfillment_status' => $r->fulfillment_status,
                 'customer_name' => trim((string) ($r->first_name . ' ' . $r->last_name)) ?: $r->email,
                 'created_at' => $r->created_at ? (string) $r->created_at : null,

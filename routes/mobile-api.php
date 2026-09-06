@@ -184,6 +184,9 @@ Route::prefix('api/v1')
 
         // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
         // de print-queue + de daemon op de Pi/NAS.
+        // Prioriteit-markering op een bestelling (aan/uit).
+        Route::post('orders/{order}/priority', [OrderController::class, 'togglePriority'])->middleware('ability:orders.write');
+
         // Print-wachtrij (CMS Print queue): bekijken + retry/cancel per taak.
         Route::get('print-jobs', [PrintJobController::class, 'index'])->middleware('ability:orders.write');
         Route::post('print-jobs/{id}/retry', [PrintJobController::class, 'retry'])->middleware('ability:orders.write');

@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables;
 
 use Filament\Tables\Table;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -55,6 +56,14 @@ class OpenOrderProductsTable
                     ->label(__('Product ID'))
                     ->toggleable()
                     ->sortable(),
+                IconColumn::make('order.is_priority')
+                    ->label(__('Prioriteit'))
+                    ->boolean()
+                    ->trueIcon('heroicon-s-star')
+                    ->falseIcon('heroicon-o-minus-small')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->toggleable(),
                 TextColumn::make('name')
                     ->label(__('Productnaam'))
                     ->wrap()
@@ -183,6 +192,13 @@ class OpenOrderProductsTable
                         return $query->whereHas('order', fn ($s) => $s->whereIn('order_origin', $data['values']));
                     }),
 
+                TernaryFilter::make('is_priority')
+                    ->label(__('Prioriteit'))
+                    ->queries(
+                        true: fn ($query) => $query->whereHas('order', fn ($q) => $q->where('is_priority', true)),
+                        false: fn ($query) => $query->whereHas('order', fn ($q) => $q->where('is_priority', false)),
+                        blank: fn ($query) => $query,
+                    ),
                 TernaryFilter::make('has_product_extras')
                     ->label(__('Product opties'))
                     ->placeholder(__('Alles'))

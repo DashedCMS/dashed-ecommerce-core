@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Mail;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
@@ -317,6 +318,15 @@ class OrderResource extends Resource
 
         return $table
             ->columns([
+                IconColumn::make('is_priority')
+                    ->label(__('Prioriteit'))
+                    ->boolean()
+                    ->trueIcon('heroicon-s-star')
+                    ->falseIcon('heroicon-o-minus-small')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('invoice_id')
                     ->label(__('Bestelling ID'))
                     ->toggleable()
@@ -423,6 +433,16 @@ class OrderResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                Filter::make('is_priority')
+                    ->toggle()
+                    ->label(__('Alleen prioriteit'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (! ($data['isActive'] ?? false)) {
+                            return $query;
+                        }
+
+                        return $query->where('is_priority', true);
+                    }),
                 Filter::make('proforma_awaiting_payment')
                     ->toggle()
                     ->label(__('Wachtend op betaling (proforma)'))
@@ -556,6 +576,14 @@ class OrderResource extends Resource
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
+                Action::make('togglePriority')
+                    ->label(fn ($record) => $record->is_priority ? __('Prioriteit uitzetten') : __('Markeer als prioriteit'))
+                    ->icon('heroicon-o-star')
+                    ->color('warning')
+                    ->action(function ($record) {
+                        // forceFill: onafhankelijk van de mass-assignment-config van Order.
+                        $record->forceFill(['is_priority' => ! $record->is_priority])->save();
+                    }),
                 Action::make('deleteDraft')
                     ->label(__('Verwijderen'))
                     ->icon('heroicon-o-trash')
