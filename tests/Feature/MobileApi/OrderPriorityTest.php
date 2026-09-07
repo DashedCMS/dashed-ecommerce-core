@@ -2,6 +2,7 @@
 
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 
 /**
  * Prioriteit-markering: toggle-endpoint, vlag in de lijst-payload en het
@@ -32,4 +33,24 @@ it('orders: prioriteit togglen, zien in de lijst en erop filteren', function () 
     // Expliciet uitzetten.
     $off = $this->postJson("/api/v1/orders/{$a->id}/priority", ['on' => false], ['X-Site-Id' => 'site']);
     expect($off->json('data.is_priority'))->toBeFalse();
+});
+
+it('open-order-products: prioriteit-orders staan altijd bovenaan', function () {
+    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+
+    // Nieuwste order zónder prioriteit, oudere mét — prioriteit moet winnen
+    // van de standaard-sortering (nieuwste eerst).
+    $normal = Order::create(['site_id' => 'site', 'email' => 'a@example.com', 'invoice_id' => 'INV-N' . strtoupper(uniqid()), 'status' => 'paid', 'fulfillment_status' => 'unhandled']);
+    $prio = Order::create(['site_id' => 'site', 'email' => 'b@example.com', 'invoice_id' => 'INV-P' . strtoupper(uniqid()), 'status' => 'paid', 'fulfillment_status' => 'unhandled']);
+    $prio->forceFill(['is_priority' => true])->save();
+
+    OrderProduct::create(['order_id' => $normal->id, 'name' => 'Gewoon', 'quantity' => 1, 'price' => 5]);
+    OrderProduct::create(['order_id' => $prio->id, 'name' => 'Belangrijk', 'quantity' => 1, 'price' => 5]);
+
+    $res = $this->getJson('/api/v1/open-order-products', ['X-Site-Id' => 'site']);
+    $res->assertOk();
+
+    $rows = collect($res->json('data'));
+    expect($rows->first()['name'])->toBe('Belangrijk')
+        ->and($rows->first()['is_priority'])->toBeTrue();
 });

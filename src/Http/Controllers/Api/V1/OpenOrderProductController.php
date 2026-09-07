@@ -146,6 +146,9 @@ class OpenOrderProductController extends Controller
                 'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at', 'o.is_priority',
                 'o.first_name', 'o.last_name', 'o.email',
             ])
+            // Prioriteit-orders altijd bovenaan, ongeacht de gekozen sortering
+            // (de app sorteert client-side identiek).
+            ->orderByDesc('o.is_priority')
             ->orderBy($sortColumn, $sortDir)
             ->forPage($page, $perPage)
             ->get();
