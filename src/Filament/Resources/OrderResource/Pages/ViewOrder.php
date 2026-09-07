@@ -117,8 +117,10 @@ class ViewOrder extends ViewRecord
 
         return array_merge([
             Action::make('togglePriority')
+                ->iconButton()
                 ->label(fn () => $this->record->is_priority ? __('Prioriteit uitzetten') : __('Markeer als prioriteit'))
-                ->icon('heroicon-o-star')
+                ->tooltip(fn () => $this->record->is_priority ? __('Prioriteit uitzetten') : __('Markeer als prioriteit'))
+                ->icon(fn () => $this->record->is_priority ? 'heroicon-s-star' : 'heroicon-o-star')
                 ->color(fn () => $this->record->is_priority ? 'gray' : 'warning')
                 ->action(function () {
                     $this->record->forceFill(['is_priority' => ! $this->record->is_priority])->save();
