@@ -34,16 +34,19 @@ Route::post('/dashed/exchange', [TransactionController::class, 'exchange'])
 
 Route::middleware(['web'])->group(function () {
     Route::get('/pay/order/{orderHash}/remainder', RemainderPaymentController::class)
+        ->middleware('throttle:dashed-order-pages')
         ->name('dashed.frontend.remainder-payment');
     Route::get('/proforma/{orderHash}', [ProformaCheckoutController::class, 'show'])
-        ->middleware(FrontendMiddleware::class)
+        ->middleware([FrontendMiddleware::class, 'throttle:dashed-order-pages'])
         ->name('dashed.frontend.proforma-checkout');
 });
 
 Route::middleware(['web'])->group(function () {
     Route::get('/return-status/{hash}', [ReturnStatusController::class, 'show'])
+        ->middleware('throttle:dashed-order-pages')
         ->name('dashed.frontend.return-status');
     Route::get('/return-status/{hash}/label', [ReturnStatusController::class, 'downloadLabel'])
+        ->middleware('throttle:dashed-order-pages')
         ->name('dashed.frontend.return-status.label');
 });
 
@@ -70,13 +73,15 @@ Route::group(
         //        Route::get('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [CartController::class, 'checkout'])->name('dashed.frontend.checkout');
         //        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [TransactionController::class, 'startTransaction'])->name('dashed.frontend.start-transaction');
         //        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [TransactionController::class, 'complete'])->name('dashed.frontend.checkout.complete');
-        Route::get('/restore-cart', [CartController::class, 'restoreCart'])->name('dashed.frontend.restore-cart');
-        Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->name('dashed.frontend.download-invoice');
-        Route::get('/download-packing-slip/{orderHash}', [CartController::class, 'downloadPackingSlip'])->name('dashed.frontend.download-packing-slip');
-        Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->name('dashed.frontend.cart.apply-discount-code');
-        Route::post('/add-to-cart/{product}', [CartController::class, 'addToCart'])->name('dashed.frontend.cart.add-to-cart');
-        Route::post('/update-to-cart/{rowId}', [CartController::class, 'updateToCart'])->name('dashed.frontend.cart.update-to-cart');
-        Route::post('/remove-from-cart/{rowId}', [CartController::class, 'removeFromCart'])->name('dashed.frontend.cart.remove-from-cart');
+        Route::get('/restore-cart', [CartController::class, 'restoreCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.restore-cart');
+        // Op orderhash: de hash is niet te raden, maar wie het probeert loopt
+        // hier tegen de limiet aan. De toegang zelf regelt InvoiceAccess.
+        Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->middleware('throttle:dashed-order-pages')->name('dashed.frontend.download-invoice');
+        Route::get('/download-packing-slip/{orderHash}', [CartController::class, 'downloadPackingSlip'])->middleware('throttle:dashed-order-pages')->name('dashed.frontend.download-packing-slip');
+        Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->middleware('throttle:dashed-discount-code')->name('dashed.frontend.cart.apply-discount-code');
+        Route::post('/add-to-cart/{product}', [CartController::class, 'addToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.add-to-cart');
+        Route::post('/update-to-cart/{rowId}', [CartController::class, 'updateToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.update-to-cart');
+        Route::post('/remove-from-cart/{rowId}', [CartController::class, 'removeFromCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.remove-from-cart');
     }
 );
 

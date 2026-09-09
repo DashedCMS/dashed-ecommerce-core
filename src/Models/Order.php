@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedCore\Classes\Mails;
@@ -729,7 +730,7 @@ class Order extends Model
         $pdf->loadHTML($contents);
         $output = $pdf->output();
 
-        Storage::disk('dashed')->put($invoicePath, $output);
+        Storage::disk('dashed')->put($invoicePath, $output, 'private');
     }
 
     public function createNormalInvoice()
@@ -765,7 +766,7 @@ class Order extends Model
             OrderLog::createLog(orderId: $this->id, note: 'Output retrieved', isDebugLog: true);
 
             //                OrderLog::createLog(orderId: $this->id, note: 'Put on disk', isDebugLog: true);
-            Storage::disk('dashed')->put($invoicePath, $output);
+            Storage::disk('dashed')->put($invoicePath, $output, 'private');
             //                OrderLog::createLog(orderId: $this->id, note: 'Put on disk done', isDebugLog: true);
 
             //                OrderLog::createLog(orderId: $this->id, note: 'Dispatch InvoiceCreatedEvent', isDebugLog: true);
@@ -788,7 +789,7 @@ class Order extends Model
                 $output = $pdf->output();
 
                 $invoicePath = '/dashed/packing-slips/packing-slip-'.($order->invoice_id ?: $order->id).'-'.$order->hash.'.pdf';
-                Storage::disk('dashed')->put($invoicePath, $output);
+                Storage::disk('dashed')->put($invoicePath, $output, 'private');
             }
         }
     }
@@ -807,7 +808,7 @@ class Order extends Model
                 $output = $pdf->output();
 
                 $invoicePath = '/dashed/invoices/invoice-'.$order->invoice_id.'-'.$order->hash.'.pdf';
-                Storage::disk('dashed')->put($invoicePath, $output);
+                Storage::disk('dashed')->put($invoicePath, $output, 'private');
 
                 InvoiceCreatedEvent::dispatch($this);
             }
@@ -1560,16 +1561,22 @@ class Order extends Model
         }
     }
 
+    /**
+     * Facturen en pakbonnen staan prive op de schijf en de downloadroute eist
+     * een handtekening (of een ingelogde eigenaar of beheerder, zie
+     * InvoiceAccess). De link is daarom altijd ondertekend, zonder vervaldatum:
+     * hij staat in de bevestigingsmail en moet daar blijven werken.
+     */
     public function downloadInvoiceUrl(): ?string
     {
         if (Storage::disk('dashed')->exists($this->invoicePath())) {
-            return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
+            return URL::signedRoute('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
         }
 
         $this->createInvoice();
 
         if (Storage::disk('dashed')->exists($this->invoicePath())) {
-            return route('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
+            return URL::signedRoute('dashed.frontend.download-invoice', ['orderHash' => $this->hash]);
         }
 
         return null;
@@ -1577,14 +1584,14 @@ class Order extends Model
 
     public function downloadPackingslipUrl(): ?string
     {
-        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf')) {
-            return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
+        if (Storage::disk('dashed')->exists($this->packingSlipPath())) {
+            return URL::signedRoute('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         }
 
         $this->createPackingSlip();
 
-        if (Storage::disk('dashed')->exists('dashed/packing-slips/packing-slip-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf')) {
-            return route('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
+        if (Storage::disk('dashed')->exists($this->packingSlipPath())) {
+            return URL::signedRoute('dashed.frontend.download-packing-slip', ['orderHash' => $this->hash]);
         }
 
         return null;

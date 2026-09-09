@@ -1715,6 +1715,23 @@ MARKDOWN,
             \Dashed\DashedEcommerceCore\Support\Analysis\Analyses\VariantSpreadAnalysis::class,
         ]);
 
+        // Bestel-, winkelwagen- en downloadroutes horen niet in een zoekmachine.
+        cms()->builder(\Dashed\DashedCore\Classes\RobotsTxtBuilder::BUILDER, [
+            '/download-invoice/',
+            '/download-packing-slip/',
+            '/proforma/',
+            '/pay/',
+            '/return-status/',
+            '/restore-cart',
+            '/recover-order/',
+            '/abandoned-cart/',
+            '/add-to-cart/',
+            '/update-to-cart/',
+            '/remove-from-cart/',
+            '/apply-discount-code',
+            '/ecommerce/',
+        ]);
+
         cms()->builder('dashboardWidgets', [
             'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 'full',      'sort' => 10],
             'ec-revenue' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\RevenueStats::class,                         'label' => 'Omzet',                        'width' => 'full',      'sort' => 15],
@@ -2400,6 +2417,7 @@ MARKDOWN,
             ->hasViews()
             ->hasCommands([
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\PrivatizeInvoicesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::class,
                 RecalculatePurchasesCommand::class,
                 CancelOldOrders::class,

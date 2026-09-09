@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\InvoiceAccess;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -308,33 +309,33 @@ class CartController extends Controller
     {
         $order = Order::where('hash', $orderHash)->first();
 
-        $hasAccessToOrder = false;
-
-        if ($order) {
-            $hasAccessToOrder = true;
-        }
-
-        if (! $hasAccessToOrder || ! $order->downloadInvoiceUrl()) {
+        if (! $order) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return Storage::disk('dashed')->download('dashed/invoices/invoice-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
+        abort_unless(InvoiceAccess::allows($request, $order), 403);
+
+        if (! $order->downloadInvoiceUrl()) {
+            return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
+        }
+
+        return Storage::disk('dashed')->download($order->invoicePath());
     }
 
     public function downloadPackingSlip(Request $request, $orderHash)
     {
         $order = Order::where('hash', $orderHash)->first();
 
-        $hasAccessToOrder = false;
-
-        if ($order) {
-            $hasAccessToOrder = true;
-        }
-
-        if (! $hasAccessToOrder || ! $order->downloadPackingslipUrl()) {
+        if (! $order) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }
 
-        return Storage::disk('dashed')->download('dashed/packing-slips/packing-slip-' . ($order->invoice_id ?: $order->id) . '-' . $order->hash . '.pdf');
+        abort_unless(InvoiceAccess::allows($request, $order), 403);
+
+        if (! $order->downloadPackingslipUrl()) {
+            return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
+        }
+
+        return Storage::disk('dashed')->download($order->packingSlipPath());
     }
 }

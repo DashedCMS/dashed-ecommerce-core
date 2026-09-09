@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
+use Illuminate\Validation\Rules\Password;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -579,7 +580,7 @@ class Checkout extends Component
             'password' => [
                 Rule::requiredIf(Customsetting::get('checkout_account') == 'required' && ! auth()->check()),
                 'nullable',
-                'min:6',
+                Password::defaults(),
                 'max:255',
             ],
             'passwordConfirmation' => [
