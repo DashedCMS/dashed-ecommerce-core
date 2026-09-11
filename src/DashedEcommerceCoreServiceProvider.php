@@ -2102,6 +2102,38 @@ MARKDOWN,
         }
 
         self::registreerBewaartermijnen();
+
+        // Beveiligingsmaatregelen uit het playbook (september 2026): bewaking
+        // van geldvelden, betaalmethodes en handmatige betaalmarkeringen, en
+        // twee rijen op de Beveiligingscheck. Zie EcommerceActionMonitor en
+        // ManualPaymentPin.
+        \Dashed\DashedEcommerceCore\Classes\EcommerceActionMonitor::register();
+
+        if (class_exists(\Dashed\DashedCore\Security\SecurityCheck::class) && method_exists(\Dashed\DashedCore\Security\SecurityCheck::class, 'extend')) {
+            \Dashed\DashedCore\Security\SecurityCheck::extend(function (): array {
+                $pin = \Dashed\DashedEcommerceCore\Classes\ManualPaymentPin::configured();
+                $ownActive = \Dashed\DashedEcommerceCore\Models\PaymentMethod::query()->where('psp', 'own')->where('type', 'online')->where('active', true)->pluck('name')->all();
+
+                return [
+                    [
+                        'key' => 'manual_paid_pin',
+                        'label' => __('Pincode bij handmatig op betaald zetten'),
+                        'status' => $pin ? \Dashed\DashedCore\Security\SecurityCheck::OK : \Dashed\DashedCore\Security\SecurityCheck::WARNING,
+                        'detail' => $pin
+                            ? __('Gezet (MANUAL_PAID_PIN): een gekaapte beheersessie kan geen bestelling op betaald zetten zonder de pincode.')
+                            : __('Niet gezet: iedereen met een beheersessie kan een bestelling handmatig op betaald zetten. Zet MANUAL_PAID_PIN in .env als de webshop na betaling iets uitlevert.'),
+                    ],
+                    [
+                        'key' => 'own_psp_checkout',
+                        'label' => __('Handmatige betaling in de checkout'),
+                        'status' => $ownActive === [] ? \Dashed\DashedCore\Security\SecurityCheck::OK : \Dashed\DashedCore\Security\SecurityCheck::WARNING,
+                        'detail' => $ownActive === []
+                            ? __('Geen actieve checkoutbetaalmethode met psp own.')
+                            : __('Actief met psp own (kost niets, loopt langs geen PSP): :namen. Zet DASHED_ALLOW_OWN_PSP_IN_CHECKOUT=false of draai dashed:disable-own-payment-methods als dit niet de bedoeling is.', ['namen' => implode(', ', $ownActive)]),
+                    ],
+                ];
+            });
+        }
     }
 
     /**
@@ -2416,6 +2448,7 @@ MARKDOWN,
             ])
             ->hasViews()
             ->hasCommands([
+                \Dashed\DashedEcommerceCore\Commands\DisableOwnPaymentMethodsCommand::class,
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrivatizeInvoicesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::class,

@@ -318,6 +318,13 @@ class OrderController extends Controller
     public function markAsPaid(Request $request, int $order): OrderResource
     {
         $model = Order::thisSite()->findOrFail($order);
+
+        // Zelfde pincode als de CMS-knoppen (MANUAL_PAID_PIN); zonder
+        // pincode in .env is de controle uit.
+        if ($error = \Dashed\DashedEcommerceCore\Classes\ManualPaymentPin::attempt($request->input('pin'), $model)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['pin' => $error]);
+        }
+
         $model->markAsPaid();
 
         activity()->performedOn($model)->causedBy($request->user())->log('mobile-api: gemarkeerd als betaald');

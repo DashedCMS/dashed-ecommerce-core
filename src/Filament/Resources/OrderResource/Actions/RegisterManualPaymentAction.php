@@ -34,11 +34,14 @@ class RegisterManualPaymentAction
                     ])
                     ->default('cash')
                     ->required(),
+                \Dashed\DashedEcommerceCore\Classes\ManualPaymentPin::formField(),
                 Textarea::make('note')
                     ->label(__('Opmerking'))
                     ->nullable(),
             ])
             ->action(function (array $data) use ($order) {
+                \Dashed\DashedEcommerceCore\Classes\ManualPaymentPin::verifyOrFail($data['pin'] ?? null, $order);
+
                 (new self())->handle($order, $data);
 
                 Notification::make()

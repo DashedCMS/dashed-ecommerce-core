@@ -38,6 +38,22 @@ class PaymentMethod extends Model
             $paymentMethod->order = PaymentMethod::max('order') + 1;
         });
 
+        // Een betaalmethode met psp own kost niets en loopt langs geen PSP:
+        // in een checkout is dat de ingang voor orders van een cent die
+        // daarna handmatig op betaald gezet worden. Alleen actief als het
+        // project dat uitdrukkelijk toestaat (DASHED_ALLOW_OWN_PSP_IN_CHECKOUT).
+        static::saving(function (PaymentMethod $paymentMethod) {
+            if ($paymentMethod->psp === 'own' && $paymentMethod->type === 'online' && $paymentMethod->active && ! config('dashed-ecommerce-core.security.allow_own_psp_in_checkout', true)) {
+                $paymentMethod->active = false;
+
+                \Illuminate\Support\Facades\Log::warning('Betaalmethode met psp own mag niet actief zijn in de checkout; automatisch uitgezet.', [
+                    'payment_method_id' => $paymentMethod->id,
+                    'name' => $paymentMethod->name,
+                    'user_id' => auth()->id(),
+                ]);
+            }
+        });
+
         parent::booted();
     }
 

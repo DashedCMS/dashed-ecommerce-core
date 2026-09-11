@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.121.0 - 2026-09-11
+
+### Security
+Uit het Beveiligingsplaybook Dashed-projecten (M5, M7, M12); vereist dashed-core v4.62.0 voor `AdminActionMonitor` en `SecurityCheck::extend()`.
+- **Pincode bij handmatig op betaald zetten.** `ManualPaymentPin` (`MANUAL_PAID_PIN`) op "Voeg betaling toe", "Registreer handmatige betaling" en de app-endpoint `mark-as-paid` (veld `pin`). Twee foute pogingen per kwartier geven een melding, vijf blokkeren; elke foute poging staat bij de bestelling. Zonder pincode uit, met een rij op de Beveiligingscheck. Bewust geen `Order::saving`-haak: kassa, webhooks en proforma zetten orders legitiem op betaald.
+- **Handmatige betaling in de checkout.** `PaymentMethod::saving` zet een actieve checkoutmethode met psp `own` uit zodra `DASHED_ALLOW_OWN_PSP_IN_CHECKOUT=false` (standaard toegestaan); `dashed:disable-own-payment-methods`; rij op de Beveiligingscheck met de actieve methodes.
+- **Beheeracties bewaken.** `EcommerceActionMonitor`: geldvelden op een product (numeriek vergeleken; "prijs drastisch verlaagd" onder `ALERT_PRICE_DROP_FRACTION`), betaalmethode aan of uit, en meer dan `ALERT_MARKED_PAID_PER_10_MIN` handmatige betaalmarkeringen per gebruiker in tien minuten (een mail per uur).
+
 ## v4.120.0 - 2026-09-11
 
 ### Security
