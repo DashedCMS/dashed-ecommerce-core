@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.119.0 - 2026-09-10
+
+### Added
+- **Heropende bestellingen tellen alleen nieuwe zendingen mee.** Nieuwe kolom `fulfillment_reopened_at` op `dashed__orders`; `Order::changeFulfillmentStatus()` stempelt die bij elke overgang weg van `handled`. `Order::sinceFulfillmentReopened($query)` beperkt een query op zendingen of labels tot wat na die heropening is aangemaakt. De carrier-syncs van MyParcel en Veloyd gebruiken dat, zodat een bestelling die terug naar open is gezet niet door de al bezorgde pakketten meteen weer op afgehandeld belandt, maar pas als de nieuwe zending ook bezorgd is.
+- **Status na het aanmaken van een label.** De app-endpoint voor labels aanmaken accepteert `set_fulfillment_status` (een geldige fulfilmentstatus) en zet de bestelling na een geslaagd label direct door, dezelfde optie als de labelacties in het CMS.
+
 ## v4.118.0 - 2026-09-09
 
 ### Added

@@ -592,6 +592,13 @@ class OrderController extends Controller
     {
         $model = Order::thisSite()->findOrFail($order);
 
+        // Optioneel: direct na het aanmaken de bestelling doorzetten (bv. naar
+        // Ingepakt) — zelfde optie als de CMS-labelacties.
+        $request->validate([
+            'set_fulfillment_status' => ['nullable', 'string', Rule::in(array_keys(Orders::getFulfillmentStatusses()))],
+        ]);
+        $setStatus = (string) $request->input('set_fulfillment_status', '');
+
         $result = $this->attemptCreateLabel(
             $model,
             (string) $request->input('provider', ''),
@@ -599,6 +606,10 @@ class OrderController extends Controller
         );
 
         if ($result['ok']) {
+            if ($setStatus !== '') {
+                $model->changeFulfillmentStatus($setStatus);
+            }
+
             return response()->json(['success' => true, 'provider' => $result['provider'], 'message' => $result['message']]);
         }
 
@@ -638,7 +649,7 @@ class OrderController extends Controller
             'delivery_type' => $input['delivery_type'] ?? null,
         ], fn ($v) => $v !== null && $v !== '');
 
-        $extra = array_diff_key($input, array_flip(['provider', 'ids', 'carrier', 'package_type', 'delivery_type']));
+        $extra = array_diff_key($input, array_flip(['provider', 'ids', 'carrier', 'package_type', 'delivery_type', 'set_fulfillment_status']));
 
         return $basis + $extra;
     }

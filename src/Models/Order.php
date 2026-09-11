@@ -6,9 +6,9 @@ use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\URL;
 use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
@@ -78,6 +78,7 @@ class Order extends Model
         'applied_discount_codes' => 'array',
         'applied_gift_cards' => 'array',
         'packed_at' => 'datetime',
+        'fulfillment_reopened_at' => 'datetime',
         'is_proforma' => 'boolean',
         'proforma_allow_shipping' => 'boolean',
         'proforma_sent_at' => 'datetime',
@@ -1099,6 +1100,24 @@ class Order extends Model
         //            });
     }
 
+    /**
+     * Beperkt een query op zendingen of labels van deze bestelling tot wat
+     * is aangemaakt na de laatste heropening (terugzet van afgehandeld naar
+     * open). Zonder heropening blijft de query ongewijzigd.
+     *
+     * De carrier-syncs (MyParcel, Veloyd) leiden de fulfilment-status af
+     * uit de zendingen. Na een heropening zijn de oude zendingen al bezorgd
+     * en zeggen ze niets meer over wat er nog nagestuurd moet worden.
+     */
+    public function sinceFulfillmentReopened($query)
+    {
+        if ($this->fulfillment_reopened_at) {
+            $query->where('created_at', '>=', $this->fulfillment_reopened_at);
+        }
+
+        return $query;
+    }
+
     public function changeFulfillmentStatus($newStatus, ?string $note = null)
     {
         $oldStatus = $this->fulfillment_status;
@@ -1108,6 +1127,15 @@ class Order extends Model
         }
 
         $this->fulfillment_status = $newStatus;
+
+        // Terug van afgehandeld naar open: vanaf hier tellen alleen zendingen
+        // van na dit moment mee voor het automatisch afhandelen. Anders zet
+        // de eerstvolgende carrier-sync de bestelling meteen weer op
+        // afgehandeld, want de oude pakketten zijn al bezorgd.
+        if ($oldStatus === 'handled') {
+            $this->fulfillment_reopened_at = now();
+        }
+
         $this->save();
 
         // Elke fulfilment-statuswijziging hoort in het orderlogboek, juist ook
