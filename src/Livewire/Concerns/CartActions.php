@@ -2,17 +2,16 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
+use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
@@ -271,13 +270,17 @@ trait CartActions
                 }
 
                 if ($productValue['value'] ?? false) {
-                    if (Storage::disk('dashed')->exists($productValue['value'])) {
-                        $path = $productValue['value'];
-                        $value = str($path)->explode('/')->last();
-                    } else {
-                        $value = Str::uuid() . '-' . $productValue['value']->getClientOriginalName();
-                        $path = $productValue['value']->storeAs('dashed/product-extras', $value, 'dashed');
+                    $resolvedFile = ProductExtraFile::resolve($productValue['value']);
+
+                    if (! $resolvedFile) {
+                        return $this->checkCart('danger', Translation::get('invalid-file-for-product-extra', 'products', 'The file for option :optionName: is not allowed. Allowed: :allowed:', 'text', [
+                            'optionName' => $productExtra->name,
+                            'allowed' => implode(', ', ProductExtraFile::ALLOWED_EXTENSIONS),
+                        ]));
                     }
+
+                    $value = $resolvedFile['value'];
+                    $path = $resolvedFile['path'];
                 }
 
                 if (($value ?? false) && ($path ?? false)) {

@@ -2,12 +2,10 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Concerns;
 
-use Illuminate\Support\Str;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
@@ -22,6 +20,7 @@ use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Illuminate\Support\Collection as SupportCollection;
+use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 
 trait ProductCartActions
@@ -1040,13 +1039,17 @@ trait ProductCartActions
                 }
 
                 if ($productValue['value'] ?? false) {
-                    if (Storage::disk('dashed')->exists($productValue['value'])) {
-                        $path = $productValue['value'];
-                        $value = str($path)->explode('/')->last();
-                    } else {
-                        $value = Str::uuid().'-'.$productValue['value']->getClientOriginalName();
-                        $path = $productValue['value']->storeAs('dashed/product-extras', $value, 'dashed');
+                    $resolvedFile = ProductExtraFile::resolve($productValue['value']);
+
+                    if (! $resolvedFile) {
+                        return $this->checkCart('danger', Translation::get('invalid-file-for-product-extra', 'products', 'The file for option :optionName: is not allowed. Allowed: :allowed:', 'text', [
+                            'optionName' => $productExtra->name,
+                            'allowed' => implode(', ', ProductExtraFile::ALLOWED_EXTENSIONS),
+                        ]));
                     }
+
+                    $value = $resolvedFile['value'];
+                    $path = $resolvedFile['path'];
                 }
 
                 if (($value ?? false) && ($path ?? false)) {

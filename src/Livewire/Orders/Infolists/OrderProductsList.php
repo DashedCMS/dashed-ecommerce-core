@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 use Livewire\Component;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\Storage;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -13,6 +12,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 
 class OrderProductsList extends Component implements HasSchemas
 {
@@ -60,7 +60,7 @@ class OrderProductsList extends Component implements HasSchemas
                                 foreach ($orderProduct->product_extras as $productExtra) {
                                     if ($productExtra['path'] ?? false) {
                                         $html .= e($productExtra['name']) . ': <a class="hover:text-primary-500" target="_blank" href="' .
-                                            e(Storage::disk('dashed')->url($productExtra['path'])) . '">' . e($productExtra['value']) . '</a> <br/>';
+                                            e(ProductExtraFile::adminUrl($productExtra['path'])) . '">' . e($productExtra['value']) . '</a> <br/>';
                                     } else {
                                         $html .= e($productExtra['name']) . ': ' . e($productExtra['value']) . ' <br/>';
                                     }

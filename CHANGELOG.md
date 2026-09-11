@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.120.0 - 2026-09-11
+
+### Security
+- **Klant-uploads bij product-extra's van het type bestand lopen via `ProductExtraFile`.** Allowlist (`pdf, jpg, jpeg, png, gif, webp, doc, docx, xls, xlsx`, extensie afgeleid van de inhoud), maximaal 10 MB, en de globale `SafeUploadedFile`-controle uit dashed-core. De bestandsnaam is altijd `<uuid>.<ext>`; de client-naam komt nergens meer in het pad. Het object wordt `private` weggeschreven op de media-disk en de beheerder opent het in de bestelling via een tijdelijke, ondertekende URL van 30 minuten (`ProductExtraFile::adminUrl()`). Een al opgeslagen pad wordt bij opnieuw indienen alleen geaccepteerd binnen `dashed/product-extras/`, zodat een klant via Livewire geen ander bestand (een factuur) aan zijn bestelling kan hangen. Een geweigerd bestand geeft de melding `invalid-file-for-product-extra` in plaats van een stille opslag. Vereist dashed-core v4.61.0.
+
 ## v4.119.0 - 2026-09-10
 
 ### Added
