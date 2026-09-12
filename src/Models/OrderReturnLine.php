@@ -13,6 +13,7 @@ class OrderReturnLine extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'processed_quantity' => 'integer',
     ];
 
     public function orderReturn(): BelongsTo

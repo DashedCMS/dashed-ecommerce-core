@@ -33,6 +33,8 @@ class Orders
             'received' => 'Ontvangen',
             'shipped' => 'Onderweg',
             'waiting_for_return' => 'Wachten op retour',
+            'returned' => 'Geretourneerd',
+            'partially_returned' => 'Deels geretourneerd',
         ];
     }
 

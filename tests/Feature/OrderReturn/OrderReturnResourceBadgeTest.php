@@ -17,6 +17,7 @@ it('counts every non-handled return in the badge', function () {
     OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_APPROVED]);
     OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_REJECTED]);
     OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_HANDLED]);
+    OrderReturn::create(['order_id' => $order->id, 'email' => 'a@b.nl', 'status' => OrderReturn::STATUS_CLOSED]);
 
     expect(OrderReturnResource::getNavigationBadge())->toBe('3')
         ->and(OrderReturnResource::getNavigationBadgeColor())->toBe('warning');

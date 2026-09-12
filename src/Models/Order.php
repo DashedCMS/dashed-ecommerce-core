@@ -260,6 +260,23 @@ class Order extends Model
         return $this->belongsTo(Order::class, 'credit_for_order_id');
     }
 
+    /**
+     * Retouren die op deze bestelling zijn aangemeld (portaal of beheerder).
+     */
+    public function orderReturns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class, 'order_id');
+    }
+
+    /**
+     * Voor een creditorder: de retour waaruit hij is ontstaan. Leeg voor een
+     * creditorder uit de annuleerknop of een orderwijziging.
+     */
+    public function originReturn(): HasOne
+    {
+        return $this->hasOne(OrderReturn::class, 'credit_order_id');
+    }
+
     public function replacedByOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'replaced_by_order_id');
@@ -1726,6 +1743,10 @@ class Order extends Model
             return 'Verzonden';
         } elseif ($this->retour_status == 'waiting_for_return') {
             return 'Wachten op retour';
+        } elseif ($this->retour_status == 'returned') {
+            return 'Geretourneerd';
+        } elseif ($this->retour_status == 'partially_returned') {
+            return 'Deels geretourneerd';
         }
     }
 

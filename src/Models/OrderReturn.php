@@ -20,6 +20,7 @@ class OrderReturn extends Model
     public const STATUS_APPROVED = 'approved';
     public const STATUS_REJECTED = 'rejected';
     public const STATUS_HANDLED = 'handled';
+    public const STATUS_CLOSED = 'closed';
 
     protected $table = 'dashed__order_returns';
 
@@ -30,6 +31,8 @@ class OrderReturn extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'handled_at' => 'datetime',
+        'processed_at' => 'datetime',
+        'closed_at' => 'datetime',
         'auto_accepted' => 'boolean',
     ];
 
@@ -53,6 +56,15 @@ class OrderReturn extends Model
         return $this->belongsTo(Order::class);
     }
 
+    /**
+     * De creditorder die bij het verwerken is ontstaan. Eén retour, hooguit één
+     * creditorder; de kolom is nullable zolang er niets verwerkt is.
+     */
+    public function creditOrder(): BelongsTo
+    {
+        return $this->belongsTo(Order::class, 'credit_order_id');
+    }
+
     public function lines(): HasMany
     {
         return $this->hasMany(OrderReturnLine::class);
@@ -70,12 +82,12 @@ class OrderReturn extends Model
 
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->whereNotIn('status', [self::STATUS_REJECTED, self::STATUS_HANDLED]);
+        return $query->whereNotIn('status', [self::STATUS_REJECTED, self::STATUS_HANDLED, self::STATUS_CLOSED]);
     }
 
     public function scopeNotHandled(Builder $query): Builder
     {
-        return $query->where('status', '!=', self::STATUS_HANDLED);
+        return $query->whereNotIn('status', [self::STATUS_HANDLED, self::STATUS_CLOSED]);
     }
 
     public static function statusLabels(): array
@@ -84,7 +96,8 @@ class OrderReturn extends Model
             self::STATUS_REQUESTED => __('Aangevraagd'),
             self::STATUS_APPROVED => __('Goedgekeurd'),
             self::STATUS_REJECTED => __('Afgekeurd'),
-            self::STATUS_HANDLED => __('Afgehandeld'),
+            self::STATUS_HANDLED => __('Verwerkt'),
+            self::STATUS_CLOSED => __('Gesloten'),
         ];
     }
 
@@ -138,6 +151,58 @@ class OrderReturn extends Model
 
         $this->order?->update(['retour_status' => 'handled']);
         $this->logToOrder('order.return-handled');
+    }
+
+    /**
+     * Sluiten zonder creditering: de retour is afgerond maar er komt geen
+     * creditorder. Alleen vanuit goedgekeurd, altijd met reden, nooit met mail:
+     * wie de klant iets wil uitleggen gebruikt sendCustomEmail().
+     */
+    public function close(string $reason): void
+    {
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new \InvalidArgumentException(__('Geef een reden op om de retour te sluiten.'));
+        }
+        if ($this->status !== self::STATUS_APPROVED) {
+            throw new \InvalidArgumentException(__('Alleen een goedgekeurde retour kan gesloten worden.'));
+        }
+
+        $this->status = self::STATUS_CLOSED;
+        $this->closed_reason = $reason;
+        $this->closed_at = now();
+        $this->save();
+
+        $this->order?->update(['retour_status' => 'handled']);
+        $this->logToOrder('order.return-closed');
+    }
+
+    /**
+     * Terugbetaald betekent: de creditorder heeft een betaalde betaling. De
+     * creditorder zelf blijft op status 'return'; zie de spec waarom er geen
+     * changeStatus('paid') op wordt gedaan.
+     */
+    public function refundPayment(): ?OrderPayment
+    {
+        if (! $this->credit_order_id) {
+            return null;
+        }
+
+        return OrderPayment::query()
+            ->where('order_id', $this->credit_order_id)
+            ->where('status', 'paid')
+            ->orderBy('id')
+            ->first();
+    }
+
+    public function isRefunded(): bool
+    {
+        return $this->refundPayment() !== null;
+    }
+
+    public function creditedAmount(): float
+    {
+        return $this->creditOrder ? abs((float) $this->creditOrder->total) : 0.0;
     }
 
     protected function logToOrder(string $tag): void
