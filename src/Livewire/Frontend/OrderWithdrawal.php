@@ -21,6 +21,7 @@ use Dashed\DashedEcommerceCore\Support\ReturnNotifier;
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRequestedEvent;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
 
 class OrderWithdrawal extends Component
@@ -84,14 +85,10 @@ class OrderWithdrawal extends Component
     protected function initSelectedLines(Order $order): void
     {
         $this->selectedLines = [];
-        foreach ($order->orderProducts as $product) {
-            if (in_array($product->sku, SKUs::nonReturnable(), true)) {
-                continue;
-            }
-
+        foreach (ReturnableLines::forOrder($order) as $product) {
             $this->selectedLines[$product->id] = [
                 'selected' => false,
-                'quantity' => (int) ($product->quantity ?: 1),
+                'quantity' => ReturnableLines::remaining($product),
                 'reason_id' => null,
                 'note' => '',
             ];
@@ -106,7 +103,7 @@ class OrderWithdrawal extends Component
             return collect();
         }
 
-        return $order->orderProducts->reject(fn ($product) => in_array($product->sku, SKUs::nonReturnable(), true));
+        return ReturnableLines::forOrder($order);
     }
 
     public function selectAllLines(): void
@@ -158,7 +155,7 @@ class OrderWithdrawal extends Component
             if (! $product) {
                 continue;
             }
-            $maxQty = (int) ($product->quantity ?: 1);
+            $maxQty = ReturnableLines::remaining($product);
             $qty = (int) ($line['quantity'] ?? 1);
             if ($qty < 1 || $qty > $maxQty) {
                 $this->addError('lines', Translation::get('return-quantity-invalid', 'returns', 'Het aantal voor :product: moet tussen 1 en :max: liggen.', 'text', ['product' => $product->name, 'max' => $maxQty]));

@@ -183,3 +183,21 @@ it('leaves a new return as requested when auto-accept is disabled', function () 
 
     expect(OrderReturn::first()->status)->toBe(OrderReturn::STATUS_REQUESTED);
 });
+
+it('biedt een regel zonder restant niet aan en accepteert hem niet', function () {
+    Mail::fake();
+    [$order, $p1, $p2] = makeOrderWithProductsT4();
+    $p1->update(['returned_quantity' => 3]);
+
+    Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'INV-1001')
+        ->set('email', 'klant@example.com')
+        ->call('search')
+        ->assertDontSee('Shirt')
+        ->set("selectedLines.{$p1->id}.selected", true)
+        ->set("selectedLines.{$p1->id}.quantity", 1)
+        ->call('confirm')
+        ->assertSet('completed', false);
+
+    expect(OrderReturn::count())->toBe(0);
+});
