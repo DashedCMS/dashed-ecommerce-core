@@ -59,6 +59,7 @@ class StockRuleScanner
         return Product::query()
             ->thisSite((string) $rule->site_id)
             ->where('use_stock', true)
+            ->where('out_of_stock_sellable', false)
             ->whereNotNull('low_stock_notification_limit')
             ->whereColumn('stock', '<=', 'low_stock_notification_limit')
             ->whereNotExists(function ($subQuery) use ($runsTable, $productsTable, $rule) {

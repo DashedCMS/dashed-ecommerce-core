@@ -49,6 +49,7 @@ class ProductController extends Controller
         // Lage/negatieve voorraad: voorraad op of onder de drempel, of <= 0.
         if ($request->boolean('low_stock')) {
             $query->where('use_stock', true)
+                ->where('out_of_stock_sellable', false)
                 ->where(function ($q): void {
                     $q->whereColumn('stock', '<=', 'low_stock_notification_limit')
                         ->orWhere('stock', '<=', 0);

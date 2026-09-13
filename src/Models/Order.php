@@ -858,7 +858,7 @@ class Order extends Model
         }
 
         foreach (Product::whereIn('id', $this->orderProducts->pluck('product_id'))->get() as $product) {
-            if ($product->low_stock_notification && $product->use_stock && $product->stock() < $product->low_stock_notification_limit) {
+            if ($product->low_stock_notification && $product->use_stock && ! $product->out_of_stock_sellable && $product->stock() < $product->low_stock_notification_limit) {
                 try {
                     foreach (Mails::getAdminLowStockNotificationEmails() as $lowStockNotificationEmail) {
                         AdminNotifier::send(new ProductOnLowStockEmail($product), $lowStockNotificationEmail);

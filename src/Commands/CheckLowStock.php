@@ -38,6 +38,7 @@ class CheckLowStock extends Command
                 ->where(function ($q): void {
                     $q->whereNull('low_stock_notification_limit')
                         ->orWhere('use_stock', false)
+                        ->orWhere('out_of_stock_sellable', true)
                         ->orWhere('low_stock_notification', false)
                         ->orWhereColumn('stock', '>', 'low_stock_notification_limit');
                 })
@@ -48,6 +49,7 @@ class CheckLowStock extends Command
             $threshold = now()->subDay();
             $products = Product::thisSite($siteId)
                 ->where('use_stock', true)
+                ->where('out_of_stock_sellable', false)
                 ->where('low_stock_notification', true)
                 ->whereNotNull('low_stock_notification_limit')
                 ->whereColumn('stock', '<=', 'low_stock_notification_limit')

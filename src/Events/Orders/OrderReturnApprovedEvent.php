@@ -11,7 +11,12 @@ class OrderReturnApprovedEvent
     use Dispatchable;
     use SerializesModels;
 
-    public function __construct(public OrderReturn $orderReturn)
+    /**
+     * $notifyCustomer is false als een beheerder de retour aanmeldt zonder
+     * "Klant informeren", of bij een Bol-bestelling. De labellisteners van
+     * MyParcel en Veloyd maken dan geen label en sturen geen mail.
+     */
+    public function __construct(public OrderReturn $orderReturn, public bool $notifyCustomer = true)
     {
     }
 }
