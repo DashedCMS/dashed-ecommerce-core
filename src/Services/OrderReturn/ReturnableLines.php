@@ -27,11 +27,18 @@ class ReturnableLines
     /**
      * Orderregels met restant boven nul, zonder verzend- en betaalkosten.
      *
+     * Hergebruikt de relatie als die al geladen is (bijvoorbeeld met
+     * `Order::with('orderProducts.product')`), zodat het portaal niet
+     * opnieuw query't en de eager-loaded `product` per regel niet alsnog
+     * los per rij ophaalt.
+     *
      * @return Collection<int, OrderProduct>
      */
     public static function forOrder(Order $order): Collection
     {
-        return $order->orderProducts()->get()
+        $orderProducts = $order->relationLoaded('orderProducts') ? $order->orderProducts : $order->orderProducts()->get();
+
+        return $orderProducts
             ->filter(fn (OrderProduct $op) => self::isReturnable($op) && self::remaining($op) > 0)
             ->values();
     }

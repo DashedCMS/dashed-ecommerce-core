@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Event;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -99,4 +100,18 @@ it('rekent het restant per regel uit en laat verzendkosten weg', function () {
     expect(ReturnableLines::remaining($shirt->fresh()))->toBe(0)
         ->and(ReturnableLines::remaining($broek))->toBe(1)
         ->and(ReturnableLines::forOrder($order->fresh())->pluck('id')->all())->toBe([$broek->id]);
+});
+
+it('hergebruikt de al geladen orderregels en query niet opnieuw', function () {
+    ['order' => $order] = spilOrder();
+
+    $loaded = Order::with('orderProducts')->find($order->id);
+
+    DB::enableQueryLog();
+    $result = ReturnableLines::forOrder($loaded);
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    expect($queries)->toBeEmpty()
+        ->and($result->pluck('name')->sort()->values()->all())->toBe(['Broek', 'Shirt']);
 });
