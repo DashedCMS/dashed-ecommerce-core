@@ -156,6 +156,31 @@ class OrderLog extends Model
             $string = 'Retour afgehandeld';
         } elseif ($this->tag == 'order.return-label-failed') {
             $string = 'Retourlabel mislukt';
+        } elseif ($this->tag == 'order.return-registered-by-admin') {
+            $string = 'heeft een retour aangemeld.';
+        } elseif ($this->tag == 'order.return-processed') {
+            $string = 'heeft de retour verwerkt.' . ($this->note ? ' ' . $this->note : '');
+        } elseif ($this->tag == 'order.return-closed') {
+            $string = 'heeft de retour gesloten zonder creditering.';
+        } elseif ($this->tag == 'order.return-refunded') {
+            $string = 'heeft de terugbetaling van de retour geregistreerd.' . ($this->note ? ' ' . $this->note : '');
+        } elseif ($this->tag == 'order.return-mail-skipped-bol') {
+            $string = 'heeft de klantmail overgeslagen: Bol-bestelling.';
+        } elseif ($this->tag == 'order.return-processed.mail.failed') {
+            $string = 'kon de mail "retour verwerkt" niet versturen.';
+        } elseif ($this->tag == 'order.return-refunded.mail.failed') {
+            $string = 'kon de mail "terugbetaald" niet versturen.';
+        } elseif ($this->tag == 'order.return.full') {
+            $string = 'heeft alle producten als geretourneerd geregistreerd.';
+        } elseif ($this->tag == 'order.return.partial') {
+            $string = 'heeft een gedeeltelijke retour geregistreerd.';
+        } elseif ($this->tag == 'order.return.refund-requested') {
+            $string = 'heeft een terugbetaling aangevraagd, handmatig te verwerken.';
+        } elseif ($this->tag == 'order.refund.registered') {
+            $string = 'heeft een terugstorting geregistreerd.' . ($this->note ? ' ' . $this->note : '');
+        } elseif (str_starts_with((string) $this->tag, 'order.changed-retour-status-to-')) {
+            $status = substr((string) $this->tag, strlen('order.changed-retour-status-to-'));
+            $string = 'heeft de retourstatus gewijzigd naar ' . (\Dashed\DashedEcommerceCore\Classes\Orders::getReturnStatusses()[$status] ?? $status) . '.';
         } elseif ($this->tag == 'order.labelstatus.synced') {
             $string = 'heeft de labelstatussen van de zendingen bijgewerkt.';
         } elseif ($this->tag == 'order.trackandtrace.updated') {
@@ -164,8 +189,8 @@ class OrderLog extends Model
             $string = 'heeft de bestelling ingepakt.';
         } elseif ($this->tag == 'order.unpacked') {
             $string = 'heeft het inpakken van de bestelling ongedaan gemaakt.';
-        } elseif ($this->message) {
-            return $this->message;
+        } elseif ($this->note) {
+            return $this->note;
         } else {
             return 'ERROR tag niet gevonden: ' . $this->tag;
         }
