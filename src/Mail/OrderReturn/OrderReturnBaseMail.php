@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 /**
@@ -63,6 +64,11 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             'returnLines',
             'returnStatusUrl',
             'message',
+            'creditedLines',
+            'creditAmount',
+            'refundDays',
+            'refundAmount',
+            'refundMethod',
         ];
     }
 
@@ -198,11 +204,31 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             })
             ->implode($escapeHtml ? '<br>' : ', ');
 
+        $creditOrder = $this->orderReturn->creditOrder;
+        $creditedLines = $this->orderReturn->lines
+            ->filter(fn ($line) => (int) $line->processed_quantity > 0)
+            ->map(function ($line) use ($escapeHtml) {
+                $part = $line->processed_quantity . 'x ' . ($line->orderProduct?->name ?? '');
+
+                return $escapeHtml ? e($part) : $part;
+            })
+            ->implode($escapeHtml ? '<br>' : ', ');
+        $creditAmount = $creditOrder ? CurrencyHelper::formatPrice(abs((float) $creditOrder->total)) : '';
+        $refundDays = (string) (int) Customsetting::get('returns_refund_days', $this->orderReturn->order?->site_id, 14);
+        $refundPayment = $this->orderReturn->refundPayment();
+        $refundAmount = $refundPayment ? CurrencyHelper::formatPrice(abs((float) $refundPayment->amount)) : '';
+        $refundMethod = (string) ($refundPayment?->payment_method ?? '');
+        if ($escapeHtml) {
+            $creditAmount = e($creditAmount);
+            $refundAmount = e($refundAmount);
+            $refundMethod = e($refundMethod);
+        }
+
         // :message: wordt bewust rauw ingevoegd (nooit ge-escaped): het is vertrouwde
         // RichEditor-HTML die de beheerder zelf opstelt vanaf de retourpagina.
         return str_replace(
-            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:', ':returnStatusUrl:', ':message:'],
-            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary, $statusUrl, $this->messageBody],
+            [':returnRequestedAt:', ':returnReason:', ':rejectedReason:', ':adminNote:', ':orderNumber:', ':returnLines:', ':returnStatusUrl:', ':message:', ':creditedLines:', ':creditAmount:', ':refundDays:', ':refundAmount:', ':refundMethod:'],
+            [$requestedAt, $reason, $rejectedReason, $adminNote, $orderNumber, $linesSummary, $statusUrl, $this->messageBody, $creditedLines, $creditAmount, $refundDays, $refundAmount, $refundMethod],
             $value
         );
     }

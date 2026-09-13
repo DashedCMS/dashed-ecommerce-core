@@ -44,6 +44,7 @@ class ReturnSettingsPage extends Page
             'returns_auto_accept_excluded_category_ids' => (array) (Customsetting::get('returns_auto_accept_excluded_category_ids') ?: []),
             'returns_auto_accept_excluded_order_origins' => (array) (Customsetting::get('returns_auto_accept_excluded_order_origins') ?: []),
             'returns_auto_accept_max_amount' => ($maxAmount === '' ? null : $maxAmount),
+            'returns_refund_days' => (int) Customsetting::get('returns_refund_days', null, 14),
         ]);
     }
 
@@ -77,6 +78,18 @@ class ReturnSettingsPage extends Page
                             ->helperText(__('Keur binnenkomende retouren automatisch goed wanneer ze aan de onderstaande voorwaarden voldoen.')),
                         TextInput::make('returns_auto_accept_max_days')
                             ->label(__('Automatisch goedkeuren binnen (dagen)'))
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(14)
+                            ->suffix(__('dagen')),
+                    ])
+                    ->columns(2),
+
+                Section::make(__('Verwerken'))
+                    ->schema([
+                        TextInput::make('returns_refund_days')
+                            ->label(__('Terugbetaling binnen (dagen)'))
+                            ->helperText(__('Staat als :refundDays: in de mail "Retour: verwerkt".'))
                             ->numeric()
                             ->minValue(1)
                             ->default(14)
@@ -134,6 +147,8 @@ class ReturnSettingsPage extends Page
 
         $maxAmount = $data['returns_auto_accept_max_amount'] ?? null;
         Customsetting::set('returns_auto_accept_max_amount', ($maxAmount === '' || $maxAmount === null) ? '' : $maxAmount);
+
+        Customsetting::set('returns_refund_days', (int) ($data['returns_refund_days'] ?: 14));
 
         Notification::make()->title(__('Instellingen opgeslagen'))->success()->send();
     }
