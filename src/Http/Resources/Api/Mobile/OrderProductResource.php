@@ -34,7 +34,19 @@ class OrderProductResource extends JsonResource
             'fulfillment_provider' => $this->fulfillment_provider,
             'send_to_fulfiller' => (bool) $this->send_to_fulfiller,
             'added_via' => $this->added_via,
-            'extras' => $this->product_extras ?: [],
+            'extras' => collect($this->product_extras ?: [])->map(function ($extra): array {
+                $row = [
+                    'name' => $extra['name'] ?? null,
+                    'value' => $extra['value'] ?? null,
+                ];
+                // Door de klant geüpload bestand/foto: geef een (tijdelijke) URL mee
+                // zodat de app 'm kan openen, net als de "download"-link in het CMS.
+                if (! empty($extra['path'])) {
+                    $row['url'] = \Dashed\DashedEcommerceCore\Classes\ProductExtraFile::adminUrl((string) $extra['path']);
+                }
+
+                return $row;
+            })->all(),
         ];
     }
 }

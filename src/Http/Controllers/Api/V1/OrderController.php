@@ -10,7 +10,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
@@ -1048,14 +1051,31 @@ class OrderController extends Controller
         $data = $request->validate([
             'note' => ['required', 'string', 'max:5000'],
             'public_for_customer' => ['sometimes', 'boolean'],
+            // Zelfde opties als de CMS-notitie: (optioneel) de klant mailen.
+            'send_email_to_customer' => ['sometimes', 'boolean'],
+            'email_subject' => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
-        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
-            orderId: $model->id,
-            tag: 'note.created',
-            note: $data['note'],
-            publicForCustomer: (bool) ($data['public_for_customer'] ?? false),
-        );
+        $public = (bool) ($data['public_for_customer'] ?? false);
+        $sendEmail = $public && (bool) ($data['send_email_to_customer'] ?? false);
+
+        $orderLog = new OrderLog();
+        $orderLog->order_id = $model->id;
+        $orderLog->user_id = auth()->id();
+        $orderLog->tag = 'order.note.created';
+        $orderLog->note = $data['note'];
+        $orderLog->public_for_customer = $public;
+        $orderLog->send_email_to_customer = $sendEmail;
+        $orderLog->email_subject = ($data['email_subject'] ?? null) ?: 'Je bestelling is bijgewerkt';
+        $orderLog->save();
+
+        if ($sendEmail && $model->email) {
+            try {
+                Mail::to($model->email)->send(new OrderNoteMail($model, $orderLog));
+            } catch (\Throwable $e) {
+                // Mail-fout mag het opslaan van de notitie niet blokkeren.
+            }
+        }
 
         return $this->detail($model);
     }
