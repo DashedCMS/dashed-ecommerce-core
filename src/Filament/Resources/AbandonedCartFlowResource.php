@@ -19,6 +19,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\CheckboxList;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Pages\EditAbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Pages\ListAbandonedCartFlows;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Pages\CreateAbandonedCartFlow;
@@ -54,14 +55,8 @@ class AbandonedCartFlowResource extends Resource
 
             CheckboxList::make('triggers')
                 ->label(__('Triggers'))
-                ->options([
-                    'cart_with_email' => __('Verlaten winkelwagen (met email)'),
-                    'cancelled_order' => __('Geannuleerde bestelling (niet betaald)'),
-                ])
-                ->descriptions([
-                    'cart_with_email' => __('Start flow wanneer een cart een emailadres krijgt en niet wordt afgerond.'),
-                    'cancelled_order' => __('Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.'),
-                ])
+                ->options(fn () => AbandonedCartTriggers::labels())
+                ->descriptions(fn () => AbandonedCartTriggers::descriptions())
                 ->default(['cart_with_email'])
                 ->minItems(1)
                 ->required(),

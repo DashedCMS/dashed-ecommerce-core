@@ -30,4 +30,11 @@ interface AbandonedCartSource
      * @return array<string, string>
      */
     public function variables(): array;
+
+    /**
+     * Of deze mail nog zinvol is: de bron bestaat nog en is niet intussen
+     * afgerond. Vervangt de trigger-specifieke controle die vroeger in
+     * SendAbandonedCartEmails::sourceIsValid() stond.
+     */
+    public function isValid(): bool;
 }

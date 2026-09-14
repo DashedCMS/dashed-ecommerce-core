@@ -76,6 +76,7 @@ class AbandonedCartEmail extends Model
         return match ($this->trigger_type) {
             'cancelled_order' => $this->cancelledOrder,
             'cart_with_email' => $this->cart,
+            'wishlist' => $this->wishlist,
             default => null,
         };
     }

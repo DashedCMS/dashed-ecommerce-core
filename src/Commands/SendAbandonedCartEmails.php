@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartSource;
 use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartSourceResolver;
 
 class SendAbandonedCartEmails extends Command
@@ -37,11 +38,11 @@ class SendAbandonedCartEmails extends Command
                 continue;
             }
 
-            if (! $this->sourceIsValid($record)) {
+            $source = $this->sourceIsValid($record);
+
+            if (! $source) {
                 continue;
             }
-
-            $source = AbandonedCartSourceResolver::for($record);
 
             if ($source->items()->isEmpty()) {
                 $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_empty']);
@@ -83,36 +84,23 @@ class SendAbandonedCartEmails extends Command
         $this->info("Done. {$emails->count()} email(s) processed.");
     }
 
-    private function sourceIsValid(AbandonedCartEmail $record): bool
+    private function sourceIsValid(AbandonedCartEmail $record): ?AbandonedCartSource
     {
-        if ($record->trigger_type === 'cancelled_order') {
-            $order = $record->cancelledOrder;
-
-            if (! $order) {
-                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_empty']);
-
-                return false;
-            }
-
-            $orderWasPaid = $order->orderPayments()->where('status', 'paid')->exists();
-            if ($orderWasPaid || $order->status !== 'cancelled') {
-                $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_recovered']);
-
-                return false;
-            }
-
-            return true;
-        }
-
-        $cart = $record->cart;
-
-        if (! $cart) {
+        try {
+            $source = AbandonedCartSourceResolver::for($record);
+        } catch (\InvalidArgumentException $e) {
             $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_empty']);
 
-            return false;
+            return null;
         }
 
-        return true;
+        if (! $source->isValid()) {
+            $record->update(['cancelled_at' => now(), 'cancelled_reason' => 'source_recovered']);
+
+            return null;
+        }
+
+        return $source;
     }
 
     private function generateDiscountCode($step, string $email): DiscountCode

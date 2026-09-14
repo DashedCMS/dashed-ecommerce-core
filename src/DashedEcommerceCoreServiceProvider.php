@@ -26,6 +26,7 @@ use Dashed\DashedEcommerceCore\Commands\PruneCartLogs;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
@@ -67,11 +68,13 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CartAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification;
@@ -92,6 +95,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\CrossSellVariantPicker;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
@@ -1536,6 +1540,22 @@ MARKDOWN,
         cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\CategoryAffinityStrategy::class));
         cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\CustomManualStrategy::class));
         cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\GapClosingStrategy::class));
+
+        // Register de twee ingebouwde verlaten-wagen-triggers in het triggerregister.
+        // Statisch, dus ook actief in tests; een pakket of app kan er zelf een bijzetten
+        // (zie AbandonedCartTriggers).
+        AbandonedCartTriggers::register(
+            'cart_with_email',
+            __('Verlaten winkelwagen (met email)'),
+            __('Start flow wanneer een cart een emailadres krijgt en niet wordt afgerond.'),
+            fn (AbandonedCartEmail $record) => ($cart = $record->cart()->with(['items.product'])->first()) ? new CartAbandonedSource($cart) : null,
+        );
+        AbandonedCartTriggers::register(
+            'cancelled_order',
+            __('Geannuleerde bestelling (niet betaald)'),
+            __('Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.'),
+            fn (AbandonedCartEmail $record) => ($order = $record->cancelledOrder()->with(['orderProducts.product'])->first()) ? new CancelledOrderAbandonedSource($order) : null,
+        );
 
         //Stats components
         Livewire::component('revenue-chart', RevenueChart::class);
