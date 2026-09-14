@@ -62,6 +62,13 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
+        // De Testbench-skeleton heeft geen APP_KEY; zonder deze faalt elke
+        // Crypt::encryptString()/decryptString() (bijv. de verlanglijst- en
+        // wagen-hersteltokens) met MissingAppKeyException.
+        if (! config('app.key')) {
+            config()->set('app.key', 'base64:' . base64_encode(random_bytes(32)));
+        }
+
         // De sanctum-guard bestaat alleen in een echte app-config; hier nodig
         // voor de MobileApi-routes (auth:sanctum) en actingAs(..., 'sanctum').
         config()->set('auth.guards.sanctum', ['driver' => 'sanctum', 'provider' => 'users']);

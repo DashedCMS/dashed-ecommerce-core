@@ -14,4 +14,12 @@ class EcommerceAccountHelper
 
         return $page->getUrl() ?? '#';
     }
+
+    /** De verlanglijstpagina, publiek voor gast én klant. */
+    public static function getWishlistUrl(): string
+    {
+        $page = Page::publicShowable()->where('id', Customsetting::get('wishlist_page_id'))->first();
+
+        return $page?->getUrl() ?? '#';
+    }
 }

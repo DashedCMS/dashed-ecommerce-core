@@ -1606,6 +1606,9 @@ MARKDOWN,
         Livewire::component('products.cross-sell-variant-picker', CrossSellVariantPicker::class);
         Livewire::component('products.searchbar', Searchbar::class);
         Livewire::component('account.orders', Orders::class);
+        Livewire::component('wishlist.toggle', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistToggle::class);
+        Livewire::component('wishlist.count', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistCount::class);
+        Livewire::component('wishlist.wishlist', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistPage::class);
         Livewire::component('orders.view-order', ViewOrder::class);
 
         Livewire::component(
@@ -1687,6 +1690,7 @@ MARKDOWN,
             'checkout-block',
             'view-order-block',
             'all-products',
+            'wishlist-block',
         ]);
 
         cms()->builder('plugins', [
@@ -2312,6 +2316,9 @@ MARKDOWN,
             Block::make('view-order-block')
                 ->label(__('Bestelling'))
                 ->schema([]),
+            Block::make('wishlist-block')
+                ->label(__('Verlanglijst'))
+                ->schema([]),
             Block::make('product-finder')
                 ->label(__('Product finder'))
                 ->schema([
@@ -2542,6 +2549,25 @@ MARKDOWN,
             $page->metadata()->create([
                 'noindex' => true,
             ]);
+        }
+
+        if (! \Dashed\DashedCore\Models\Customsetting::get('wishlist_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            foreach (Locales::getActivatedLocalesFromSites() as $locale) {
+                $page->setTranslation('name', $locale, match ($locale) { 'de' => 'Wunschliste', 'en' => 'Wishlist', default => 'Verlanglijst' });
+                $page->setTranslation('slug', $locale, match ($locale) { 'de' => 'wunschliste', 'en' => 'wishlist', default => 'verlanglijst' });
+                $page->setTranslation('content', $locale, [
+                    [
+                        'data' => ['in_container' => true, 'top_margin' => true, 'bottom_margin' => true],
+                        'type' => 'wishlist-block',
+                    ],
+                ]);
+            }
+            $page->save();
+
+            \Dashed\DashedCore\Models\Customsetting::set('wishlist_page_id', $page->id);
+
+            $page->metadata()->create(['noindex' => true]);
         }
 
         if (! \Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
