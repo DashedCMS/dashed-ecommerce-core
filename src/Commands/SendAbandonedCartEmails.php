@@ -62,6 +62,16 @@ class SendAbandonedCartEmails extends Command
 
                 $record->update(['sent_at' => now()]);
 
+                // Laatste stap van een verlanglijst-reeks verstuurd: 30 dagen
+                // rust voor deze lijst, anders start elke toevoeging een nieuwe
+                // reeks.
+                if ($record->trigger_type === 'wishlist' && $record->wishlist) {
+                    $laatsteStap = ! AbandonedCartEmail::where('wishlist_id', $record->wishlist_id)->whereNull('sent_at')->whereNull('cancelled_at')->where('id', '!=', $record->id)->exists();
+                    if ($laatsteStap) {
+                        $record->wishlist->forceFill(['flow_cooldown_until' => now()->addDays(30)])->save();
+                    }
+                }
+
                 $this->info("Sent abandoned cart email #{$record->id} to {$record->email}");
             } catch (Throwable $e) {
                 report($e);

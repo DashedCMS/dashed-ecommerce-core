@@ -89,6 +89,14 @@ class AbandonedCartEmail extends Model
             ->update(['cancelled_at' => now()]);
     }
 
+    public static function cancelAllForWishlist(int $wishlistId, string $reason = 'rescheduled'): void
+    {
+        static::where('wishlist_id', $wishlistId)
+            ->whereNull('cancelled_at')
+            ->whereNull('sent_at')
+            ->update(['cancelled_at' => now(), 'cancelled_reason' => $reason]);
+    }
+
     public static function cancelPendingForEmail(string $email, string $reason = 'converted'): int
     {
         return static::query()

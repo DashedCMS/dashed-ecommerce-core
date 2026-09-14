@@ -17,10 +17,12 @@ use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Wishlist;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
+use Dashed\DashedEcommerceCore\Classes\WishlistHelper;
 use Dashed\DashedEcommerceCore\Commands\ClearOldCarts;
 use Dashed\DashedEcommerceCore\Commands\PruneCartLogs;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
@@ -74,17 +76,18 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Categories\ShowCategories;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\OrderProductsList;
-use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\CheckoutSettingsPage;
 use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentNextMailAt;
 use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentReviewUrls;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\WishlistAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
@@ -95,12 +98,13 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\CrossSellVariantPicker;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
-use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets\OrderUnhandledStat;
+use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForWishlistJob;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
@@ -1556,6 +1560,21 @@ MARKDOWN,
             __('Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.'),
             fn (AbandonedCartEmail $record) => ($order = $record->cancelledOrder()->with(['orderProducts.product'])->first()) ? new CancelledOrderAbandonedSource($order) : null,
         );
+        AbandonedCartTriggers::register(
+            'wishlist',
+            __('Verlanglijst met e-mailadres'),
+            __('Start flow wanneer iemand met een bekend e-mailadres iets op zijn verlanglijst zet en daarna een tijd niets meer doet.'),
+            fn (AbandonedCartEmail $record) => ($wishlist = $record->wishlist()->first()) ? new WishlistAbandonedSource($wishlist) : null,
+        );
+
+        // Elke wijziging aan een lijst met e-mailadres plant de reeks opnieuw.
+        // Config-guard omdat afterCommit in tests niet beschermt (de test-
+        // transactiemanager slaat de testtransactie over).
+        WishlistHelper::afterChange(function (Wishlist $wishlist): void {
+            if ($wishlist->email && config('dashed-ecommerce-core.wishlist_flows_enabled', true)) {
+                ScheduleAbandonedCartEmailsForWishlistJob::dispatch($wishlist->id)->afterCommit();
+            }
+        });
 
         //Stats components
         Livewire::component('revenue-chart', RevenueChart::class);
