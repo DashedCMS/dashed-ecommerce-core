@@ -227,6 +227,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             cms()->emailBlock('products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\ProductsBlock::class);
             cms()->emailBlock('auto-products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\AutoProductsBlock::class);
             cms()->emailBlock('discount-code', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\DiscountCodeBlock::class);
+            cms()->emailBlock('wishlist', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\WishlistBlock::class);
         }
 
         // Zelfde guard als bij de nieuwsbriefblokken hierboven, plus een op
@@ -2461,6 +2462,7 @@ MARKDOWN,
 
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\OrderTotalCondition());
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\LastOrderDateCondition());
+            app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\WishlistCondition());
 
             // De eigen nieuwsbrief moet overal te kiezen zijn waar een koppeling
             // als Laposta dat ook is. Zonder deze registratie staat hij wel bij
