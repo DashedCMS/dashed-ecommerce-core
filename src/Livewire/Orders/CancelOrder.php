@@ -52,7 +52,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
         }
 
         return Action::make('action')
-            ->label($this->buttonText ?: __('Annuleer bestelling'))
+            ->label($this->buttonText ?: __('Annuleren'))
             ->extraAttributes([
                 'class' => $this->buttonClass,
             ])
@@ -72,6 +72,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
 
                 return [
                     Section::make(__('Annuleren'))->columnSpanFull()
+                        ->description(__('Voor een bestelling die niet of niet volledig geleverd is. Komt er iets terug na levering, gebruik dan "Retour aanmelden" bovenaan: dan loopt de creditorder via de retour.'))
                         ->schema([
                             TextEntry::make('cancel')
                                 ->state('Klik op onderstaande knop om deze bestelling te annuleren.'),

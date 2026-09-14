@@ -85,6 +85,15 @@ class ViewStatusses extends Component implements HasSchemas
                 ->color('danger');
         }
 
+        if ($this->order->credit_for_order_id && ($origin = $this->order->originReturn)) {
+            $statusEntries[] = TextEntry::make('origin_return_' . $origin->id)
+                ->hiddenLabel()
+                ->state('Ontstaan uit retour #' . $origin->id)
+                ->url(route('filament.dashed.resources.order-returns.view', [$origin]))
+                ->badge()
+                ->color('warning');
+        }
+
         // Render als Schema (v4)
         return $schema
             ->record($this->order)

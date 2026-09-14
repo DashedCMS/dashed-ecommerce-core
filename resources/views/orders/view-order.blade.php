@@ -11,6 +11,9 @@
                     @livewire('order-view-statusses', ['order' => $record])
                 </div>
                 <div>
+                    @include('dashed-ecommerce-core::orders.partials.order-returns', ['record' => $record])
+                </div>
+                <div>
                     @livewire('order-order-products-list', ['order' => $record])
                 </div>
                 <div>

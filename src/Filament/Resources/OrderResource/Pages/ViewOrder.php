@@ -18,6 +18,7 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterReturnAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterRefundAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
@@ -152,6 +153,7 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
+            RegisterReturnAction::forOrder($this->record),
             ActionGroup::make([
                 Action::make('edit')
                     ->label(__('Gegevens wijzigen'))
