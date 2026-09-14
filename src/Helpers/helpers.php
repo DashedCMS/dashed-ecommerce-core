@@ -15,3 +15,10 @@ if (! function_exists('cartHelper')) {
         return app(\Dashed\DashedEcommerceCore\Classes\CartHelper::class);
     }
 }
+
+if (! function_exists('wishlistHelper')) {
+    function wishlistHelper(): \Dashed\DashedEcommerceCore\Classes\WishlistHelper
+    {
+        return app(\Dashed\DashedEcommerceCore\Classes\WishlistHelper::class);
+    }
+}
