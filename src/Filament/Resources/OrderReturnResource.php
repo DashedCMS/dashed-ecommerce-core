@@ -5,24 +5,19 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
-use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
-use Filament\Forms\Components\RichEditor;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Forms\Components\Placeholder;
-use Dashed\DashedCore\Models\EmailTemplate;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Filament\Infolists\Components\RepeatableEntry;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Actions\ReturnActions;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OrderReturnResource extends Resource
 {
@@ -55,13 +50,13 @@ class OrderReturnResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with(['order', 'lines.orderProduct', 'lines.returnReason']))
+            ->modifyQueryUsing(fn ($query) => $query->with(['order', 'creditOrder', 'lines.orderProduct', 'lines.returnReason']))
             ->defaultSort('requested_at', 'desc')
             ->columns([
                 TextColumn::make('order.invoice_id')
                     ->label(__('Bestelling'))
                     ->formatStateUsing(fn ($state, $record) => $state ?: ('#' . $record->order_id))
-                    ->url(fn ($record) => $record->order_id ? \Dashed\DashedEcommerceCore\Filament\Resources\OrderResource::getUrl('edit', ['record' => $record->order_id]) : null),
+                    ->url(fn ($record) => $record->order_id ? OrderResource::getUrl('edit', ['record' => $record->order_id]) : null),
                 TextColumn::make('email')
                     ->label(__('E-mail'))
                     ->searchable(),
@@ -74,6 +69,7 @@ class OrderReturnResource extends Resource
                         OrderReturn::STATUS_APPROVED => 'success',
                         OrderReturn::STATUS_REJECTED => 'danger',
                         OrderReturn::STATUS_HANDLED => 'gray',
+                        OrderReturn::STATUS_CLOSED => 'gray',
                         default => 'gray',
                     }),
                 IconColumn::make('auto_accepted')
@@ -86,6 +82,13 @@ class OrderReturnResource extends Resource
                 TextColumn::make('lines_count')
                     ->label(__('Regels'))
                     ->counts('lines'),
+                TextColumn::make('creditOrder.invoice_id')
+                    ->label(__('Creditorder'))
+                    ->placeholder('-')
+                    ->url(fn ($record) => $record->credit_order_id ? OrderResource::getUrl('view', ['record' => $record->credit_order_id]) : null),
+                TextColumn::make('credited')
+                    ->label(__('Gecrediteerd'))
+                    ->getStateUsing(fn ($record) => $record->credit_order_id ? CurrencyHelper::formatPrice($record->creditedAmount()) : '-'),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -94,87 +97,7 @@ class OrderReturnResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                Action::make('approve')
-                    ->label(__('Goedkeuren'))
-                    ->color('success')
-                    ->visible(fn ($record) => $record->status === OrderReturn::STATUS_REQUESTED)
-                    ->schema([
-                        Textarea::make('admin_note')
-                            ->label(__('Notitie (optioneel)')),
-                    ])
-                    ->action(function ($record, $data) {
-                        $record->approve($data['admin_note'] ?? null);
-
-                        Notification::make()
-                            ->success()
-                            ->title(__('Retouraanvraag goedgekeurd'))
-                            ->send();
-                    }),
-                Action::make('reject')
-                    ->label(__('Afkeuren'))
-                    ->color('danger')
-                    ->visible(fn ($record) => $record->status === OrderReturn::STATUS_REQUESTED)
-                    ->schema([
-                        Textarea::make('rejected_reason')
-                            ->label(__('Reden'))
-                            ->required(),
-                    ])
-                    ->action(function ($record, $data) {
-                        $record->reject($data['rejected_reason']);
-
-                        Notification::make()
-                            ->success()
-                            ->title(__('Retouraanvraag afgekeurd'))
-                            ->send();
-                    }),
-                Action::make('markHandled')
-                    ->label(__('Markeer als afgehandeld'))
-                    ->color('gray')
-                    ->visible(fn ($record) => in_array($record->status, [OrderReturn::STATUS_REQUESTED, OrderReturn::STATUS_APPROVED]))
-                    ->requiresConfirmation()
-                    ->action(function ($record) {
-                        $record->markHandled();
-
-                        Notification::make()
-                            ->success()
-                            ->title(__('Retouraanvraag gemarkeerd als afgehandeld'))
-                            ->send();
-                    }),
-                Action::make('sendEmail')
-                    ->label(__('Stuur e-mail'))
-                    ->icon('heroicon-o-envelope')
-                    ->color('primary')
-                    ->schema([
-                        TextInput::make('email')
-                            ->label(__('E-mailadres'))
-                            ->email()
-                            ->required()
-                            ->default(fn ($record) => $record->email),
-                        TextInput::make('subject')
-                            ->label(__('Onderwerp'))
-                            ->required()
-                            ->default(function () {
-                                $template = EmailTemplate::forMailable(OrderReturnCustomMail::emailTemplateKey());
-
-                                return $template?->getTranslation('subject', app()->getLocale(), useFallbackLocale: true)
-                                    ?: OrderReturnCustomMail::defaultSubject();
-                            }),
-                        Placeholder::make('variabelen')
-                            ->label(__('Beschikbare variabelen'))
-                            ->content(fn () => OrderReturnCustomMail::usableVariablesHint()),
-                        RichEditor::make('message')
-                            ->label(__('Bericht'))
-                            ->required()
-                            ->default(fn () => OrderReturnCustomMail::defaultMessage()),
-                    ])
-                    ->action(function ($record, array $data) {
-                        $record->sendCustomEmail($data['subject'], $data['message'], $data['email']);
-
-                        Notification::make()
-                            ->success()
-                            ->title(__('Bericht naar klant verstuurd'))
-                            ->send();
-                    }),
+                ...ReturnActions::all(),
             ]);
     }
 
@@ -211,12 +134,44 @@ class OrderReturnResource extends Resource
                         ->label(__('Product')),
                     TextEntry::make('quantity')
                         ->label(__('Aantal')),
+                    TextEntry::make('processed_quantity')
+                        ->label(__('Verwerkt'))
+                        ->formatStateUsing(fn ($state, $record) => in_array($record->orderReturn?->status, [OrderReturn::STATUS_HANDLED, OrderReturn::STATUS_CLOSED], true) ? (string) (int) $state : '-'),
                     TextEntry::make('returnReason.label')
                         ->label(__('Reden'))
                         ->formatStateUsing(fn ($state) => is_array($state) ? ($state[app()->getLocale()] ?? reset($state)) : $state),
                     TextEntry::make('reason_note')
                         ->label(__('Toelichting'))
                         ->default('-'),
+                ]),
+            Fieldset::make(__('Creditorder en terugbetaling'))
+                ->columnSpanFull()
+                ->visible(fn ($record) => $record->status === OrderReturn::STATUS_HANDLED || $record->status === OrderReturn::STATUS_CLOSED)
+                ->schema([
+                    TextEntry::make('creditOrder.invoice_id')
+                        ->label(__('Creditorder'))
+                        ->placeholder(__('Geen creditorder'))
+                        ->url(fn ($record) => $record->credit_order_id ? OrderResource::getUrl('view', ['record' => $record->credit_order_id]) : null),
+                    TextEntry::make('credited_amount')
+                        ->label(__('Gecrediteerd'))
+                        ->getStateUsing(fn ($record) => $record->credit_order_id ? CurrencyHelper::formatPrice($record->creditedAmount()) : '-'),
+                    TextEntry::make('refund_state')
+                        ->label(__('Terugbetaling'))
+                        ->getStateUsing(function ($record) {
+                            $payment = $record->refundPayment();
+                            if (! $payment) {
+                                return $record->credit_order_id ? __('Nog niet terugbetaald') : '-';
+                            }
+
+                            return __(':bedrag via :methode op :datum', [
+                                'bedrag' => CurrencyHelper::formatPrice(abs((float) $payment->amount)),
+                                'methode' => $payment->payment_method,
+                                'datum' => $payment->created_at?->format('d-m-Y H:i'),
+                            ]);
+                        }),
+                    TextEntry::make('closed_reason')
+                        ->label(__('Reden van sluiten'))
+                        ->visible(fn ($record) => $record->status === OrderReturn::STATUS_CLOSED),
                 ]),
         ]);
     }
