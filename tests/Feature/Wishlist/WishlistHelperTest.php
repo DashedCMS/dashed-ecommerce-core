@@ -85,3 +85,39 @@ it('neemt een e-mailadres over maar overschrijft een bestaand adres niet', funct
 
     expect(wishlistHelper()->getWishlist()->email)->toBe('eerste@example.com');
 });
+
+it('negeert een lijst van een andere gebruiker in de cookie', function () {
+    $userA = \App\Models\User::create(['name' => 'Anna', 'email' => 'anna@example.com', 'password' => bcrypt('geheim')]);
+    $userB = \App\Models\User::create(['name' => 'Bas', 'email' => 'bas@example.com', 'password' => bcrypt('geheim')]);
+    $product = helperProduct();
+    $lijstA = Wishlist::create(['user_id' => $userA->id]);
+    $lijstA->items()->create(['product_id' => $product->id, 'price_at_add' => 20]);
+
+    $this->actingAs($userB);
+    request()->cookies->set('wishlist_token', $lijstA->token);
+
+    $lijst = wishlistHelper()->getWishlist(create: true);
+
+    expect($lijst->id)->not->toBe($lijstA->id)
+        ->and($lijstA->refresh()->user_id)->toBe($userA->id)
+        ->and($lijstA->items()->where('product_id', $product->id)->exists())->toBeTrue()
+        ->and(collect(Cookie::getQueuedCookies())->map(fn ($c) => $c->getName())->all())->toContain('wishlist_token')
+        ->and(collect(Cookie::getQueuedCookies())->firstWhere(fn ($c) => $c->getName() === 'wishlist_token')->getValue())->toBe($lijst->token)
+        ->and($lijst->token)->not->toBe($lijstA->token);
+});
+
+it('een gebruiker zonder eigen lijst neemt de gastlijst over', function () {
+    $userC = \App\Models\User::create(['name' => 'Chris', 'email' => 'chris@example.com', 'password' => bcrypt('geheim')]);
+    $product = helperProduct();
+    $gastLijst = Wishlist::create([]);
+    $gastLijst->items()->create(['product_id' => $product->id, 'price_at_add' => 20]);
+
+    $this->actingAs($userC);
+    request()->cookies->set('wishlist_token', $gastLijst->token);
+
+    $lijst = wishlistHelper()->getWishlist();
+
+    expect($lijst->id)->toBe($gastLijst->id)
+        ->and($lijst->user_id)->toBe($userC->id)
+        ->and($lijst->email)->toBe($userC->email);
+});

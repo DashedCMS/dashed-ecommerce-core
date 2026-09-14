@@ -74,8 +74,17 @@ class WishlistHelper
         $byUser = $user ? Wishlist::where('user_id', $user->id)->orderBy('id')->first() : null;
 
         if ($user && $byToken && $byToken->user_id !== $user->id) {
-            $byToken = $this->claimForUser($user, $byToken, $byUser);
-            $byUser = $byToken;
+            if ($byToken->user_id === null) {
+                $byToken = $this->claimForUser($user, $byToken, $byUser);
+                $byUser = $byToken;
+            } else {
+                // Cookie hoort bij een andere, al gekoppelde gebruiker (gedeelde
+                // browser): nooit overnemen, samenvoegen of hergebruiken als
+                // eigen token — ook $token zelf negeren zodat verderop geen
+                // nieuwe lijst per ongeluk dat andermans token krijgt.
+                $byToken = null;
+                $token = null;
+            }
         }
 
         $wishlist = $byUser ?? $byToken;
@@ -113,6 +122,12 @@ class WishlistHelper
     {
         $guest ??= ($token = $this->currentToken()) ? Wishlist::where('token', $token)->first() : null;
         $own ??= Wishlist::where('user_id', $user->id)->orderBy('id')->first();
+
+        if ($guest && $guest->user_id !== null && $guest->user_id !== $user->id) {
+            // Nooit een lijst van een andere, al gekoppelde gebruiker
+            // overnemen of aanraken (gedeelde browser, verouderde cookie).
+            return $own;
+        }
 
         if (! $guest || $guest->user_id === $user->id) {
             return $own ?? $guest;
