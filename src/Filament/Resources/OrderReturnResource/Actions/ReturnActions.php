@@ -100,7 +100,7 @@ class ReturnActions
                     Toggle::make('restock')->label(__('Terug op voorraad'))->default(true),
                     Toggle::make('refund_discount')
                         ->label(__('Korting verrekenen'))
-                        ->helperText(__('De vaste korting van de bestelling wordt van het creditbedrag afgetrokken, want de klant heeft die korting niet betaald. Zelfde betekenis als in de annuleermodal.'))
+                        ->helperText(__('Alleen bij een volledige retour: de vaste korting van de bestelling wordt dan van het creditbedrag afgetrokken, want de klant heeft die korting niet betaald. Bij een deelretour wordt dit geweigerd.'))
                         ->default(false),
                     Textarea::make('note')->label(__('Notitie (optioneel)')),
                 ];

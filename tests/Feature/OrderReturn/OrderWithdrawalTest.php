@@ -73,6 +73,43 @@ it('does not create a second return when an open one exists', function () {
     expect(OrderReturn::where('order_id', $order->id)->count())->toBe(1);
 });
 
+it('raakt een goedgekeurde open retour niet aan en wijst de klant naar de statuspagina', function () {
+    Mail::fake();
+    $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-1001']);
+    $shirt = OrderProduct::create(['order_id' => $order->id, 'name' => 'Shirt', 'quantity' => 1, 'price' => 20]);
+    $broek = OrderProduct::create(['order_id' => $order->id, 'name' => 'Broek', 'quantity' => 1, 'price' => 40]);
+
+    // Door een beheerder aangemeld: staat al op approved, mogelijk met een
+    // retourlabel eraan. Het portaal mag daar niets aan veranderen.
+    $bestaande = OrderReturn::create([
+        'order_id' => $order->id,
+        'email' => 'klant@example.com',
+        'status' => OrderReturn::STATUS_APPROVED,
+        'approved_at' => now(),
+    ]);
+    \Dashed\DashedEcommerceCore\Models\OrderReturnLine::create([
+        'order_return_id' => $bestaande->id,
+        'order_product_id' => $broek->id,
+        'quantity' => 1,
+    ]);
+
+    $component = Livewire::test(OrderWithdrawal::class)
+        ->set('orderNumber', 'INV-1001')
+        ->set('email', 'klant@example.com')
+        ->call('search')
+        ->set("selectedLines.{$shirt->id}.selected", true)
+        ->call('confirm')
+        ->assertSet('completed', false)
+        ->assertHasErrors('lines');
+
+    expect($component->get('existingReturnStatusUrl'))->toBe(route('dashed.frontend.return-status', $bestaande->fresh()->hash));
+
+    $bestaande->refresh()->load('lines');
+    expect(OrderReturn::where('order_id', $order->id)->count())->toBe(1)
+        ->and($bestaande->lines)->toHaveCount(1)
+        ->and($bestaande->lines->first()->order_product_id)->toBe($broek->id);
+});
+
 it('rejects a confirm with a foundOrderId that does not match the supplied credentials', function () {
     Mail::fake();
     $mine = Order::create(['email' => 'me@example.com', 'status' => 'paid', 'invoice_id' => 'MINE-1']);

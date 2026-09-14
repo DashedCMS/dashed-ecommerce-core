@@ -1,9 +1,11 @@
 <?php
 
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -28,6 +30,28 @@ function processorReturn(array $orderAttrs = []): array
     $broekLine = OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $fixture['broek']->id, 'quantity' => 1]);
 
     return $fixture + ['return' => $return->fresh(), 'shirtLine' => $shirtLine, 'broekLine' => $broekLine];
+}
+
+/** Een cadeaubon met saldo, eigen helper zodat hij niet met ledgerGiftcard() botst. */
+function processorGiftcardCode(float $balance = 100.0): DiscountCode
+{
+    return DiscountCode::create([
+        'site_ids' => [Sites::getActive()],
+        'name' => 'Cadeaubon',
+        'code' => 'GC-PROC-' . strtoupper(uniqid()),
+        'is_giftcard' => 1,
+        'discount_amount' => $balance,
+        'use_stock' => 0,
+    ]);
+}
+
+/** Een tweede goedgekeurde retour op het Shirt van dezelfde bestelling. */
+function processorSecondReturn(array $f, int $quantity): array
+{
+    $return = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now()]);
+    $line = OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['shirt']->id, 'quantity' => $quantity]);
+
+    return ['return' => $return->fresh(), 'line' => $line];
 }
 
 it('maakt een creditorder met de verwerkte aantallen en koppelt hem aan de retour', function () {
@@ -67,19 +91,94 @@ it('maakt een creditorder met de verwerkte aantallen en koppelt hem aan de retou
 
 it('crediteert een volledige retour inclusief korting als daarom gevraagd wordt', function () {
     $f = processorReturn(['discount' => 10, 'total' => 90]);
+    // Alle drie de shirts terug, anders is het geen volledige retour en weigert
+    // de processor het verrekenen van de korting.
+    $f['shirtLine']->update(['quantity' => 3]);
 
     $credit = app(ReturnProcessor::class)->process($f['return'], [
-        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 2],
+        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 3],
         ['order_return_line_id' => $f['broekLine']->id, 'quantity' => 1],
     ], ['restock' => false, 'refund_discount' => true]);
 
-    // Zonder korting: 40 + 40 = 80 credit. De regel-korting op shirt en broek
+    // Zonder korting: 60 + 40 = 100 credit. De regel-korting op shirt en broek
     // staat op null (0), dus $discountToGet in markAsCancelledWithCredit
     // blijft op de volle order-korting (10) staan. Bij refund_discount telt
     // de methode dat bedrag bij een NEGATIEF totaal op (100 - 10 = 90 was al
-    // betaald), dus het credit wordt kleiner, niet groter: 80 - 10 = 70.
-    expect(round(abs((float) $credit->total), 2))->toBe(70.0)
+    // betaald), dus het credit wordt kleiner, niet groter: 100 - 10 = 90.
+    expect(round(abs((float) $credit->total), 2))->toBe(90.0)
         ->and($credit->orderProducts()->count())->toBe(2);
+});
+
+it('weigert korting verrekenen bij een deelretour, zonder creditorder', function () {
+    $f = processorReturn(['discount' => 10, 'total' => 90]);
+    $processor = app(ReturnProcessor::class);
+
+    // Shirt 2 van 3 en de broek erbij: er blijft één shirt over, dus de hele
+    // orderkorting van het credit aftrekken mag hier niet.
+    expect(fn () => $processor->process($f['return'], [
+        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 2],
+        ['order_return_line_id' => $f['broekLine']->id, 'quantity' => 1],
+    ], ['restock' => false, 'refund_discount' => true]))
+        ->toThrow(InvalidArgumentException::class, 'Korting verrekenen kan alleen bij een volledige retour');
+
+    // En ook niet als de broek helemaal buiten de retour blijft.
+    expect(fn () => $processor->process($f['return'], [
+        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 2],
+        ['order_return_line_id' => $f['broekLine']->id, 'quantity' => 0],
+    ], ['restock' => false, 'refund_discount' => true]))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(0)
+        ->and($f['return']->fresh()->status)->toBe(OrderReturn::STATUS_APPROVED)
+        ->and($f['shirt']->fresh()->returned_quantity)->toBe(0);
+});
+
+it('stort een cadeaubon niet terug, ook niet bij twee deelretouren', function () {
+    $giftcard = processorGiftcardCode(100.0);
+    $f = processorReturn(['discount' => 10, 'total' => 90, 'discount_code_id' => $giftcard->id]);
+    // Wat markAsPaid() gedaan zou hebben: de reservering wordt een verbruik.
+    $f['order']->deductDiscount();
+
+    $saldo = round((float) $giftcard->fresh()->discount_amount, 2);
+
+    app(ReturnProcessor::class)->process($f['return'], [
+        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 2],
+    ], ['restock' => false]);
+
+    expect(round((float) $giftcard->fresh()->discount_amount, 2))->toBe($saldo);
+
+    $tweede = processorSecondReturn($f, 1);
+    app(ReturnProcessor::class)->process($tweede['return'], [
+        ['order_return_line_id' => $tweede['line']->id, 'quantity' => 1],
+    ], ['restock' => false]);
+
+    // Met refillGiftcard: true was het saldo er nu twee keer de volle
+    // orderkorting bij gekregen, bij elke retour opnieuw.
+    expect(round((float) $giftcard->fresh()->discount_amount, 2))->toBe($saldo)
+        ->and(round((float) $giftcard->fresh()->used_amount, 2))->toBe(10.0);
+});
+
+it('telt twee retourregels op hetzelfde orderproduct bij elkaar op tegen het restant', function () {
+    $f = processorReturn();
+    $tweedeRegel = OrderReturnLine::create(['order_return_id' => $f['return']->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 2]);
+
+    // 2 + 2 op een shirt met restant 3 kan niet.
+    expect(fn () => app(ReturnProcessor::class)->process($f['return'], [
+        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 2],
+        ['order_return_line_id' => $tweedeRegel->id, 'quantity' => 2],
+    ], ['restock' => false]))->toThrow(InvalidArgumentException::class);
+
+    expect(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(0);
+
+    // 1 + 2 past precies in het restant en wordt per regel vastgelegd.
+    app(ReturnProcessor::class)->process($f['return'], [
+        ['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 1],
+        ['order_return_line_id' => $tweedeRegel->id, 'quantity' => 2],
+    ], ['restock' => false]);
+
+    expect($f['shirtLine']->fresh()->processed_quantity)->toBe(1)
+        ->and($tweedeRegel->fresh()->processed_quantity)->toBe(2)
+        ->and($f['shirt']->fresh()->returned_quantity)->toBe(3);
 });
 
 it('boekt de voorraad terug als restock aan staat, en niet als hij uit staat', function () {

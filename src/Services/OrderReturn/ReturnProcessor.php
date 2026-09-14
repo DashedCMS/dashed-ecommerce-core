@@ -45,6 +45,7 @@ class ReturnProcessor
 
             $returnLines = $locked->lines()->with('orderProduct')->get()->keyBy('id');
             $quantities = [];
+            $perOrderProduct = [];
             foreach ($lines as $line) {
                 $lineId = (int) ($line['order_return_line_id'] ?? 0);
                 $quantity = (int) ($line['quantity'] ?? 0);
@@ -58,14 +59,25 @@ class ReturnProcessor
                 }
 
                 $quantities[$lineId] = ($quantities[$lineId] ?? 0) + $quantity;
+                // Het restant hangt aan de orderregel en niet aan de retourregel.
+                // Twee retourregels die naar hetzelfde orderproduct wijzen (Bol en
+                // Pay.nl leveren dat straks aan) moeten dus bij elkaar opgeteld
+                // tegen het restant gehouden worden, anders komt er meer terug dan
+                // er besteld is.
+                $orderProductId = (int) $returnLine->order_product_id;
+                $perOrderProduct[$orderProductId] = ($perOrderProduct[$orderProductId] ?? 0) + $quantity;
                 $remaining = ReturnableLines::remaining($returnLine->orderProduct);
-                if ($quantities[$lineId] > $remaining) {
+                if ($perOrderProduct[$orderProductId] > $remaining) {
                     throw new InvalidArgumentException(__('Voor :naam kan nog maar :aantal terug.', ['naam' => $returnLine->orderProduct->name, 'aantal' => $remaining]));
                 }
             }
 
             if (array_sum($quantities) < 1) {
                 throw new InvalidArgumentException(__('Geef minstens één regel een aantal boven nul, of sluit de retour zonder creditering.'));
+            }
+
+            if ($refundDiscount) {
+                $this->guardFullReturn($order, $perOrderProduct);
             }
 
             $chosen = [];
@@ -92,7 +104,13 @@ class ReturnProcessor
                 fulfillmentStatus: $order->fulfillment_status,
                 paymentMethodId: null,
                 sendAdminEmail: false,
-                refillGiftcard: true,
+                // Een cadeaubon wordt niet automatisch teruggestort:
+                // refillGiftcardFromPaidOrder() telt de hele orderkorting bij het
+                // saldo op, zonder te kijken hoeveel er terugkomt en zonder te
+                // onthouden dat het al gebeurd is. Bij een deelretour of een
+                // tweede retour zou de klant het volle bedrag opnieuw krijgen.
+                // De beheerder stort met de hand terug als dat aan de orde is.
+                refillGiftcard: false,
             );
 
             foreach ($quantities as $lineId => $quantity) {
@@ -131,6 +149,28 @@ class ReturnProcessor
         $this->mailCustomer($return);
 
         return $creditOrder;
+    }
+
+    /**
+     * "Korting verrekenen" trekt de hele vaste korting van de bestelling van het
+     * creditbedrag af, ongeacht welk deel er terugkomt, en zou dat bij elke
+     * volgende retour opnieuw doen. Verrekenen mag daarom alleen als er na deze
+     * verwerking niets meer te retourneren valt.
+     *
+     * @param  array<int, int>  $perOrderProduct  te verwerken aantal per orderproduct
+     */
+    protected function guardFullReturn(Order $order, array $perOrderProduct): void
+    {
+        // De relatie kan door een eerdere lading verouderde returned_quantity's
+        // bevatten; het restant moet uit de database komen.
+        $order->unsetRelation('orderProducts');
+
+        foreach (ReturnableLines::forOrder($order) as $orderProduct) {
+            $rest = ReturnableLines::remaining($orderProduct) - (int) ($perOrderProduct[$orderProduct->id] ?? 0);
+            if ($rest > 0) {
+                throw new InvalidArgumentException(__('Korting verrekenen kan alleen bij een volledige retour: er blijven nog producten over die niet geretourneerd zijn.'));
+            }
+        }
     }
 
     protected function mailCustomer(OrderReturn $return): void

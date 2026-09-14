@@ -38,6 +38,13 @@ class OrderWithdrawal extends Component
     public ?string $completedOrderLabel = null;
     public ?string $rateLimitMessage = null;
 
+    /**
+     * Staat er al een goedgekeurde retour open (door een beheerder aangemeld, of
+     * al goedgekeurd), dan wordt er niets aangemaakt of gewijzigd en wijst de
+     * view de klant naar de statuspagina van die retour.
+     */
+    public ?string $existingReturnStatusUrl = null;
+
     /** @var array<int, array{selected: bool, quantity: int, reason_id: int|null, note: string}> */
     public array $selectedLines = [];
 
@@ -121,6 +128,7 @@ class OrderWithdrawal extends Component
     public function confirm(): void
     {
         $this->rateLimitMessage = null;
+        $this->existingReturnStatusUrl = null;
 
         $confirmThrottleKey = 'order-withdrawal-confirm:' . request()->ip();
         if (RateLimiter::tooManyAttempts($confirmThrottleKey, 10)) {
@@ -181,12 +189,25 @@ class OrderWithdrawal extends Component
 
         $resolvedReturn = null;
         $createdReturn = null;
+        $blockedByReturn = null;
 
-        DB::transaction(function () use ($order, $chosen, &$resolvedReturn, &$createdReturn) {
+        DB::transaction(function () use ($order, $chosen, &$resolvedReturn, &$createdReturn, &$blockedByReturn) {
             $existing = OrderReturn::where('order_id', $order->id)
                 ->open()
                 ->lockForUpdate()
                 ->first();
+
+            // Een openstaande retour met status `requested` is de klant die twee
+            // keer op verzenden drukte: dat verzoek staat er al, dus melden we
+            // hetzelfde nog eens af als gelukt. Staat de retour op `approved`,
+            // dan heeft een beheerder hem aangemeld of al goedgekeurd, mogelijk
+            // met een retourlabel eraan; dan mag dit formulier er niets aan
+            // veranderen en hoort de klant te horen dat er al een retour loopt.
+            if ($existing && $existing->status !== OrderReturn::STATUS_REQUESTED) {
+                $blockedByReturn = $existing;
+
+                return;
+            }
 
             if ($existing) {
                 $resolvedReturn = $existing;
@@ -239,6 +260,13 @@ class OrderWithdrawal extends Component
                 $return->approve();
             }
         });
+
+        if ($blockedByReturn) {
+            $this->existingReturnStatusUrl = route('dashed.frontend.return-status', $blockedByReturn->hash);
+            $this->addError('lines', Translation::get('return-already-open', 'returns', 'Er staat al een retour open voor deze bestelling. Volg hem via de statuspagina.'));
+
+            return;
+        }
 
         // App-push: auto-goedgekeurd krijgt zijn eigen melding, anders 'nieuw
         // verzoek'. Alleen voor een NIEUW aangemaakte retour (niet als er al een

@@ -98,7 +98,16 @@
                     </div>
                 @endforeach
 
-                @error('lines') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                @error('lines')
+                    <p class="text-sm text-red-600">{{ $message }}</p>
+                    @if ($existingReturnStatusUrl)
+                        <p class="text-sm">
+                            <a href="{{ $existingReturnStatusUrl }}" class="underline">
+                                {{ Translation::get('return-open-status-link', 'returns', 'Bekijk de status van je retour') }}
+                            </a>
+                        </p>
+                    @endif
+                @enderror
 
                 <button type="submit" wire:loading.attr="disabled" wire:target="confirm" class="button button--primary">
                     {{ Translation::get('return-submit', 'returns', 'Geselecteerde producten retourneren') }}
