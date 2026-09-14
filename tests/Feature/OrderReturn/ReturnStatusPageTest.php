@@ -81,3 +81,37 @@ it('returns 404 for the label route with an unknown hash', function () {
     $this->get(route('dashed.frontend.return-status.label', 'unknownhash0000000000000000000000'))
         ->assertNotFound();
 });
+
+it('toont verwerkt met creditbedrag en factuurlink', function () {
+    $return = makeReturnForStatus(OrderReturn::STATUS_HANDLED, ['processed_at' => now(), 'handled_at' => now()]);
+    $credit = Order::create(['email' => 'a@b.nl', 'status' => 'return', 'credit_for_order_id' => $return->order_id, 'total' => -20, 'invoice_id' => 'CR-STATUS', 'hash' => str_repeat('c', 32)]);
+    $return->update(['credit_order_id' => $credit->id]);
+    $return->lines()->update(['processed_quantity' => 1]);
+
+    $this->get(route('dashed.frontend.return-status', $return->hash))
+        ->assertOk()
+        ->assertSee('Verwerkt')
+        ->assertSee('20')
+        ->assertSee('Creditfactuur');
+});
+
+it('toont terugbetaald met bedrag en methode', function () {
+    $return = makeReturnForStatus(OrderReturn::STATUS_HANDLED, ['processed_at' => now(), 'handled_at' => now()]);
+    $credit = Order::create(['email' => 'a@b.nl', 'status' => 'return', 'credit_for_order_id' => $return->order_id, 'total' => -20, 'invoice_id' => 'CR-REF', 'hash' => str_repeat('d', 32)]);
+    $return->update(['credit_order_id' => $credit->id]);
+    $credit->orderPayments()->create(['status' => 'paid', 'amount' => -20, 'psp' => 'own', 'payment_method' => 'Bankoverschrijving']);
+
+    $this->get(route('dashed.frontend.return-status', $return->hash))
+        ->assertOk()
+        ->assertSee('Terugbetaald')
+        ->assertSee('Bankoverschrijving');
+});
+
+it('toont gesloten met de reden', function () {
+    $return = makeReturnForStatus(OrderReturn::STATUS_CLOSED, ['closed_at' => now(), 'closed_reason' => 'Niets ontvangen binnen de termijn']);
+
+    $this->get(route('dashed.frontend.return-status', $return->hash))
+        ->assertOk()
+        ->assertSee('Gesloten')
+        ->assertSee('Niets ontvangen binnen de termijn');
+});

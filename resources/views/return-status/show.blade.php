@@ -22,14 +22,34 @@
         @if ($orderReturn->rejected_at)
             <li>{{ Translation::get('return-status-rejected', 'returns', 'Afgekeurd') }}: {{ $orderReturn->rejected_at->format('d-m-Y H:i') }}</li>
         @endif
-        @if ($orderReturn->handled_at)
-            <li>{{ Translation::get('return-status-handled', 'returns', 'Afgehandeld') }}: {{ $orderReturn->handled_at->format('d-m-Y H:i') }}</li>
+        @if ($orderReturn->status === \Dashed\DashedEcommerceCore\Models\OrderReturn::STATUS_HANDLED && ($orderReturn->processed_at ?? $orderReturn->handled_at))
+            <li>{{ Translation::get('return-status-processed', 'returns', 'Verwerkt') }}: {{ ($orderReturn->processed_at ?? $orderReturn->handled_at)->format('d-m-Y H:i') }}
+                @if ($orderReturn->creditOrder)
+                    ({{ Translation::get('return-status-credited', 'returns', 'gecrediteerd') }}: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderReturn->creditedAmount()) }})
+                @endif
+            </li>
+        @endif
+        @php($refund = $orderReturn->refundPayment())
+        @if ($refund)
+            <li>{{ Translation::get('return-status-refunded', 'returns', 'Terugbetaald') }}: {{ $refund->created_at?->format('d-m-Y H:i') }},
+                {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice(abs((float) $refund->amount)) }}
+                @if ($refund->payment_method) ({{ $refund->payment_method }}) @endif
+            </li>
+        @endif
+        @if ($orderReturn->closed_at)
+            <li>{{ Translation::get('return-status-closed', 'returns', 'Gesloten') }}: {{ $orderReturn->closed_at->format('d-m-Y H:i') }}</li>
         @endif
     </ul>
 
     @if ($orderReturn->status === \Dashed\DashedEcommerceCore\Models\OrderReturn::STATUS_REJECTED && $orderReturn->rejected_reason)
         <div class="mt-4 rounded border border-red-200 bg-red-50 p-4 text-sm text-red-800">
             <strong>{{ Translation::get('return-status-reason', 'returns', 'Reden') }}:</strong> {{ $orderReturn->rejected_reason }}
+        </div>
+    @endif
+
+    @if ($orderReturn->status === \Dashed\DashedEcommerceCore\Models\OrderReturn::STATUS_CLOSED && $orderReturn->closed_reason)
+        <div class="mt-4 rounded border border-gray-200 bg-gray-50 p-4 text-sm text-gray-800">
+            <strong>{{ Translation::get('return-status-reason', 'returns', 'Reden') }}:</strong> {{ $orderReturn->closed_reason }}
         </div>
     @endif
 
@@ -42,6 +62,9 @@
                     <img src="{{ $img }}" alt="{{ $line->orderProduct?->name }}" class="w-12 h-12 object-cover rounded" />
                 @endif
                 <span>{{ $line->quantity }}x {{ $line->orderProduct?->name }}</span>
+                @if ($orderReturn->status === \Dashed\DashedEcommerceCore\Models\OrderReturn::STATUS_HANDLED)
+                    <span class="text-gray-500">({{ Translation::get('return-status-credited-qty', 'returns', 'gecrediteerd') }}: {{ (int) $line->processed_quantity }})</span>
+                @endif
             </li>
         @endforeach
     </ul>
@@ -50,6 +73,13 @@
         <a href="{{ route('dashed.frontend.return-status.label', $orderReturn->hash) }}"
            class="button button--primary mt-6 inline-block">
             {{ Translation::get('return-status-download-label', 'returns', 'Retourlabel downloaden') }}
+        </a>
+    @endif
+
+    @php($creditInvoiceUrl = $orderReturn->creditOrder ? rescue(fn () => $orderReturn->creditOrder->downloadInvoiceUrl(), null, false) : null)
+    @if ($creditInvoiceUrl)
+        <a href="{{ $creditInvoiceUrl }}" class="button button--primary mt-6 inline-block">
+            {{ Translation::get('return-status-download-credit-invoice', 'returns', 'Creditfactuur downloaden') }}
         </a>
     @endif
 

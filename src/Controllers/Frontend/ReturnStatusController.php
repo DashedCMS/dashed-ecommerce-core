@@ -18,7 +18,7 @@ class ReturnStatusController extends Controller
         RateLimiter::hit($key, 60);
 
         $orderReturn = OrderReturn::query()
-            ->with(['order', 'lines.orderProduct.product', 'lines.returnReason'])
+            ->with(['order', 'creditOrder', 'lines.orderProduct.product', 'lines.returnReason'])
             ->where('hash', $hash)
             ->first();
 
