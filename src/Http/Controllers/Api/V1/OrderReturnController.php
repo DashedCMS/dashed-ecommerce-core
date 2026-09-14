@@ -7,18 +7,18 @@ namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderReturnResource;
 
 class OrderReturnController extends Controller
 {
-    private const EAGER = ['order:id,invoice_id,first_name,last_name,email', 'lines.orderProduct', 'lines.returnReason'];
+    private const EAGER = ['order:id,invoice_id,first_name,last_name,email', 'lines.orderProduct', 'lines.returnReason', 'creditOrder:id,invoice_id,total'];
 
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -84,28 +84,27 @@ class OrderReturnController extends Controller
     public function handle(Request $request, int $orderReturn): OrderReturnResource|JsonResponse
     {
         $return = $this->find($orderReturn);
-        if (! in_array($return->status, [OrderReturn::STATUS_REQUESTED, OrderReturn::STATUS_APPROVED], true)) {
-            return response()->json(['message' => 'Deze retour kan niet meer worden afgehandeld.'], 422);
+        if ($return->status !== OrderReturn::STATUS_APPROVED) {
+            return response()->json(['message' => 'Alleen een goedgekeurde retour kan verwerkt worden.'], 422);
         }
         $data = $request->validate([
             'restock' => ['sometimes', 'boolean'],
-            'refund' => ['sometimes', 'boolean'],
+            'refund' => ['sometimes', 'boolean'], // geaccepteerd voor oude app-versies, genegeerd: terugbetalen is een aparte stap
+            'note' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'lines' => ['sometimes', 'array'],
+            'lines.*.order_return_line_id' => ['required_with:lines', 'integer'],
+            'lines.*.quantity' => ['required_with:lines', 'integer', 'min:0'],
         ]);
-        $restock = (bool) ($data['restock'] ?? false);
-        $refund = (bool) ($data['refund'] ?? false);
+
+        $lines = $data['lines'] ?? $return->lines
+            ->map(fn ($l) => ['order_return_line_id' => $l->id, 'quantity' => (int) $l->quantity])
+            ->all();
 
         try {
-            DB::transaction(function () use ($return, $restock, $refund): void {
-                if ($restock || $refund) {
-                    $lines = $return->lines
-                        ->map(fn ($l) => ['order_product_id' => $l->order_product_id, 'quantity' => (int) $l->quantity])
-                        ->all();
-                    if ($lines) {
-                        $return->order?->registerReturn($lines, $restock, $refund);
-                    }
-                }
-                $return->markHandled();
-            });
+            app(ReturnProcessor::class)->process($return, $lines, [
+                'restock' => (bool) ($data['restock'] ?? true),
+                'note' => $data['note'] ?? null,
+            ]);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

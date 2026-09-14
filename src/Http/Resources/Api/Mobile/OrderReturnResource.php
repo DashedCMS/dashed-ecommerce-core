@@ -38,6 +38,13 @@ class OrderReturnResource extends JsonResource
             'approved_at' => optional($this->approved_at)->toIso8601String(),
             'rejected_at' => optional($this->rejected_at)->toIso8601String(),
             'handled_at' => optional($this->handled_at)->toIso8601String(),
+            'processed_at' => optional($this->processed_at)->toIso8601String(),
+            'closed_at' => optional($this->closed_at)->toIso8601String(),
+            'closed_reason' => $this->closed_reason,
+            'credit_order_id' => $this->credit_order_id,
+            'credit_order_invoice_id' => $this->creditOrder?->invoice_id,
+            'credited_amount' => $this->credit_order_id ? round($this->creditedAmount(), 2) : null,
+            'is_refunded' => $this->isRefunded(),
             'lines' => $this->lines->map(function ($line): array {
                 $reason = $line->returnReason;
                 $reasonLabel = null;
@@ -52,6 +59,7 @@ class OrderReturnResource extends JsonResource
                     'id' => $line->id,
                     'product_name' => $line->orderProduct?->name ?? '—',
                     'quantity' => (int) $line->quantity,
+                    'processed_quantity' => (int) $line->processed_quantity,
                     'reason_label' => $reasonLabel,
                     'reason_note' => $line->reason_note,
                 ];
