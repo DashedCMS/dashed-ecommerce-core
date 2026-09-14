@@ -14,6 +14,7 @@ class AbandonedCartEmail extends Model
         'cart_id',
         'trigger_type',
         'cancelled_order_id',
+        'wishlist_id',
         'email',
         'email_number',
         'flow_step_id',
@@ -63,6 +64,11 @@ class AbandonedCartEmail extends Model
     public function cancelledOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'cancelled_order_id');
+    }
+
+    public function wishlist(): BelongsTo
+    {
+        return $this->belongsTo(Wishlist::class, 'wishlist_id');
     }
 
     public function source(): ?\Illuminate\Database\Eloquent\Model

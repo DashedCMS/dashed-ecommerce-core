@@ -4,6 +4,11 @@ return [
     'registerDefaultBuilderBlocks' => true,
     'debug_logs_enabled' => env('DASHED_ECOMMERCE_DEBUG_LOGS_ENABLED', false),
 
+    // Verlanglijst: naam van de cookie met het lijst-token, en een schakelaar
+    // voor de mailflow-inschrijving (uit in tests, zie WishlistHelper::add()).
+    'wishlist_cookie' => 'wishlist_token',
+    'wishlist_flows_enabled' => env('DASHED_WISHLIST_FLOWS_ENABLED', true),
+
     'invoices' => [
         // Facturen en pakbonnen staan prive op de schijf; de downloadroute is
         // de enige weg ernaartoe en werkt op de orderhash (32 willekeurige

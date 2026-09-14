@@ -2219,6 +2219,19 @@ MARKDOWN,
                         ->filter(fn ($query) => $query->where('status', PrintJobStatus::Failed->value))
                 )
         );
+
+        cms()->registerRetention(
+            Retention::make('wishlists')
+                ->label(__('Verlanglijsten van gasten'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__wishlists')
+                ->termijn(
+                    Termijn::make('wishlists', 365, 'last_activity_at')
+                        ->label(__('Gastverlanglijsten bewaren (dagen)'))
+                        ->uitleg(__('Lijsten zonder account en zonder e-mailadres waar zo lang niets mee gedaan is. Lijsten met account of e-mail blijven. Standaard: 365 dagen.'))
+                        ->filter(fn ($query) => $query->whereNull('user_id')->whereNull('email'))
+                )
+        );
     }
 
     public static function builderBlocks()
