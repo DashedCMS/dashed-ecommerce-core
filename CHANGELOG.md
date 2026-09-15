@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.124.0 - 2026-09-15
+
+### Added
+- **Verlanglijst.** Tabellen `dashed__wishlists`/`dashed__wishlist_items`, `wishlistHelper()` (cookie-token, samenvoegen bij inloggen, e-mail overnemen uit de checkout), Livewire `wishlist.toggle`, `wishlist.count`, `wishlist.wishlist`, publieke pagina via builderblok `wishlist-block` (`wishlist_page_id`, `dashed:create-default-pages`), deellink `/verlanglijst/gedeeld/{token}`, herstel-link `/verlanglijst/herstel`, bewaar-mail, nieuwsbriefblok "Jouw verlanglijst" (per ontvanger, vereist dashed-core ≥ 4.64 en dashed-newsletter ≥ 4.17), segmentconditie `ecommerce.wishlist`, dashboardwidget "Meest gewenst", instelling `wishlist_enabled`, bewaartermijn voor gastlijsten.
+- **Triggerregister voor verlaten-wagen-flows** (`AbandonedCartTriggers`): `cart_with_email`, `cancelled_order` en nieuw `wishlist` (herstart bij elke toevoeging, cooldown 30 dagen, wagenreeks gaat voor). `AbandonedCartSource` kreeg `isValid()`.
+
 ## v4.121.0 - 2026-09-11
 
 ### Security

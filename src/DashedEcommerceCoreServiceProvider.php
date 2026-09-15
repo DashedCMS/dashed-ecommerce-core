@@ -1788,6 +1788,7 @@ MARKDOWN,
             'ec-payment-methods' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
             'ec-revenue-return-chart' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats::class, 'label' => 'Omzet & retouren (grafiek)',  'width' => 'full', 'sort' => 45],
             'ec-doelen' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget::class,                      'label' => 'Verkoopdoelen',                'width' => 'full',      'sort' => 12],
+            'ec-most-wished' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\MostWishedProducts::class,                'label' => 'Meest gewenst',                'width' => 'full',      'sort' => 32],
         ]);
 
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);
@@ -2496,6 +2497,7 @@ MARKDOWN,
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage::class, 'GS1 / EAN instellingen', 'qr-code', 'Standaardwaarden voor het GS1-export en EAN-toewijzing');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage::class, 'Print queue', 'printer', 'Instellingen voor de print queue (auto print, health check, retentie)');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class, 'Verkoopdoelen', 'flag', 'Stel omzet- en bestellingsdoelen in per dag, week, maand en jaar');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class, 'Verlanglijst', 'heart', 'Verlanglijst aan of uit per site');
 
         $package
             ->name('dashed-ecommerce-core')
