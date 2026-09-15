@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.124.1 - 2026-09-15
+
+### Changed
+- **Na een geannuleerde of afgewezen betaling terug naar de checkout.** Voor elke betaalprovider tegelijk, want de terugkeer loopt centraal: de orderpagina van de klant (`Livewire\Frontend\Orders\ViewOrder`) en `TransactionController::complete()` sturen een geannuleerde bestelling nu via `ShoppingCart::cancelledPaymentRedirect()` naar de checkoutpagina met de melding `payment-declined-try-again`, in plaats van naar de homepage. Het winkelwagentje staat er nog, dus de klant kiest een andere betaalmethode. Zonder ingestelde checkoutpagina blijft de homepage over. `getCartUrl()`, `getCheckoutUrl()` en `getCompleteUrl()` geven `#` terug als de pagina ontbreekt in plaats van een fout.
+
+### Fixed
+- **Een geannuleerde betaling annuleerde een betaalde bestelling.** `OrderPayment::changeStatus('cancelled')` gaf altijd "cancelled" terug, en de klantpagina, de transactiecontroller en de pinterminal-job zetten dat door naar de bestelling. Een bestelling die betaald was maar nog een oudere, bij de PSP vervallen betaling had, werd zo geannuleerd zodra iemand de orderlink opende; de link in de fulfilment-mails wijst precies naar die laatste betaling, dus een terugzet naar onafgehandeld (met mail) leek de bestelling te annuleren. Nu annuleert een vervallen betaling de bestelling alleen als die niet (deels) betaald is en er geen andere betaling betaald of nog open is.
+
 ## v4.121.0 - 2026-09-11
 
 ### Security

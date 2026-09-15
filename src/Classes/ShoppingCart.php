@@ -62,7 +62,7 @@ class ShoppingCart
         $pageId = Customsetting::get('cart_page_id');
         $page = Page::publicShowable()->where('id', $pageId)->first();
 
-        return $page->getUrl() ?? '#';
+        return $page?->getUrl() ?? '#';
     }
 
     public static function getCheckoutUrl()
@@ -70,7 +70,22 @@ class ShoppingCart
         $pageId = Customsetting::get('checkout_page_id');
         $page = Page::publicShowable()->where('id', $pageId)->first();
 
-        return $page->getUrl() ?? '#';
+        return $page?->getUrl() ?? '#';
+    }
+
+    /**
+     * Waar de klant heen gaat als de betaling bij de PSP is afgewezen of
+     * geannuleerd. Het winkelwagentje wordt pas geleegd bij een geslaagde
+     * betaling, dus alles staat nog klaar: terug naar de checkout om het
+     * met een andere betaalmethode te proberen, in plaats van de homepage.
+     * Zonder ingestelde checkoutpagina blijft de homepage over.
+     */
+    public static function cancelledPaymentRedirect()
+    {
+        $message = Translation::get('payment-declined-try-again', 'checkout', 'Je betaling is afgewezen of niet voltooid. Probeer het opnieuw met een andere betaalmethode.');
+        $checkoutUrl = self::getCheckoutUrl();
+
+        return redirect($checkoutUrl && $checkoutUrl !== '#' ? $checkoutUrl : '/')->with('error', $message);
     }
 
     public static function getCompleteUrl()
@@ -78,7 +93,7 @@ class ShoppingCart
         $pageId = Customsetting::get('order_page_id');
         $page = Page::publicShowable()->where('id', $pageId)->first();
 
-        return $page->getUrl(native: false) ?? '#';
+        return $page?->getUrl(native: false) ?? '#';
     }
 
     public static function getStartTransactionUrl()

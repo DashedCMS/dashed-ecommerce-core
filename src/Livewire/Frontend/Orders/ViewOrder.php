@@ -9,6 +9,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 
@@ -83,7 +84,9 @@ class ViewOrder extends Component
         }
 
         if ($order->status == 'cancelled') {
-            return redirect('/')->with('error', Translation::get('order-status-cancelled', 'checkout', 'Your order is cancelled'));
+            // Geannuleerd of afgewezen in het betaalscherm van de PSP, welke
+            // dat ook was: terug naar de checkout, zie ShoppingCart.
+            return ShoppingCart::cancelledPaymentRedirect();
         }
 
         $this->order = $order;

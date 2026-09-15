@@ -104,6 +104,25 @@ class OrderPayment extends Model
         $this->save();
 
         if ($newStatus == 'cancelled') {
+            // Een geannuleerde betaling zegt iets over die ene betaling, niet
+            // over de bestelling. Een bestelling die al (deels) betaald is,
+            // of waar nog een andere betaling van open staat (een klant die
+            // het opnieuw probeert), blijft wat hij was. Anders annuleerde
+            // de klantpagina een betaalde bestelling zodra hij de laatste,
+            // bij de PSP vervallen betaling nakeek; de link in de
+            // fulfilment-mail wijst precies naar die betaling.
+            $order = $this->order;
+
+            if ($order && in_array($order->status, ['paid', 'partially_paid'], true)) {
+                return '';
+            }
+
+            $others = $order?->orderPayments()->where('id', '!=', $this->id);
+
+            if ($others && (clone $others)->whereIn('status', ['paid', 'pending'])->exists()) {
+                return '';
+            }
+
             return 'cancelled';
         } elseif ($newStatus == 'paid') {
             if ($this->order->orderPayments()->where('status', 'paid')->sum('amount') >= $this->order->total) {

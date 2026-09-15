@@ -403,18 +403,7 @@ class TransactionController extends Controller
         }
 
         if ($order->status == 'cancelled') {
-            // Payment was declined/cancelled by the provider. The cart is still
-            // intact (emptyCart only runs on a successful payment), so send the
-            // customer back to checkout to retry with another payment method
-            // instead of dumping them on the homepage.
-            $message = Translation::get('payment-declined-try-again', 'checkout', 'Je betaling is afgewezen of niet voltooid. Probeer het opnieuw met een andere betaalmethode.');
-            $checkoutUrl = ShoppingCart::getCheckoutUrl();
-
-            if ($checkoutUrl && $checkoutUrl !== '#') {
-                return redirect($checkoutUrl)->with('error', $message);
-            }
-
-            return redirect('/')->with('error', $message);
+            return ShoppingCart::cancelledPaymentRedirect();
         }
 
         if (view()->exists('dashed.orders.view-order')) {
