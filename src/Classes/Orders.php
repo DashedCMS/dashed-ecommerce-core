@@ -38,10 +38,17 @@ class Orders
         ];
     }
 
-    public static function sendNotification(Order $order, ?string $email = null, ?User $mailSendByUser): void
+    /**
+     * Stuurt de bevestigingsmail en zegt of dat gelukt is. Een fout wordt
+     * gemeld bij de foutmelder en komt met bestand en regel in het
+     * orderlogboek; alleen de melding was niet genoeg om een "array offset
+     * on null" ooit terug te vinden. Er wordt niets doorgegooid, want een
+     * mislukte mail mag een betaling of een statusovergang nooit tegenhouden.
+     */
+    public static function sendNotification(Order $order, ?string $email = null, ?User $mailSendByUser = null): bool
     {
         if (! $email && ! $order->email) {
-            return;
+            return false;
         }
 
         try {
@@ -50,22 +57,19 @@ class Orders
             } else {
                 Mail::to($email ?: $order->email)->bcc(Mails::getBCCNotificationEmails())->send(new OrderConfirmationMail($order));
             }
-        } catch (\Exception $e) {
-            if (app()->runningInConsole()) {
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $order->id;
-                $orderLog->user_id = null;
-                $orderLog->tag = 'order.system.paid.invoice.mail.send.failed';
-                $orderLog->note = 'Error: ' . $e->getMessage();
-                $orderLog->save();
-            } else {
-                $orderLog = new OrderLog();
-                $orderLog->order_id = $order->id;
-                $orderLog->user_id = Auth::check() ? Auth::user()->id : null;
-                $orderLog->tag = 'order.paid.invoice.mail.send.failed';
-                $orderLog->note = 'Error: ' . $e->getMessage();
-                $orderLog->save();
-            }
+
+            return true;
+        } catch (\Throwable $e) {
+            report($e);
+
+            $orderLog = new OrderLog();
+            $orderLog->order_id = $order->id;
+            $orderLog->user_id = app()->runningInConsole() ? null : (Auth::check() ? Auth::user()->id : null);
+            $orderLog->tag = app()->runningInConsole() ? 'order.system.paid.invoice.mail.send.failed' : 'order.paid.invoice.mail.send.failed';
+            $orderLog->note = 'Error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine();
+            $orderLog->save();
+
+            return false;
         }
     }
 }

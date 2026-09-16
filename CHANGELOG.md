@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.126.1 - 2026-09-16
+
+### Fixed
+- **Een mislukte bevestigingsmail is nu terug te vinden.** `Orders::sendNotification()` meldt de fout bij de foutmelder (`report()`) en zet bestand en regel in het orderlogboek naast de melding; met alleen "Trying to access array offset on null" viel er niets te zoeken. De methode geeft nu `bool` terug, en de knoppen "Stuur bevestigingsmail" op de bestelling en in het orderscherm tonen een rode melding als de mail niet weg is, in plaats van altijd "verstuurd".
+
 ## v4.126.0 - 2026-09-16
 
 ### Added

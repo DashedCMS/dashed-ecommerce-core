@@ -42,12 +42,18 @@ class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasA
                     ->email(),
             ])
             ->action(function ($data) {
-                Orders::sendNotification($this->order, $data['email'], auth()->user());
-
-                Notification::make()
-                    ->success()
-                    ->title(__('De notificatie is verstuurd'))
-                    ->send();
+                if (Orders::sendNotification($this->order, $data['email'], auth()->user())) {
+                    Notification::make()
+                        ->success()
+                        ->title(__('De notificatie is verstuurd'))
+                        ->send();
+                } else {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('De bevestigingsmail kon niet worden verstuurd'))
+                        ->body(__('Zie het logboek van de bestelling voor de fout.'))
+                        ->send();
+                }
 
                 $this->dispatch('refreshData');
             });

@@ -693,11 +693,21 @@ class OrderResource extends Resource
                                     ->required(),
                             ])
                             ->action(function ($record, $data) {
-                                Orders::sendNotification($record, $data['email'], auth()->user());
+                                if (Orders::sendNotification($record, $data['email'], auth()->user())) {
+                                    Notification::make()
+                                        ->success()
+                                        ->title(__('De bevestigingsmail is verstuurd'))
+                                        ->send();
 
+                                    return;
+                                }
+
+                                // Niet "verstuurd" zeggen als hij niet weg is; de reden
+                                // staat in het logboek van de bestelling.
                                 Notification::make()
-                                    ->success()
-                                    ->title(__('De bevestigingsmail is verstuurd'))
+                                    ->danger()
+                                    ->title(__('De bevestigingsmail kon niet worden verstuurd'))
+                                    ->body(__('Zie het logboek van de bestelling voor de fout.'))
                                     ->send();
                             }),
                         Action::make('createOrderLog')
