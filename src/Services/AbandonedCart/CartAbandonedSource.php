@@ -62,4 +62,9 @@ class CartAbandonedSource implements AbandonedCartSource
     {
         return [];
     }
+
+    public function isValid(): bool
+    {
+        return true;
+    }
 }

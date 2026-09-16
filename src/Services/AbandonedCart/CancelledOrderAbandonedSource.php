@@ -66,4 +66,11 @@ class CancelledOrderAbandonedSource implements AbandonedCartSource
             ':orderDate:' => $this->order->created_at?->format('j F Y') ?? '',
         ];
     }
+
+    public function isValid(): bool
+    {
+        $orderWasPaid = $this->order->orderPayments()->where('status', 'paid')->exists();
+
+        return ! $orderWasPaid && $this->order->status === 'cancelled';
+    }
 }

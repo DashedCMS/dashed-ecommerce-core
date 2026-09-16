@@ -74,6 +74,12 @@ Route::group(
         //        Route::post('/' . Translation::get('checkout-slug', 'slug', 'checkout'), [TransactionController::class, 'startTransaction'])->name('dashed.frontend.start-transaction');
         //        Route::get('/' . Translation::get('complete-order-slug', 'slug', 'complete'), [TransactionController::class, 'complete'])->name('dashed.frontend.checkout.complete');
         Route::get('/restore-cart', [CartController::class, 'restoreCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.restore-cart');
+        Route::get('/verlanglijst/herstel', [\Dashed\DashedEcommerceCore\Controllers\Frontend\WishlistController::class, 'restore'])
+            ->middleware('throttle:dashed-cart')
+            ->name('dashed.frontend.wishlist.restore');
+        Route::get('/verlanglijst/gedeeld/{shareToken}', [\Dashed\DashedEcommerceCore\Controllers\Frontend\WishlistController::class, 'shared'])
+            ->where('shareToken', '[0-9a-fA-F-]{36}')
+            ->name('dashed.frontend.wishlist.shared');
         // Op orderhash: de hash is niet te raden, maar wie het probeert loopt
         // hier tegen de limiet aan. De toegang zelf regelt InvoiceAccess.
         Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->middleware('throttle:dashed-order-pages')->name('dashed.frontend.download-invoice');

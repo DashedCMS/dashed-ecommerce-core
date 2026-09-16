@@ -14,6 +14,7 @@ class AbandonedCartEmail extends Model
         'cart_id',
         'trigger_type',
         'cancelled_order_id',
+        'wishlist_id',
         'email',
         'email_number',
         'flow_step_id',
@@ -65,11 +66,17 @@ class AbandonedCartEmail extends Model
         return $this->belongsTo(Order::class, 'cancelled_order_id');
     }
 
+    public function wishlist(): BelongsTo
+    {
+        return $this->belongsTo(Wishlist::class, 'wishlist_id');
+    }
+
     public function source(): ?\Illuminate\Database\Eloquent\Model
     {
         return match ($this->trigger_type) {
             'cancelled_order' => $this->cancelledOrder,
             'cart_with_email' => $this->cart,
+            'wishlist' => $this->wishlist,
             default => null,
         };
     }
@@ -80,6 +87,14 @@ class AbandonedCartEmail extends Model
             ->whereNull('cancelled_at')
             ->whereNull('sent_at')
             ->update(['cancelled_at' => now()]);
+    }
+
+    public static function cancelAllForWishlist(int $wishlistId, string $reason = 'rescheduled'): void
+    {
+        static::where('wishlist_id', $wishlistId)
+            ->whereNull('cancelled_at')
+            ->whereNull('sent_at')
+            ->update(['cancelled_at' => now(), 'cancelled_reason' => $reason]);
     }
 
     public static function cancelPendingForEmail(string $email, string $reason = 'converted'): int

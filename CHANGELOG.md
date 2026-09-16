@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.126.0 - 2026-09-16
+
+### Added
+- **Verlanglijst.** Tabellen `dashed__wishlists`/`dashed__wishlist_items`, `wishlistHelper()` (cookie-token, samenvoegen bij inloggen, e-mail overnemen uit de checkout), Livewire `wishlist.toggle`, `wishlist.count`, `wishlist.wishlist`, publieke pagina via builderblok `wishlist-block` (`wishlist_page_id`, `dashed:create-default-pages`), deellink `/verlanglijst/gedeeld/{token}`, herstel-link `/verlanglijst/herstel`, bewaar-mail, nieuwsbriefblok "Jouw verlanglijst" (per ontvanger, vereist dashed-core ≥ 4.64 en dashed-newsletter ≥ 4.17), segmentconditie `ecommerce.wishlist`, dashboardwidget "Meest gewenst", instelling `wishlist_enabled`, bewaartermijn voor gastlijsten.
+- **Triggerregister voor verlaten-wagen-flows** (`AbandonedCartTriggers`): `cart_with_email`, `cancelled_order` en nieuw `wishlist` (herstart bij elke toevoeging, cooldown 30 dagen, wagenreeks gaat voor). `AbandonedCartSource` kreeg `isValid()`.
+
+Deze verlanglijst stond eerder als v4.124.0 op de branch `feature/verlanglijst`; v4.124.1 en v4.125.0 op master bevatten hem niet. Vanaf v4.126.0 zit alles in één lijn.
+
+### Fixed
+- **Rate limit op `WishlistPage::saveByEmail()`.** Een lege lijst geeft alleen een boodschap (geen mail), en per IP-adres mogen hoogstens vijf keer per uur bewaar-mails de deur uit (`WishlistSaveThrottle`, `Illuminate\Support\Facades\RateLimiter`) — anders is het formulier een gratis spam-relay vanaf de afzender van de shop.
+- **`WishlistHelper::productIds()` gememoiseerd.** Eén query per paginaweergave, hoeveel hartjes een pagina ook toont; de cache wordt geleegd bij `add()`, `remove()`, `useToken()`, `reset()` en na het samenvoegen in `claimForUser()`.
+
 ## v4.125.0 - 2026-09-16
 
 ### Changed

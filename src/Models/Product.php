@@ -243,6 +243,11 @@ class Product extends Model
         return $this->hasMany(EcommerceActionLog::class);
     }
 
+    public function wishlistItems(): HasMany
+    {
+        return $this->hasMany(WishlistItem::class, 'product_id');
+    }
+
     /**
      * Bouwt de gedenormaliseerde zoekindex voor dit product.
      * Tekstvelden komen uit de eigen translatables; de productgroep-tekst

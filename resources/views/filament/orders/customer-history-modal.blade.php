@@ -16,6 +16,9 @@
         },
         'Favoriete betaalmethode' => $history->favoritePaymentMethod() ?? '-',
         'Klant-type' => $history->customerType(),
+        'Op verlanglijst' => (int) \Dashed\DashedEcommerceCore\Models\WishlistItem::query()
+            ->whereIn('wishlist_id', \Dashed\DashedEcommerceCore\Models\Wishlist::forEmail((string) $history->anchor->email)->select('id'))
+            ->count() . ' product(en)',
     ];
     $recent = $history->recentOrders(10);
     $anchorId = $history->anchor->id;

@@ -17,15 +17,18 @@ use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\Builder\Block;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\Wishlist;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Commands\MigrateToV3;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Commands\SendInvoices;
+use Dashed\DashedEcommerceCore\Classes\WishlistHelper;
 use Dashed\DashedEcommerceCore\Commands\ClearOldCarts;
 use Dashed\DashedEcommerceCore\Commands\PruneCartLogs;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Dashed\DashedEcommerceCore\Commands\CancelOldOrders;
+use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPage;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\Cart;
 use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
@@ -67,6 +70,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CartAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\InvoiceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource;
@@ -77,11 +81,13 @@ use Dashed\DashedEcommerceCore\Http\Middleware\CaptureAttributionMiddleware;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Products\StockNotification;
 use Dashed\DashedEcommerceCore\Livewire\Orders\ChangeOrderFulfillmentStatus;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderConfirmationToEmail;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ProductGroupTable;
 use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentNextMailAt;
 use Dashed\DashedEcommerceCore\Commands\BackfillOrderFlowEnrollmentReviewUrls;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\WishlistAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\SendOrderToFulfillmentCompanies;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\PaymentInformationList;
@@ -94,9 +100,11 @@ use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\ShippingInformationList
 use Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DefaultEcommerceSettingsPage;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\AttributionInformationList;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Widgets\CartActiveStat;
 use Dashed\DashedEcommerceCore\Livewire\Orders\Infolists\CustomerInformationBlockList;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Widgets\OrderUnhandledStat;
+use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForWishlistJob;
 use Dashed\DashedEcommerceCore\Commands\CheckPastDuePreorderDatesForProductsWithoutStockCommand;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
 use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Widgets\AbandonedCartFlowStats;
@@ -219,6 +227,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             cms()->emailBlock('products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\ProductsBlock::class);
             cms()->emailBlock('auto-products', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\AutoProductsBlock::class);
             cms()->emailBlock('discount-code', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\DiscountCodeBlock::class);
+            cms()->emailBlock('wishlist', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\WishlistBlock::class);
         }
 
         // Zelfde guard als bij de nieuwsbriefblokken hierboven, plus een op
@@ -1537,6 +1546,37 @@ MARKDOWN,
         cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\CustomManualStrategy::class));
         cms()->registerRecommendationStrategy(app(\Dashed\DashedEcommerceCore\Services\Recommendations\Strategies\GapClosingStrategy::class));
 
+        // Register de twee ingebouwde verlaten-wagen-triggers in het triggerregister.
+        // Statisch, dus ook actief in tests; een pakket of app kan er zelf een bijzetten
+        // (zie AbandonedCartTriggers).
+        AbandonedCartTriggers::register(
+            'cart_with_email',
+            __('Verlaten winkelwagen (met email)'),
+            __('Start flow wanneer een cart een emailadres krijgt en niet wordt afgerond.'),
+            fn (AbandonedCartEmail $record) => ($cart = $record->cart()->with(['items.product'])->first()) ? new CartAbandonedSource($cart) : null,
+        );
+        AbandonedCartTriggers::register(
+            'cancelled_order',
+            __('Geannuleerde bestelling (niet betaald)'),
+            __('Start flow wanneer een bestelling wordt geannuleerd zonder dat er ooit betaald is.'),
+            fn (AbandonedCartEmail $record) => ($order = $record->cancelledOrder()->with(['orderProducts.product'])->first()) ? new CancelledOrderAbandonedSource($order) : null,
+        );
+        AbandonedCartTriggers::register(
+            'wishlist',
+            __('Verlanglijst met e-mailadres'),
+            __('Start flow wanneer iemand met een bekend e-mailadres iets op zijn verlanglijst zet en daarna een tijd niets meer doet.'),
+            fn (AbandonedCartEmail $record) => ($wishlist = $record->wishlist()->first()) ? new WishlistAbandonedSource($wishlist) : null,
+        );
+
+        // Elke wijziging aan een lijst met e-mailadres plant de reeks opnieuw.
+        // Config-guard omdat afterCommit in tests niet beschermt (de test-
+        // transactiemanager slaat de testtransactie over).
+        WishlistHelper::afterChange(function (Wishlist $wishlist): void {
+            if ($wishlist->email && config('dashed-ecommerce-core.wishlist_flows_enabled', true)) {
+                ScheduleAbandonedCartEmailsForWishlistJob::dispatch($wishlist->id)->afterCommit();
+            }
+        });
+
         //Stats components
         Livewire::component('revenue-chart', RevenueChart::class);
         Livewire::component('revenue-cards', RevenueCards::class);
@@ -1606,6 +1646,9 @@ MARKDOWN,
         Livewire::component('products.cross-sell-variant-picker', CrossSellVariantPicker::class);
         Livewire::component('products.searchbar', Searchbar::class);
         Livewire::component('account.orders', Orders::class);
+        Livewire::component('wishlist.toggle', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistToggle::class);
+        Livewire::component('wishlist.count', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistCount::class);
+        Livewire::component('wishlist.wishlist', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistPage::class);
         Livewire::component('orders.view-order', ViewOrder::class);
 
         Livewire::component(
@@ -1687,6 +1730,7 @@ MARKDOWN,
             'checkout-block',
             'view-order-block',
             'all-products',
+            'wishlist-block',
         ]);
 
         cms()->builder('plugins', [
@@ -1744,6 +1788,7 @@ MARKDOWN,
             'ec-payment-methods' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWidget::class,          'label' => 'Betaalmethodes',               'width' => 'full', 'sort' => 40],
             'ec-revenue-return-chart' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats::class, 'label' => 'Omzet & retouren (grafiek)',  'width' => 'full', 'sort' => 45],
             'ec-doelen' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DoelenWidget::class,                      'label' => 'Verkoopdoelen',                'width' => 'full',      'sort' => 12],
+            'ec-most-wished' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\MostWishedProducts::class,                'label' => 'Meest gewenst',                'width' => 'full',      'sort' => 32],
         ]);
 
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Cart::class, \Dashed\DashedEcommerceCore\Policies\CartPolicy::class);
@@ -2219,6 +2264,19 @@ MARKDOWN,
                         ->filter(fn ($query) => $query->where('status', PrintJobStatus::Failed->value))
                 )
         );
+
+        cms()->registerRetention(
+            Retention::make('wishlists')
+                ->label(__('Verlanglijsten van gasten'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__wishlists')
+                ->termijn(
+                    Termijn::make('wishlists', 365, 'last_activity_at')
+                        ->label(__('Gastverlanglijsten bewaren (dagen)'))
+                        ->uitleg(__('Lijsten zonder account en zonder e-mailadres waar zo lang niets mee gedaan is. Lijsten met account of e-mail blijven. Standaard: 365 dagen.'))
+                        ->filter(fn ($query) => $query->whereNull('user_id')->whereNull('email'))
+                )
+        );
     }
 
     public static function builderBlocks()
@@ -2298,6 +2356,9 @@ MARKDOWN,
                 ->schema([]),
             Block::make('view-order-block')
                 ->label(__('Bestelling'))
+                ->schema([]),
+            Block::make('wishlist-block')
+                ->label(__('Verlanglijst'))
                 ->schema([]),
             Block::make('product-finder')
                 ->label(__('Product finder'))
@@ -2402,6 +2463,7 @@ MARKDOWN,
 
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\OrderTotalCondition());
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\LastOrderDateCondition());
+            app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\WishlistCondition());
 
             // De eigen nieuwsbrief moet overal te kiezen zijn waar een koppeling
             // als Laposta dat ook is. Zonder deze registratie staat hij wel bij
@@ -2435,6 +2497,7 @@ MARKDOWN,
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\Gs1SettingsPage::class, 'GS1 / EAN instellingen', 'qr-code', 'Standaardwaarden voor het GS1-export en EAN-toewijzing');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage::class, 'Print queue', 'printer', 'Instellingen voor de print queue (auto print, health check, retentie)');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class, 'Verkoopdoelen', 'flag', 'Stel omzet- en bestellingsdoelen in per dag, week, maand en jaar');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class, 'Verlanglijst', 'heart', 'Verlanglijst aan of uit per site');
 
         $package
             ->name('dashed-ecommerce-core')
@@ -2529,6 +2592,25 @@ MARKDOWN,
             $page->metadata()->create([
                 'noindex' => true,
             ]);
+        }
+
+        if (! \Dashed\DashedCore\Models\Customsetting::get('wishlist_page_id')) {
+            $page = new \Dashed\DashedPages\Models\Page();
+            foreach (Locales::getActivatedLocalesFromSites() as $locale) {
+                $page->setTranslation('name', $locale, match ($locale) { 'de' => 'Wunschliste', 'en' => 'Wishlist', default => 'Verlanglijst' });
+                $page->setTranslation('slug', $locale, match ($locale) { 'de' => 'wunschliste', 'en' => 'wishlist', default => 'verlanglijst' });
+                $page->setTranslation('content', $locale, [
+                    [
+                        'data' => ['in_container' => true, 'top_margin' => true, 'bottom_margin' => true],
+                        'type' => 'wishlist-block',
+                    ],
+                ]);
+            }
+            $page->save();
+
+            \Dashed\DashedCore\Models\Customsetting::set('wishlist_page_id', $page->id);
+
+            $page->metadata()->create(['noindex' => true]);
         }
 
         if (! \Dashed\DashedCore\Models\Customsetting::get('order_page_id')) {
