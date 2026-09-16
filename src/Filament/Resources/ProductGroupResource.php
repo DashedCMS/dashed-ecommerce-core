@@ -257,9 +257,9 @@ class ProductGroupResource extends Resource
                             ->send();
                     }),
                 \Filament\Actions\Action::make('restoreExcludedVariations')
-                    ->label(fn ($record) => __('Uitgesloten variaties (:aantal)', ['aantal' => count($record->excludedVariations())]))
+                    ->label(fn ($record) => __('Uitgesloten variaties (:aantal)', ['aantal' => count($record?->excludedVariations() ?? [])]))
                     ->color('gray')
-                    ->visible(fn ($livewire, $record) => count($record->excludedVariations()) && $livewire instanceof EditProductGroup)
+                    ->visible(fn ($livewire, $record) => $livewire instanceof EditProductGroup && count($record?->excludedVariations() ?? []))
                     ->modalHeading(__('Uitgesloten variaties'))
                     ->modalDescription(__('Deze variaties worden niet meer voorgesteld. Vink aan welke je weer wilt laten voorstellen.'))
                     ->modalSubmitActionLabel(__('Geselecteerde terugzetten'))

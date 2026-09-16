@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.126.2 - 2026-09-16
+
+### Fixed
+- **Productgroep aanmaken gaf een 500.** De knop "Uitgesloten variaties" riep `excludedVariations()` aan op het record, en op de aanmaakpagina is er nog geen record. De knop is nu, net als "Ontbrekende variaties aanmaken", alleen op de bewerkpagina zichtbaar en null-veilig.
+
 ## v4.126.1 - 2026-09-16
 
 ### Fixed
