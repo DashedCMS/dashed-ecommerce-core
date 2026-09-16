@@ -12,6 +12,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Illuminate\Support\Collection as SupportCollection;
@@ -223,20 +224,21 @@ class ShoppingCart
                     // threshold against the cart subtotal.
                     $total = cartHelper()->getTotal() - cartHelper()->getShippingCosts();
 
-                    // Een korting/cadeaubon mag de min/max-order-value check niet
-                    // verstoren: een hoge kortingscode (of cadeaubon) capt het
-                    // totaal op €0,01, waardoor alle shipping methods met een
-                    // minimum_order_value > €0,01 wegvielen — en omdat deze filter
-                    // vóór het definitief zetten van de verzendmethode draait, gaf
-                    // getTotal() - getShippingCosts() per refresh een ander (soms
-                    // negatief) bedrag. We tellen getDiscount() terug op zodat we
-                    // altijd tegen de echte, korting-onafhankelijke cart-waarde
-                    // checken (getTotal() + getDiscount() - getShippingCosts() ==
-                    // totalWithoutDiscount - shippingCosts).
+                    // De korting van een kortingscode telt mee: de minimale en
+                    // maximale orderwaarde van een verzendmethode (bijv. gratis
+                    // verzending vanaf € 100) wordt getoetst op het bedrag dat de
+                    // klant echt voor de producten betaalt. Een cadeaubon is een
+                    // betaalmiddel, geen korting, en wordt daarom teruggeteld.
+                    // De waarde wordt op € 0 afgekapt: de korting is gecapt op het
+                    // totaal inclusief de nu geselecteerde verzendkosten, dus
+                    // zonder afkappen kon hier een negatief bedrag uitkomen waar
+                    // geen enkele verzendmethode meer bij paste.
                     $activeDiscountCode = cartHelper()->getDiscountCode();
-                    if ($activeDiscountCode) {
+                    if ($activeDiscountCode && ! self::discountLowersShippingOrderValue($activeDiscountCode)) {
                         $total += cartHelper()->getDiscount();
                     }
+
+                    $total = max(0.0, round((float) $total, 2));
 
                     if (static::$shippingOrderValueResolver) {
                         $total = (float) (static::$shippingOrderValueResolver)((float) $total, $cartItems);
@@ -293,6 +295,16 @@ class ShoppingCart
         }
 
         return [];
+    }
+
+    /**
+     * Telt de korting van deze code mee bij het toetsen van de minimale en
+     * maximale orderwaarde van verzendmethodes? Altijd, behalve voor een
+     * cadeaubon: die is een betaalmiddel en verlaagt de orderwaarde niet.
+     */
+    public static function discountLowersShippingOrderValue(DiscountCode $discountCode): bool
+    {
+        return ! $discountCode->is_giftcard;
     }
 
     public static function getAllShippingMethods($countryName)

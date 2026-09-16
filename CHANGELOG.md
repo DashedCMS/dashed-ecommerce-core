@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.125.0 - 2026-09-16
+
+### Changed
+- **Verzendmethode-drempels worden getoetst op het bedrag ná korting.** `ShoppingCart::getAvailableShippingMethods()` trekt de kortingscode af voordat de minimale en maximale orderwaarde van een verzendmethode getoetst wordt, zodat een klant die met een korting onder de gratis-verzenddrempel zakt gewoon verzendkosten betaalt. Eerder gold de drempel voor de orderwaarde vóór korting. Cadeaubonnen zijn een betaalmiddel en tellen niet mee. De getoetste waarde wordt op € 0 afgekapt, zodat een korting die groter is dan de wagen nooit alle verzendmethodes laat verdwijnen (het probleem uit v4.67.3).
+
 ## v4.124.1 - 2026-09-15
 
 ### Changed
