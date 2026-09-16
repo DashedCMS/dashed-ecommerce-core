@@ -25,6 +25,7 @@ use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
+use Dashed\DashedEcommerceCore\Events\Orders\PaymentRefundReportedEvent;
 
 class TransactionController extends Controller
 {
@@ -383,7 +384,13 @@ class TransactionController extends Controller
                 foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
                     if ($orderPayment->psp == $pspId) {
                         $newStatus = $psp['class']::getOrderStatus($orderPayment);
-                        $newPaymentStatus = $orderPayment->changeStatus($newStatus);
+                        if ($newStatus === 'refunded') {
+                            // Terugbetaald: de betaling blijft 'paid', de creditorder van de
+                            // retour krijgt de terugbetaling. Zie PaymentRefundReportedEvent.
+                            PaymentRefundReportedEvent::dispatch($orderPayment);
+                        } else {
+                            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
+                        }
                     }
                 }
 
@@ -462,8 +469,12 @@ class TransactionController extends Controller
                     foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
                         if ($orderPayment->psp == $pspId) {
                             $newStatus = $psp['class']::getOrderStatus($orderPayment);
-                            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-                            $order->changeStatus($newPaymentStatus);
+                            if ($newStatus === 'refunded') {
+                                PaymentRefundReportedEvent::dispatch($orderPayment);
+                            } else {
+                                $newPaymentStatus = $orderPayment->changeStatus($newStatus);
+                                $order->changeStatus($newPaymentStatus);
+                            }
                         }
                     }
                 }
