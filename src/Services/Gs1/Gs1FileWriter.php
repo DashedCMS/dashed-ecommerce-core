@@ -40,16 +40,17 @@ class Gs1FileWriter
         $sheet->setTitle($sheetName);
 
         foreach (self::HEADERS as $index => $header) {
-            $sheet->setCellValueByColumnAndRow($index + 1, 1, $header);
+            // Coördinaat als [kolom, rij]: de ByColumnAndRow-varianten zijn in
+            // PhpSpreadsheet 2 verwijderd, deze vorm werkt in 1.30 en 5.x.
+            $sheet->setCellValue([$index + 1, 1], $header);
         }
 
         $rowNumber = 2;
         foreach ($rows as $row) {
             $values = $row->toArray();
             foreach ($values as $columnIndex => $value) {
-                $sheet->setCellValueExplicitByColumnAndRow(
-                    $columnIndex + 1,
-                    $rowNumber,
+                $sheet->setCellValueExplicit(
+                    [$columnIndex + 1, $rowNumber],
                     $value ?? '',
                     DataType::TYPE_STRING,
                 );

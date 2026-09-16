@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.127.0 - 2026-09-16
+
+### Changed
+- **PHP 8.5: Laravel-Excel 4 toegestaan.** `maatwebsite/excel` mag `^3.1 || ^4.0`. Versie 3.1 zit vast op phpspreadsheet 1.30, die PHP 8.5 uitsluit; 4.0 brengt phpspreadsheet 5 mee (PHP ^8.2). Composer kiest zelf: op PHP 8.4 kan het bij 3.1 blijven, op 8.5 gaat het naar 4.0. `Gs1FileWriter` gebruikt de coördinaatvorm `[kolom, rij]` in plaats van de in phpspreadsheet 2 verwijderde `...ByColumnAndRow`-methodes; werkt in beide versies. Vereist dashed-core v4.65.0 (dat de blokkerende `pxlrbt/filament-excel` laat vallen). Rondgang export, import en GS1 in `tests/Feature/Core/ExcelCompatibilityTest.php`.
+
 ## v4.126.2 - 2026-09-16
 
 ### Fixed
