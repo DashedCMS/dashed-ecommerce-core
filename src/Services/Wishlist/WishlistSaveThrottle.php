@@ -15,17 +15,18 @@ class WishlistSaveThrottle
 
     protected int $decaySeconds = 3600;
 
-    protected function key(string $ip): string
+    // Een verzoek zonder REMOTE_ADDR deelt één emmer, wordt niet doorgelaten zonder limiet.
+    private function key(?string $ip): string
     {
-        return 'wishlist-save:'.$ip;
+        return 'wishlist-save:'.($ip ?: 'onbekend');
     }
 
-    public function allow(string $ip): bool
+    public function allow(?string $ip): bool
     {
         return ! RateLimiter::tooManyAttempts($this->key($ip), $this->maxAttempts);
     }
 
-    public function hit(string $ip): void
+    public function hit(?string $ip): void
     {
         RateLimiter::hit($this->key($ip), $this->decaySeconds);
     }

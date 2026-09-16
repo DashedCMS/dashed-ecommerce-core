@@ -36,3 +36,15 @@ it('houdt ip-adressen los van elkaar', function () {
     expect($throttle->allow('1.1.1.1'))->toBeFalse()
         ->and($throttle->allow('2.2.2.2'))->toBeTrue();
 });
+
+it('verdraagt een verzoek zonder ip en blokkeert alsnog na vijf pogingen', function () {
+    RateLimiter::clear('wishlist-save:onbekend');
+    $throttle = new WishlistSaveThrottle();
+
+    foreach (range(1, 5) as $poging) {
+        expect($throttle->allow(null))->toBeTrue();
+        $throttle->hit(null);
+    }
+
+    expect($throttle->allow(null))->toBeFalse();
+});
