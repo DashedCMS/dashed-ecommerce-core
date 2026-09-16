@@ -55,7 +55,9 @@ it('is site-aware, read from a single model, wired into three pages', function (
  * het toont letterlijk alles uit MobileApiRegistry::automationTriggers().
  * Zodra CustomerAutomationTriggers/StockAutomationTriggers (Task 4/6)
  * registreren, verschijnen hun triggers dus vanzelf hier ook. Bewust
- * bijgewerkt naar twaalf triggers, niet afgezwakt: zes bestaande order-events,
+ * bijgewerkt naar vijftien triggers, niet afgezwakt: negen bestaande
+ * order-events (inclusief de drie retour-afhandelingstriggers uit Task 1
+ * van Bol-retouren: order.return_processed/closed/rejected),
  * time.relative/time.recurring, de twee klant-triggers (customer.new/
  * customer.nth_order) en de twee voorraad-triggers (stock.low/stock.back).
  * De vier nieuwe B3-triggers hebben een eigen, uitgebreidere dekking in
@@ -72,6 +74,9 @@ it('exposes all order, time, customer and stock automation triggers to the trigg
         'order.fulfillment_changed',
         'order.return_requested',
         'order.return_approved',
+        'order.return_processed',
+        'order.return_closed',
+        'order.return_rejected',
         'time.relative',
         'time.recurring',
         'customer.new',

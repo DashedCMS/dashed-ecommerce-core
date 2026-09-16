@@ -9,13 +9,16 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnClosedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRejectedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRequestedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnProcessedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
 /**
- * Naast de zes order-triggers bevat de registry ook niet-order-triggers:
+ * Naast de negen order-triggers bevat de registry ook niet-order-triggers:
  * de tijd-triggers uit B2 (`time.relative`/`time.recurring`) en de
  * voorraad-/klant-triggers uit B3 (`stock.low`/`stock.back`;
  * `customer.new`/`customer.nth_order`). Filteren op subject alléén is niet
@@ -25,12 +28,12 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
  * type => 'time'. Klant-/voorraad-triggers hebben een ander subject
  * ('customer'/'product') en vallen al buiten een subject-filter. Deze test
  * gaat alleen over de order-triggers, dus filtert hij op subject === 'order'
- * én type !== 'time', vóórdat hij de "zes order-triggers hebben
+ * én type !== 'time', vóórdat hij de "negen order-triggers hebben
  * subject+event+resolve"-assertie doet, zodat die intentie (order-triggers
  * zijn event-gebaseerd) onverzwakt getest blijft. Het aparte, bedoelde
  * gedrag van de tijd-triggers staat in de test hieronder.
  */
-it('registers the six order automation triggers with a subject, event class and resolve callable', function () {
+it('registers the nine order automation triggers with a subject, event class and resolve callable', function () {
     $registry = app(MobileApiRegistry::class);
     $orderTriggers = collect($registry->automationTriggers())
         ->filter(fn (array $trigger): bool => ($trigger['subject'] ?? null) === 'order'
@@ -44,6 +47,9 @@ it('registers the six order automation triggers with a subject, event class and 
         'order.fulfillment_changed',
         'order.return_requested',
         'order.return_approved',
+        'order.return_processed',
+        'order.return_closed',
+        'order.return_rejected',
     ];
 
     expect($orderTriggers->keys()->all())->toEqualCanonicalizing($expectedKeys);
@@ -98,6 +104,7 @@ it('returns the descriptor for a single trigger key via automationTrigger()', fu
 it('resolves the order from each trigger event via its resolve callable', function () {
     $order = Order::create(['email' => 'klant@example.com', 'status' => 'paid', 'invoice_id' => 'INV-2001']);
     $return = OrderReturn::create(['order_id' => $order->id, 'email' => $order->email]);
+    $creditOrder = Order::create(['email' => 'klant@example.com', 'status' => 'return', 'credit_for_order_id' => $order->id, 'invoice_id' => 'INV-2001-C']);
 
     $registry = app(MobileApiRegistry::class);
 
@@ -108,6 +115,9 @@ it('resolves the order from each trigger event via its resolve callable', functi
         'order.fulfillment_changed' => new OrderFulfillmentStatusChangedEvent($order, 'unhandled', 'packed'),
         'order.return_requested' => new OrderReturnRequestedEvent($return),
         'order.return_approved' => new OrderReturnApprovedEvent($return),
+        'order.return_processed' => new OrderReturnProcessedEvent($return, $creditOrder),
+        'order.return_closed' => new OrderReturnClosedEvent($return),
+        'order.return_rejected' => new OrderReturnRejectedEvent($return),
     ];
 
     foreach ($cases as $key => $event) {

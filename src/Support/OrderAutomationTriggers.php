@@ -12,8 +12,11 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnClosedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRejectedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRequestedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnProcessedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderFulfillmentStatusChangedEvent;
 
 /**
@@ -84,6 +87,30 @@ class OrderAutomationTriggers
                 'event' => OrderReturnApprovedEvent::class,
                 'fields' => self::orderConditionFields(),
                 'resolve' => fn (OrderReturnApprovedEvent $event): Order => $event->orderReturn->order,
+            ],
+            [
+                'key' => 'order.return_processed',
+                'label' => 'Retour verwerkt',
+                'subject' => 'order',
+                'event' => OrderReturnProcessedEvent::class,
+                'fields' => self::orderConditionFields(),
+                'resolve' => fn (OrderReturnProcessedEvent $event): Order => $event->orderReturn->order,
+            ],
+            [
+                'key' => 'order.return_closed',
+                'label' => 'Retour gesloten zonder creditering',
+                'subject' => 'order',
+                'event' => OrderReturnClosedEvent::class,
+                'fields' => self::orderConditionFields(),
+                'resolve' => fn (OrderReturnClosedEvent $event): Order => $event->orderReturn->order,
+            ],
+            [
+                'key' => 'order.return_rejected',
+                'label' => 'Retour afgekeurd',
+                'subject' => 'order',
+                'event' => OrderReturnRejectedEvent::class,
+                'fields' => self::orderConditionFields(),
+                'resolve' => fn (OrderReturnRejectedEvent $event): Order => $event->orderReturn->order,
             ],
         ]);
     }

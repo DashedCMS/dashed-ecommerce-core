@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnClosedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRejectedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
@@ -129,6 +131,7 @@ class OrderReturn extends Model
 
         $this->logToOrder('order.return-rejected');
         Mail::to($this->email)->queue(new OrderReturnRejectedMail($this));
+        OrderReturnRejectedEvent::dispatch($this);
     }
 
     public function sendCustomEmail(string $subject, string $message, ?string $email = null): void
@@ -175,6 +178,7 @@ class OrderReturn extends Model
 
         $this->order?->update(['retour_status' => 'handled']);
         $this->logToOrder('order.return-closed');
+        OrderReturnClosedEvent::dispatch($this);
     }
 
     /**

@@ -10,6 +10,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnProcessedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnProcessedMail;
 
 /**
@@ -145,6 +146,8 @@ class ReturnProcessor
 
         $return->refresh();
         $return->load(['order', 'lines.orderProduct', 'lines.returnReason', 'creditOrder']);
+
+        OrderReturnProcessedEvent::dispatch($return, $creditOrder);
 
         $this->mailCustomer($return);
 
