@@ -12,6 +12,7 @@ use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Dashed\DashedEcommerceCore\Services\Payments\PspStatusResolver;
 
 class ViewOrder extends Component
 {
@@ -61,14 +62,11 @@ class ViewOrder extends Component
 
         try {
             if ($lock->get()) {
-                foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
-                    if ($orderPayment->psp == $pspId) {
-                        $newStatus = $psp['class']::getOrderStatus($orderPayment);
-                        $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-                    }
-                }
+                // Dezelfde route als de exchange en de complete-pagina: bij een
+                // gemelde terugbetaling blijft de betaling staan. Zie PspStatusResolver.
+                $newPaymentStatus = PspStatusResolver::apply($orderPayment, $order, false);
 
-                if (isset($newPaymentStatus)) {
+                if ($newPaymentStatus !== null) {
                     $order->changeStatus($newPaymentStatus);
                     $order->sendGAEcommerceHit();
                 }

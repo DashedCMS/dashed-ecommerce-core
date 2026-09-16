@@ -23,9 +23,9 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
+use Dashed\DashedEcommerceCore\Services\Payments\PspStatusResolver;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
-use Dashed\DashedEcommerceCore\Events\Orders\PaymentRefundReportedEvent;
 
 class TransactionController extends Controller
 {
@@ -381,20 +381,11 @@ class TransactionController extends Controller
 
         try {
             if ($lock->get()) {
-                foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
-                    if ($orderPayment->psp == $pspId) {
-                        $newStatus = $psp['class']::getOrderStatus($orderPayment);
-                        if ($newStatus === 'refunded') {
-                            // Terugbetaald: de betaling blijft 'paid', de creditorder van de
-                            // retour krijgt de terugbetaling. Zie PaymentRefundReportedEvent.
-                            PaymentRefundReportedEvent::dispatch($orderPayment);
-                        } else {
-                            $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-                        }
-                    }
-                }
+                // Terugbetaald: de betaling blijft 'paid', de creditorder van de
+                // retour krijgt de terugbetaling. Zie PspStatusResolver.
+                $newPaymentStatus = PspStatusResolver::apply($orderPayment, $order, false);
 
-                if (isset($newPaymentStatus)) {
+                if ($newPaymentStatus !== null) {
                     $order->changeStatus($newPaymentStatus);
                     $order->sendGAEcommerceHit();
                 }
@@ -466,17 +457,7 @@ class TransactionController extends Controller
                     $newPaymentStatus = 'waiting_for_confirmation';
                     $order->changeStatus($newPaymentStatus);
                 } else {
-                    foreach (ecommerce()->builder('paymentServiceProviders') ?: [] as $pspId => $psp) {
-                        if ($orderPayment->psp == $pspId) {
-                            $newStatus = $psp['class']::getOrderStatus($orderPayment);
-                            if ($newStatus === 'refunded') {
-                                PaymentRefundReportedEvent::dispatch($orderPayment);
-                            } else {
-                                $newPaymentStatus = $orderPayment->changeStatus($newStatus);
-                                $order->changeStatus($newPaymentStatus);
-                            }
-                        }
-                    }
+                    PspStatusResolver::apply($orderPayment, $order, true);
                 }
             }
         } catch (LockTimeoutException $e) {
