@@ -169,8 +169,7 @@ class OrderModifiedMail extends Mailable implements RegistersEmailTemplate
                 return $mail;
             }
 
-            $mail->attach(Storage::disk('dashed')->url($invoicePath), [
-                'as' => Customsetting::get('site_name') . ' - ' . $this->order->invoice_id . '.pdf',
+            $mail->attachFromStorageDisk('dashed', ltrim($invoicePath, '/'), Customsetting::get('site_name') . ' - ' . $this->order->invoice_id . '.pdf', [
                 'mime' => 'application/pdf',
             ]);
         } catch (\Throwable $e) {

@@ -6,11 +6,11 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
+use Dashed\DashedEcommerceCore\Mail\Concerns\AttachesInvoice;
 use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
@@ -18,6 +18,7 @@ use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
 class AdminPreOrderConfirmationMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram
 {
     use HasEmailTemplate;
+    use AttachesInvoice;
     use Queueable;
     use SerializesModels;
 
@@ -126,11 +127,7 @@ class AdminPreOrderConfirmationMail extends Mailable implements RegistersEmailTe
                 ]);
         }
 
-        $invoicePath = Storage::disk('dashed')->url('dashed/invoices/invoice-' . $this->order->invoice_id . '-' . $this->order->hash . '.pdf');
-        $mail->attach($invoicePath, [
-            'as' => Customsetting::get('site_name') . ' - ' . $this->order->invoice_id . '.pdf',
-            'mime' => 'application/pdf',
-        ]);
+        $mail->attachInvoiceFromDisk($this->order);
 
         return $mail;
     }

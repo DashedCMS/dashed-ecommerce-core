@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.128.1 - 2026-09-16
+
+### Fixed
+- **Bestelmails met factuur kwamen niet weg: "Trying to access array offset on null".** Zeven mails (bevestiging, pre-orderbevestiging, de admin-varianten, annulering, creditering, wijziging) hingen de factuur aan via de publieke URL van de dashed-schijf. Sinds facturen prive staan (v4.118.0) geeft die URL een 403; Symfony leest een pad-bijlage pas bij het verzenden met `file_get_contents()`, en Laravels foutafhandelaar laat `error_get_last()` leeg, dus bleef alleen die melding uit `TextPart.php` over. `Mail\Concerns\AttachesInvoice::attachInvoiceFromDisk()` leest nu via de schijf-API (`attachFromStorageDisk`), en zonder factuur op de schijf gaat de mail zonder bijlage in plaats van helemaal niet.
+
 ## v4.128.0 - 2026-09-16
 
 ### Changed
