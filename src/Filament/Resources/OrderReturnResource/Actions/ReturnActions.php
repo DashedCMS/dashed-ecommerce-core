@@ -8,16 +8,16 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\RichEditor;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\EmailTemplate;
-use Filament\Schemas\Components\Fieldset;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
-use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 /**
@@ -62,10 +62,12 @@ class ReturnActions
             ->label(__('Afkeuren'))
             ->color('danger')
             ->visible(fn (OrderReturn $record) => in_array($record->status, [OrderReturn::STATUS_REQUESTED, OrderReturn::STATUS_APPROVED], true))
-            ->schema([
+            ->schema(fn (OrderReturn $record) => [
                 Textarea::make('rejected_reason')->label(__('Reden'))->required(),
+                ...ReturnActionExtensions::fields('reject', $record),
             ])
             ->action(function (OrderReturn $record, array $data) {
+                ReturnActionExtensions::runBefore('reject', $record, $data);
                 $record->reject($data['rejected_reason']);
                 Notification::make()->success()->title(__('Retouraanvraag afgekeurd'))->send();
             });
@@ -142,11 +144,13 @@ class ReturnActions
             ->color('gray')
             ->visible(fn (OrderReturn $record) => $record->status === OrderReturn::STATUS_APPROVED)
             ->modalDescription(__('De retour wordt afgesloten zonder creditorder. Wil je de klant iets uitleggen, gebruik dan "Stuur e-mail".'))
-            ->schema([
+            ->schema(fn (OrderReturn $record) => [
                 Textarea::make('closed_reason')->label(__('Reden'))->required(),
+                ...ReturnActionExtensions::fields('close', $record),
             ])
             ->action(function (OrderReturn $record, array $data) {
                 try {
+                    ReturnActionExtensions::runBefore('close', $record, $data);
                     $record->close($data['closed_reason']);
                 } catch (\InvalidArgumentException $e) {
                     Notification::make()->danger()->title($e->getMessage())->send();
