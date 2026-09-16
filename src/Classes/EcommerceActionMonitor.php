@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Classes;
 
 use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Classes\SecurityAlerts;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedCore\Classes\AdminActionMonitor;
@@ -63,7 +64,12 @@ class EcommerceActionMonitor
             }
         }
 
-        AdminActionMonitor::alert($title, $facts);
+        // Eigen soort met eigen schakelaar (Instellingen, Beveiliging), want
+        // een prijs wijzigen gebeurt vaak en bewust. Op een oudere dashed-core
+        // zonder die soort valt hij terug op de beheeracties.
+        $type = defined(SecurityAlerts::class . '::TYPE_PRICE_CHANGE') ? SecurityAlerts::TYPE_PRICE_CHANGE : null;
+
+        AdminActionMonitor::alert($title, $facts, type: $type);
     }
 
     /**

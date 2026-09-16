@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.128.0 - 2026-09-16
+
+### Changed
+- **Prijsmeldingen vallen onder de soort Prijswijzigingen.** De melding bij gewijzigde geldvelden van een product (prijs, inkoopprijs, btw, drastische verlaging) gaat nu via `SecurityAlerts::TYPE_PRICE_CHANGE`, met eigen schakelaar en ontvangers bij Instellingen, Beveiliging. Vereist dashed-core v4.66.0; op een oudere core valt hij terug op de Beheeracties.
+
 ## v4.127.0 - 2026-09-16
 
 ### Changed
