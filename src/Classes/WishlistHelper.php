@@ -22,6 +22,9 @@ class WishlistHelper
 
     protected static bool $resolved = false;
 
+    /** @var array<int, int>|null */
+    protected static ?array $productIds = null;
+
     /** @var array<int, Closure(Wishlist): void> */
     protected static array $afterChange = [];
 
@@ -35,6 +38,7 @@ class WishlistHelper
     {
         static::$wishlist = null;
         static::$resolved = false;
+        static::$productIds = null;
     }
 
     protected function cookieName(): string
@@ -149,14 +153,24 @@ class WishlistHelper
 
         $guest->delete();
         $own->touchActivity();
+        static::$productIds = null;
 
         return $own;
     }
 
-    /** @return array<int, int> */
+    /**
+     * Eén query per paginaweergave, hoeveel hartjes er ook staan (zelfde
+     * opzet als CartHelper::$cartProductsById).
+     *
+     * @return array<int, int>
+     */
     public function productIds(): array
     {
-        return $this->getWishlist()?->items()->pluck('product_id')->all() ?? [];
+        if (static::$productIds !== null) {
+            return static::$productIds;
+        }
+
+        return static::$productIds = $this->getWishlist()?->items()->pluck('product_id')->all() ?? [];
     }
 
     public function has(Product|int $product): bool
@@ -180,6 +194,7 @@ class WishlistHelper
 
         $this->adoptCartEmail($wishlist);
         $wishlist->touchActivity();
+        static::$productIds = null;
         $this->changed($wishlist);
 
         return $item;
@@ -195,6 +210,7 @@ class WishlistHelper
 
         $wishlist->items()->where('product_id', $product instanceof Product ? $product->id : $product)->delete();
         $wishlist->touchActivity();
+        static::$productIds = null;
         $this->changed($wishlist);
     }
 

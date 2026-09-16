@@ -9,6 +9,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Wishlist;
 use Dashed\DashedEcommerceCore\Models\WishlistItem;
 use Dashed\DashedEcommerceCore\Mail\WishlistSavedMail;
+use Dashed\DashedEcommerceCore\Services\Wishlist\WishlistSaveThrottle;
 
 class WishlistPage extends Component
 {
@@ -70,6 +71,26 @@ class WishlistPage extends Component
     public function saveByEmail(): void
     {
         $this->validate(['email' => ['required', 'email']]);
+
+        if ($this->items()->isEmpty()) {
+            $this->message = __('Zet eerst iets op je verlanglijst.');
+
+            return;
+        }
+
+        // Zonder limiet is dit formulier een gratis spam-relay: elk e-mailadres
+        // krijgt een mail vanaf de afzender van de shop zelf, ongeacht wie het
+        // invult. Zelfde patroon als OutletBidService in Lovora.
+        $ip = request()->ip();
+        $throttle = new WishlistSaveThrottle();
+
+        if (! $throttle->allow($ip)) {
+            $this->message = __('Je hebt dit net al gedaan. Probeer het over een uur nog eens.');
+
+            return;
+        }
+
+        $throttle->hit($ip);
 
         $wishlist = wishlistHelper()->getWishlist(create: true);
         wishlistHelper()->adoptEmail($this->email);

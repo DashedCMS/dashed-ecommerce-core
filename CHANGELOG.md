@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.124.1 - 2026-09-16
+
+### Fixed
+- **Rate limit op `WishlistPage::saveByEmail()`.** Een lege lijst geeft alleen een boodschap (geen mail), en per IP-adres mogen hoogstens vijf keer per uur bewaar-mails de deur uit (`WishlistSaveThrottle`, `Illuminate\Support\Facades\RateLimiter`) — anders is het formulier een gratis spam-relay vanaf de afzender van de shop.
+- **`WishlistHelper::productIds()` gememoiseerd.** Eén query per paginaweergave, hoeveel hartjes een pagina ook toont; de cache wordt geleegd bij `add()`, `remove()`, `useToken()`, `reset()` en na het samenvoegen in `claimForUser()`.
+
 ## v4.124.0 - 2026-09-15
 
 ### Added

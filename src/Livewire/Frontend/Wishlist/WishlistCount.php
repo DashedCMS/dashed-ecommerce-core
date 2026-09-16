@@ -15,11 +15,6 @@ class WishlistCount extends Component
         // render() leest het aantal vers; hier hoeft niets te gebeuren.
     }
 
-    public function placeholder()
-    {
-        return '<span class="wishlist-count" aria-hidden="true"></span>';
-    }
-
     public function render()
     {
         $count = Customsetting::get('wishlist_enabled', Sites::getActive(), 1) ? wishlistHelper()->count() : 0;

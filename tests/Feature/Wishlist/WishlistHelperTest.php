@@ -106,6 +106,25 @@ it('negeert een lijst van een andere gebruiker in de cookie', function () {
         ->and($lijst->token)->not->toBe($lijstA->token);
 });
 
+it('memoiseert productIds() per verzoek en leest opnieuw na een wijziging', function () {
+    $a = helperProduct();
+    $b = helperProduct();
+    wishlistHelper()->add($a);
+
+    wishlistHelper()->productIds();
+
+    \Illuminate\Support\Facades\DB::enableQueryLog();
+    foreach (range(1, 5) as $poging) {
+        wishlistHelper()->has($a);
+    }
+    expect(\Illuminate\Support\Facades\DB::getQueryLog())->toHaveCount(0);
+    \Illuminate\Support\Facades\DB::disableQueryLog();
+
+    wishlistHelper()->add($b);
+
+    expect(wishlistHelper()->productIds())->toEqualCanonicalizing([$a->id, $b->id]);
+});
+
 it('een gebruiker zonder eigen lijst neemt de gastlijst over', function () {
     $userC = \App\Models\User::create(['name' => 'Chris', 'email' => 'chris@example.com', 'password' => bcrypt('geheim')]);
     $product = helperProduct();
