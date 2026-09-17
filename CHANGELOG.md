@@ -2,6 +2,25 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.129.0 - 2026-09-17
+
+### Added
+- **Openstaande bestellingen tonen ook 'in behandeling'.** In de app-API (standaard en de waarde `open`) en in de CMS-tabel (multi-select filter met beide als standaard); een concrete status filtert nog exact.
+- **Retour-events en uitbreidingspunt.** `OrderReturnProcessedEvent`, `OrderReturnClosedEvent` en `OrderReturnRejectedEvent` (ook als automatiseringstrigger), en `ReturnActionExtensions` waarmee een package velden en een opslagstap aan de sluit- en afkeurmodal toevoegt, en `approve()`/`reject()` mailen een Bol-klant niet meer (dezelfde overslaan-regel met orderlog `order.return-mail-skipped-bol` als de registrar, de processor en de terugbetaling). Gebouwd voor dashed-ecommerce-bol.
+
+### Retouren als spil
+- **Retour aanmelden vanuit het CMS.** Op de bestelling en boven de retourlijst; begint direct als Goedgekeurd, met schakelaar "Klant informeren" (mail plus retourlabel via MyParcel/Veloyd; `OrderReturnApprovedEvent` heeft daarvoor de vlag `notifyCustomer`, vereist myparcel/veloyd met dezelfde wijziging).
+- **Verwerken maakt de creditorder.** `ReturnProcessor` bouwt hem via `markAsCancelledWithCredit()` en koppelt hem op `credit_order_id`; per regel `processed_quantity`; `returned_quantity` telt mee zodat een tweede retour alleen het restant kan. Mail "Retour: verwerkt" met creditfactuur en `:refundDays:` (instelling `returns_refund_days`).
+- **Sluiten zonder creditering** (status `closed`, met reden) en **Terugbetaling registreren** (`RefundRegistrar`, negatieve betaalde betaling op de creditorder, mail "Retour: terugbetaald"). De creditorder blijft op status `return`.
+- "Markeer als afgehandeld" is weg; "Afkeuren" kan nu ook bij Goedgekeurd. Annuleerknop heet "Annuleren" en is voor niet-geleverde bestellingen.
+- Mobiele API: `returns/{id}/handle` verwerkt via `ReturnProcessor` (optioneel `lines`), antwoord bevat `credit_order_id`, `credited_amount`, `is_refunded`.
+- Klantstatuspagina toont Verwerkt (met creditbedrag en creditfactuur), Terugbetaald en Gesloten.
+- Orderlog: teksten voor `order.return.*`, `order.refund.registered` en `order.changed-retour-status-to-*` (renderden als ERROR); terugval op `note`.
+- Opgeruimd: dode Filament-pagina `OrderResource/Pages/CancelOrder`.
+
+### Changed
+- **Een terugbetaling bij de PSP zet de betaling niet meer op `refunded`.** `TransactionController` vuurt bij `refunded` het nieuwe `PaymentRefundReportedEvent` en laat betaling en bestelling met rust; de terugbetaling hoort op de creditorder van de retour (zie dashed-ecommerce-paynl). Eerder telde de bestelling na een terugbetaling stilzwijgend niet meer als betaald. Het ophalen van de PSP-status loopt nu op alle drie de plekken door de nieuwe `Services\Payments\PspStatusResolver`, dus ook `Livewire\Frontend\Orders\ViewOrder` (die de betaling nog wél naar `refunded` draaide zodra een klant zijn oude bevestigingsmail opende). Bij een gemelde terugbetaling gaat er altijd een orderlog `order.psp-refund-reported` op de bestelling, ook voor een PSP waar nog niets naar het event luistert (MultiSafePay geeft `refunded` terug en heeft nog geen koppeling).
+
 ## v4.128.1 - 2026-09-16
 
 ### Fixed

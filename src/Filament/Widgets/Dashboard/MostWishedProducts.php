@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard;
 
 use Filament\Tables\Table;
-use Illuminate\Support\Collection;
 use Filament\Widgets\TableWidget;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Filament\Tables\Columns\TextColumn;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -56,8 +56,8 @@ class MostWishedProducts extends TableWidget
                 ->withCount(['wishlistItems as aantal' => fn ($q) => $q->where('updated_at', '>=', now()->subDays(90))])
                 ->orderByDesc('aantal'))
             ->columns([
-                TextColumn::make('name')->label('Product')->url(fn (Product $p) => ProductResource::getUrl('edit', ['record' => $p])),
-                TextColumn::make('aantal')->label('Op verlanglijsten'),
+                TextColumn::make('name')->label(__('Product'))->url(fn (Product $p) => ProductResource::getUrl('edit', ['record' => $p])),
+                TextColumn::make('aantal')->label(__('Op verlanglijsten')),
             ])
             ->paginated(false);
     }
