@@ -10,7 +10,7 @@ it('exposes items total locale and resume url', function () {
         'token' => 'cart-token-123',
         'total' => 30.00,
     ]);
-    $cart->items()->create(['quantity' => 2, 'unit_price' => 15.00, 'options_hash' => 'h']);
+    $cart->items()->create(['product_id' => makeMobileProduct(['slug' => ['nl' => 'cart-item']])->id, 'quantity' => 2, 'unit_price' => 15.00, 'options_hash' => 'h']);
 
     $src = new CartAbandonedSource($cart->fresh());
 

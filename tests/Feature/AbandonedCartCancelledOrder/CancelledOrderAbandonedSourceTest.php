@@ -11,7 +11,7 @@ it('exposes email items total and variables', function () {
         'invoice_id' => '1234',
     ]);
     $order->orderProducts()->create([
-        'product_id' => null,
+        'product_id' => makeMobileProduct(['slug' => ['nl' => 'widget']])->id,
         'name' => 'Widget',
         'quantity' => 2,
         'price' => 24.97,

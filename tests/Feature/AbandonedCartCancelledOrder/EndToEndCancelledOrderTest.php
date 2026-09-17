@@ -28,7 +28,7 @@ it('cancelling an unpaid order schedules emails and sends them when due', functi
         'total' => 30,
         'invoice_id' => '7777',
     ]);
-    $order->orderProducts()->create(['name' => 'Thing', 'quantity' => 1, 'price' => 30]);
+    $order->orderProducts()->create(['product_id' => makeMobileProduct(['slug' => ['nl' => 'thing'], 'product_group_id' => makeChatTestProductGroup('Thing', 'thing-group')->id])->id, 'name' => 'Thing', 'quantity' => 1, 'price' => 30]);
 
     $order->markAsCancelled();
 

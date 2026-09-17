@@ -13,7 +13,7 @@ it('renders items from cancelled order via resolver', function () {
         'total' => 19.95,
         'invoice_id' => '9001',
     ]);
-    $order->orderProducts()->create(['name' => 'Frisbee', 'quantity' => 1, 'price' => 19.95]);
+    $order->orderProducts()->create(['product_id' => makeMobileProduct(['slug' => ['nl' => 'frisbee']])->id, 'name' => 'Frisbee', 'quantity' => 1, 'price' => 19.95]);
 
     $flow = AbandonedCartFlow::create([
         'name' => 'F', 'is_active' => true, 'discount_prefix' => 'P', 'triggers' => ['cancelled_order'],

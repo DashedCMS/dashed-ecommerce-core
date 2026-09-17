@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.131.0 - 2026-09-17
+
+### Fixed
+- **`skip_if_paid_within_days` op een mailflow werkte nooit.** De controle zat sinds mei alleen in `SendAbandonedCartEmailJob`, en die job wordt nergens gestart; het verzenden loopt via `dashed:send-abandoned-cart-emails`. Dat commando kijkt nu ook of de ontvanger binnen de afkoelperiode van de flow een order heeft betaald, en blaast dan alle openstaande mails voor dat adres af met reden `recent_paid_order`. De kolom staat standaard op 30 dagen, dus op elke flow waar hij niet is aangepast krijgt iemand die de afgelopen 30 dagen iets betaalde vanaf nu geen herinneringen meer. Leeg of 0 zet het uit.
+
+### Tests
+- De vier tests in `AbandonedCartCancelledOrder` die sinds 4 mei rood stonden (regels zonder product worden bewust overgeslagen), maken nu regels met een echt product.
+
 ## v4.130.2 - 2026-09-17
 
 ### Fixed

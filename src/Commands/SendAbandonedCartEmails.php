@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Mail\AbandonedCartMail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
@@ -38,9 +39,21 @@ class SendAbandonedCartEmails extends Command
                 continue;
             }
 
+            // Kan eerder in deze ronde al afgeblazen zijn door
+            // cancelPendingForEmail() op een andere regel van dit adres.
+            if ($record->fresh()?->cancelled_at) {
+                continue;
+            }
+
             $source = $this->sourceIsValid($record);
 
             if (! $source) {
+                continue;
+            }
+
+            if ($this->recipientPaidWithinCooldown($record)) {
+                AbandonedCartEmail::cancelPendingForEmail($record->email, 'recent_paid_order');
+
                 continue;
             }
 
@@ -92,6 +105,25 @@ class SendAbandonedCartEmails extends Command
         }
 
         $this->info("Done. {$emails->count()} email(s) processed.");
+    }
+
+    /**
+     * Wie binnen de afkoelperiode van de flow (`skip_if_paid_within_days`,
+     * leeg of 0 is uit) een order betaalde, krijgt geen herinnering meer.
+     */
+    private function recipientPaidWithinCooldown(AbandonedCartEmail $record): bool
+    {
+        $cooldownDays = (int) ($record->flowStep?->flow?->skip_if_paid_within_days ?? 0);
+
+        if ($cooldownDays <= 0 || blank($record->email)) {
+            return false;
+        }
+
+        return Order::query()
+            ->where('email', $record->email)
+            ->isPaid()
+            ->where('created_at', '>=', now()->subDays($cooldownDays))
+            ->exists();
     }
 
     private function sourceIsValid(AbandonedCartEmail $record): ?AbandonedCartSource
