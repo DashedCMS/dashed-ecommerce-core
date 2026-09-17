@@ -14,6 +14,7 @@ class OrderReturnLine extends Model
     protected $casts = [
         'quantity' => 'integer',
         'processed_quantity' => 'integer',
+        'bol_handled_at' => 'datetime',
     ];
 
     public function orderReturn(): BelongsTo

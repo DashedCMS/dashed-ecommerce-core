@@ -35,6 +35,7 @@ class OrderReturn extends Model
         'handled_at' => 'datetime',
         'processed_at' => 'datetime',
         'closed_at' => 'datetime',
+        'bol_handled_at' => 'datetime',
         'auto_accepted' => 'boolean',
     ];
 
@@ -118,7 +119,11 @@ class OrderReturn extends Model
         $this->save();
 
         $this->logToOrder('order.return-approved');
-        Mail::to($this->email)->queue(new OrderReturnApprovedMail($this));
+        if ($this->skipsCustomerMail()) {
+            OrderLog::createLog(orderId: $this->order_id, tag: 'order.return-mail-skipped-bol');
+        } else {
+            Mail::to($this->email)->queue(new OrderReturnApprovedMail($this));
+        }
         OrderReturnApprovedEvent::dispatch($this);
     }
 
@@ -130,7 +135,11 @@ class OrderReturn extends Model
         $this->save();
 
         $this->logToOrder('order.return-rejected');
-        Mail::to($this->email)->queue(new OrderReturnRejectedMail($this));
+        if ($this->skipsCustomerMail()) {
+            OrderLog::createLog(orderId: $this->order_id, tag: 'order.return-mail-skipped-bol');
+        } else {
+            Mail::to($this->email)->queue(new OrderReturnRejectedMail($this));
+        }
         OrderReturnRejectedEvent::dispatch($this);
     }
 
@@ -207,6 +216,17 @@ class OrderReturn extends Model
     public function creditedAmount(): float
     {
         return $this->creditOrder ? abs((float) $this->creditOrder->total) : 0.0;
+    }
+
+    /**
+     * Een marktplaatsbestelling praat zelf met zijn klant: die klant is klant
+     * van Bol en kent ons niet, en Bol heeft de retour zelf aangemeld. Elke
+     * andere retourmail (registrar, processor, refund) sloeg dit al over; hier
+     * ontbrak het, dus een afgekeurde Bol-retour mailde de Bol-klant.
+     */
+    protected function skipsCustomerMail(): bool
+    {
+        return $this->order?->order_origin === 'Bol';
     }
 
     protected function logToOrder(string $tag): void
