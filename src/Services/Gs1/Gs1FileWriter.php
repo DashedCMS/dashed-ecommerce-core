@@ -8,7 +8,7 @@ use Dashed\DashedEcommerceCore\ValueObjects\Gs1Row;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx as XlsxWriter;
 
 /**
- * Bouwt een vers Excel-bestand met de 13 GS1-kolommen. Geen Reference
+ * Bouwt een vers Excel-bestand met de 14 GS1-kolommen. Geen Reference
  * Data of Instructies sheet — de gebruiker plakt deze rijen in zijn
  * eigen mijnGS1 contractbestand, of upload deze direct in mijnGS1.
  */
@@ -28,6 +28,7 @@ class Gs1FileWriter
         'Aantal',
         'Eenheid',
         'Afbeelding (max 500 tekens)',
+        'Aangemaakt in GS1 Data Source',
     ];
 
     /**

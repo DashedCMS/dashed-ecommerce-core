@@ -17,12 +17,10 @@ class Gs1ExportBuilder
     {
     }
 
-    public function buildForProductsWithoutEan(int $siteId, string $outputPath): int
+    public function buildForProductsWithoutEan(?string $siteId, string $outputPath): int
     {
         $products = Product::query()
-            ->withoutEan()
-            ->where('public', true)
-            ->where('is_bundle', false)
+            ->needsGs1Code()
             ->with('productCategories')
             ->orderBy('id')
             ->get();

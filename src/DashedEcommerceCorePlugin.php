@@ -144,6 +144,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductFaqResource::class,
                 ProductFinderResource::class,
                 ProductResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\Gs1RunResource::class,
                 ProductCategoryResource::class,
                 ProductFilterResource::class,
                 ProductFilterOptionResource::class,

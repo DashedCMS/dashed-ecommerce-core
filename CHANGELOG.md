@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.132.0 - 2026-09-17
+
+### Added
+- **GS1-bestand verwerken.** Upload de download uit mijnGS1 onder de knop GS1 op de productlijst. Vrije codes (Concept, of Inactief als de Concept-codes op zijn) gaan naar producten zonder EAN, weesgeraakte Actief-codes krijgen per code een beslissing (laten, inactief, vrijgeven, koppelen), ontbrekende verplichte velden worden per categorie gevraagd en bewaard, en het uploadbestand bevat alleen de gewijzigde rijen met plaatshouders voor de rest. Toewijzingen zijn per regel terug te draaien. Bewaartermijn `gs1_runs`.
+
+### Fixed
+- **GS1-winkelstandaarden werden niet gelezen op een site met een niet-numerieke id.** De export gaf de site-id als `(int)` door.
+
 ## v4.131.0 - 2026-09-17
 
 ### Fixed

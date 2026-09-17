@@ -4,7 +4,7 @@ namespace Dashed\DashedEcommerceCore\ValueObjects;
 
 /**
  * Een rij in een GS1 contract-Excel. De volgorde van velden komt
- * 1-op-1 overeen met de 13 kolommen die GS1 verplicht voor zowel
+ * 1-op-1 overeen met de 14 kolommen die GS1 verplicht voor zowel
  * de download als de upload van het artikelbestand.
  */
 class Gs1Row
@@ -23,6 +23,7 @@ class Gs1Row
         public ?int $quantity = null,
         public ?string $unit = null,
         public ?string $imageUrl = null,
+        public bool $createdInDataSource = false,
     ) {
     }
 
@@ -42,6 +43,7 @@ class Gs1Row
             quantity: isset($row[10]) && $row[10] !== null && $row[10] !== '' ? (int) $row[10] : null,
             unit: self::clean($row[11] ?? null),
             imageUrl: self::clean($row[12] ?? null),
+            createdInDataSource: self::clean($row[13] ?? null) === 'Ja',
         );
     }
 
@@ -61,6 +63,7 @@ class Gs1Row
             $this->quantity,
             $this->unit,
             $this->imageUrl,
+            $this->createdInDataSource ? 'Ja' : 'Nee',
         ];
     }
 
@@ -72,6 +75,11 @@ class Gs1Row
     public function isActive(): bool
     {
         return $this->status === 'Actief';
+    }
+
+    public function isConcept(): bool
+    {
+        return $this->status === 'Concept';
     }
 
     public function isPlaceholderGtin(): bool

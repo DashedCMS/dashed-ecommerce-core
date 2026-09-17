@@ -1811,6 +1811,7 @@ MARKDOWN,
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingClass::class, \Dashed\DashedEcommerceCore\Policies\ShippingClassPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingMethod::class, \Dashed\DashedEcommerceCore\Policies\ShippingMethodPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingZone::class, \Dashed\DashedEcommerceCore\Policies\ShippingZonePolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\Gs1Run::class, \Dashed\DashedEcommerceCore\Policies\Gs1RunPolicy::class);
 
         cms()->registerRolePermissions('E-commerce', [
             'view_order' => 'Bestellingen bekijken',
@@ -2275,6 +2276,19 @@ MARKDOWN,
                         ->label(__('Gastverlanglijsten bewaren (dagen)'))
                         ->uitleg(__('Lijsten zonder account en zonder e-mailadres waar zo lang niets mee gedaan is. Lijsten met account of e-mail blijven. Standaard: 365 dagen.'))
                         ->filter(fn ($query) => $query->whereNull('user_id')->whereNull('email'))
+                )
+        );
+
+        cms()->registerRetention(
+            Retention::make('gs1_runs')
+                ->label(__('GS1-runs'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__gs1_runs')
+                ->opruimer(new \Dashed\DashedEcommerceCore\Retention\Gs1RunsOpruimer())
+                ->termijn(
+                    Termijn::make('gs1_runs', 365, 'created_at')
+                        ->label(__('GS1-runs bewaren (dagen)'))
+                        ->uitleg(__('Verwerkte GS1-bestanden met hun toewijzingen. Standaard: 365 dagen.'))
                 )
         );
     }

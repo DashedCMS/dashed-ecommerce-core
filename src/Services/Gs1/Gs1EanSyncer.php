@@ -19,8 +19,10 @@ use Dashed\DashedEcommerceCore\Models\Product;
  */
 class Gs1EanSyncer
 {
-    public function __construct(private readonly Gs1FileReader $reader)
-    {
+    public function __construct(
+        private readonly Gs1FileReader $reader,
+        private readonly Gs1NameMatcher $matcher = new Gs1NameMatcher(),
+    ) {
     }
 
     public function sync(string $absolutePath): Gs1EanSyncResult
@@ -28,14 +30,14 @@ class Gs1EanSyncer
         $contents = $this->reader->read($absolutePath);
         $result = new Gs1EanSyncResult();
 
-        $index = $this->buildNameIndex();
+        $index = $this->matcher->index(Product::query());
 
         foreach ($contents->rows as $rowNumber => $row) {
             if (! $row->hasRealGtin() || ! $row->description) {
                 continue;
             }
 
-            $key = $this->normalize($row->description);
+            $key = Gs1NameMatcher::normalize($row->description);
             $productId = $index[$key] ?? null;
 
             if (! $productId) {
@@ -95,44 +97,5 @@ class Gs1EanSyncer
         }
 
         return $result;
-    }
-
-    /**
-     * @return array<string, int>  Normalized productnaam → product_id.
-     *   Eerste hit wint bij duplicate namen.
-     */
-    private function buildNameIndex(): array
-    {
-        $index = [];
-
-        Product::query()
-            ->select(['id', 'name'])
-            ->orderBy('id')
-            ->chunkById(500, function ($products) use (&$index) {
-                foreach ($products as $product) {
-                    $translations = method_exists($product, 'getTranslations')
-                        ? $product->getTranslations('name')
-                        : ['_' => $product->name ?? null];
-
-                    foreach ($translations as $name) {
-                        if (! $name) {
-                            continue;
-                        }
-                        $key = $this->normalize((string) $name);
-                        if (! isset($index[$key])) {
-                            $index[$key] = $product->id;
-                        }
-                    }
-                }
-            });
-
-        return $index;
-    }
-
-    private function normalize(string $value): string
-    {
-        $value = preg_replace('/\s+/u', ' ', trim($value));
-
-        return mb_strtolower($value);
     }
 }

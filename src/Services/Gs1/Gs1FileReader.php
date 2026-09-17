@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Services\Gs1;
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Dashed\DashedEcommerceCore\ValueObjects\Gs1Row;
 
 /**
@@ -25,12 +26,23 @@ class Gs1FileReader
         $spreadsheet = IOFactory::load($absolutePath);
         [$contractSheetName, $contractNumber] = $this->resolveContractSheet($spreadsheet);
 
-        $sheet = $spreadsheet->getSheetByName($contractSheetName);
+        return new Gs1FileContents(
+            contractSheetName: $contractSheetName,
+            contractNumber: $contractNumber,
+            rows: $this->rowsFromSheet($spreadsheet->getSheetByName($contractSheetName)),
+        );
+    }
+
+    /**
+     * @return array<int, Gs1Row> Rijnummer (header = 1) => rij
+     */
+    public function rowsFromSheet(Worksheet $sheet): array
+    {
         $rows = [];
 
         foreach ($sheet->getRowIterator(2) as $rowIndex => $row) {
             $values = [];
-            $cellIterator = $row->getCellIterator('A', 'M');
+            $cellIterator = $row->getCellIterator('A', 'N');
             $cellIterator->setIterateOnlyExistingCells(false);
             foreach ($cellIterator as $cell) {
                 $values[] = $cell->getValue();
@@ -45,11 +57,7 @@ class Gs1FileReader
             $rows[$rowIndex] = $gs1Row;
         }
 
-        return new Gs1FileContents(
-            contractSheetName: $contractSheetName,
-            contractNumber: $contractNumber,
-            rows: $rows,
-        );
+        return $rows;
     }
 
     /**

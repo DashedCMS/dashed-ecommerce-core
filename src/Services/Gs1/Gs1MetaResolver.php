@@ -16,7 +16,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCategory;
  */
 class Gs1MetaResolver
 {
-    public function __construct(private readonly int $siteId)
+    public function __construct(private readonly ?string $siteId)
     {
     }
 

@@ -408,6 +408,17 @@ class Product extends Model
         });
     }
 
+    /**
+     * Producten die een GS1-code nodig hebben: publiek, geen bundel, geen EAN.
+     * Verwijderde producten vallen er via SoftDeletes al buiten.
+     */
+    public function scopeNeedsGs1Code($query)
+    {
+        $query->withoutEan()
+            ->where('public', true)
+            ->where('is_bundle', false);
+    }
+
     public function breadcrumbs()
     {
         $breadcrumbs = [

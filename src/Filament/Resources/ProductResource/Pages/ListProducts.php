@@ -89,19 +89,65 @@ class ListProducts extends ListRecords
                         ->send();
                 }),
             ActionGroup::make([
+                Action::make('processGs1File')
+                    ->label(__('GS1-bestand verwerken'))
+                    ->icon('heroicon-s-arrow-path')
+                    // Niet Gs1RunResource::canCreate(): die staat bewust op false.
+                    ->authorize(fn () => auth()->user()?->can('create', \Dashed\DashedEcommerceCore\Models\Gs1Run::class) ?? false)
+                    ->modalHeading(__('GS1-bestand verwerken'))
+                    ->modalDescription(__('Upload de download uit mijnGS1. Het CMS zoekt vrije codes, wijst ze toe aan producten zonder EAN en maakt een bestand om terug te uploaden. Er verandert pas iets als je op de volgende pagina op Toewijzen klikt.'))
+                    ->schema([
+                        FileUpload::make('file')
+                            ->label(__('GS1 bestand'))
+                            ->disk('local')
+                            ->directory('gs1-runs')
+                            ->required()
+                            // Alleen xlsx: de keuzelijsten worden uit de xlsx-XML gelezen.
+                            ->acceptedFileTypes([
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            ]),
+                    ])
+                    ->action(function (array $data) {
+                        try {
+                            // Gs1RunStarter controleert het pad zelf: het komt uit de Livewire-staat.
+                            $run = app(\Dashed\DashedEcommerceCore\Services\Gs1\Gs1RunStarter::class)
+                                ->start(is_string($data['file'] ?? null) ? $data['file'] : '', auth()->id(), (string) Sites::getActive());
+                        } catch (\Throwable $exception) {
+                            if (! $exception instanceof \RuntimeException) {
+                                report($exception);
+                            }
+
+                            Notification::make()
+                                ->title(__('Bestand niet verwerkt'))
+                                ->body($exception instanceof \RuntimeException
+                                    ? $exception->getMessage()
+                                    : __('Het bestand kon niet gelezen worden. Controleer of het de download uit mijnGS1 is.'))
+                                ->danger()
+                                ->persistent()
+                                ->send();
+
+                            return null;
+                        }
+
+                        return redirect(\Dashed\DashedEcommerceCore\Filament\Resources\Gs1RunResource::getUrl('view', ['record' => $run]));
+                    }),
+                Action::make('gs1Runs')
+                    ->label(__('Eerdere runs'))
+                    ->icon('heroicon-o-clock')
+                    ->url(fn () => \Dashed\DashedEcommerceCore\Filament\Resources\Gs1RunResource::getUrl('index')),
                 Action::make('exportForGs1')
                     ->label(__('Exporteer voor GS1'))
                     ->icon('heroicon-s-arrow-down-tray')
                     ->requiresConfirmation()
                     ->modalHeading(__('Exporteer producten zonder EAN voor GS1'))
-                    ->modalDescription(fn () => __('Er worden :aantal producten geëxporteerd. Standaardwaardes komen uit Instellingen → GS1, eventueel overschreven per categorie of product. Je kunt het bestand aanpassen vóór upload bij mijnGS1.', ['aantal' => cache()->remember('products_without_ean_count', 300, fn () => Product::withoutEan()->where('public', true)->where('is_bundle', false)->count())]))
+                    ->modalDescription(fn () => __('Er worden :aantal producten geëxporteerd. Standaardwaardes komen uit Instellingen → GS1, eventueel overschreven per categorie of product. Je kunt het bestand aanpassen vóór upload bij mijnGS1.', ['aantal' => cache()->remember('products_without_ean_count', 300, fn () => Product::query()->needsGs1Code()->count())]))
                     ->modalSubmitActionLabel(__('Download bestand'))
                     ->action(function () {
-                        $siteId = Sites::getActive() ?: (Sites::getFirstSite()['id'] ?? 1);
+                        $siteId = (string) (Sites::getActive() ?: (Sites::getFirstSite()['id'] ?? ''));
                         $tmpPath = tempnam(sys_get_temp_dir(), 'gs1-export-') . '.xlsx';
 
                         $count = (new Gs1ExportBuilder(new Gs1FileWriter()))
-                            ->buildForProductsWithoutEan((int) $siteId, $tmpPath);
+                            ->buildForProductsWithoutEan($siteId, $tmpPath);
 
                         if ($count === 0) {
                             Notification::make()
