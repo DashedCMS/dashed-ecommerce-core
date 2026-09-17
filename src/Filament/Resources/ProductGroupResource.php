@@ -52,6 +52,7 @@ use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Jobs\CreateMissingProductVariationsJob;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkAssignCategoriesBulkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages\EditProductGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages\ListProductGroups;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\Pages\CreateProductGroup;
@@ -666,6 +667,7 @@ class ProductGroupResource extends Resource
                 ForceDeleteAction::make(),
             ])
             ->toolbarActions(ToolbarActions::getActions([
+                BulkAssignCategoriesBulkAction::make(),
                 RestoreBulkAction::make(),
                 ForceDeleteBulkAction::make(),
             ]))

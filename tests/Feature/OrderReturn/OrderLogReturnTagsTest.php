@@ -14,7 +14,7 @@ it('rendert elke retour- en terugbetaaltag zonder ERROR', function () {
         'order.return-registered-by-admin', 'order.return-processed', 'order.return-closed', 'order.return-refunded',
         'order.return-mail-skipped-bol', 'order.return-processed.mail.failed', 'order.return-refunded.mail.failed',
         'order.return.full', 'order.return.partial', 'order.return.refund-requested', 'order.refund.registered',
-        'order.changed-retour-status-to-handled',
+        'order.changed-retour-status-to-handled', 'order.return-handled-by-cancellation',
     ];
 
     foreach ($tags as $tag) {

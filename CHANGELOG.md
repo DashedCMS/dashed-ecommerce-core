@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.130.0 - 2026-09-17
+
+### Added
+- **Categorieën toewijzen als bulkactie.** Op de tabellen Producten en Productgroepen: kies categorieën en of ze toegevoegd, vervangen of weggehaald moeten worden. Toevoegen en vervangen nemen de bovenliggende categorieën mee, net als het bewerkformulier. Bij een productgroep wordt per groep `UpdateProductInformationJob` klaargezet zodat de categorieën doorlopen naar de producten als de sync aan staat.
+- **Annuleren handelt een open retour af.** Maakt de annuleerknop een creditorder terwijl er op de bestelling nog een retour open staat (aangevraagd of goedgekeurd), dan zet `CancellationReturnSettler` die retour op Verwerkt met de creditorder gekoppeld, per regel het verwerkte aantal begrensd op wat er geannuleerd is, zonder klantmail en zonder `OrderReturnProcessedEvent`. Orderlog `order.return-handled-by-cancellation`.
+
 ## v4.129.0 - 2026-09-17
 
 ### Added

@@ -20,6 +20,7 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\CancellationReturnSettler;
 
 class CancelOrder extends Component implements HasSchemas, HasActions
 {
@@ -185,6 +186,14 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                     //                        }
                     //                    } else {
                     $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id']);
+
+                    // Een open retour op deze bestelling is met deze annulering
+                    // feitelijk verwerkt: koppel hem aan de creditorder.
+                    $cancelledQuantities = [];
+                    foreach ($orderProducts as $orderProduct) {
+                        $cancelledQuantities[$orderProduct->id] = (int) $orderProduct->refundQuantity;
+                    }
+                    app(CancellationReturnSettler::class)->settle($this->order, $newOrder, $cancelledQuantities);
 
                     Notification::make()
                         ->title(__('Bestelling gemarkeerd als geannuleerd'))

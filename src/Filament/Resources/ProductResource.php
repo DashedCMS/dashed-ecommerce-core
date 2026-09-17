@@ -57,6 +57,7 @@ use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
 use Dashed\DashedCore\Classes\Actions\ActionGroups\ToolbarActions;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Actions\BulkPriceUpdateBulkAction;
+use Dashed\DashedEcommerceCore\Filament\Actions\BulkAssignCategoriesBulkAction;
 use Dashed\DashedEcommerceCore\Filament\Actions\BulkDeliveryTimeUpdateBulkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\ListProducts;
@@ -804,6 +805,7 @@ class ProductResource extends Resource
             ])
             ->toolbarActions(ToolbarActions::getActions([
                 BulkPriceUpdateBulkAction::make(),
+                BulkAssignCategoriesBulkAction::make(),
                 BulkDeliveryTimeUpdateBulkAction::make(),
                 RestoreBulkAction::make(),
                 ForceDeleteBulkAction::make(),
