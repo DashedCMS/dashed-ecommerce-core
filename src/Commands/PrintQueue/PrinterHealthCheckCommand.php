@@ -45,14 +45,14 @@ class PrinterHealthCheckCommand extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * `role` is een kolom op users en geen methode of scope. De eerdere
+     * method_exists-check was daardoor altijd onwaar en viel terug op alle
+     * gebruikers, klanten inbegrepen: bij één offline printer kreeg elke
+     * webshopklant elk half uur een melding in de notifications-tabel.
+     */
     private function resolveAdmins(): \Illuminate\Support\Collection
     {
-        $query = User::query();
-
-        if (method_exists(User::class, 'role')) {
-            return $query->role('admin')->get();
-        }
-
-        return $query->get();
+        return User::query()->whereIn('role', ['admin', 'superadmin'])->get();
     }
 }

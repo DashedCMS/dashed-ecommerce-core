@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.130.2 - 2026-09-17
+
+### Fixed
+- **Printer-offline-melding ging naar elke gebruiker.** `print-queue:health-check` zocht de beheerders met `method_exists(User::class, 'role')`, maar `role` is een kolom en geen methode. De check was dus altijd onwaar en de melding ging naar alle gebruikers, webshopklanten inbegrepen, elk half uur per offline printer. Nu alleen naar `admin` en `superadmin`. De rijen die dit al heeft achtergelaten ruimt dashed-core v4.68.0 (`MeldingenOpruimer`) op.
+
 ## v4.130.1 - 2026-09-17
 
 ### Fixed
