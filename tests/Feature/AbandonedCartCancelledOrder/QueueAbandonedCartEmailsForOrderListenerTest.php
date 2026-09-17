@@ -97,3 +97,29 @@ it('skips inactive flows', function () {
 
     expect(AbandonedCartEmail::count())->toBe(0);
 });
+
+it('skips when the customer already paid another order after starting this one', function () {
+    makeFlowWithStep(['cancelled_order']);
+
+    $abandoned = Order::create(['email' => 'paid-later@example.test', 'status' => 'cancelled']);
+    $abandoned->forceFill(['created_at' => now()->subHour()])->save();
+    Order::create(['email' => 'paid-later@example.test', 'status' => 'paid']);
+
+    (new QueueAbandonedCartEmailsForOrderListener())
+        ->handle(new OrderCancelledEvent($abandoned));
+
+    expect(AbandonedCartEmail::where('cancelled_order_id', $abandoned->id)->count())->toBe(0);
+});
+
+it('still schedules when the only paid order predates the abandoned attempt', function () {
+    makeFlowWithStep(['cancelled_order']);
+
+    $older = Order::create(['email' => 'returning@example.test', 'status' => 'paid']);
+    $older->forceFill(['created_at' => now()->subDays(3)])->save();
+    $abandoned = Order::create(['email' => 'returning@example.test', 'status' => 'cancelled']);
+
+    (new QueueAbandonedCartEmailsForOrderListener())
+        ->handle(new OrderCancelledEvent($abandoned));
+
+    expect(AbandonedCartEmail::where('cancelled_order_id', $abandoned->id)->count())->toBe(1);
+});

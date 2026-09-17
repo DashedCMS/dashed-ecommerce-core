@@ -71,6 +71,28 @@ class CancelledOrderAbandonedSource implements AbandonedCartSource
     {
         $orderWasPaid = $this->order->orderPayments()->where('status', 'paid')->exists();
 
-        return ! $orderWasPaid && $this->order->status === 'cancelled';
+        return ! $orderWasPaid && $this->order->status === 'cancelled' && ! $this->customerPaidAnotherOrder();
+    }
+
+    /**
+     * Een klant die zijn betaling afbreekt en opnieuw begint, krijgt een
+     * tweede order en rekent die af. De eerste poging verloopt pas een half
+     * uur tot een uur later bij de PSP, dus na de betaling: op dat moment
+     * valt er voor OrderMarkedAsPaidEvent nog niets af te blazen. Zonder deze
+     * controle krijgt een klant die netjes betaald heeft de mail dat zijn
+     * betaling niet is afgerond.
+     */
+    public function customerPaidAnotherOrder(): bool
+    {
+        if (blank($this->order->email) || ! $this->order->created_at) {
+            return false;
+        }
+
+        return Order::query()
+            ->where('email', $this->order->email)
+            ->where('id', '!=', $this->order->id)
+            ->isPaid()
+            ->where('created_at', '>=', $this->order->created_at)
+            ->exists();
     }
 }

@@ -6,6 +6,7 @@ use Dashed\DashedEcommerceCore\Models\AbandonedCartFlow;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartFlowStep;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\CancelledOrderAbandonedSource;
 
 class QueueAbandonedCartEmailsForOrderListener
 {
@@ -18,6 +19,10 @@ class QueueAbandonedCartEmailsForOrderListener
         }
 
         if ($order->orderPayments()->where('status', 'paid')->exists()) {
+            return;
+        }
+
+        if ((new CancelledOrderAbandonedSource($order))->customerPaidAnotherOrder()) {
             return;
         }
 

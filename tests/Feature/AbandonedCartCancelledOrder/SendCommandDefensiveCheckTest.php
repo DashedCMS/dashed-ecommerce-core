@@ -56,3 +56,28 @@ it('cancels cancelled_order row when order is missing', function () {
     expect($row->fresh()->cancelled_at)->not->toBeNull()
         ->and($row->fresh()->cancelled_reason)->toBe('source_empty');
 });
+
+it('cancels cancelled_order row when the customer paid another order after the abandoned attempt', function () {
+    $step = makeStep();
+
+    // Klant start een betaling, begint opnieuw en rekent die tweede order af.
+    // De eerste poging verloopt pas daarna, dus bij het betalen viel er nog
+    // niets af te blazen.
+    $abandoned = Order::create(['email' => 'z@example.test', 'status' => 'cancelled']);
+    $abandoned->forceFill(['created_at' => now()->subHours(2)])->save();
+    Order::create(['email' => 'z@example.test', 'status' => 'paid']);
+
+    $row = AbandonedCartEmail::create([
+        'email' => 'z@example.test',
+        'trigger_type' => 'cancelled_order',
+        'cancelled_order_id' => $abandoned->id,
+        'email_number' => 1,
+        'flow_step_id' => $step->id,
+        'send_at' => now()->subMinute(),
+    ]);
+
+    $this->artisan('dashed:send-abandoned-cart-emails');
+
+    expect($row->fresh()->sent_at)->toBeNull()
+        ->and($row->fresh()->cancelled_reason)->toBe('source_recovered');
+});

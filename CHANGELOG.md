@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.130.1 - 2026-09-17
+
+### Fixed
+- **"Betaling niet afgerond"-mail naar klanten die wel betaald hebben.** Een klant die zijn betaling afbreekt en opnieuw begint krijgt een tweede order en rekent die af; de eerste poging verloopt pas een half uur tot een uur later bij de PSP. Bij het betalen viel er dus nog niets af te blazen, en de mailflow op `cancelled_order` werd daarna gewoon ingepland en verstuurd. `CancelledOrderAbandonedSource::customerPaidAnotherOrder()` kijkt nu of hetzelfde adres sinds de afgebroken poging een andere order heeft betaald: de listener plant dan niets in, en `dashed:send-abandoned-cart-emails` blaast al ingeplande regels af met reden `source_recovered`.
+
 ## v4.130.0 - 2026-09-17
 
 ### Added
