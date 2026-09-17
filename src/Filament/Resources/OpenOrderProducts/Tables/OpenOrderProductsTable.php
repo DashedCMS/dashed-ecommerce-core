@@ -165,13 +165,16 @@ class OpenOrderProductsTable
                 SelectFilter::make('fulfillment_status')
                     ->label(__('Fulfillment status'))
                     ->options(Orders::getFulfillmentStatusses())
-                    ->default('unhandled')
+                    ->multiple()
+                    // Standaard "openstaand": nog niet afgehandeld én in behandeling.
+                    ->default(['unhandled', 'in_treatment'])
                     ->query(function (Builder $query, array $data): Builder {
-                        if (empty($data['value'])) {
+                        $values = array_values(array_filter((array) ($data['values'] ?? [])));
+                        if (empty($values)) {
                             return $query;
                         }
 
-                        return $query->whereHas('order', fn ($s) => $s->where('fulfillment_status', $data['value']));
+                        return $query->whereHas('order', fn ($s) => $s->whereIn('fulfillment_status', $values));
                     }),
 
                 SelectFilter::make('order_origin')

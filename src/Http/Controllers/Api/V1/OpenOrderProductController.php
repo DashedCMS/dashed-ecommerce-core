@@ -64,10 +64,19 @@ class OpenOrderProductController extends Controller
             ->where('o.invoice_id', '!=', '')
             ->whereNotIn('o.invoice_id', ['PROFORMA', 'RETURN']);
 
-        // Fulfillment status: standaard 'unhandled' (zoals Filament); expliciet leeg = alles.
-        $fulfillment = $request->has('fulfillment_status') ? (string) $request->query('fulfillment_status') : 'unhandled';
-        if ($fulfillment !== '') {
-            $query->where('o.fulfillment_status', $fulfillment);
+        // "Openstaand" = nog niet afgehandeld óf in behandeling. Zonder expliciete
+        // status (of met de sentinel 'open') tonen we beide; een concrete status
+        // filtert exact; een expliciet lege waarde = alles.
+        $openStatuses = ['unhandled', 'in_treatment'];
+        if (! $request->has('fulfillment_status')) {
+            $query->whereIn('o.fulfillment_status', $openStatuses);
+        } else {
+            $fulfillment = (string) $request->query('fulfillment_status');
+            if ($fulfillment === 'open') {
+                $query->whereIn('o.fulfillment_status', $openStatuses);
+            } elseif ($fulfillment !== '') {
+                $query->where('o.fulfillment_status', $fulfillment);
+            }
         }
 
         if ($origins = $this->list($request->query('order_origin'))) {
