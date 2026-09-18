@@ -486,8 +486,8 @@ class ProductGroup extends Model
         $productTabIds = array_merge($productTabIds, $this->tabs->pluck('id')->toArray());
         $productTabIds = array_merge($productTabIds, $this->globalTabs->pluck('id')->toArray());
 
-        return ProductTab::whereIn('id', $productTabIds)
-            ->get();
+        return ProductTab::withoutExcludedFor(ProductTab::whereIn('id', $productTabIds)
+            ->get(), $this);
     }
 
     public function allProductFaqs(): ?Collection
@@ -497,8 +497,8 @@ class ProductGroup extends Model
         $productFaqIds = array_merge($productFaqIds, $this->faqs->pluck('id')->toArray());
         $productFaqIds = array_merge($productFaqIds, $this->globalFaqs->pluck('id')->toArray());
 
-        return ProductFaq::whereIn('id', $productFaqIds)
-            ->get();
+        return ProductFaq::withoutExcludedFor(ProductFaq::whereIn('id', $productFaqIds)
+            ->get(), $this);
     }
 
     public function breadcrumbs()

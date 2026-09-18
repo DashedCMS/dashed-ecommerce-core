@@ -105,6 +105,7 @@ class ProductFaqResource extends Resource
                                     }),
                             ),
                     ])),
+                ProductFaq::exclusionFormSection(),
             ], static::customBlocksTab('productFaqBlocks')));
     }
 

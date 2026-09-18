@@ -1132,10 +1132,10 @@ class Product extends Model
 
         $productExtraIds = array_values(array_unique($productExtraIds));
 
-        return ProductExtra::whereIn('id', $productExtraIds)
+        return ProductExtra::withoutExcludedFor(ProductExtra::whereIn('id', $productExtraIds)
             ->orderBy('order')
             ->with(['productExtraOptions'])
-            ->get();
+            ->get(), $this);
     }
 
     public function allProductTabs(): ?Collection
@@ -1154,9 +1154,9 @@ class Product extends Model
             $productTabIds = array_merge($productTabIds, $this->productGroup->globalTabs->pluck('id')->toArray());
         }
 
-        return ProductTab::whereIn('id', $productTabIds)
+        return ProductTab::withoutExcludedFor(ProductTab::whereIn('id', $productTabIds)
             ->orderBy('order')
-            ->get();
+            ->get(), $this);
     }
 
     public function allProductFaqs(): ?Collection
@@ -1170,9 +1170,9 @@ class Product extends Model
             $productFaqIds = array_merge($productFaqIds, $productCategory->globalFaqs->pluck('id')->toArray() ?? []);
         }
 
-        return ProductFaq::whereIn('id', $productFaqIds)
+        return ProductFaq::withoutExcludedFor(ProductFaq::whereIn('id', $productFaqIds)
             ->orderBy('order')
-            ->get();
+            ->get(), $this);
     }
 
     /**

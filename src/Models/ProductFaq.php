@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Translatable\HasTranslations;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedEcommerceCore\Models\Concerns\ExcludesProducts;
 
 class ProductFaq extends Model
 {
+    use ExcludesProducts;
     use HasTranslations;
     use LogsActivity;
 

@@ -90,6 +90,7 @@ class ProductTabResource extends Resource
                                     }),
                             ),
                     ])),
+                ProductTab::exclusionFormSection(),
             ], static::customBlocksTab('productTabBlocks')));
     }
 

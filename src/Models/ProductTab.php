@@ -8,9 +8,11 @@ use Spatie\Translatable\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedEcommerceCore\Models\Concerns\ExcludesProducts;
 
 class ProductTab extends Model
 {
+    use ExcludesProducts;
     use HasTranslations;
     use LogsActivity;
 

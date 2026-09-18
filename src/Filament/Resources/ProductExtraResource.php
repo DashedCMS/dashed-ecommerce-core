@@ -96,6 +96,7 @@ class ProductExtraResource extends Resource
                                     $set('productCategories', ProductCategory::all()->pluck('id')->toArray());
                                 }),
                         ),
+                    ProductExtra::exclusionFormSection(),
                 ],
                 static::customBlocksTab('productExtraOptionBlocks')
             ));

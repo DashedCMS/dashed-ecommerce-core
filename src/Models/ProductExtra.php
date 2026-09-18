@@ -16,9 +16,11 @@ use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Dashed\DashedEcommerceCore\Models\Concerns\ExcludesProducts;
 
 class ProductExtra extends Model
 {
+    use ExcludesProducts;
     use HasTranslations;
     use SoftDeletes;
     use LogsActivity;
