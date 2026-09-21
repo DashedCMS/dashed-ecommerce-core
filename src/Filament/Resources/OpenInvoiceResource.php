@@ -33,9 +33,11 @@ class OpenInvoiceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Retouren';
+    protected static string|UnitEnum|null $navigationGroup = 'E-commerce';
 
-    protected static ?int $navigationSort = 2;
+    // Direct na Bestellingen (sort 0): dit is een werklijst op bestellingen,
+    // geen retourscherm, dus dezelfde groep als OrderResource.
+    protected static ?int $navigationSort = 1;
 
     public static function getNavigationLabel(): string
     {
