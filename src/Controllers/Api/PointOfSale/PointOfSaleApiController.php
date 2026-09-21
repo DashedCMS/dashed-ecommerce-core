@@ -1506,7 +1506,7 @@ class PointOfSaleApiController extends Controller
 
         if ($paymentMethod?->on_account) {
             if (! $posCart) {
-                return response()->json(['success' => false, 'message' => 'Kassa niet gevonden'], 400);
+                return response()->json(['success' => false, 'message' => __('Kassa niet gevonden')], 400);
             }
 
             // Idempotent: een herhaalde aanroep (bijvoorbeeld na een

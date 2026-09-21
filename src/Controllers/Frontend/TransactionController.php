@@ -454,8 +454,13 @@ class TransactionController extends Controller
         try {
             if ($lock->get()) {
                 if ($orderPayment->psp == 'own') {
-                    $newPaymentStatus = 'waiting_for_confirmation';
-                    $order->changeStatus($newPaymentStatus);
+                    // Alleen een order die nog op pending staat. Een herhaalde
+                    // aanroep met dezelfde hash (bijvoorbeeld op een deels of
+                    // helemaal betaalde order op rekening) mag hem niet
+                    // terugzetten naar waiting_for_confirmation.
+                    if ($order->status === 'pending') {
+                        $order->changeStatus('waiting_for_confirmation');
+                    }
                 } else {
                     PspStatusResolver::apply($orderPayment, $order, true);
                 }

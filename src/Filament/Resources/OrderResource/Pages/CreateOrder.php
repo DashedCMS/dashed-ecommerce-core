@@ -27,6 +27,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
 
 class CreateOrder extends Page implements HasSchemas
@@ -313,7 +314,7 @@ class CreateOrder extends Page implements HasSchemas
                 Toggle::make('on_account_override')
                     ->label(__('Toch op rekening'))
                     ->helperText(__('Zet de order op rekening, ook als de klant geblokkeerd is of boven de limiet zit. Dit wordt gemeld.'))
-                    ->visible(fn (Get $get) => (bool) $get('on_account')),
+                    ->visible(fn (Get $get) => (bool) $get('on_account') && OnAccountOverride::actorMayOverride()),
             ]);
 
         $newSchema = [
@@ -339,17 +340,28 @@ BLADE
 
     public function submit()
     {
-        if ($this->on_account && $this->user_id && ! $this->on_account_override) {
+        if ($this->on_account && $this->user_id) {
             $this->updateInfo(false);
 
+            // Altijd vooraf controleren, ook met "Toch op rekening": zonder
+            // gekoppelde methode (NOT_ENABLED) valt er niets door te zetten,
+            // en anders bleef er een pending order achter.
             $customer = User::find($this->user_id);
-            $check = $customer ? OnAccountOverride::precheck($customer, (float) $this->totalUnformatted, Sites::getActive()) : null;
+            $check = $customer ? OnAccountOverride::refusalBeforeCreate($customer, (float) $this->totalUnformatted, Sites::getActive(), $this->on_account_override) : null;
 
-            if ($check && ! $check->allowed) {
+            if ($check) {
+                $body = $check->reason === OnAccount::NOT_ENABLED
+                    ? __('Voor deze klant staat geen betaalmethode op rekening aan.')
+                    : ($check->message() ?? __('Op rekening bestellen is nu niet mogelijk'));
+
+                if ($check->reason !== OnAccount::NOT_ENABLED && OnAccountOverride::actorMayOverride()) {
+                    $body .= ' ' . __('Zet "Toch op rekening" aan om toch door te zetten.');
+                }
+
                 Notification::make()
                     ->danger()
                     ->title(__('Niet op rekening geplaatst'))
-                    ->body(($check->message() ?? __('Voor deze klant staat geen betaalmethode op rekening aan.')) . ' ' . __('Zet "Toch op rekening" aan om toch door te zetten.'))
+                    ->body($body)
                     ->send();
 
                 return;

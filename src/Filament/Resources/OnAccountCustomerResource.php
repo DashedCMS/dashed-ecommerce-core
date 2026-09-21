@@ -16,6 +16,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountBalance;
@@ -131,6 +132,25 @@ class OnAccountCustomerResource extends Resource
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    /**
+     * Lezen met het leesrecht op klanten én orders, instellen met het
+     * schrijfrecht op beide (spec). De lijst toont openstaande bedragen, dus
+     * alleen gebruikers bekijken is niet genoeg.
+     */
+    public static function canViewAny(): bool
+    {
+        $user = auth()->user();
+
+        return $user && $user->can('view_user') && $user->can('view_order');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        $user = auth()->user();
+
+        return $user && $user->can('edit_user') && $user->can('edit_order');
     }
 
     /**

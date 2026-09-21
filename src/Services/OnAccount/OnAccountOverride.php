@@ -34,8 +34,44 @@ class OnAccountOverride
         return OnAccount::check($customer, $method, $total);
     }
 
+    /**
+     * Mag de ingelogde beheerder een weigering doorzetten? Volgens de spec
+     * alleen met het schrijfrecht op klanten en orders. Zonder die rechten
+     * telt "Toch op rekening" (CMS) of override_on_account (kassa) als niet
+     * aangevinkt, en krijgt hij gewoon de weigering met de reden.
+     */
+    public static function actorMayOverride(): bool
+    {
+        $actor = auth()->user();
+
+        return $actor && $actor->can('edit_user') && $actor->can('edit_order');
+    }
+
+    /**
+     * De beslissing van het CMS vóór het aanmaken van de order: geeft de
+     * weigering terug, of null als er doorgegaan mag worden. NOT_ENABLED is
+     * nooit door te zetten (er is dan geen methode om de order op te zetten);
+     * de andere redenen alleen met doorzetten en de rechten daarvoor.
+     */
+    public static function refusalBeforeCreate(User $customer, float $total, string $siteId, bool $override): ?OnAccountCheck
+    {
+        $check = self::precheck($customer, $total, $siteId);
+
+        if ($check->allowed) {
+            return null;
+        }
+
+        if ($check->reason === OnAccount::NOT_ENABLED) {
+            return $check;
+        }
+
+        return $override && self::actorMayOverride() ? null : $check;
+    }
+
     public static function placeByAdmin(Order $order, User $customer, bool $override): OnAccountCheck
     {
+        $override = $override && self::actorMayOverride();
+
         $method = self::resolveMethod($customer, $order->site_id);
 
         if (! $method) {
@@ -44,7 +80,7 @@ class OnAccountOverride
 
         $check = OnAccount::check($customer, $method, (float) $order->total);
 
-        if (! $check->allowed && ! $override) {
+        if (! $check->allowed && (! $override || $check->reason === OnAccount::NOT_ENABLED)) {
             return $check;
         }
 

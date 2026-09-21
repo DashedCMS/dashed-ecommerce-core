@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResourc
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountBalance;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
@@ -42,12 +43,17 @@ class OpenOrdersRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn () => Order::query()->onAccountOpen()->where('user_id', $this->getOwnerRecord()->id)->withCount('paymentReminders'))
+            ->query(fn () => Order::query()
+                ->select('dashed__orders.*')
+                ->selectRaw(OnAccountBalance::outstandingSql().' as on_account_open_amount')
+                ->onAccountOpen()
+                ->where('user_id', $this->getOwnerRecord()->id)
+                ->withCount('paymentReminders'))
             ->columns([
                 TextColumn::make('invoice_id')->label(__('Factuurnummer')),
                 TextColumn::make('payment_due_at')->label(__('Vervaldatum'))->date('d-m-Y')->sortable()
                     ->color(fn ($record) => $record->payment_due_at?->isPast() ? 'danger' : null),
-                TextColumn::make('open_amount')->label(__('Open bedrag'))->money('EUR'),
+                TextColumn::make('on_account_open_amount')->label(__('Open bedrag'))->money('EUR'),
                 TextColumn::make('payment_reminders_count')->label(__('Herinneringen')),
             ])
             ->defaultSort('payment_due_at')

@@ -70,7 +70,7 @@ class OpenInvoiceResource extends Resource
     {
         return parent::getEloquentQuery()
             ->select('dashed__orders.*')
-            ->selectRaw(OnAccountBalance::outstandingSql().' as open_amount')
+            ->selectRaw(OnAccountBalance::outstandingSql().' as on_account_open_amount')
             ->onAccountOpen()
             ->withCount('paymentReminders');
     }
@@ -93,7 +93,9 @@ class OpenInvoiceResource extends Resource
                     ->date('d-m-Y')
                     ->sortable()
                     ->color(fn ($record) => $record->payment_due_at?->isPast() ? 'danger' : null),
-                TextColumn::make('open_amount')
+                // Niet 'open_amount': dat is een accessor op Order die per rij
+                // de betalingen laadt en de alias uit de query overschaduwt.
+                TextColumn::make('on_account_open_amount')
                     ->label(__('Open bedrag'))
                     ->money('EUR'),
                 TextColumn::make('payment_reminders_count')

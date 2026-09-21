@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Mail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
@@ -93,22 +94,32 @@ class PaymentReminderMail extends Mailable implements RegistersEmailTemplate
             'outstandingAmountFormatted' => CurrencyHelper::formatPrice($this->order->outstandingAmount()),
             'dueDate' => $this->order->payment_due_at?->format('d-m-Y') ?? '',
             'daysOverdue' => $this->order->payment_due_at ? max(0, (int) $this->order->payment_due_at->copy()->startOfDay()->diffInDays(now()->startOfDay())) : 0,
-            'paymentUrl' => $this->order->paymentUrl(),
+            // Op het domein van de site: de herinneringen gaan vanuit de
+            // console de deur uit, en daar is route() gewoon APP_URL.
+            'paymentUrl' => Sites::url($this->order->paymentUrl(), $this->order->site_id),
             'customerFirstName' => $this->order->first_name,
             'companyName' => $this->order->company_name,
             'siteName' => Customsetting::get('site_name', $this->order->site_id),
         ];
 
-        $replace = fn (string $text) => str_replace(
+        $replace = fn (string $text, array $values) => str_replace(
             array_map(fn ($key) => ':'.$key.':', array_keys($values)),
             array_map('strval', array_values($values)),
             $text,
         );
 
+        // De tekst van de stap is HTML; wat de klant zelf invulde (naam,
+        // bedrijf) mag daar niet als opmaak of script in terechtkomen. Het
+        // onderwerp is platte tekst en krijgt de waarden ongewijzigd.
+        $htmlValues = array_merge($values, [
+            'customerFirstName' => e((string) $values['customerFirstName']),
+            'companyName' => e((string) $values['companyName']),
+        ]);
+
         return array_merge($values, [
             'order' => $this->order,
-            'reminderSubject' => $replace($stage['subject'] ?? ''),
-            'reminderBody' => $replace($stage['body'] ?? ''),
+            'reminderSubject' => $replace($stage['subject'] ?? '', $values),
+            'reminderBody' => $replace($stage['body'] ?? '', $htmlValues),
         ]);
     }
 
