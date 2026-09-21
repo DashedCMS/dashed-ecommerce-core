@@ -518,6 +518,20 @@ class Order extends Model
         return $query->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid', 'return']);
     }
 
+    /**
+     * Orders op rekening met een openstaand bedrag. Het open bedrag is
+     * total min de betaalde betalingen; de pending placeholder van de
+     * rekening telt nergens mee.
+     */
+    public function scopeOnAccountOpen($query)
+    {
+        return $query
+            ->whereNotNull($this->qualifyColumn('payment_due_at'))
+            ->whereNull($this->qualifyColumn('credit_for_order_id'))
+            ->whereNotIn($this->qualifyColumn('status'), ['cancelled', 'return'])
+            ->whereRaw(\Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountBalance::outstandingSql($this->getTable()).' > 0.004');
+    }
+
     public function scopeForCustomerOf(Builder $query, Order $anchor): Builder
     {
         return $query->where(function (Builder $q) use ($anchor) {
