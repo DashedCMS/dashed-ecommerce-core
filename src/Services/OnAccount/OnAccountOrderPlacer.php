@@ -6,6 +6,7 @@ use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 
@@ -66,15 +67,25 @@ class OnAccountOrderPlacer
 
         $lock = Cache::lock('on-account:'.($customer?->id ?? 0), 10);
 
-        return $lock->block(5, function () use ($order, $payment, $method, $customer) {
-            $check = OnAccount::check($customer, $method, (float) $order->total);
-            if (! $check->allowed) {
-                throw new OnAccountRefused($check);
-            }
+        try {
+            return $lock->block(5, function () use ($order, $payment, $method, $customer) {
+                $check = OnAccount::check($customer, $method, (float) $order->total);
+                if (! $check->allowed) {
+                    throw new OnAccountRefused($check);
+                }
 
-            self::place($order, $payment, $customer);
+                self::place($order, $payment, $customer);
 
-            return true;
-        });
+                return true;
+            });
+        } catch (LockTimeoutException) {
+            // Een tweede order van dezelfde klant tegelijk: weigeren zoals elke
+            // andere weigering, zodat de checkout de order afsluit in plaats
+            // van een 500 met een verweesde pending order.
+            throw new OnAccountRefused(
+                new OnAccountCheck(false),
+                __('Er wordt al een bestelling op rekening verwerkt, probeer het zo opnieuw.'),
+            );
+        }
     }
 }
