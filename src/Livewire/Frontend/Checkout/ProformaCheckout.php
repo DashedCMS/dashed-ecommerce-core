@@ -13,8 +13,11 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOrderPlacer;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 
 class ProformaCheckout extends Component
@@ -408,6 +411,24 @@ class ProformaCheckout extends Component
         } elseif ($orderPayment->psp == 'own') {
             // Handmatige betaalmethode (bankoverschrijving/contant): geen PSP-redirect.
             $orderPayment->payment_method_id = $paymentMethod['id'];
+
+            $onAccountMethod = PaymentMethod::find($paymentMethod['id']);
+            if ($onAccountMethod?->on_account) {
+                $orderPayment->payment_method = $onAccountMethod->name;
+                $orderPayment->save();
+
+                try {
+                    OnAccountOrderPlacer::placeFromCheckout($order, $orderPayment, $onAccountMethod, $order->user);
+                } catch (OnAccountRefused $e) {
+                    $orderPayment->delete();
+                    session()->flash('error', $e->getMessage());
+
+                    return;
+                }
+
+                return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$orderPayment->hash);
+            }
+
             $orderPayment->amount = 0;
             $orderPayment->status = 'paid';
         } else {

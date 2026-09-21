@@ -353,6 +353,10 @@
                                             @endif
                                         </div>
 
+                                        @if($onAccountNotice)
+                                            <p class="mt-2 text-sm text-gray-600">{{ $onAccountNotice }}</p>
+                                        @endif
+
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('shipping-method', 'checkout', 'Verzend methode') }}
                                         </h2>

@@ -25,6 +25,10 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\CartHelper;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOrderPlacer;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
@@ -135,6 +139,8 @@ class Checkout extends Component
     public bool $postpayPaymentMethod = false;
 
     public Collection|array $paymentMethods = [];
+
+    public ?string $onAccountNotice = null;
 
     public Collection|array $depositPaymentMethods = [];
 
@@ -280,6 +286,7 @@ class Checkout extends Component
     public function retrievePaymentMethods(): void
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country) : [];
+        $this->onAccountNotice = OnAccount::unavailableNotice(auth()->user(), (float) cartHelper()->getTotal());
 
         if (
             Customsetting::get('first_payment_method_selected', null, true)
@@ -1158,12 +1165,18 @@ class Checkout extends Component
 
         $orderPayment->psp = $psp;
 
+        $onAccountMethod = null;
+
         if (! $paymentMethod) {
             $orderPayment->payment_method = $psp;
         } elseif ($orderPayment->psp == 'own') {
             $orderPayment->payment_method_id = $paymentMethod['id'];
 
-            if ($depositAmount > 0.00) {
+            $onAccountMethod = PaymentMethod::find($paymentMethod['id']);
+
+            if ($onAccountMethod?->on_account) {
+                $orderPayment->payment_method = $onAccountMethod->name;
+            } elseif ($depositAmount > 0.00) {
                 $orderPayment->amount = $depositAmount;
 
                 $depositPaymentMethod = '';
@@ -1203,6 +1216,18 @@ class Checkout extends Component
         }
 
         OrderCreatedEvent::dispatch($order);
+
+        if ($onAccountMethod?->on_account) {
+            try {
+                OnAccountOrderPlacer::placeFromCheckout($order, $orderPayment, $onAccountMethod, auth()->user());
+            } catch (OnAccountRefused $e) {
+                $order->changeStatus('cancelled');
+
+                return $this->dispatch('showAlert', 'error', $e->getMessage());
+            }
+
+            return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$orderPayment->hash);
+        }
 
         if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
             $newPaymentStatus = 'waiting_for_confirmation';
