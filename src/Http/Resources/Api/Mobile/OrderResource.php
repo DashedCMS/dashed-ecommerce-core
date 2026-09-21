@@ -45,6 +45,7 @@ class OrderResource extends JsonResource
             'invoice_name' => $this->invoiceName,
             'hash' => $this->hash,
             'outstanding_amount' => (float) $this->outstandingAmount(),
+            'payment_due_at' => $this->payment_due_at?->toIso8601String(),
             // Deelbare betaallink zolang er nog openstaat (zelfde route als de e-mail-actie).
             'payment_url' => $this->outstandingAmount() > 0 ? url('/pay/order/' . $this->hash . '/remainder') : null,
             'retour_status' => $this->retour_status,
