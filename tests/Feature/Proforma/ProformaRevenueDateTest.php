@@ -66,8 +66,8 @@ it('ignores pending payments when finding the first payment', function () {
     expect($order->created_at->timestamp)->toBe(now()->subDays(3)->timestamp);
 });
 
-it('does not change created_at for a non-concept order', function () {
-    $order = Order::create(['email' => 'a@b.nl', 'status' => 'pending', 'total' => 100]);
+it('does not change created_at for an order that already counts as revenue', function () {
+    $order = Order::create(['email' => 'a@b.nl', 'status' => 'waiting_for_confirmation', 'total' => 100]);
     $original = now()->subMonth();
     $order->created_at = $original;
     $order->save();
