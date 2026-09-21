@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Services\OnAccount;
 
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 
 /**
@@ -72,6 +73,7 @@ class OnAccount
         }
 
         $methods = PaymentMethod::query()
+            ->where('site_id', Sites::getActive())
             ->where('on_account', true)
             ->where('active', 1)
             ->whereIn('id', DB::table('dashed__payment_method_users')->where('user_id', $user->id)->select('payment_method_id'))

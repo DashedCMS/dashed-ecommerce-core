@@ -537,6 +537,8 @@ class ShoppingCart
                 ->pluck('payment_method_id')
             : collect();
 
+        $onAccountUser = $userId ? \Dashed\DashedCore\Models\User::find($userId) : null;
+
         foreach ($paymentMethods as $key => &$paymentMethod) {
 
             $paymentMethodValid = true;
@@ -548,7 +550,6 @@ class ShoppingCart
             }
 
             if ($paymentMethodValid && $paymentMethod->on_account) {
-                $onAccountUser = $userId ? \Dashed\DashedCore\Models\User::find($userId) : null;
                 $paymentMethodValid = \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount::check(
                     $onAccountUser,
                     $paymentMethod,
