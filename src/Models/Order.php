@@ -1509,6 +1509,9 @@ class Order extends Model
         $newOrder->status = 'return';
         $newOrder->fulfillment_status = 'waiting_for_return';
         $newOrder->credit_for_order_id = $this->id;
+        // replicate() neemt de rekeningvelden mee; een creditorder is geen vordering.
+        $newOrder->payment_due_at = null;
+        $newOrder->payment_reminders_paused_at = null;
         if ($productsMustBeReturned) {
             $newOrder->retour_status = 'waiting_for_return';
         } else {
@@ -1638,11 +1641,23 @@ class Order extends Model
             $this->refillGiftcardFromPaidOrder();
         }
 
-        if ($paymentMethodId) {
+        // Een open bedrag op een order op rekening wordt verrekend met de
+        // creditorder in plaats van terugbetaald: de klant heeft het geld
+        // nooit betaald. $settled is 0 voor een gewone order, dus
+        // $refundAmount is dan gelijk aan het oude $newOrder->total en
+        // verandert er niets aan bestaand gedrag.
+        $settled = \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountSettlement::applyCredit($this, $newOrder);
+        $refundAmount = round((float) $newOrder->total + $settled, 2);
+
+        // Alleen overslaan als de verrekening het hele restant al dekte; in
+        // elk ander geval (ook een gewone order met $refundAmount 0) blijft
+        // het oude gedrag staan: een terugbetaling aanmaken zodra er een
+        // betaalmethode gekozen is.
+        if ($paymentMethodId && ! ($settled > 0 && $refundAmount == 0.0)) {
             $newOrderPayment = $newOrder->orderPayments()->create([
                 'payment_method_id' => $paymentMethodId,
                 'payment_method' => PaymentMethod::find($paymentMethodId)->name,
-                'amount' => $newOrder->total,
+                'amount' => $refundAmount,
                 'psp' => 'own',
             ]);
             $newOrderPayment->psp = 'own';

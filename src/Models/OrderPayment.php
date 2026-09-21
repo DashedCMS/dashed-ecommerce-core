@@ -28,6 +28,7 @@ class OrderPayment extends Model
         'status',
         'payment_hash',
         'attributes',
+        'credit_order_id',
     ];
 
     protected $appends = [

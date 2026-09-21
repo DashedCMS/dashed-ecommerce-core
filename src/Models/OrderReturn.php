@@ -202,8 +202,11 @@ class OrderReturn extends Model
         }
 
         return OrderPayment::query()
-            ->where('order_id', $this->credit_order_id)
             ->where('status', 'paid')
+            ->where(function ($query) {
+                $query->where('order_id', $this->credit_order_id)
+                    ->orWhere(fn ($q) => $q->where('psp', 'credit')->where('credit_order_id', $this->credit_order_id));
+            })
             ->orderBy('id')
             ->first();
     }
