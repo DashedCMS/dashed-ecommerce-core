@@ -554,18 +554,33 @@ class ShoppingCart
 
             $paymentMethodValid = true;
 
-            if ($restrictedMethodIds->contains($paymentMethod->id)) {
+            // Aan de kassa is $userId de kassamedewerker; de klant is pas bij
+            // het afrekenen bekend en daar toetst OnAccountOverride opnieuw.
+            // Een methode op rekening blijft in de kassalijst dus zichtbaar,
+            // los van aan wie hij gekoppeld is.
+            $posOnAccount = $type === 'pos' && $paymentMethod->on_account;
+
+            if (! $posOnAccount && $restrictedMethodIds->contains($paymentMethod->id)) {
                 if (! $userId || ! $userAllowedMethodIds->contains($paymentMethod->id)) {
                     $paymentMethodValid = false;
                 }
             }
 
-            if ($paymentMethodValid && $paymentMethod->on_account) {
-                $paymentMethodValid = \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount::check(
-                    $onAccountUser,
-                    $paymentMethod,
-                    (float) ($total ?? cartHelper()->getTotal()),
-                )->allowed;
+            if ($paymentMethodValid && $paymentMethod->on_account && ! $posOnAccount) {
+                if ($total === null) {
+                    // Zonder bedrag (de lijst die CartHelper voor betaalkosten
+                    // en btw opbouwt) alleen de expliciete koppeling. Hier nooit
+                    // cartHelper()->getTotal(): dat rekent de btw uit, die deze
+                    // lijst weer nodig heeft, en dan loopt het rond. De echte
+                    // toets volgt in de checkoutlijst met bedrag en bij plaatsen.
+                    $paymentMethodValid = $userId && $userAllowedMethodIds->contains($paymentMethod->id);
+                } else {
+                    $paymentMethodValid = \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount::check(
+                        $onAccountUser,
+                        $paymentMethod,
+                        (float) $total,
+                    )->allowed;
+                }
             }
 
             if (! $paymentMethodValid) {
