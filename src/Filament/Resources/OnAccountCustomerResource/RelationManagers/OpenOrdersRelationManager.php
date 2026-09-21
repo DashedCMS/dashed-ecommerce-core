@@ -3,24 +3,41 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource\RelationManagers;
 
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 /**
  * Openstaande orders op rekening van deze klant. `User::orders()` bestaat
  * niet, dus dit is geen echte Eloquent-relatie maar een `->query()` op de
  * tabel via `Order::scopeOnAccountOpen()`. `$relationship` is puur de naam
- * voor de tabtitel; zonder een echte `orders()`-relatie zou Filaments
- * ingebouwde autorisatiecheck er wel op proberen aan te roepen, vandaar de
- * uitgezette `$shouldSkipAuthorization`, net als de rest van dit scherm
- * geen aparte rechten kent.
+ * voor de tabtitel (gebruikt door `getRelationshipTitle()` als er geen
+ * `$relatedResource` staat); die methode wordt nooit als relatie
+ * aangeroepen omdat `->query()` in `table()` voorrang krijgt boven de
+ * relatie-gebaseerde query.
+ *
+ * `canViewForRecord()` is bewust overschreven naar `OrderResource::canViewAny()`
+ * (dus de `view_order`-permissie), in plaats van `$shouldSkipAuthorization`
+ * of `$relatedResource`. `$shouldSkipAuthorization = true` liet ELKE
+ * ingelogde beheerder de orders zien, ook zonder `view_order` (bijvoorbeeld
+ * iemand met alleen `edit_user`). `$relatedResource = OrderResource::class`
+ * zou dat wel goed afdwingen, maar Filaments basis `makeTable()` roept dan
+ * ook `OrderResource::configureTable($table)` aan vóór onze eigen `table()`,
+ * wat de volledige orderlijst-configuratie (filters, bulk-acties, kolommen)
+ * van `OrderResource::table()` op deze kleine tabel zou plakken voordat wij
+ * hem overschrijven. Rechtstreeks `canViewForRecord()` overschrijven
+ * vermijdt dat en raakt `$ownerRecord->orders()` nooit aan.
  */
 class OpenOrdersRelationManager extends RelationManager
 {
     protected static string $relationship = 'orders';
 
-    protected static bool $shouldSkipAuthorization = true;
+    public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
+    {
+        return OrderResource::canViewAny();
+    }
 
     public function table(Table $table): Table
     {
