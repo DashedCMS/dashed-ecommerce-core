@@ -2639,6 +2639,7 @@ MARKDOWN,
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage::class, 'Print queue', 'printer', 'Instellingen voor de print queue (auto print, health check, retentie)');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class, 'Verkoopdoelen', 'flag', 'Stel omzet- en bestellingsdoelen in per dag, week, maand en jaar');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class, 'Verlanglijst', 'heart', 'Verlanglijst aan of uit per site');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\OnAccountSettingsPage::class, 'Op rekening', 'document-currency-euro', 'Betaaltermijn, kredietlimiet, blokkade en betaalherinneringen voor klanten op rekening');
 
         $package
             ->name('dashed-ecommerce-core')

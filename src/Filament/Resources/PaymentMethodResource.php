@@ -86,6 +86,10 @@ class PaymentMethodResource extends Resource
                 ->preload(),
             Toggle::make('postpay')
                 ->label(__('Achteraf betaalmethode')),
+            Toggle::make('on_account')
+                ->label(__('Op rekening'))
+                ->helperText(__('De klant betaalt achteraf op factuur. Alleen beschikbaar voor klanten die hieronder gekoppeld zijn, en afhankelijk van hun limiet en openstaande facturen.'))
+                ->hidden(fn ($record) => ! $record || $record->psp != 'own'),
             Textarea::make('additional_info')
                 ->label(__('Aanvullende gegevens'))
                 ->helperText(__('Wordt getoond aan klanten wanneer zij een betaalmethode kiezen'))
