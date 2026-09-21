@@ -7,8 +7,63 @@ use Illuminate\Support\Facades\Cache;
 
 class Countries
 {
+    /**
+     * Nederlandse en gangbare Engelse namen die countries.json niet kent. Het
+     * factuurland in de checkout is een vrij tekstveld, en zonder deze lijst
+     * werd bijvoorbeeld "Duitsland" geen landcode. Pay.nl laat de landcode
+     * dan weg en Riverty weigert de betaling.
+     */
+    public const NAMES = [
+        'the netherlands' => 'NL',
+        'holland' => 'NL',
+        'duitsland' => 'DE',
+        'oostenrijk' => 'AT',
+        'zwitserland' => 'CH',
+        'frankrijk' => 'FR',
+        'spanje' => 'ES',
+        'italië' => 'IT',
+        'italie' => 'IT',
+        'engeland' => 'GB',
+        'verenigd koninkrijk' => 'GB',
+        'groot-brittannië' => 'GB',
+        'groot-brittannie' => 'GB',
+        'ierland' => 'IE',
+        'denemarken' => 'DK',
+        'zweden' => 'SE',
+        'noorwegen' => 'NO',
+        'polen' => 'PL',
+        'tsjechië' => 'CZ',
+        'tsjechie' => 'CZ',
+        'slowakije' => 'SK',
+        'hongarije' => 'HU',
+        'roemenië' => 'RO',
+        'roemenie' => 'RO',
+        'bulgarije' => 'BG',
+        'griekenland' => 'GR',
+        'kroatië' => 'HR',
+        'kroatie' => 'HR',
+        'slovenië' => 'SI',
+        'slovenie' => 'SI',
+        'litouwen' => 'LT',
+        'letland' => 'LV',
+        'estland' => 'EE',
+        'luxemburg' => 'LU',
+        'verenigde staten' => 'US',
+        'amerika' => 'US',
+    ];
+
     public static function getCountryIsoCode($countryName)
     {
+        $countryName = rtrim(trim((string) $countryName), '.');
+
+        if ($countryName === '') {
+            return null;
+        }
+
+        if (isset(self::NAMES[mb_strtolower($countryName)])) {
+            return self::NAMES[mb_strtolower($countryName)];
+        }
+
         $activeCountry = false;
         foreach (self::getCountries() as $country) {
             if (strtolower($country['name']) == strtolower($countryName)) {

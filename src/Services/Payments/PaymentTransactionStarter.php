@@ -56,11 +56,33 @@ class PaymentTransactionStarter
         }
 
         try {
-            return $providerEntry['class']::startTransaction($orderPayment);
+            $result = $providerEntry['class']::startTransaction($orderPayment);
         } catch (Throwable $e) {
+            self::recordResponse($orderPayment, [
+                'status' => 'failed',
+                'context' => $context,
+                'error' => self::shortClassName($e) . ': ' . $e->getMessage(),
+            ]);
             self::handleFailure($orderPayment, $context, $e);
 
             throw $e;
+        }
+
+        self::recordResponse($orderPayment, [
+            'status' => 'started',
+            'context' => $context,
+            'psp_id' => $orderPayment->psp_id,
+            'redirect_url' => $result['redirectUrl'] ?? null,
+            'transaction' => is_array($result['transaction'] ?? null) ? $result['transaction'] : null,
+        ]);
+
+        return $result;
+    }
+
+    private static function recordResponse(OrderPayment $orderPayment, array $response): void
+    {
+        if ($orderPayment->exists) {
+            $orderPayment->recordPspResponse($response);
         }
     }
 

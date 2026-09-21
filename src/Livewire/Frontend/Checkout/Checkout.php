@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
-use Illuminate\Validation\Rules\Password;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
@@ -13,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Classes\AccountHelper;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -605,6 +605,7 @@ class Checkout extends Component
             'country' => [
                 'required',
                 'max:255',
+                $this->knownCountryRule(),
             ],
             'phoneNumber' => [
                 Rule::requiredIf($this->phoneNumberRequired == 1),
@@ -638,12 +639,27 @@ class Checkout extends Component
             'invoiceCountry' => [
                 Rule::requiredIf((bool) $this->invoiceStreet),
                 'max:255',
+                $this->knownCountryRule(),
             ],
             'shippingMethod' => [
                 'required',
                 'max:255',
             ],
         ], $this->customFieldRules);
+    }
+
+    /**
+     * Een land waar geen landcode uit te halen is, gaat zonder landcode naar
+     * de betaalprovider, en achteraf betalen (Riverty) weigert dan de
+     * betaling. Het factuurland is een vrij tekstveld, dus hier vangen.
+     */
+    protected function knownCountryRule(): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) {
+            if (filled($value) && ! Countries::getCountryIsoCode($value)) {
+                $fail(Translation::get('unknown-country', 'checkout', 'We herkennen dit land niet, controleer de spelling'));
+            }
+        };
     }
 
     /**

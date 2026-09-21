@@ -36,6 +36,8 @@ class OrderPayment extends Model
 
     protected $casts = [
         'attributes' => 'array',
+        'psp_request' => 'array',
+        'psp_response' => 'array',
     ];
 
     public static function boot()
@@ -53,6 +55,44 @@ class OrderPayment extends Model
                 Customsetting::set('cash_register_amount', $cashRegisterAmount);
             }
         });
+    }
+
+    /**
+     * Wat er precies naar de betaalprovider ging, vastgelegd door de provider
+     * zelf vlak voor de aanroep. Bij de bestelling is dat per betaling in te
+     * zien, zodat je bij een geweigerde betaling ziet wat er ontbrak.
+     */
+    public function recordPspRequest(array $payload): void
+    {
+        $this->recordPspColumn('psp_request', [
+            'sent_at' => now()->toIso8601String(),
+            'data' => json_decode(json_encode($payload, JSON_PARTIAL_OUTPUT_ON_ERROR), true),
+        ]);
+    }
+
+    public function recordPspResponse(array $response): void
+    {
+        $this->recordPspColumn('psp_response', [
+            'received_at' => now()->toIso8601String(),
+            ...$response,
+        ]);
+    }
+
+    /**
+     * Vastleggen mag een betaling nooit tegenhouden, ook niet midden in een
+     * uitrol waarin de kolom nog ontbreekt. Lukt het niet, dan gaat het
+     * attribuut weer van het model af, anders klapt de volgende save() van
+     * de provider alsnog op dezelfde kolom.
+     */
+    protected function recordPspColumn(string $column, array $value): void
+    {
+        try {
+            $this->{$column} = $value;
+            $this->saveQuietly();
+        } catch (\Throwable $e) {
+            unset($this->{$column});
+            report($e);
+        }
     }
 
     public function getActivitylogOptions(): LogOptions
