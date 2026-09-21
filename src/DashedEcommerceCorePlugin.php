@@ -27,6 +27,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Settings\POSSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\VATSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductExtraResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\ReturnReasonResource;
@@ -162,6 +163,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ProductExtraResource::class,
                 ProductGroupResource::class,
                 PricePerUserResource::class,
+                OnAccountCustomerResource::class,
                 PriceGroupResource::class,
                 FulfillmentCompanyResource::class,
                 GiftcardResource::class,
