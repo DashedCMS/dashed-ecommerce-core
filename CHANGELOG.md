@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.135.0 - 2026-09-21
+
+### Added
+- **Webshopmodellen in de vertaalstatus.** `registreerVertaalbaren()` meldt producten, productgroepen, categorieën, filters (met hun opties), extra's (met hun opties), kenmerken en kenmerkwaarden, FAQ's, tabs, verzend- en betaalmethodes, retourredenen, orderlogsjablonen, pinterminals en de stappen van de winkelwagen- en afgehandeld-flows aan bij het scherm Vertaalstatus van dashed-translations 4.6.0. Guarded op `class_exists`. `ProductVariant` en `FulfillmentCompany` staan er bewust niet bij: de eerste heeft een `$translatable`-array zonder de trait HasTranslations, de tweede een lege array.
+
 ## v4.132.0 - 2026-09-17
 
 ### Added

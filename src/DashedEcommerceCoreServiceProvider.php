@@ -2151,6 +2151,7 @@ MARKDOWN,
         }
 
         self::registreerBewaartermijnen();
+        self::registreerVertaalbaren();
 
         // Beveiligingsmaatregelen uit het playbook (september 2026): bewaking
         // van geldvelden, betaalmethodes en handmatige betaalmarkeringen, en
@@ -2183,6 +2184,98 @@ MARKDOWN,
                 ];
             });
         }
+    }
+
+    /**
+     * Producten en de rest van de webshopinstellingen aanmelden bij het
+     * vertaalstatus-overzicht.
+     *
+     * Statisch, naar het voorbeeld van registreerBewaartermijnen(). Guarded
+     * op class_exists: dashed-ecommerce-core kent dashed-translations niet
+     * als afhankelijkheid.
+     *
+     * FulfillmentCompany staat hier bewust niet bij: het model heeft
+     * `public $translatable = [];` (HasTranslations staat er zelfs
+     * uitgecommentarieerd), dus er is niets om te vertalen. Zie de
+     * uitsluiting met dezelfde reden in TranslatableRegistryGuardTest.
+     *
+     * ProductVariant staat hier ook niet meer bij. Het model declareert wel
+     * `public $translatable = ['name', 'images']`, maar gebruikt de trait
+     * HasTranslations niet, dus `getTranslation()` bestaat er niet en elke
+     * vingerafdruk gooit een Error. In de saved-listener wordt die gesmoord,
+     * maar de nulmeting en de rescan draaien met `rescue(..., report: true)`
+     * en zouden bij de eerste `migrate` van een klant een uitzondering per
+     * variantrij melden. De trait alsnog toevoegen is geen optie binnen dit
+     * werk: dat verandert hoe `name` en `images` in de hele applicatie gelezen
+     * worden. Staat met dezelfde reden op de uitsluitlijst in
+     * TranslatableRegistryGuardTest.
+     */
+    public static function registreerVertaalbaren(): void
+    {
+        if (! class_exists(\Dashed\DashedTranslations\Classes\Translatables\TranslatableRegistry::class)) {
+            return;
+        }
+
+        $registry = \Dashed\DashedTranslations\Classes\Translatables\TranslatableRegistry::class;
+        $make = fn (string $model, string $label, ?string $resource = null) => tap(
+            \Dashed\DashedTranslations\Classes\Translatables\Translatable::make($model)->label($label)->group(__('Webshop')),
+            fn ($t) => $resource ? $t->urlVia($resource) : null
+        );
+
+        $m = '\\Dashed\\DashedEcommerceCore\\Models\\';
+        $r = '\\Dashed\\DashedEcommerceCore\\Filament\\Resources\\';
+
+        $registry::register($make($m . 'Product', __('Producten'), $r . 'ProductResource')->contentChildren());
+        $registry::register($make($m . 'ProductGroup', __('Productgroepen'), $r . 'ProductGroupResource')->contentChildren());
+        $registry::register($make($m . 'ProductCategory', __('Productcategorieën'), $r . 'ProductCategoryResource')->contentChildren());
+        $registry::register($make($m . 'ProductFilter', __('Productfilters'), $r . 'ProductFilterResource')
+            ->child('productFilterOptions', $m . 'ProductFilterOption', fn ($option) => $option->productFilter));
+        $registry::register($make($m . 'ProductExtra', __('Product-extra\'s'), $r . 'ProductExtraResource')
+            ->child('productExtraOptions', $m . 'ProductExtraOption', fn ($option) => $option->productExtra));
+        // Een kenmerkwaarde heeft zelf geen naam en geen eigen beheerscherm: hij
+        // wordt bewerkt in de repeater "Kenmerken" op de bewerkpagina van het
+        // product (of de productgroep) waar hij aan hangt. Zonder deze twee
+        // closures leest het overzicht duizenden regels als "#1234" en verbergt
+        // de knop "Open" zichzelf. product_id en product_group_id zijn allebei
+        // nullable (zie 2025_01_30_113210_create_product_groups_table), en het
+        // model kent alleen een product()-relatie; de groep wordt daarom
+        // rechtstreeks opgezocht in plaats van via een relatie die er niet is.
+        $registry::register($make($m . 'ProductCharacteristic', __('Productkenmerkwaarden'))
+            ->name(function ($record) {
+                $eigenaar = $record->product?->name
+                    ?? ($record->product_group_id ? \Dashed\DashedEcommerceCore\Models\ProductGroup::find($record->product_group_id)?->name : null);
+                $kenmerk = $record->productCharacteristic?->name;
+
+                return match (true) {
+                    filled($eigenaar) && filled($kenmerk) => $eigenaar . ' - ' . $kenmerk,
+                    filled($eigenaar) => $eigenaar,
+                    filled($kenmerk) => $kenmerk,
+                    default => '#' . $record->getKey(),
+                };
+            })
+            ->url(function ($record) {
+                if ($record->product) {
+                    return rescue(fn () => \Dashed\DashedEcommerceCore\Filament\Resources\ProductResource::getUrl('edit', ['record' => $record->product]), null, false);
+                }
+
+                $groep = $record->product_group_id ? \Dashed\DashedEcommerceCore\Models\ProductGroup::find($record->product_group_id) : null;
+
+                return $groep
+                    ? rescue(fn () => \Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource::getUrl('edit', ['record' => $groep]), null, false)
+                    : null;
+            }));
+        $registry::register($make($m . 'ProductCharacteristics', __('Productkenmerken'), $r . 'ProductCharacteristicResource'));
+        $registry::register($make($m . 'ProductFaq', __('Product-FAQ\'s'), $r . 'ProductFaqResource'));
+        $registry::register($make($m . 'ProductTab', __('Producttabs'), $r . 'ProductTabResource'));
+        $registry::register($make($m . 'ShippingMethod', __('Verzendmethodes'), $r . 'ShippingMethodResource'));
+        $registry::register($make($m . 'ShippingClass', __('Verzendklassen'), $r . 'ShippingClassResource'));
+        $registry::register($make($m . 'ShippingZone', __('Verzendzones'), $r . 'ShippingZoneResource'));
+        $registry::register($make($m . 'PaymentMethod', __('Betaalmethodes'), $r . 'PaymentMethodResource'));
+        $registry::register($make($m . 'ReturnReason', __('Retourredenen'), $r . 'ReturnReasonResource'));
+        $registry::register($make($m . 'OrderLogTemplate', __('Orderlogsjablonen'), $r . 'OrderLogTemplateResource'));
+        $registry::register($make($m . 'PinTerminal', __('Pinterminals')));
+        $registry::register($make($m . 'AbandonedCartFlowStep', __('Verlaten-winkelwagen-stappen')));
+        $registry::register($make($m . 'OrderHandledFlowStep', __('Afgehandeld-flow-stappen')));
     }
 
     /**
