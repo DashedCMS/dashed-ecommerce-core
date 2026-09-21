@@ -16,15 +16,27 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
  */
 class OnAccountOverride
 {
+    /**
+     * Controleert vooraf, zonder order: mag deze klant met dit bedrag op
+     * rekening? Gebruikt door het CMS voordat de order wordt aangemaakt, zodat
+     * een weigering geen concept-order achterlaat. `placeByAdmin()` herhaalt
+     * dezelfde controle na het aanmaken (bedrag en saldo kunnen ondertussen
+     * wijzigen), dus dit is een vooraankondiging, geen garantie.
+     */
+    public static function precheck(User $customer, float $total, string $siteId): OnAccountCheck
+    {
+        $method = self::resolveMethod($customer, $siteId);
+
+        if (! $method) {
+            return new OnAccountCheck(false, OnAccount::NOT_ENABLED);
+        }
+
+        return OnAccount::check($customer, $method, $total);
+    }
+
     public static function placeByAdmin(Order $order, User $customer, bool $override): OnAccountCheck
     {
-        $method = PaymentMethod::query()
-            ->where('site_id', $order->site_id)
-            ->where('on_account', true)
-            ->where('active', 1)
-            ->whereIn('id', DB::table('dashed__payment_method_users')->where('user_id', $customer->id)->select('payment_method_id'))
-            ->orderBy('order')
-            ->first();
+        $method = self::resolveMethod($customer, $order->site_id);
 
         if (! $method) {
             return new OnAccountCheck(false, OnAccount::NOT_ENABLED);
@@ -59,5 +71,16 @@ class OnAccountOverride
         OnAccountOrderPlacer::place($order, $payment, $customer);
 
         return new OnAccountCheck(true);
+    }
+
+    private static function resolveMethod(User $customer, string $siteId): ?PaymentMethod
+    {
+        return PaymentMethod::query()
+            ->where('site_id', $siteId)
+            ->where('on_account', true)
+            ->where('active', 1)
+            ->whereIn('id', DB::table('dashed__payment_method_users')->where('user_id', $customer->id)->select('payment_method_id'))
+            ->orderBy('order')
+            ->first();
     }
 }

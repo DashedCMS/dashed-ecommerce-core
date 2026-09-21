@@ -21,6 +21,7 @@ use Dashed\DashedCore\Models\User;
 use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -307,7 +308,8 @@ class CreateOrder extends Page implements HasSchemas
                 Toggle::make('on_account')
                     ->label(__('Op rekening'))
                     ->helperText(__('De klant betaalt achteraf op factuur, met de betaaltermijn van de klant.'))
-                    ->visible(fn (Get $get) => (bool) $get('user_id')),
+                    ->visible(fn (Get $get) => (bool) $get('user_id'))
+                    ->reactive(),
                 Toggle::make('on_account_override')
                     ->label(__('Toch op rekening'))
                     ->helperText(__('Zet de order op rekening, ook als de klant geblokkeerd is of boven de limiet zit. Dit wordt gemeld.'))
@@ -337,6 +339,23 @@ BLADE
 
     public function submit()
     {
+        if ($this->on_account && $this->user_id && ! $this->on_account_override) {
+            $this->updateInfo(false);
+
+            $customer = User::find($this->user_id);
+            $check = $customer ? OnAccountOverride::precheck($customer, (float) $this->totalUnformatted, Sites::getActive()) : null;
+
+            if ($check && ! $check->allowed) {
+                Notification::make()
+                    ->danger()
+                    ->title(__('Niet op rekening geplaatst'))
+                    ->body(($check->message() ?? __('Voor deze klant staat geen betaalmethode op rekening aan.')) . ' ' . __('Zet "Toch op rekening" aan om toch door te zetten.'))
+                    ->send();
+
+                return;
+            }
+        }
+
         $response = $this->createOrder();
 
         if ($response['success']) {

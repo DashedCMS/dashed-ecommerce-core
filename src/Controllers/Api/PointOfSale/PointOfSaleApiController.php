@@ -1342,20 +1342,30 @@ class PointOfSaleApiController extends Controller
         }
 
         if ($paymentMethod?->on_account) {
-            $customer = $order->user_id ? User::find($order->user_id) : null;
-
-            if (! $customer) {
-                return response()->json(['success' => false, 'message' => __('Kies eerst een klant om op rekening af te rekenen')], 400);
+            if (! $posCart) {
+                return response()->json(['success' => false, 'message' => 'Kassa niet gevonden'], 400);
             }
 
-            $check = OnAccountOverride::placeByAdmin($order, $customer, (bool) ($data['override_on_account'] ?? false));
+            // Idempotent: een herhaalde aanroep (bijvoorbeeld na een
+            // netwerkhapering op het kassa-scherm) mag geen tweede betaling
+            // en geen tweede orderlog aanmaken. payment_due_at staat er pas
+            // op zodra placeByAdmin() al eerder is geslaagd.
+            if (! $order->payment_due_at) {
+                $customer = $order->user_id ? User::find($order->user_id) : null;
 
-            if (! $check->allowed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $check->message() ?? __('Voor deze klant staat geen betaalmethode op rekening aan.'),
-                    'onAccountRefused' => $check->reason,
-                ], 422);
+                if (! $customer) {
+                    return response()->json(['success' => false, 'message' => __('Kies eerst een klant om op rekening af te rekenen')], 400);
+                }
+
+                $check = OnAccountOverride::placeByAdmin($order, $customer, (bool) ($data['override_on_account'] ?? false));
+
+                if (! $check->allowed) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $check->message() ?? __('Voor deze klant staat geen betaalmethode op rekening aan.'),
+                        'onAccountRefused' => $check->reason,
+                    ], 422);
+                }
             }
 
             // finishPaidOrder() zet de order normaal op 'paid'; hier geven we
@@ -1363,7 +1373,9 @@ class PointOfSaleApiController extends Controller
             // de order daar al op gezet, dit is dus een no-op op de status)
             // zodat een order op rekening niet alsnog op paid komt te staan.
             // De klant heeft de goederen in de winkel meegenomen, dus
-            // fulfilment is wel meteen afgehandeld.
+            // fulfilment is wel meteen afgehandeld. finishPaidOrder() bewaakt
+            // zelf al pos_order_handled, dus een herhaalde aanroep hier doet
+            // de printjob en kassalade niet nog een keer.
             POSHelper::finishPaidOrder($order->fresh(), $posCart, 'waiting_for_confirmation', 'handled');
 
             return response()->json([
