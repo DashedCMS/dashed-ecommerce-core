@@ -243,6 +243,12 @@
                                                 :quantity="$quantity" :price="$price" :discountPrice="$discountPrice"/>
                         </div>
 
+                        @if($product)
+                            <div class="mt-3" wire:key="wishlist-toggle-{{ $product->id }}">
+                                <livewire:wishlist.toggle :product="$product" :show-label="true" :key="'pdp-wishlist-'.$product->id"/>
+                            </div>
+                        @endif
+
                         {{--                        @if(count($paymentMethods))--}}
                         {{--                            <div class="mt-6 grid gap-2">--}}
                         {{--                                <div class="flex items-center justify-center text-xs gap-1">--}}

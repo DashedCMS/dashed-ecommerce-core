@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Mail;
 
-use Illuminate\Mail\Mailable;
 use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;

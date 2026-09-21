@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Crypt;
-use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\Wishlist;
 use Dashed\DashedEcommerceCore\Classes\WishlistHelper;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\WishlistController;

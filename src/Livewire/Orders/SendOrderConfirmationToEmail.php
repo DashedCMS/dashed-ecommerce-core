@@ -51,7 +51,7 @@ class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasA
                     Notification::make()
                         ->danger()
                         ->title(__('De bevestigingsmail kon niet worden verstuurd'))
-                        ->body(__('Zie het logboek van de bestelling voor de fout.'))
+                        ->body(__('De reden staat in het logboek onderaan deze bestelling, bij de regel "heeft de bestellings mail NIET laten versturen".'))
                         ->send();
                 }
 

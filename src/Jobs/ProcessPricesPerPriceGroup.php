@@ -85,5 +85,7 @@ class ProcessPricesPerPriceGroup implements ShouldQueue
         if ($affectedProductIds) {
             RecalculateProductPricesJob::dispatch($affectedProductIds)->onQueue('ecommerce');
         }
+
+        \Dashed\DashedEcommerceCore\Events\PriceGroups\PriceGroupPricesUpdatedEvent::dispatch($this->priceGroupId);
     }
 }

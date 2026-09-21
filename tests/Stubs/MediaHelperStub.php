@@ -18,8 +18,7 @@ declare(strict_types=1);
 if (! function_exists('mediaHelper')) {
     function mediaHelper(): object
     {
-        return new class
-        {
+        return new class () {
             public function getSingleMedia(null|int|string|array $mediaId, array|string $conversion = 'medium'): string
             {
                 return '';

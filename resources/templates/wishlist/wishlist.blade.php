@@ -17,7 +17,7 @@
             @endif
         </div>
 
-        <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($items as $item)
                 @php($product = $item->product)
                 <div class="rounded border p-4" wire:key="wishlist-item-{{ $item->id }}">

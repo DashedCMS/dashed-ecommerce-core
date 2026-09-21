@@ -9,9 +9,9 @@ use Filament\Notifications\Notification;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Classes\ManualPaymentPin;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Dashed\DashedEcommerceCore\Classes\ManualPaymentPin;
 
 class AddPaymentToOrder extends Component implements HasSchemas, HasActions
 {

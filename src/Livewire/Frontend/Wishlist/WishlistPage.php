@@ -6,7 +6,6 @@ use Livewire\Component;
 use Illuminate\Support\Collection;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Wishlist;
 use Dashed\DashedEcommerceCore\Models\WishlistItem;
 use Dashed\DashedEcommerceCore\Mail\WishlistSavedMail;
 use Dashed\DashedEcommerceCore\Services\Wishlist\WishlistSaveThrottle;

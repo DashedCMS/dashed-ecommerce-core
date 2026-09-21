@@ -2704,8 +2704,12 @@ MARKDOWN,
         if (! \Dashed\DashedCore\Models\Customsetting::get('wishlist_page_id')) {
             $page = new \Dashed\DashedPages\Models\Page();
             foreach (Locales::getActivatedLocalesFromSites() as $locale) {
-                $page->setTranslation('name', $locale, match ($locale) { 'de' => 'Wunschliste', 'en' => 'Wishlist', default => 'Verlanglijst' });
-                $page->setTranslation('slug', $locale, match ($locale) { 'de' => 'wunschliste', 'en' => 'wishlist', default => 'verlanglijst' });
+                $page->setTranslation('name', $locale, match ($locale) {
+                    'de' => 'Wunschliste', 'en' => 'Wishlist', default => 'Verlanglijst'
+                });
+                $page->setTranslation('slug', $locale, match ($locale) {
+                    'de' => 'wunschliste', 'en' => 'wishlist', default => 'verlanglijst'
+                });
                 $page->setTranslation('content', $locale, [
                     [
                         'data' => ['in_container' => true, 'top_margin' => true, 'bottom_margin' => true],

@@ -1,10 +1,10 @@
 <?php
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\Wishlist;
 use Dashed\DashedEcommerceCore\Models\WishlistItem;
-use Illuminate\Support\Facades\Schema;
 
 // Product::create vuurt via het saved-event UpdateProductInformationJob af, dat
 // een productGroup verwacht; zonder groep crasht dat. withoutEvents() (zoals in

@@ -2,8 +2,8 @@
 
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
-use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Services\AbandonedCart\CartAbandonedSource;
+use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartTriggers;
 use Dashed\DashedEcommerceCore\Services\AbandonedCart\AbandonedCartSourceResolver;
 
 it('kent de twee bestaande triggers met hun labels', function () {

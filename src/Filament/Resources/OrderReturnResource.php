@@ -17,7 +17,6 @@ use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Filament\Infolists\Components\RepeatableEntry;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Actions\ReturnActions;
-use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OrderReturnResource extends Resource
 {

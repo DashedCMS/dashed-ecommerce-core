@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.136.0 - 2026-09-21
+
+### Added
+- **Prijsgroep-events.** `PriceGroupPricesUpdatedEvent` (na het herberekenen van de prijzen van een groep) en `PriceGroupMembersChangedEvent` (met de gebruikers die erbij kwamen of eraf gingen), voor de afnemers-API.
+- **Verlanglijstknop op de productpagina** in het standaardtemplate.
+
+### Fixed
+- **Instellingenkaart Verlanglijst.** `WishlistSettingsPage` had sinds v4.124.0 een kaart op het instellingenscherm maar was niet aangemeld in `->pages([...])` van de plugin; zonder route geeft zo'n kaart een fout op het hele instellingenscherm.
+
 ## v4.135.0 - 2026-09-21
 
 ### Added

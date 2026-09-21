@@ -10,8 +10,8 @@ use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
-use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
 
 /**
