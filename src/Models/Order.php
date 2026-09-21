@@ -82,6 +82,8 @@ class Order extends Model
         'is_proforma' => 'boolean',
         'proforma_allow_shipping' => 'boolean',
         'proforma_sent_at' => 'datetime',
+        'payment_due_at' => 'datetime',
+        'payment_reminders_paused_at' => 'datetime',
     ];
 
     protected $appends = [
@@ -248,6 +250,11 @@ class Order extends Model
     public function orderPayments(): HasMany
     {
         return $this->hasMany(OrderPayment::class);
+    }
+
+    public function paymentReminders(): HasMany
+    {
+        return $this->hasMany(OrderPaymentReminder::class)->orderBy('stage');
     }
 
     public function discountCode(): BelongsTo

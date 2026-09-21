@@ -28,6 +28,7 @@ class PaymentMethod extends Model
 
     protected $casts = [
         'deposit_calculation_payment_method_ids' => 'array',
+        'on_account' => 'boolean',
     ];
 
     protected $table = 'dashed__payment_methods';
