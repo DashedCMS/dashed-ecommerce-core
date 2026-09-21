@@ -75,6 +75,8 @@ trait CreateManualOrderActions
     public ?string $activeDiscountCode = '';
     public $orderProducts = [];
     public $shipping_method_id;
+    public bool $on_account = false;
+    public bool $on_account_override = false;
     public $payment_method_id;
     public $paymentMethod;
     public $allProducts = [];

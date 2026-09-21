@@ -17,6 +17,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Infolists\Components\TextEntry;
+use Dashed\DashedCore\Models\User;
+use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Classes\Countries;
@@ -24,6 +26,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
 
 class CreateOrder extends Page implements HasSchemas
 {
@@ -301,6 +304,14 @@ class CreateOrder extends Page implements HasSchemas
                     ->state('BTW: ' . $this->vat),
                 TextEntry::make('totaal')
                     ->state('Totaal: ' . $this->total),
+                Toggle::make('on_account')
+                    ->label(__('Op rekening'))
+                    ->helperText(__('De klant betaalt achteraf op factuur, met de betaaltermijn van de klant.'))
+                    ->visible(fn (Get $get) => (bool) $get('user_id')),
+                Toggle::make('on_account_override')
+                    ->label(__('Toch op rekening'))
+                    ->helperText(__('Zet de order op rekening, ook als de klant geblokkeerd is of boven de limiet zit. Dit wordt gemeld.'))
+                    ->visible(fn (Get $get) => (bool) $get('on_account')),
             ]);
 
         $newSchema = [
@@ -330,6 +341,21 @@ BLADE
 
         if ($response['success']) {
             $order = $response['order'];
+
+            if ($this->on_account && $order->user_id) {
+                $check = OnAccountOverride::placeByAdmin($order, User::find($order->user_id), $this->on_account_override);
+
+                if (! $check->allowed) {
+                    Notification::make()
+                        ->danger()
+                        ->title(__('Niet op rekening geplaatst'))
+                        ->body(($check->message() ?? __('Voor deze klant staat geen betaalmethode op rekening aan.')) . ' ' . __('De bestelling staat als concept klaar; zet "Toch op rekening" aan om door te zetten.'))
+                        ->send();
+                }
+
+                return redirect(url(route('filament.dashed.resources.orders.view', [$order])));
+            }
+
             //        if ($orderPayment->psp == 'own' && $orderPayment->status == 'paid') {
             $newPaymentStatus = 'waiting_for_confirmation';
             $order->changeStatus($newPaymentStatus);

@@ -33,6 +33,7 @@ use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
 
 class PointOfSaleApiController extends Controller
 {
@@ -1335,6 +1336,40 @@ class PointOfSaleApiController extends Controller
                 'success' => true,
                 'order' => $order,
                 'orderPayments' => $orderPayments,
+                'startPinTerminalPayment' => false,
+                'firstPaymentMethod' => $this->resolveFirstPaymentMethodPayload($paymentMethod),
+            ]);
+        }
+
+        if ($paymentMethod?->on_account) {
+            $customer = $order->user_id ? User::find($order->user_id) : null;
+
+            if (! $customer) {
+                return response()->json(['success' => false, 'message' => __('Kies eerst een klant om op rekening af te rekenen')], 400);
+            }
+
+            $check = OnAccountOverride::placeByAdmin($order, $customer, (bool) ($data['override_on_account'] ?? false));
+
+            if (! $check->allowed) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $check->message() ?? __('Voor deze klant staat geen betaalmethode op rekening aan.'),
+                    'onAccountRefused' => $check->reason,
+                ], 422);
+            }
+
+            // finishPaidOrder() zet de order normaal op 'paid'; hier geven we
+            // 'waiting_for_confirmation' expliciet mee (placeByAdmin() heeft
+            // de order daar al op gezet, dit is dus een no-op op de status)
+            // zodat een order op rekening niet alsnog op paid komt te staan.
+            // De klant heeft de goederen in de winkel meegenomen, dus
+            // fulfilment is wel meteen afgehandeld.
+            POSHelper::finishPaidOrder($order->fresh(), $posCart, 'waiting_for_confirmation', 'handled');
+
+            return response()->json([
+                'success' => true,
+                'order' => $order->fresh(),
+                'orderPayments' => $order->fresh()->orderPayments,
                 'startPinTerminalPayment' => false,
                 'firstPaymentMethod' => $this->resolveFirstPaymentMethodPayload($paymentMethod),
             ]);
