@@ -201,14 +201,35 @@ class OrderReturn extends Model
             return null;
         }
 
-        return OrderPayment::query()
+        // Eerst het oude gedrag: een echte terugbetaling staat op de
+        // creditorder zelf.
+        $payment = OrderPayment::query()
+            ->where('order_id', $this->credit_order_id)
             ->where('status', 'paid')
-            ->where(function ($query) {
-                $query->where('order_id', $this->credit_order_id)
-                    ->orWhere(fn ($q) => $q->where('psp', 'credit')->where('credit_order_id', $this->credit_order_id));
-            })
             ->orderBy('id')
             ->first();
+
+        if ($payment) {
+            return $payment;
+        }
+
+        // Anders pas een verrekening (OnAccountSettlement) tellen, en dan
+        // alleen als hij de volledige creditering dekt: een deelverrekening
+        // (bijv. een creditorder van 50 tegen een openstaand saldo van 20)
+        // mag "terugbetaald" niet voortijdig waar maken, anders verdwijnt de
+        // knop om de rest handmatig te registreren.
+        $settlement = OrderPayment::query()
+            ->where('psp', 'credit')
+            ->where('credit_order_id', $this->credit_order_id)
+            ->where('status', 'paid')
+            ->orderBy('id')
+            ->first();
+
+        if ($settlement && $this->creditOrder && (float) $settlement->amount >= abs((float) $this->creditOrder->total) - 0.004) {
+            return $settlement;
+        }
+
+        return null;
     }
 
     public function isRefunded(): bool
