@@ -86,11 +86,17 @@ class ShippingMethod extends Model
         return $this->belongsToMany(ProductGroup::class, 'dashed__shipping_method_disabled_product_groups', 'shipping_method_id', 'product_group_id');
     }
 
-    public function costsForCart(?int $shippingZoneId = null): ?float
+    /**
+     * Verzendkosten voor een wagen. Zonder $cartItems is dat de wagen van de
+     * webshop (cartHelper); de kassa geeft zijn eigen regels mee, want die
+     * staan in een POSCart en niet in de sessie. Een regel is een object met
+     * `model` (Product of null) en `qty`.
+     *
+     * @param  iterable<object>|null  $cartItems
+     */
+    public function costsForCart(?int $shippingZoneId = null, ?iterable $cartItems = null): ?float
     {
-        cartHelper()->initialize();
-
-        $cartItems = cartHelper()->getCartItems();
+        $cartItems = $cartItems === null ? $this->webshopCartItems() : collect($cartItems)->all();
         $cartItemsCount = count($cartItems);
         $activatedShippingClassIds = [];
 
@@ -145,22 +151,22 @@ class ShippingMethod extends Model
         return $shippingCosts;
     }
 
-    public function getActivatedShippingClasses(?int $shippingZoneId = null): ?array
+    /**
+     * @param  iterable<object>|null  $cartItems  zie costsForCart()
+     */
+    public function getActivatedShippingClasses(?int $shippingZoneId = null, ?iterable $cartItems = null): ?array
     {
-        cartHelper()->initialize();
-
-        $cartItems = cartHelper()->getCartItems();
+        $cartItems = $cartItems === null ? $this->webshopCartItems() : collect($cartItems)->all();
         $activatedShippingClasses = [];
         $activatedShippingClassIds = [];
 
         foreach ($cartItems as $cartItem) {
-            if ($this->sort != 'take_away' && $cartItem->model->shippingClasses->count()) {
+            if ($this->sort != 'take_away' && $cartItem->model && $cartItem->model->shippingClasses->count()) {
                 foreach ($cartItem->model->shippingClasses as $shippingClass) {
                     if ($shippingZoneId) {
                         $shippingClassPrice = $shippingClass->price_shipping_zones[$shippingZoneId] ?? 0;
                         if ($shippingClassPrice > 0) {
-                            if ($shippingClass->count_once && ! in_array($shippingClass->id, $activatedShippingClassIds)) {
-                                $shippingCosts = $shippingCosts + $shippingClassPrice;
+                            if ($shippingClass->count_once && ! in_array($shippingClass->id, array_keys($activatedShippingClassIds))) {
                                 $activatedShippingClassIds[$shippingClass->id] = 1;
                                 $activatedShippingClasses[] = $shippingClass;
                             } elseif ($shippingClass->count_per_product) {
@@ -185,5 +191,12 @@ class ShippingMethod extends Model
         }
 
         return $activatedShippingClasses;
+    }
+
+    private function webshopCartItems(): iterable
+    {
+        cartHelper()->initialize();
+
+        return cartHelper()->getCartItems();
     }
 }

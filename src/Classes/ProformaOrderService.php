@@ -9,11 +9,18 @@ use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Mail\ProformaCheckoutMail;
+use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 
 class ProformaOrderService
 {
     public static function createAndSend(POSCart $posCart, User $cashier, bool $allowShipping = false): Order
     {
+        // Verzendkosten over de regels van de kassa, en dus vóór saveAsConcept:
+        // die maakt de kassabon leeg. Dezelfde som als die de kassa bij het
+        // kiezen toonde.
+        $posShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
+        $posShippingCosts = $posShippingMethod ? PosShippingAdvisor::costsFor($posCart, $posShippingMethod) : 0.0;
+
         $order = ConceptOrderService::saveAsConcept($posCart, $cashier);
 
         $order->is_proforma = true;
@@ -31,8 +38,7 @@ class ProformaOrderService
 
         $shippingCosts = 0.0;
         if ($shippingMethod) {
-            $shippingZone = $order->country ? ShoppingCart::getShippingZoneByCountry($order->country) : null;
-            $shippingCosts = (float) ($shippingMethod->costsForCart($shippingZone->id ?? null) ?? 0);
+            $shippingCosts = $posShippingCosts;
         }
 
         if ($shippingCosts > 0) {

@@ -2,6 +2,20 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.137.0 - 2026-09-21
+
+### Added
+- **Bestellingen filteren en sorteren op betaalmethode.** Filter "Betaalmethode" (orders met een betaalde betaling via die methode; een gesplitste betaling valt onder beide) en "Mislukte betaling met". De kolom toont alle betaalde methodes ("Pin + Contant") en sorteert op de eerste betaalde methode, onbetaald achteraan. Scopes `Order::paidWithPaymentMethod()` en `Order::withFailedPaymentAttempt()`.
+- **Verzendadvies in de kassa.** De verzendpopup volgt de webshopregels (zone, minimum- en maximumbedrag, uitgesloten producten en groepen), zet de goedkoopste geldige methode op "Aanbevolen" en houdt de rest kiesbaar met de reden erbij. `PosShippingAdvisor`; `getAvailableShippingMethods()`, `costsForCart()` en `getActivatedShippingClasses()` nemen optioneel eigen wagenregels aan.
+- **Betaalmethode statistieken** onder Statistieken: betaalpogingen per methode met betaald, mislukt, open, slagingspercentage en bedrag, kaarten, een grafiek van mislukte pogingen per dag of week, filter op herkomst en doorklikken naar de bestellingen.
+
+### Fixed
+- De kassa rekende verzendklasse-toeslagen en aantallen tegen de (lege) webshopwagen in plaats van de kassabon; ook bij afrekenen en bij een proforma, die bovendien pas rekende nadat de kassabon al geleegd was.
+- `getActivatedShippingClasses()` klapte op een verzendklasse "eenmalig tellen" en op een regel zonder product.
+- Statusfilter "Retour" in de orderlijst matchte nooit (sleutel met spatie).
+- Dashboardwidget "Meest gewenst" was niet op het paneel aangemeld en gaf bij lazy laden een 419.
+- De openstaande-bestellingen-kaart onder de orderlijst gebruikte de URL-sleutel `tableFilters`, die Filament 4 niet leest.
+
 ## v4.136.0 - 2026-09-21
 
 ### Added

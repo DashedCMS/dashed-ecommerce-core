@@ -168,11 +168,18 @@
                 <p class="text-3xl font-bold">Selecteer een verzendmethode</p>
                 <div class="grid gap-8 grid-cols-1 md:grid-cols-2" x-show="shippingMethods.length">
                     <template x-for="shippingMethod in shippingMethods">
+                        {{-- Geldig volgens de webshopregels bovenaan, de rest blijft kiesbaar met de reden erbij. --}}
                         <button @click="selectShippingMethod(shippingMethod.id)"
                                 x-bind:disabled="loading"
-                                x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
-                                class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex items-center flex-wrap justify-between">
-                            <span x-html="shippingMethod.fullName"></span>
+                                x-bind:class="loading ? 'bg-primary-500/50' : (shippingMethod.valid === false ? 'bg-neutral-100 dark:bg-white/5 hover:bg-neutral-200 dark:hover:bg-white/10' : 'bg-primary-500 hover:bg-primary-600')"
+                                class="p-4 text-2xl uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full flex flex-col items-start gap-1 text-left">
+                            <span class="w-full flex items-center justify-between gap-3">
+                                <span x-html="shippingMethod.fullName"></span>
+                                <span x-show="shippingMethod.recommended" x-cloak
+                                      class="shrink-0 rounded-full bg-white text-primary-600 px-3 py-1 text-sm">Aanbevolen</span>
+                            </span>
+                            <span x-show="shippingMethod.reason" x-cloak x-text="shippingMethod.reason"
+                                  class="text-base font-normal normal-case text-neutral-500 dark:text-white/60"></span>
                         </button>
                     </template>
                 </div>

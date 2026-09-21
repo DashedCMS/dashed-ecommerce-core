@@ -100,6 +100,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 RevenueStatisticsPage::class,
                 ProductStatisticsPage::class,
                 DiscountStatisticsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Statistics\PaymentMethodStatisticsPage::class,
                 POSPageRedirect::class,
                 POSSettingsPage::class,
                 POSCustomerPageRedirect::class,
@@ -134,6 +135,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 PrintQueueWidget::class,
                 OrderOutstandingStatsWidget::class,
                 DoelenWidget::class,
+                \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\MostWishedProducts::class,
             ])
             ->resources([
                 PaymentMethodResource::class,

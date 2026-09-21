@@ -208,6 +208,25 @@ class Order extends Model
         return $this->mainPaymentMethod ? $this->mainPaymentMethod->name : ($this->orderPayments->first() ? $this->orderPayments->first()->payment_method_name : Translation::get('no-payment-method-available', 'orders', 'Geen methode beschikbaar'));
     }
 
+    /**
+     * Alle methodes waarmee betaald is, zoals het betaalmethodefilter in de
+     * orderlijst ze ziet ("Pin + Contant"). Zonder betaalde betaling valt
+     * dit terug op de hoofdmethode. Leest orderPayments, dus laad die mee
+     * waar het per rij wordt aangeroepen.
+     */
+    public function paidPaymentMethodsLabel(): string
+    {
+        $names = $this->orderPayments
+            ->where('status', 'paid')
+            ->sortBy('id')
+            ->map(fn (OrderPayment $payment) => $payment->payment_method_name)
+            ->filter()
+            ->unique()
+            ->values();
+
+        return $names->isNotEmpty() ? $names->implode(' + ') : $this->payment_method;
+    }
+
     public function getPaymentMethodInstructionsAttribute(): string
     {
         return $this->orderPayments->first() ? $this->orderPayments->first()->paymentMethodInstructions : '';
@@ -506,6 +525,80 @@ class Order extends Model
     public function scopeIsPaid($query)
     {
         return $query->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid']);
+    }
+
+    /**
+     * Orders met minstens één betaalde betaling via een van deze methodes.
+     * Een gesplitste betaling (pin + contant) valt onder beide, een
+     * mislukte poging telt niet. Oude betaalregels hebben alleen de naam
+     * als tekst en geen id; die worden op elke vertaling van de naam
+     * gevonden.
+     *
+     * @param  array<int, int|string>  $paymentMethodIds
+     */
+    public function scopePaidWithPaymentMethod(Builder $query, array $paymentMethodIds): Builder
+    {
+        return self::whereHasPaymentVia($query, $paymentMethodIds, ['paid']);
+    }
+
+    /**
+     * Orders met minstens één mislukte of geannuleerde betaalpoging via een
+     * van deze methodes, ook als de order daarna alsnog betaald is. De
+     * doorklik vanuit de statistieken per betaalmethode.
+     *
+     * @param  array<int, int|string>  $paymentMethodIds
+     */
+    public function scopeWithFailedPaymentAttempt(Builder $query, array $paymentMethodIds): Builder
+    {
+        return self::whereHasPaymentVia($query, $paymentMethodIds, \Dashed\DashedEcommerceCore\Services\Statistics\PaymentMethodStatistics::FAILED_STATUSES);
+    }
+
+    /**
+     * @param  array<int, int|string>  $paymentMethodIds
+     * @param  array<int, string>  $statuses
+     */
+    private static function whereHasPaymentVia(Builder $query, array $paymentMethodIds, array $statuses): Builder
+    {
+        $ids = array_values(array_filter(array_map('intval', $paymentMethodIds)));
+
+        if ($ids === []) {
+            return $query;
+        }
+
+        $names = PaymentMethod::withTrashed()
+            ->whereIn('id', $ids)
+            ->get()
+            ->flatMap(fn (PaymentMethod $paymentMethod) => array_values($paymentMethod->getTranslations('name')))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        return $query->whereHas('orderPayments', fn ($payments) => $payments
+            ->whereIn('status', $statuses)
+            ->where(fn ($match) => $match
+                ->whereIn('payment_method_id', $ids)
+                ->when($names !== [], fn ($legacy) => $legacy->orWhere(fn ($byName) => $byName
+                    ->whereNull('payment_method_id')
+                    ->whereIn('payment_method', $names)))));
+    }
+
+    /**
+     * Naam van de methode van de eerste betaalde betaling, als subquery om
+     * op te sorteren. Leeg voor een order zonder betaalde betaling.
+     */
+    public static function firstPaidPaymentMethodNameQuery(): \Illuminate\Database\Query\Builder
+    {
+        $payments = (new OrderPayment())->getTable();
+        $methods = (new PaymentMethod())->getTable();
+
+        return DB::table($payments)
+            ->join($methods, "{$methods}.id", '=', "{$payments}.payment_method_id")
+            ->whereColumn("{$payments}.order_id", (new static())->getTable() . '.id')
+            ->where("{$payments}.status", 'paid')
+            ->orderBy("{$payments}.id")
+            ->limit(1)
+            ->select("{$methods}.name->" . app()->getLocale());
     }
 
     public function scopeIsReturn($query)
@@ -1267,6 +1360,8 @@ class Order extends Model
             SendGAEcommerceHitJob::dispatch($this);
         }
 
+        \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOrderPlacer::settle($this);
+
         $this->updateOrderProductsProductInformation();
     }
 
@@ -1278,6 +1373,12 @@ class Order extends Model
 
         $this->alignCreatedAtToFirstPayment();
 
+        // Vanuit waiting_for_confirmation zijn voorraad, korting, het
+        // betaald-event en de winkelwagen al afgehandeld. Nog een keer
+        // afboeken gebeurde bij elke deelbetaling op een order op rekening
+        // of een overboeking die in delen binnenkwam.
+        $alreadyConfirmed = $this->status === 'waiting_for_confirmation';
+
         $this->status = 'partially_paid';
         $this->save();
 
@@ -1286,18 +1387,20 @@ class Order extends Model
         // Invoice rendering loopt nu binnen SendInvoiceJob zelf.
         SendInvoiceJob::dispatch($this, auth()->check() ? auth()->user() : null);
 
-        $this->deductStock();
-        $this->deductDiscount();
+        if (! $alreadyConfirmed) {
+            $this->deductStock();
+            $this->deductDiscount();
 
-        OrderMarkedAsPaidEvent::dispatch($this);
+            OrderMarkedAsPaidEvent::dispatch($this);
 
-        if ($this->cart_id && $this->cart) {
-            $this->cart->items()->delete();
-            $this->cart->delete();
+            if ($this->cart_id && $this->cart) {
+                $this->cart->items()->delete();
+                $this->cart->delete();
+            }
+            cartHelper()->emptyCart();
+
+            $this->sendGAEcommerceHit();
         }
-        cartHelper()->emptyCart();
-
-        $this->sendGAEcommerceHit();
 
         $this->updateOrderProductsProductInformation();
     }

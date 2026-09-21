@@ -1249,6 +1249,35 @@ MARKDOWN,
         );
 
         cms()->registerSettingsDocs(
+            page: \Dashed\DashedEcommerceCore\Filament\Pages\Statistics\PaymentMethodStatisticsPage::class,
+            title: 'Betaalmethode statistieken',
+            intro: 'Op deze pagina zie je per betaalmethode hoe vaak er geprobeerd, betaald en afgehaakt wordt. Zo zie je waar klanten vastlopen en wanneer een betaalprovider een slechte dag had.',
+            sections: [
+                [
+                    'heading' => 'Wat telt als poging?',
+                    'body' => <<<MARKDOWN
+- Elke betaling die voor een bestelling gestart wordt is een poging, ook als de klant het daarna nog een keer probeert. Drie mislukte iDEAL-pogingen en daarna een geslaagde tellen dus als drie mislukt en een betaald.
+- Terugbetalingen en verrekeningen tellen niet mee: dat is boekhouding, geen poging.
+- Het slagingspercentage is betaald gedeeld door betaald plus mislukt. Een poging die nog open staat is nog niet afgelopen en telt daarom niet mee.
+- Een poging telt op de datum waarop de betaling gestart is.
+MARKDOWN,
+                ],
+                [
+                    'heading' => 'Wat kun je hier doen?',
+                    'body' => 'Kies een periode en eventueel een herkomst, zoals de webshop of de kassa. Klik in de tabel op een aantal betaald of mislukt om de bestellingen erachter te openen.',
+                ],
+            ],
+            fields: [
+                'Periode' => 'Het datumbereik van de betaalpogingen.',
+                'Herkomst' => 'Waar de bestelling vandaan komt. Leeg is alles.',
+            ],
+            tips: [
+                'Een methode met veel open pogingen en weinig betaald kan betekenen dat klanten de betaalpagina verlaten zonder af te ronden.',
+                'Zie je op een dag een piek in mislukte pogingen bij een methode, kijk dan bij je betaalprovider of er toen een storing was.',
+            ],
+        );
+
+        cms()->registerSettingsDocs(
             page: \Dashed\DashedEcommerceCore\Filament\Pages\Statistics\ProductGroupStatisticsPage::class,
             title: 'Product groep statistieken',
             intro: 'Op deze pagina zie je hoe hele productgroepen presteren in plaats van losse producten. Handig om te ontdekken welke categorieen het beste lopen.',

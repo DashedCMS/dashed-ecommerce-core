@@ -31,6 +31,7 @@ use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 
 class PointOfSaleApiController extends Controller
@@ -94,20 +95,7 @@ class PointOfSaleApiController extends Controller
         }
         unset($product);
 
-        $shippingMethods = ShippingMethod::all();
-        foreach ($shippingMethods as $shippingMethod) {
-            $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
-
-            if ($shippingMethod->shippingZone && count($shippingMethod->shippingZone->zones) > 1) {
-                $shippingMethod->fullName .= ' ('.implode(', ', $shippingMethod->shippingZone->zones).')';
-            } elseif ($shippingMethod->shippingZone) {
-                $shippingMethod->fullName .= ' ('.$shippingMethod->shippingZone->name.')';
-            }
-
-            $shippingZone = $posCart->country ? ShoppingCart::getShippingZoneByCountry($posCart->country) : null;
-            $costs = $shippingMethod->costsForCart($shippingZone->id ?? null);
-            $shippingMethod->fullName .= ' '.($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
-        }
+        $shippingMethods = PosShippingAdvisor::advise($posCart, (float) ($this->calculatePosCartTotals($posCart)['subtotal'] ?? 0));
 
         $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
 
@@ -118,9 +106,7 @@ class PointOfSaleApiController extends Controller
             'shippingMethods' => $shippingMethods,
             'shippingMethodId' => $chosenShippingMethod->id ?? null,
             'shippingCosts' => $chosenShippingMethod
-                ? CurrencyHelper::formatPrice($chosenShippingMethod->costsForCart(
-                    optional(ShoppingCart::getShippingZoneByCountry($posCart->country))->id
-                ))
+                ? CurrencyHelper::formatPrice(PosShippingAdvisor::costsFor($posCart, $chosenShippingMethod))
                 : null,
 
             'customerUserId' => $posCart->customer_user_id,
@@ -188,9 +174,8 @@ class PointOfSaleApiController extends Controller
         $totals = $this->calculatePosCartTotals($posCart, $discountCodeRecords);
 
         $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
-        $shippingZone = $posCart->country ? ShoppingCart::getShippingZoneByCountry($posCart->country) : null;
         $shippingCosts = $chosenShippingMethod
-            ? (float) $chosenShippingMethod->costsForCart($shippingZone->id ?? null)
+            ? PosShippingAdvisor::costsFor($posCart, $chosenShippingMethod)
             : 0.0;
 
         $giftCardsTotal = (float) ($totals['giftCardsTotal'] ?? 0);
@@ -228,19 +213,7 @@ class PointOfSaleApiController extends Controller
                 : '';
         }
 
-        $shippingMethods = ShippingMethod::all();
-        foreach ($shippingMethods as $shippingMethod) {
-            $shippingMethod->fullName = $shippingMethod->getTranslation('name', app()->getLocale());
-
-            if ($shippingMethod->shippingZone && count($shippingMethod->shippingZone->zones) > 1) {
-                $shippingMethod->fullName .= ' ('.implode(', ', $shippingMethod->shippingZone->zones).')';
-            } elseif ($shippingMethod->shippingZone) {
-                $shippingMethod->fullName .= ' ('.$shippingMethod->shippingZone->name.')';
-            }
-
-            $costs = $shippingMethod->costsForCart($shippingZone->id ?? null);
-            $shippingMethod->fullName .= ' '.($costs > 0 ? CurrencyHelper::formatPrice($costs) : 'gratis');
-        }
+        $shippingMethods = PosShippingAdvisor::advise($posCart, (float) ($totals['subtotal'] ?? 0));
 
         return [
             'products' => array_reverse(array_values($products)),
@@ -862,9 +835,7 @@ class PointOfSaleApiController extends Controller
         return response()->json([
             'success' => true,
             'shippingMethodId' => $shippingMethod->id,
-            'shippingCosts' => CurrencyHelper::formatPrice(
-                $shippingMethod->costsForCart(optional(ShoppingCart::getShippingZoneByCountry($posCart->country))->id)
-            ),
+            'shippingCosts' => CurrencyHelper::formatPrice(PosShippingAdvisor::costsFor($posCart, $shippingMethod)),
         ]);
     }
 
@@ -930,9 +901,7 @@ class PointOfSaleApiController extends Controller
 
         $totals = $this->calculatePosCartTotals($posCart, $discountCodeRecords);
 
-        $shippingCosts = (float) ($shippingMethod ? $shippingMethod->costsForCart(
-            optional(ShoppingCart::getShippingZoneByCountry($posCart->country ?: Countries::getAllSelectedCountries()[0]))->id
-        ) : 0);
+        $shippingCosts = $shippingMethod ? PosShippingAdvisor::costsFor($posCart, $shippingMethod) : 0.0;
 
         $total = (float) ($totals['subtotal'] ?? 0) + $shippingCosts;
 

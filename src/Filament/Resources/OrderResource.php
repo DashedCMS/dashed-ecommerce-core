@@ -33,6 +33,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
@@ -335,7 +337,17 @@ class OrderResource extends Resource
                 TextColumn::make('payment_method')
                     ->label(__('Betaalmethode'))
                     ->toggleable()
-                    ->getStateUsing(fn ($record) => Str::substr($record->payment_method, 0, 10)),
+                    ->getStateUsing(fn ($record) => $record->paidPaymentMethodsLabel())
+                    ->limit(25)
+                    // Sorteert op de methode van de eerste betaalde betaling;
+                    // een order zonder betaalde betaling komt altijd achteraan.
+                    ->sortable(query: function ($query, string $direction) {
+                        $firstPaid = Order::firstPaidPaymentMethodNameQuery();
+
+                        return $query
+                            ->orderByRaw('(' . $firstPaid->toSql() . ') is null', $firstPaid->getBindings())
+                            ->orderBy($firstPaid, $direction);
+                    }),
                 TextColumn::make('payment_status')
                     ->label(__('Betaalstatus'))
                     ->toggleable()
@@ -466,7 +478,7 @@ class OrderResource extends Resource
                                 'pending' => __('Lopende aankoop'),
                                 'concept' => __('Concept'),
                                 'cancelled' => __('Geannuleerd'),
-                                'return ' => __('Retour'),
+                                'return' => __('Retour'),
                             ])
                             ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
                     ])
@@ -480,7 +492,7 @@ class OrderResource extends Resource
                         $values = $data['values'] ?? [];
 
                         // Widget-shortcut: ResourceFilterUrl stuurt
-                        // tableFilters[fulfillment_status][value]=unhandled mee.
+                        // filters[fulfillment_status][value]=unhandled mee.
                         // Strikt op 'unhandled' zodat de doorklik overeenkomt met
                         // de OrderUnhandledStat-teller. De brede variant blijft
                         // beschikbaar via de losse optie 'unhandled_virtual'.
@@ -561,6 +573,24 @@ class OrderResource extends Resource
                         ->orderBy('utm_campaign')
                         ->pluck('utm_campaign', 'utm_campaign')
                         ->toArray()),
+                SelectFilter::make('payment_method')
+                    ->label(__('Betaalmethode'))
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => static::paymentMethodFilterOptions())
+                    ->query(fn ($query, array $data) => $query->when(
+                        filled($data['values'] ?? null),
+                        fn ($query) => $query->paidWithPaymentMethod($data['values']),
+                    )),
+                SelectFilter::make('failed_payment_method')
+                    ->label(__('Mislukte betaling met'))
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => static::paymentMethodFilterOptions())
+                    ->query(fn ($query, array $data) => $query->when(
+                        filled($data['values'] ?? null),
+                        fn ($query) => $query->withFailedPaymentAttempt($data['values']),
+                    )),
                 SelectFilter::make('country')
                     ->label(__('Land'))
                     ->multiple()
@@ -914,12 +944,34 @@ class OrderResource extends Resource
                     }),
             ])
             ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited(
-                $query->without('orderProducts')->with('mainPaymentMethod')
+                $query->without('orderProducts')->with(['mainPaymentMethod', 'orderPayments.paymentMethod'])
             ))
             ->filtersFormColumns(4)
             ->deferFilters(false)
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
+    }
+
+    /**
+     * Betaalmethodes voor de filters op betaalmethode: de actieve, plus
+     * verwijderde methodes waar nog betalingen aan hangen.
+     *
+     * @return array<int, string>
+     */
+    protected static function paymentMethodFilterOptions(): array
+    {
+        return PaymentMethod::withTrashed()
+            ->where(fn ($query) => $query
+                ->whereNull('deleted_at')
+                ->orWhereIn('id', OrderPayment::query()->whereNotNull('payment_method_id')->select('payment_method_id')))
+            ->get()
+            ->mapWithKeys(fn (PaymentMethod $paymentMethod) => [
+                $paymentMethod->id => $paymentMethod->trashed()
+                    ? __(':naam (verwijderd)', ['naam' => $paymentMethod->name])
+                    : $paymentMethod->name,
+            ])
+            ->sort()
+            ->toArray();
     }
 
     public static function getPages(): array

@@ -107,10 +107,21 @@ class ShoppingCart
         return (int) collect(cartHelper()->getCartItems() ?? [])->sum(fn ($item) => (int) ($item->qty ?? 0));
     }
 
-    public static function getAvailableShippingMethods($countryName, string $shippingAddress = '', $paymentMethod = null, ?float $orderTotalOverride = null)
+    /**
+     * @param  iterable<object>|null  $cartItems  Regels van een andere wagen dan
+     *                                            die van de webshop (de kassa), elk met `model` (Product of null) en
+     *                                            `qty`. Zonder deze regels geldt cartHelper(). Geef er dan ook
+     *                                            $orderTotalOverride bij, anders wordt tegen het webshoptotaal getoetst.
+     */
+    public static function getAvailableShippingMethods($countryName, string $shippingAddress = '', $paymentMethod = null, ?float $orderTotalOverride = null, ?iterable $cartItems = null)
     {
-        $cartItems = cartHelper()->getCartItems();
-        cartHelper()->preloadCartProducts(['productGroup']);
+        $ownCartItems = $cartItems !== null;
+        if ($ownCartItems) {
+            $cartItems = collect($cartItems)->all();
+        } else {
+            $cartItems = cartHelper()->getCartItems();
+            cartHelper()->preloadCartProducts(['productGroup']);
+        }
         $productIds = [];
         $productGroupIds = [];
         $activatedShippingMethodIds = [];
@@ -134,7 +145,7 @@ class ShoppingCart
         }
 
         foreach ($cartItems as $cartItem) {
-            $product = cartHelper()->getProductForCartItem($cartItem);
+            $product = $ownCartItems ? ($cartItem->model ?? null) : cartHelper()->getProductForCartItem($cartItem);
             if ($product) {
                 $productIds[] = $product->id;
                 $productGroupIds[] = $product->product_group_id;
@@ -274,8 +285,8 @@ class ShoppingCart
                     if ($shippingMethodValid) {
                         $shippingMethod->correctName = $shippingMethod->getTranslation('name', app()->getLocale());
                         $shippingMethod->shippingZoneId = $shippingZone->id;
-                        $costs = $shippingMethod->costsForCart($shippingZone->id);
-                        $shippingMethod->activatedShippingClasses = $shippingMethod->getActivatedShippingClasses($shippingZone->id);
+                        $costs = $shippingMethod->costsForCart($shippingZone->id, $ownCartItems ? $cartItems : null);
+                        $shippingMethod->activatedShippingClasses = $shippingMethod->getActivatedShippingClasses($shippingZone->id, $ownCartItems ? $cartItems : null);
 
                         $shippingMethod->costs = $costs;
                         if ($shippingMethod->costs == 0) {

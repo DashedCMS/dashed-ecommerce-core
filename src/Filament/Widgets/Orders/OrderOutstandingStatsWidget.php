@@ -64,7 +64,7 @@ class OrderOutstandingStatsWidget extends StatsOverviewWidget
     protected function filterUrl(array $statuses): string
     {
         return OrderResource::getUrl('index', [
-            'tableFilters' => [
+            'filters' => [
                 'status' => [
                     'values' => $statuses,
                 ],

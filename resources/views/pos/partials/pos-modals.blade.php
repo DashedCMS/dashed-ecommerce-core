@@ -168,11 +168,18 @@
                 <p class="text-3xl font-bold">Selecteer een verzendmethode</p>
                 <div class="grid gap-8 grid-cols-1 md:grid-cols-2" x-show="shippingMethods.length">
                     <template x-for="shippingMethod in shippingMethods">
+                        {{-- Geldig volgens de webshopregels bovenaan, de rest blijft kiesbaar met de reden erbij. --}}
                         <button @click="selectShippingMethod(shippingMethod.id)"
                                 x-bind:disabled="loading"
-                                x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
-                                class="p-4 text-2xl uppercase rounded-lg transition-all ease-in-out duration-300 text-white font-bold w-full flex items-center flex-wrap justify-between">
-                            <span x-html="shippingMethod.fullName"></span>
+                                x-bind:class="loading ? 'bg-primary-900 text-white' : (shippingMethod.valid === false ? 'bg-gray-200 hover:bg-gray-300 text-gray-600' : 'bg-primary-500 hover:bg-primary-700 text-white')"
+                                class="p-4 text-2xl uppercase rounded-lg transition-all ease-in-out duration-300 font-bold w-full flex flex-col items-start gap-1 text-left">
+                            <span class="w-full flex items-center justify-between gap-3">
+                                <span x-html="shippingMethod.fullName"></span>
+                                <span x-show="shippingMethod.recommended" x-cloak
+                                      class="shrink-0 rounded-full bg-white text-primary-600 px-3 py-1 text-sm">Aanbevolen</span>
+                            </span>
+                            <span x-show="shippingMethod.reason" x-cloak x-text="shippingMethod.reason"
+                                  class="text-base font-normal normal-case"></span>
                         </button>
                     </template>
                 </div>
