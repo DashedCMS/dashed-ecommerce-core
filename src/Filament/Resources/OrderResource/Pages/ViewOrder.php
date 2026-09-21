@@ -22,7 +22,9 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\Register
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterReturnAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentReminderAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterManualPaymentAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\TogglePaymentRemindersAction;
 
 class ViewOrder extends ViewRecord
 {
@@ -328,6 +330,8 @@ class ViewOrder extends ViewRecord
                     }),
                 RegisterManualPaymentAction::make($this->record),
                 SendPaymentLinkAction::make($this->record),
+                SendPaymentReminderAction::make($this->record),
+                TogglePaymentRemindersAction::make($this->record),
                 RegisterRefundAction::make($this->record),
             ])
                 ->label(__('Betaling'))

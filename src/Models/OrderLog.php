@@ -191,6 +191,20 @@ class OrderLog extends Model
             $string = 'heeft de bestelling ingepakt.';
         } elseif ($this->tag == 'order.unpacked') {
             $string = 'heeft het inpakken van de bestelling ongedaan gemaakt.';
+        } elseif ($this->tag == 'order.on-account.placed') {
+            $string = 'heeft de bestelling op rekening geplaatst.';
+        } elseif ($this->tag == 'order.on-account.override') {
+            $string = 'heeft de kredietlimietcontrole op rekening overschreven.' . ($this->note ? ' ' . $this->note : '');
+        } elseif ($this->tag == 'order.on-account.credit-settled') {
+            $string = 'heeft de bestelling op rekening verrekend via een creditorder.' . ($this->note ? ' Bedrag: ' . $this->note : '');
+        } elseif ($this->tag == 'order.payment-reminder.sent') {
+            $string = 'De automatische betaalherinnering is verstuurd.' . ($this->note ? ' Stap: ' . $this->note : '');
+        } elseif ($this->tag == 'order.payment-reminder.manual') {
+            $string = 'heeft handmatig een betaalherinnering verstuurd.' . ($this->note ? ' Stap: ' . $this->note : '');
+        } elseif ($this->tag == 'order.payment-reminders.paused') {
+            $string = 'heeft de betaalherinneringen gepauzeerd.';
+        } elseif ($this->tag == 'order.payment-reminders.resumed') {
+            $string = 'heeft de betaalherinneringen hervat.';
         } elseif ($this->note) {
             return $this->note;
         } else {

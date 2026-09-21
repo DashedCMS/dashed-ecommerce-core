@@ -465,6 +465,10 @@ class OrderResource extends Resource
 
                         return $query->proformaAwaitingPayment();
                     }),
+                Filter::make('on_account_open')
+                    ->toggle()
+                    ->label(__('Op rekening, openstaand'))
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false) ? $query->onAccountOpen() : $query),
                 SelectFilter::make('status')
                     ->multiple()
                     ->form([

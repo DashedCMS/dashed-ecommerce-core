@@ -115,6 +115,18 @@ class PaymentInformationList extends Component implements HasSchemas
                         TextEntry::make('total')
                             ->label(__('Totaal'))
                             ->money('EUR'),
+
+                        TextEntry::make('payment_due_at')
+                            ->label(__('Te betalen voor'))
+                            ->date('d-m-Y')
+                            ->visible(fn (Order $record) => (bool) $record->payment_due_at),
+
+                        TextEntry::make('payment_reminders')
+                            ->label(__('Verstuurde herinneringen'))
+                            ->state(fn (Order $record) => $record->paymentReminders->map(
+                                fn ($reminder) => __('Stap :stage op :date', ['stage' => $reminder->stage, 'date' => $reminder->sent_at->format('d-m-Y')])
+                            )->join(', '))
+                            ->visible(fn (Order $record) => $record->paymentReminders->isNotEmpty()),
                     ])
                     ->columns(4),
 
