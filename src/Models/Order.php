@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 use Exception;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
@@ -63,6 +64,24 @@ class Order extends Model
     use SoftDeletes;
 
     public const STATUS_CONCEPT = 'concept';
+
+    /**
+     * Statussen waaruit een order later betaald kan worden zonder al omzet
+     * te tellen. Zie alignCreatedAtToFirstPayment().
+     */
+    public const LATE_PAYMENT_SOURCE_STATUSES = ['pending', 'cancelled'];
+
+    /**
+     * Logregels die markeren dat een order omzet ging tellen. De oudste is
+     * het betaalmoment waarop realignLatePaidCreatedAtToPaymentDate()
+     * terugvalt.
+     */
+    public const REVENUE_LOG_TAGS = [
+        'order.paid',
+        'order.marked-as-paid',
+        'order.partially_paid',
+        'order.waiting_for_confirmation',
+    ];
 
     protected static $logFillable = true;
 
@@ -365,33 +384,112 @@ class Order extends Model
     }
 
     /**
-     * Een proforma/concept-order wordt pas later betaald (bijv. vanuit de POS
-     * gemaild). De omzet moet tellen op het moment van de eerste betaling, niet
-     * op het moment dat het concept is aangemaakt. Zet daarom created_at gelijk
-     * aan de eerste betaalde OrderPayment.
+     * Omzet telt op created_at, en hoort te tellen op de dag dat een order
+     * betaald wordt. Deze methode draait vlak voordat een order voor het
+     * eerst in een omzetstatus komt (paid, partially_paid,
+     * waiting_for_confirmation) en schuift created_at daarvoor op.
      *
-     * Draait alleen op de eerste overgang uit 'concept' (de guard), dus het
-     * blijft na de eerste betaling vaststaan en verschuift niet meer.
+     * Twee gevallen:
      *
-     * $force omzeilt die guard voor een order die nooit 'concept' is geweest
-     * maar wel dezelfde uitlijning nodig heeft: de vervangende order uit
-     * OrderModificationService::replaceWithNewOrder() wordt vandaag aangemaakt
-     * terwijl de betalingen die erheen verhuizen van maanden geleden kunnen
-     * zijn. Zonder deze aanroep verschuift de omzet van de oorspronkelijke
-     * betaalmaand naar de maand van de wijziging.
+     * - Een concept/proforma (bijv. vanuit de POS gemaild): created_at wordt
+     *   de eerste betaalde OrderPayment. Die regels worden pas bij het
+     *   afrekenen aangemaakt, dus hun created_at is het betaalmoment.
+     * - Een order die open (pending) of geannuleerd stond en op een latere
+     *   dag alsnog betaald wordt: created_at wordt nu. Hier niet de
+     *   betaalregel, want een overboeking of betaallink heeft zijn regel al
+     *   bij het afrekenen gekregen en alleen de status verschuift later.
+     *   Gebeurt het op dezelfde dag, dan blijft created_at staan.
+     *
+     * Een order die al omzet telt (waiting_for_confirmation of partially_paid
+     * naar paid) verschuift niet meer: zijn factuur met die datum is al de
+     * deur uit, en de omzet stond al in de goede periode.
+     *
+     * $force omzeilt de statuscontrole voor een order die nooit 'concept' is
+     * geweest maar wel op de eerste betaaldatum moet staan: de vervangende
+     * order uit OrderModificationService::replaceWithNewOrder() wordt vandaag
+     * aangemaakt terwijl de betalingen die erheen verhuizen van maanden
+     * geleden kunnen zijn. Zonder deze aanroep verschuift de omzet van de
+     * oorspronkelijke betaalmaand naar de maand van de wijziging.
      */
     public function alignCreatedAtToFirstPayment(bool $force = false): void
     {
-        if (! $force && ! $this->isConcept()) {
+        if ($force || $this->isConcept()) {
+            $firstPaidPayment = $this->orderPayments()
+                ->where('status', 'paid')
+                ->oldest('created_at')
+                ->first();
+
+            $this->created_at = $firstPaidPayment?->created_at ?? now();
+
             return;
         }
 
-        $firstPaidPayment = $this->orderPayments()
-            ->where('status', 'paid')
-            ->oldest('created_at')
-            ->first();
+        if (in_array($this->status, self::LATE_PAYMENT_SOURCE_STATUSES, true)
+            && $this->created_at
+            && ! $this->created_at->isSameDay(now())) {
+            $this->created_at = now();
+        }
+    }
 
-        $this->created_at = $firstPaidPayment?->created_at ?? now();
+    /**
+     * Terugwerkende correctie voor orders die op een latere dag betaald zijn
+     * dan ze aangemaakt werden. Er is geen betaaldatum-kolom; het moment dat
+     * een order omzet ging tellen staat wel in het orderlogboek, als de
+     * oudste regel met een van REVENUE_LOG_TAGS. created_at schuift alleen
+     * vooruit, en alleen als die regel op een andere dag valt.
+     *
+     * Proforma's zijn al door realignProformaCreatedAtToFirstPayment()
+     * rechtgezet, en een vervangende order uit een orderwijziging staat
+     * bewust op de oorspronkelijke betaaldatum terwijl zijn logregels van
+     * het wijzigmoment zijn. Beide blijven hier dus buiten.
+     *
+     * Query-builder update zodat er geen events/observers/updated_at-bump
+     * meegaan.
+     */
+    public static function realignLatePaidCreatedAtToPaymentDate(): int
+    {
+        $tags = self::REVENUE_LOG_TAGS;
+
+        $firstRevenueLog = fn ($query) => $query
+            ->selectRaw('min(dashed__order_logs.created_at)')
+            ->from('dashed__order_logs')
+            ->whereColumn('dashed__order_logs.order_id', 'dashed__orders.id')
+            ->whereIn('dashed__order_logs.tag', $tags);
+
+        $updated = 0;
+
+        static::query()
+            ->withTrashed()
+            ->whereIn('status', ['paid', 'partially_paid', 'waiting_for_confirmation'])
+            ->where(fn ($query) => $query->where('is_proforma', false)->orWhereNull('is_proforma'))
+            ->whereNotExists(fn ($query) => $query
+                ->selectRaw('1')
+                ->from('dashed__orders as replaced')
+                ->whereColumn('replaced.replaced_by_order_id', 'dashed__orders.id'))
+            ->select('dashed__orders.id', 'dashed__orders.created_at')
+            ->selectSub($firstRevenueLog, 'first_revenue_at')
+            ->toBase()
+            ->orderBy('dashed__orders.id')
+            ->chunk(1000, function ($orders) use (&$updated) {
+                foreach ($orders as $order) {
+                    if (! $order->first_revenue_at || ! $order->created_at) {
+                        continue;
+                    }
+
+                    $createdAt = Carbon::parse($order->created_at);
+                    $firstRevenueAt = Carbon::parse($order->first_revenue_at);
+
+                    if ($firstRevenueAt->lessThanOrEqualTo($createdAt) || $firstRevenueAt->isSameDay($createdAt)) {
+                        continue;
+                    }
+
+                    $updated += DB::table('dashed__orders')
+                        ->where('id', $order->id)
+                        ->update(['created_at' => $order->first_revenue_at]);
+                }
+            });
+
+        return $updated;
     }
 
     /**
