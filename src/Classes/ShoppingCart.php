@@ -547,6 +547,15 @@ class ShoppingCart
                 }
             }
 
+            if ($paymentMethodValid && $paymentMethod->on_account) {
+                $onAccountUser = $userId ? \Dashed\DashedCore\Models\User::find($userId) : null;
+                $paymentMethodValid = \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount::check(
+                    $onAccountUser,
+                    $paymentMethod,
+                    (float) ($total ?? cartHelper()->getTotal()),
+                )->allowed;
+            }
+
             if (! $paymentMethodValid) {
                 unset($paymentMethods[$key]);
             } else {
