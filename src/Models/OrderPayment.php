@@ -152,9 +152,15 @@ class OrderPayment extends Model
             // de klantpagina een betaalde bestelling zodra hij de laatste,
             // bij de PSP vervallen betaling nakeek; de link in de
             // fulfilment-mail wijst precies naar die betaling.
+            //
+            // Hetzelfde geldt voor een bestelling die op bevestiging wacht
+            // (handmatige of kassabestelling, overboeking): die status komt
+            // nooit van een PSP-betaling, dus een afgebroken betaallink is
+            // geen reden om hem te laten vervallen. Annuleren is daar een
+            // keuze van de winkel.
             $order = $this->order;
 
-            if ($order && in_array($order->status, ['paid', 'partially_paid'], true)) {
+            if ($order && in_array($order->status, ['paid', 'partially_paid', 'waiting_for_confirmation'], true)) {
                 return '';
             }
 
