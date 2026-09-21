@@ -39,7 +39,7 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
 
     public static function availableVariables(): array
     {
-        return ['orderId', 'customerFirstName', 'customerLastName', 'totalFormatted', 'siteName', 'orderUrl', 'primaryColor'];
+        return ['orderId', 'customerFirstName', 'customerLastName', 'totalFormatted', 'siteName', 'orderUrl', 'dueDate', 'paymentUrl', 'primaryColor'];
     }
 
     public static function availableBlockKeys(): array
@@ -157,6 +157,8 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
             'totalFormatted' => $this->order->total ?? '',
             'siteName' => Customsetting::get('site_name'),
             'orderUrl' => method_exists($this->order, 'getUrl') ? $this->order->getUrl() : '#',
+            'dueDate' => $this->order->payment_due_at?->format('d-m-Y') ?? '',
+            'paymentUrl' => $this->order->payment_due_at ? $this->order->paymentUrl() : '',
         ];
 
         $templateHtml = $this->renderFromTemplate($context);

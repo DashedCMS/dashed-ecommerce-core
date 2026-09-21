@@ -1786,6 +1786,11 @@ class Order extends Model
         return '/dashed/invoices/invoice-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf';
     }
 
+    public function paymentUrl(): string
+    {
+        return route('dashed.frontend.remainder-payment', $this->hash);
+    }
+
     public function packingSlipPath(): ?string
     {
         return 'dashed/packing-slips/packing-slip-'.($this->invoice_id ?: $this->id).'-'.$this->hash.'.pdf';

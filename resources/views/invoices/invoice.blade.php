@@ -104,6 +104,9 @@
             </th>
             <th>{{ Translation::get('payment-method', 'invoice', 'Betaal methode') }}</th>
             <th>{{ Translation::get('shipping-method', 'invoice', 'Verzend methode') }}</th>
+            @if($order->payment_due_at)
+                <th>{{ Translation::get('payment-due-date', 'invoice', 'Te betalen voor') }}</th>
+            @endif
         </tr>
 
         <tr>
@@ -111,6 +114,9 @@
             <td>{{ $order->created_at->format('d-m-Y') }}</td>
             <td>{{ $order->paymentMethod ?: Translation::get('payment-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
             <td>{{ $order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
+            @if($order->payment_due_at)
+                <td>{{ $order->payment_due_at->format('d-m-Y') }}</td>
+            @endif
         </tr>
     </table>
 
