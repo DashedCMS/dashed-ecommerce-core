@@ -1567,6 +1567,10 @@ MARKDOWN,
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class)
                 ->everyFiveMinutes();
+
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendPaymentRemindersCommand::class)
+                ->dailyAt('09:00')
+                ->withoutOverlapping();
         });
 
         // Register the v1 recommendation strategy stack. Each strategy is
@@ -2679,6 +2683,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\CheckLowStock::class,
                 \Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class,
+                \Dashed\DashedEcommerceCore\Commands\SendPaymentRemindersCommand::class,
             ]);
 
     }

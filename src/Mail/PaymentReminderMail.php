@@ -92,7 +92,7 @@ class PaymentReminderMail extends Mailable implements RegistersEmailTemplate
             'invoiceId' => $this->order->invoice_id,
             'outstandingAmountFormatted' => CurrencyHelper::formatPrice($this->order->outstandingAmount()),
             'dueDate' => $this->order->payment_due_at?->format('d-m-Y') ?? '',
-            'daysOverdue' => $this->order->payment_due_at ? max(0, (int) $this->order->payment_due_at->startOfDay()->diffInDays(now()->startOfDay())) : 0,
+            'daysOverdue' => $this->order->payment_due_at ? max(0, (int) $this->order->payment_due_at->copy()->startOfDay()->diffInDays(now()->startOfDay())) : 0,
             'paymentUrl' => $this->order->paymentUrl(),
             'customerFirstName' => $this->order->first_name,
             'companyName' => $this->order->company_name,
@@ -118,7 +118,7 @@ class PaymentReminderMail extends Mailable implements RegistersEmailTemplate
         $html = $this->renderFromTemplate($context, $this->order->locale)
             ?? $context['reminderBody'].'<p><a href="'.e($context['paymentUrl']).'">'.e(__('Betaal factuur')).'</a></p>';
 
-        [$fromEmail, $fromName] = $this->templateFrom(Customsetting::get('site_from_email'), Customsetting::get('site_name'), $this->order->locale);
+        [$fromEmail, $fromName] = $this->templateFrom(Customsetting::get('site_from_email', $this->order->site_id), Customsetting::get('site_name', $this->order->site_id), $this->order->locale);
 
         $mail = $this->html($html)
             ->from($fromEmail, $fromName)
