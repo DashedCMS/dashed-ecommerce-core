@@ -44,6 +44,7 @@ class OrderReturnResource extends JsonResource
             'credit_order_id' => $this->credit_order_id,
             'credit_order_invoice_id' => $this->creditOrder?->invoice_id,
             'credited_amount' => $this->credit_order_id ? round($this->creditedAmount(), 2) : null,
+            'refundable_amount' => $this->credit_order_id ? $this->refundableAmount() : null,
             'is_refunded' => $this->isRefunded(),
             'lines' => $this->lines->map(function ($line): array {
                 $reason = $line->returnReason;

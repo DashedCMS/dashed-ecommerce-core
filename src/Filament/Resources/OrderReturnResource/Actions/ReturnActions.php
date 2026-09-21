@@ -168,15 +168,15 @@ class ReturnActions
             ->icon('heroicon-o-banknotes')
             ->color('warning')
             ->visible(fn (OrderReturn $record) => $record->status === OrderReturn::STATUS_HANDLED && $record->credit_order_id && ! $record->isRefunded())
-            ->modalDescription(fn (OrderReturn $record) => __('Te crediteren: :bedrag. Registreer hier wat je hebt terugbetaald; de klant krijgt een mail.', ['bedrag' => CurrencyHelper::formatPrice($record->creditedAmount())]))
+            ->modalDescription(fn (OrderReturn $record) => __('Te crediteren: :bedrag. Registreer hier wat je hebt terugbetaald; de klant krijgt een mail.', ['bedrag' => CurrencyHelper::formatPrice($record->refundableAmount())]))
             ->schema(fn (OrderReturn $record) => [
                 TextInput::make('amount')
                     ->label(__('Bedrag'))
                     ->numeric()
                     ->required()
                     ->minValue(0.01)
-                    ->maxValue(round($record->creditedAmount(), 2))
-                    ->default(round($record->creditedAmount(), 2)),
+                    ->maxValue($record->refundableAmount())
+                    ->default($record->refundableAmount()),
                 \Filament\Forms\Components\Select::make('method')
                     ->label(__('Betaalmethode'))
                     ->required()

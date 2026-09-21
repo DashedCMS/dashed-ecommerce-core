@@ -243,6 +243,27 @@ class OrderReturn extends Model
     }
 
     /**
+     * Wat er nog echt terugbetaald moet worden: de creditering min wat er al
+     * met een openstaande factuur op rekening verrekend is (OnAccountSettlement,
+     * psp 'credit' op de oorspronkelijke order). Een creditorder van 50 tegen
+     * 20 open laat zo 30 over, niet 50.
+     */
+    public function refundableAmount(): float
+    {
+        if (! $this->credit_order_id) {
+            return 0.0;
+        }
+
+        $settled = (float) OrderPayment::query()
+            ->where('psp', 'credit')
+            ->where('credit_order_id', $this->credit_order_id)
+            ->where('status', 'paid')
+            ->sum('amount');
+
+        return max(0.0, round($this->creditedAmount() - $settled, 2));
+    }
+
+    /**
      * Een marktplaatsbestelling praat zelf met zijn klant: die klant is klant
      * van Bol en kent ons niet, en Bol heeft de retour zelf aangemeld. Elke
      * andere retourmail (registrar, processor, refund) sloeg dit al over; hier

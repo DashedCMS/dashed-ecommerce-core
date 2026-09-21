@@ -38,7 +38,8 @@ class RefundRegistrar
                 throw new InvalidArgumentException(__('Deze retour is al terugbetaald.'));
             }
 
-            $max = round(abs((float) $creditOrder->total), 2);
+            // Na een verrekening met een factuur op rekening alleen de rest.
+            $max = $locked->refundableAmount();
             $amount = round($amount, 2);
             if ($amount <= 0 || $amount > $max + 0.001) {
                 throw new InvalidArgumentException(__('Het bedrag moet tussen 0,01 en :max liggen.', ['max' => CurrencyHelper::formatPrice($max)]));
