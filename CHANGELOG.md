@@ -2,9 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## v4.137.0 - 2026-09-21
+## v4.138.0 - 2026-09-21
 
 ### Added
+- **Bestellen op rekening.** Een betaalmethode met psp `own` kan op "Op rekening" staan; hij is alleen zichtbaar voor klanten die er expliciet aan gekoppeld zijn. Een order op rekening gaat naar `waiting_for_confirmation` met een openstaande betaling voor het volle bedrag en een vervaldatum (`payment_due_at`), in plaats van de betaalde nulbetaling van own-methodes. Werkt in de webshop, de proforma-checkout, de handmatige order in het CMS en de kassa, met "Toch op rekening" voor beheerders met schrijfrecht op klanten en orders.
+- **Openstaand saldo, kredietlimiet en blokkade** per klant (`OnAccountBalance`, `OnAccount::check()`), met winkelstandaarden onder Instellingen, Op rekening. De blokkade na X dagen over de vervaldatum heft zichzelf op na betaling.
+- **Betaalherinneringen** (`dashed:send-payment-reminders`, dagelijks 09:00): alleen de hoogste stap die aan de beurt is, nooit dubbel, met de factuur als bijlage en een betaallink per site. Pauzeren en handmatig sturen op de order.
+- **Schermen Klanten op rekening en Openstaande facturen**, filter "Op rekening, openstaand" in de orderlijst, vervaldatum op de factuur-pdf en in de mobiele orderdetail.
+- **Credits verrekenen.** Een creditorder op een order op rekening wordt verrekend met het openstaande bedrag; alleen het restant wordt terugbetaald (`OrderReturn::refundableAmount()`).
+- **Kassa-pariteit in de mobiele API:** regelprijs aanpassen, cadeaubon toevoegen en verwijderen, klant koppelen en proforma sturen.
 - **Bestellingen filteren en sorteren op betaalmethode.** Filter "Betaalmethode" (orders met een betaalde betaling via die methode; een gesplitste betaling valt onder beide) en "Mislukte betaling met". De kolom toont alle betaalde methodes ("Pin + Contant") en sorteert op de eerste betaalde methode, onbetaald achteraan. Scopes `Order::paidWithPaymentMethod()` en `Order::withFailedPaymentAttempt()`.
 - **Verzendadvies in de kassa.** De verzendpopup volgt de webshopregels (zone, minimum- en maximumbedrag, uitgesloten producten en groepen), zet de goedkoopste geldige methode op "Aanbevolen" en houdt de rest kiesbaar met de reden erbij. `PosShippingAdvisor`; `getAvailableShippingMethods()`, `costsForCart()` en `getActivatedShippingClasses()` nemen optioneel eigen wagenregels aan.
 - **Betaalmethode statistieken** onder Statistieken: betaalpogingen per methode met betaald, mislukt, open, slagingspercentage en bedrag, kaarten, een grafiek van mislukte pogingen per dag of week, filter op herkomst en doorklikken naar de bestellingen.
@@ -15,6 +21,14 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - Statusfilter "Retour" in de orderlijst matchte nooit (sleutel met spatie).
 - Dashboardwidget "Meest gewenst" was niet op het paneel aangemeld en gaf bij lazy laden een 419.
 - De openstaande-bestellingen-kaart onder de orderlijst gebruikte de URL-sleutel `tableFilters`, die Filament 4 niet leest.
+- Een deelbetaling op een order die op bevestiging wachtte boekte voorraad en kortingscode opnieuw af en vuurde het betaald-event nog een keer.
+- Een afgebroken betaallink annuleerde een bestelling die op bevestiging wachtte (kassa, proforma, overboeking).
+- Een herhaalde exchange-aanroep op een own-betaling zette een al betaalde bestelling terug op wachten.
+
+## v4.137.0 - 2026-09-21
+
+### Added
+- **Omzet van later betaalde bestellingen op de betaaldag.**
 
 ## v4.136.0 - 2026-09-21
 
