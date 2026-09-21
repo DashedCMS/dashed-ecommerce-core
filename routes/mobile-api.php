@@ -59,6 +59,10 @@ $posActions = [
     'cancel-order' => 'cancelOrder',
     'update-search-query-input-mode' => 'updateSearchQueryInputmode',
     'apply-custom-discount' => 'applyCustomDiscount',
+    'apply-gift-card' => 'applyGiftCard',
+    'remove-gift-card' => 'removeGiftCard',
+    'change-product-price' => 'changeProductPrice',
+    'send-proforma' => 'sendProforma',
     'set-prices-ex-vat' => 'setPricesExVat',
 ];
 

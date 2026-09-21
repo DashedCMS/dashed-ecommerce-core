@@ -8,7 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
@@ -31,6 +31,7 @@ use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
@@ -651,6 +652,60 @@ class PointOfSaleApiController extends Controller
         ]);
     }
 
+    /**
+     * Prijs van één winkelwagenregel aanpassen ("Prijs aanpassen", zoals de
+     * CMS-kassa). De cart bewaart altijd incl-BTW eenheidsprijzen; is de kassa
+     * in ex-BTW-modus, dan wordt de ingevoerde ex-prijs omgerekend naar incl.
+     * Zet `isCustomPrice` zodat klant-/prijsgroep-overrides deze regel niet meer
+     * overschrijven. Spiegelt POSPage::submitChangeProductForm().
+     */
+    public function changeProductPrice(Request $request)
+    {
+        $data = $request->validate([
+            'posIdentifier' => ['required', 'string'],
+            'productIdentifier' => ['required', 'string'],
+            'singlePrice' => ['required', 'numeric'],
+        ]);
+
+        $posCart = POSCart::where('identifier', $data['posIdentifier'])->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        $found = false;
+        $products = $posCart->products ?? [];
+        foreach ($products as &$product) {
+            if (($product['identifier'] ?? null) === $data['productIdentifier']) {
+                $found = true;
+                $qty = max(1, (int) ($product['quantity'] ?? 1));
+                $enteredSingle = (float) $data['singlePrice'];
+                $vatRate = (float) ($product['vat_rate'] ?? 21);
+
+                $singleIncl = $posCart->prices_ex_vat
+                    ? $enteredSingle * (1 + max(0.0, $vatRate) / 100)
+                    : $enteredSingle;
+
+                $product['singlePrice'] = $singleIncl;
+                $product['price'] = $singleIncl * $qty;
+                $product['priceFormatted'] = CurrencyHelper::formatPrice($product['price']);
+                $product['isCustomPrice'] = true;
+            }
+        }
+        unset($product);
+
+        if (! $found) {
+            return response()->json(['success' => false, 'message' => 'Regel niet gevonden'], 404);
+        }
+
+        $posCart->products = array_values($products);
+        $posCart->save();
+
+        return response()->json([
+            'products' => array_reverse($posCart->products),
+            'success' => true,
+        ]);
+    }
+
     public function clearProducts(Request $request)
     {
         $data = $request->all();
@@ -683,6 +738,98 @@ class PointOfSaleApiController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Cadeaubon toepassen (zoals de CMS-kassa). Cadeaubonnen lopen bewust NIET
+     * via de kortingscode-route (die weigert giftcards), maar via
+     * POSCart::applyGiftcard — dezelfde methode als Filament gebruikt.
+     */
+    public function applyGiftCard(Request $request)
+    {
+        $data = $request->validate([
+            'posIdentifier' => ['required', 'string'],
+            'code' => ['required', 'string'],
+        ]);
+
+        $posCart = POSCart::where('identifier', $data['posIdentifier'])->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        $result = $posCart->applyGiftcard((string) $data['code']);
+
+        return response()->json([
+            'success' => (bool) ($result['success'] ?? false),
+            'message' => $result['message'] ?? null,
+            'amount' => $result['amount'] ?? 0,
+        ], ($result['success'] ?? false) ? 200 : 422);
+    }
+
+    /**
+     * Toegepaste cadeaubon verwijderen (spiegelt POSPage::removeGiftCardCode /
+     * POSCart::removeGiftcard).
+     */
+    public function removeGiftCard(Request $request)
+    {
+        $data = $request->validate([
+            'posIdentifier' => ['required', 'string'],
+            'code' => ['required', 'string'],
+        ]);
+
+        $posCart = POSCart::where('identifier', $data['posIdentifier'])->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        $removed = $posCart->removeGiftcard((string) $data['code']);
+
+        return response()->json(['success' => $removed]);
+    }
+
+    /**
+     * Proforma opslaan & mailen (zoals de CMS-kassa, achter de instelling
+     * `pos_allow_proforma`). De klant krijgt een link om de bestelling zelf af
+     * te ronden. Spiegelt POSPage::sendProformaAction() → ProformaOrderService.
+     */
+    public function sendProforma(Request $request)
+    {
+        if (! (bool) Customsetting::get('pos_allow_proforma', null, false)) {
+            return response()->json(['success' => false, 'message' => 'Proforma staat niet aan voor deze winkel.'], 422);
+        }
+
+        $data = $request->validate([
+            'posIdentifier' => ['required', 'string'],
+            'email' => ['required', 'email'],
+            'allowShipping' => ['sometimes', 'boolean'],
+        ]);
+
+        $posCart = POSCart::where('identifier', $data['posIdentifier'])->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        if (empty($posCart->products ?? [])) {
+            return response()->json(['success' => false, 'message' => 'Geen producten in de winkelwagen'], 422);
+        }
+
+        $posCart->email = $data['email'];
+        $posCart->save();
+
+        ProformaOrderService::createAndSend(
+            $posCart,
+            auth()->user(),
+            (bool) ($data['allowShipping'] ?? false),
+        );
+
+        $posCart->refresh();
+        $posCart->loaded_concept_order_id = null;
+        $posCart->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proforma opgeslagen en gemaild naar '.$data['email'],
+        ]);
     }
 
     /**
@@ -875,6 +1022,22 @@ class PointOfSaleApiController extends Controller
             if (array_key_exists($field, $data)) {
                 $value = is_string($data[$field]) ? trim($data[$field]) : $data[$field];
                 $posCart->{$field} = ($value === '' || $value === null) ? null : $value;
+            }
+        }
+
+        // Een bestaand klantaccount koppelen (customer_user_id) — zoals de
+        // CMS-kassa. Bij een gekoppelde klant met `show_prices_ex_vat` schakelt
+        // de kassa automatisch naar ex-BTW (spiegelt submitCustomerDataForm).
+        if (array_key_exists('customer_user_id', $data)) {
+            $customerUserId = $data['customer_user_id'] ?: null;
+            $posCart->customer_user_id = $customerUserId;
+
+            if ($customerUserId) {
+                $customer = \Dashed\DashedCore\Models\User::find($customerUserId);
+                $shouldShowEx = (bool) ($customer->show_prices_ex_vat ?? false);
+                if ($shouldShowEx !== (bool) $posCart->prices_ex_vat) {
+                    $posCart->prices_ex_vat = $shouldShowEx;
+                }
             }
         }
 
