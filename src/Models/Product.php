@@ -1114,6 +1114,16 @@ class Product extends Model
     /**
      * FIX: relation name casing en consistent eager load
      */
+    /**
+     * Of er een verplichte extra aan het product hangt (bijv. de tekst op een
+     * wenskaart). Zo'n product kan niet met één klik vanuit een suggestie in
+     * de winkelwagen, want dan ontbreekt de keuze.
+     */
+    public function hasRequiredExtras(): bool
+    {
+        return (bool) $this->allProductExtras()?->contains(fn (ProductExtra $extra) => (bool) $extra->required);
+    }
+
     public function allProductExtras(): ?Collection
     {
         $productExtraIds = [];

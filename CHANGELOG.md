@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.138.1 - 2026-09-22
+
+### Fixed
+- **Verplichte extra's konden via een suggestie worden overgeslagen.** `CartSuggestions::openQuickAdd()` voegde een product met één (of geen openbare) variant direct toe, zonder de extra's. Een product met een verplichte extra (bijv. de tekst op een wenskaart) opent nu altijd de quick-add-modal. Nieuw: `Product::hasRequiredExtras()`.
+- **Tekstvelden (input/textarea) worden op de server gecontroleerd.** Alleen spaties telt als leeg, en `min_length`/`max_length` worden ook zonder browsercontrole afgedwongen (`ProductExtra::textValueError()`, vertalingen `product-extra-text-too-short` en `product-extra-text-too-long`). De waarde wordt getrimd opgeslagen.
+- De quick-add-modal toont de link "Naar productpagina" alleen nog als product en groep openbaar zijn.
+
 ## v4.138.0 - 2026-09-21
 
 ### Added

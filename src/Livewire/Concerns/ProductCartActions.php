@@ -1008,10 +1008,30 @@ trait ProductCartActions
             } elseif ($productExtra->type == 'input' || $productExtra->type == 'textarea') {
                 $productValue = $this->extras[$extraKey]['value'] ?? null;
 
-                if ($productExtra->required && ! $productValue) {
-                    return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
-                        'optionName' => $productExtra->name,
-                    ]));
+                if ($productValue !== true) {
+                    $textError = $productExtra->textValueError($productValue);
+
+                    if ($textError === 'required') {
+                        return $this->checkCart('danger', Translation::get('fill-option-for-product-extra', 'products', 'Fill the input field for :optionName:', 'text', [
+                            'optionName' => $productExtra->name,
+                        ]));
+                    }
+
+                    if ($textError === 'min') {
+                        return $this->checkCart('danger', Translation::get('product-extra-text-too-short', 'products', ':optionName: moet minimaal :length: tekens hebben', 'text', [
+                            'optionName' => $productExtra->name,
+                            'length' => $productExtra->min_length,
+                        ]));
+                    }
+
+                    if ($textError === 'max') {
+                        return $this->checkCart('danger', Translation::get('product-extra-text-too-long', 'products', ':optionName: mag maximaal :length: tekens hebben', 'text', [
+                            'optionName' => $productExtra->name,
+                            'length' => $productExtra->max_length,
+                        ]));
+                    }
+
+                    $productValue = is_string($productValue) ? trim($productValue) : $productValue;
                 }
 
                 if ($productValue) {

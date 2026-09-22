@@ -23,7 +23,8 @@
                     <span class="font-semibold">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($heroPrice) }}</span>
                 </p>
             @endif
-            @if ($group)
+            {{-- Een bijproduct zoals een wenskaart heeft geen eigen pagina. --}}
+            @if ($group && $group->public && $heroProduct?->public)
                 <a href="{{ $group->getUrl() }}" class="text-xs text-gray-500 underline mt-1 inline-block">
                     {{ \Dashed\DashedTranslations\Models\Translation::get('cart.suggestions.go_to_product', 'cart', 'Naar productpagina') }}
                 </a>

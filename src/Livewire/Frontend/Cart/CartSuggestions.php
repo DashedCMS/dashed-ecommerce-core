@@ -66,7 +66,17 @@ class CartSuggestions extends Component
             ->filter(fn (Product $p) => ! $p->use_stock || $p->in_stock)
             ->values();
 
-        if ($availableVariants->count() <= 1) {
+        // Een verplichte extra (bijv. de tekst op een wenskaart) kan alleen in
+        // de modal worden ingevuld; direct toevoegen zou hem overslaan. Zo'n
+        // product is soms niet los zichtbaar (alleen als bijproduct), dus het
+        // geklikte product telt dan zelf als beschikbare variant.
+        $hasRequiredExtras = $product->hasRequiredExtras();
+
+        if ($hasRequiredExtras && ! $availableVariants->contains(fn (Product $p) => $p->id === $productId)) {
+            $availableVariants->prepend($product);
+        }
+
+        if ($availableVariants->count() <= 1 && ! $hasRequiredExtras) {
             $this->addToCart($productId);
 
             return;

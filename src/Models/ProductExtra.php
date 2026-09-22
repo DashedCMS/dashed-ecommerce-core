@@ -63,6 +63,34 @@ class ProductExtra extends Model
         return LogOptions::defaults();
     }
 
+    /**
+     * Controleert de tekst van een input- of textarea-extra op de server: de
+     * browser dwingt required/minlength/maxlength af, maar niet elke route
+     * naar de winkelwagen toont het veld. Spaties aan begin en eind tellen
+     * niet mee, dus alleen spaties is leeg.
+     *
+     * @return string|null 'required', 'min', 'max' of null als het klopt
+     */
+    public function textValueError(mixed $value): ?string
+    {
+        $text = trim(is_string($value) ? $value : '');
+        $length = mb_strlen($text);
+
+        if ($length === 0) {
+            return $this->required ? 'required' : null;
+        }
+
+        if ($this->min_length && $length < (int) $this->min_length) {
+            return 'min';
+        }
+
+        if ($this->max_length && $length > (int) $this->max_length) {
+            return 'max';
+        }
+
+        return null;
+    }
+
     public function productGroups(): BelongsToMany
     {
         return $this->belongsToMany(ProductGroup::class, 'dashed__product_extra_product_groups', 'product_extra_id', 'product_group_id');
