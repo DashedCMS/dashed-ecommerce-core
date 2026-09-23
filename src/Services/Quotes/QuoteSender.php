@@ -29,21 +29,28 @@ class QuoteSender
         QuoteNumber::assign($quote);
 
         // De mail en de PDF staan in de taal van de offerte, niet in die van de
-        // beheerder die op de knop drukt.
+        // beheerder die op de knop drukt. Zonder terugzetten blijft de rest van
+        // dit verzoek (of, op een queue-worker, de volgende job) in die taal
+        // hangen, dus dat gebeurt in een finally, ook als het versturen faalt.
+        $originalLocale = App::getLocale();
         App::setLocale($quote->locale);
 
-        QuotePdf::store($quote->fresh());
+        try {
+            QuotePdf::store($quote->fresh());
 
-        $mail = Mail::to($email);
-        if ($cc) {
-            $mail->cc($cc);
+            $mail = Mail::to($email);
+            if ($cc) {
+                $mail->cc($cc);
+            }
+            $mail->send(new QuoteMail($quote->fresh(), $message));
+
+            $quote->status = Quote::STATUS_SENT;
+            $quote->sent_at = now();
+            $quote->reminder_sent_at = null;
+            $quote->save();
+        } finally {
+            App::setLocale($originalLocale);
         }
-        $mail->send(new QuoteMail($quote->fresh(), $message));
-
-        $quote->status = Quote::STATUS_SENT;
-        $quote->sent_at = now();
-        $quote->reminder_sent_at = null;
-        $quote->save();
     }
 
     public static function sendReminder(Quote $quote): void
@@ -52,11 +59,16 @@ class QuoteSender
             return;
         }
 
+        $originalLocale = App::getLocale();
         App::setLocale($quote->locale);
 
-        Mail::to($quote->email)->send(new QuoteReminderMail($quote));
+        try {
+            Mail::to($quote->email)->send(new QuoteReminderMail($quote));
 
-        $quote->reminder_sent_at = now();
-        $quote->save();
+            $quote->reminder_sent_at = now();
+            $quote->save();
+        } finally {
+            App::setLocale($originalLocale);
+        }
     }
 }
