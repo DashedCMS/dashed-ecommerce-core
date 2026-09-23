@@ -1573,6 +1573,13 @@ MARKDOWN,
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendPaymentRemindersCommand::class)
                 ->dailyAt('09:00')
                 ->withoutOverlapping();
+
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\ExpireQuotesCommand::class)
+                ->dailyAt('00:30')
+                ->withoutOverlapping();
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class)
+                ->dailyAt('09:00')
+                ->withoutOverlapping();
         });
 
         // Register the v1 recommendation strategy stack. Each strategy is
@@ -2695,6 +2702,8 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class,
                 \Dashed\DashedEcommerceCore\Commands\SendPaymentRemindersCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\ExpireQuotesCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class,
             ]);
 
     }
