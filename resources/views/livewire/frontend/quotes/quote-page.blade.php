@@ -1,7 +1,6 @@
 @php
     use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
     $exVat = (bool) $quote->prices_ex_vat;
-    $groups = $quote->lines->whereNotNull('choice_group')->groupBy('choice_group');
 @endphp
 
 <section class="py-[clamp(40px,6vw,80px)]">

@@ -52,13 +52,22 @@ class QuotePage extends Component
         return QuoteTotals::forLines($this->chosenLines());
     }
 
-    /** @return \Illuminate\Support\Collection<int, QuoteLine> */
+    /**
+     * Kopieen, niet de geladen regels zelf: Collection::map() kloont niet, en
+     * deze vlag is alleen voor de weergave. Zonder kloon markeert elke render
+     * de echte regels als vuil met de keuze van dit moment, en Task 7 (dat
+     * hierop de akkoordflow bouwt en per regel opslaat) zou die schermstand
+     * per ongeluk als het antwoord van de klant kunnen wegschrijven.
+     *
+     * @return \Illuminate\Support\Collection<int, QuoteLine>
+     */
     public function chosenLines()
     {
         return $this->quote->lines->map(function (QuoteLine $line) {
-            $line->is_selected = (bool) ($this->selected[$line->id] ?? ! $line->is_optional);
+            $copy = clone $line;
+            $copy->is_selected = (bool) ($this->selected[$line->id] ?? ! $line->is_optional);
 
-            return $line;
+            return $copy;
         });
     }
 
