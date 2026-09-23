@@ -272,7 +272,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnProcessedMail::class)
-            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRefundedMail::class);
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRefundedMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\QuoteMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\QuoteReminderMail::class);
 
         cms()->registerResourceDocs(
             resource: \Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource::class,

@@ -13,7 +13,18 @@ class EditQuote extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [
+            \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\SendQuoteAction::make($this->record),
+            \Filament\Actions\Action::make('preview')
+                ->label(__('Voorbeeld'))
+                ->icon('heroicon-o-eye')
+                ->color('gray')
+                ->action(function () {
+                    \Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf::store($this->record->fresh());
+                    $this->redirect(\Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf::downloadUrl($this->record->fresh()), navigate: false);
+                }),
+            DeleteAction::make(),
+        ];
     }
 
     /**
