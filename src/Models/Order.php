@@ -300,6 +300,11 @@ class Order extends Model
         return $this->belongsTo(DiscountCode::class);
     }
 
+    public function quote(): BelongsTo
+    {
+        return $this->belongsTo(Quote::class);
+    }
+
     public function parentCreditOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'credit_for_order_id');
