@@ -318,6 +318,10 @@ class ProductResource extends Resource
             ->persistCollapsed()
             ->collapsible()
             ->schema([
+                Toggle::make('gs1_excluded')
+                    ->label(__('Nooit een GS1-code toewijzen'))
+                    ->helperText(__('Dit product krijgt geen code uit een GS1-bestand en staat niet in de GS1-export. Een EAN die er al staat blijft staan. Kan ook voor een hele productgroep.'))
+                    ->columnSpanFull(),
                 TextInput::make('gs1_classification')
                     ->label(__('Productclassificatie (GPC)'))
                     ->columnSpan(['default' => 1, 'lg' => 4]),

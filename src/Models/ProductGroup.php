@@ -43,6 +43,7 @@ class ProductGroup extends Model
         'images' => 'array',
         'missing_variations' => 'array',
         'excluded_variations' => 'array',
+        'gs1_excluded' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

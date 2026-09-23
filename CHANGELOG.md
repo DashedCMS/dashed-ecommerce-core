@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.138.3 - 2026-09-23
+
+### Added
+- **GS1: product of productgroep uitsluiten.** Nieuwe schakelaar "Nooit een GS1-code toewijzen" (`gs1_excluded`) op een product (sectie GS1) en op een productgroep (Algemene instellingen). `Product::scopeNeedsGs1Code()` slaat zulke producten over, dus ze krijgen geen vrije code, staan niet in de GS1-export of bij ontbrekende velden, worden niet op naam gekoppeld en zijn niet te kiezen bij "koppelen". Een EAN die er al staat blijft staan. Migratie `add_gs1_excluded_to_products_and_groups`.
+
 ## v4.138.2 - 2026-09-23
 
 ### Changed

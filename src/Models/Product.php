@@ -80,6 +80,7 @@ class Product extends Model
 
     protected $casts = [
         'site_ids' => 'array',
+        'gs1_excluded' => 'boolean',
         'images' => 'array',
         'copyable_to_childs' => 'array',
         'start_date' => 'datetime',
@@ -412,11 +413,17 @@ class Product extends Model
      * Producten die een GS1-code nodig hebben: publiek, geen bundel, geen EAN.
      * Verwijderde producten vallen er via SoftDeletes al buiten.
      */
+    /**
+     * Producten die een GS1-code mogen krijgen: geen EAN, openbaar, geen
+     * bundel, en niet zelf of via hun productgroep uitgesloten.
+     */
     public function scopeNeedsGs1Code($query)
     {
         $query->withoutEan()
             ->where('public', true)
-            ->where('is_bundle', false);
+            ->where('is_bundle', false)
+            ->where('gs1_excluded', false)
+            ->whereDoesntHave('productGroup', fn ($group) => $group->where('gs1_excluded', true));
     }
 
     public function breadcrumbs()

@@ -117,6 +117,10 @@ class ProductGroupResource extends Resource
                     ->label(__('Synchroniseer categorieën naar producten'))
                     ->default(1)
                     ->reactive(),
+                Toggle::make('gs1_excluded')
+                    ->label(__('Nooit een GS1-code toewijzen'))
+                    ->helperText(__('Geen enkel product in deze groep krijgt een code uit een GS1-bestand of komt in de GS1-export. Een EAN die er al staat blijft staan.'))
+                    ->default(0),
                 Toggle::make('use_parent_stock')
                     ->label(__('Gebruik voorraad informatie van deze product groep'))
                     ->helperText(__('Let op: dit is slechts een extra check, de voorraad van het variaties gelden ook'))
