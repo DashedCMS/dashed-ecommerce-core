@@ -53,10 +53,10 @@ class QuoteSender
         }
     }
 
-    public static function sendReminder(Quote $quote): void
+    public static function sendReminder(Quote $quote): bool
     {
         if ($quote->reminder_sent_at || $quote->status !== Quote::STATUS_SENT) {
-            return;
+            return false;
         }
 
         $originalLocale = App::getLocale();
@@ -67,6 +67,8 @@ class QuoteSender
 
             $quote->reminder_sent_at = now();
             $quote->save();
+
+            return true;
         } finally {
             App::setLocale($originalLocale);
         }

@@ -40,8 +40,9 @@ class SendQuoteRemindersCommand extends Command
                 continue;
             }
 
-            QuoteSender::sendReminder($quote);
-            $sent++;
+            if (QuoteSender::sendReminder($quote)) {
+                $sent++;
+            }
         }
 
         $this->info($sent.' herinneringen verstuurd');

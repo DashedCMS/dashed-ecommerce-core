@@ -6,7 +6,6 @@ namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Models\User;
-use Illuminate\Support\Facades\Notification;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Filament\Notifications\Notification as FilamentNotification;
 
