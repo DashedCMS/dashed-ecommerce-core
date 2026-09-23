@@ -20,6 +20,16 @@ return [
         'require_signature' => env('DASHED_INVOICE_REQUIRE_SIGNATURE', false),
     ],
 
+    'quotes' => [
+        // De offerte-PDF staat prive op de schijf; de downloadroute is de
+        // enige weg ernaartoe en werkt op de offertehash (32 willekeurige
+        // tekens, achter de verzoeklimiet dashed-order-pages). Op true eist
+        // de route ook de handtekening die het systeem in zijn links zet,
+        // tenzij de klant van de offerte of een beheerder is ingelogd. Zie
+        // Classes\QuoteAccess.
+        'require_signature' => env('DASHED_QUOTE_REQUIRE_SIGNATURE', false),
+    ],
+
     'security' => [
         // Pincode, los van wachtwoord en MFA, die verplicht is om een order
         // handmatig op betaald te zetten ("Voeg betaling toe", "Registreer
