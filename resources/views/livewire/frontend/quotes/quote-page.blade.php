@@ -89,6 +89,53 @@
                     </a>
                 </p>
             @endif
+
+            <div class="mt-10 border-t pt-8">
+                <h2 class="text-xl">{{ Translation::get('agreement', 'quote', 'Akkoord') }}</h2>
+
+                @if ($quote->acceptance_text)
+                    <p class="mt-2">{!! nl2br(e($quote->acceptance_text)) !!}</p>
+                @endif
+
+                <div class="mt-4 max-w-md">
+                    <label class="block">
+                        <span class="text-sm">{{ Translation::get('your-name', 'quote', 'Uw naam') }}</span>
+                        <input type="text" wire:model="acceptName" class="mt-1 w-full rounded border px-3 py-2">
+                    </label>
+                    @error('acceptName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                    <label class="mt-4 flex items-start gap-2">
+                        <input type="checkbox" wire:model="acceptAgreed" class="mt-1">
+                        <span class="text-sm">{{ Translation::get('agree-checkbox', 'quote', 'Ik ga akkoord met deze offerte') }}</span>
+                    </label>
+                    @error('acceptAgreed') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                    <button type="button" wire:click="accept" wire:loading.attr="disabled"
+                            class="button button--primary mt-6 inline-flex">
+                        {{ Translation::get('accept', 'quote', 'Akkoord geven') }}
+                    </button>
+                </div>
+
+                <div class="mt-8">
+                    <button type="button" wire:click="$toggle('showReject')" class="text-sm underline">
+                        {{ Translation::get('reject', 'quote', 'Offerte afwijzen') }}
+                    </button>
+
+                    @if ($showReject)
+                        <div class="mt-4 max-w-md">
+                            <label class="block">
+                                <span class="text-sm">{{ Translation::get('reject-reason', 'quote', 'Waarom wijst u af?') }}</span>
+                                <textarea wire:model="rejectReason" rows="3" class="mt-1 w-full rounded border px-3 py-2"></textarea>
+                            </label>
+                            @error('rejectReason') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                            <button type="button" wire:click="reject" class="button mt-4 inline-flex">
+                                {{ Translation::get('confirm-reject', 'quote', 'Afwijzen bevestigen') }}
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </x-container>
 </section>
