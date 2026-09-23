@@ -31,6 +31,11 @@ class QuoteRevision
         return DB::transaction(function () use ($quote) {
             $root = $quote->rootQuote();
 
+            // Slot op de wortelrij voordat we het hoogste versienummer lezen: zonder dat
+            // berekenen twee gelijktijdige revisies hetzelfde nummer en krijg je twee
+            // rijen met dezelfde versie. Zelfde reden als het slot in QuoteNumber::assign().
+            Quote::query()->whereKey($root->id)->lockForUpdate()->first();
+
             $highest = Quote::query()
                 ->where(fn ($q) => $q->whereKey($root->id)->orWhere('parent_quote_id', $root->id))
                 ->max('version');

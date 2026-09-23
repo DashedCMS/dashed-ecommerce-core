@@ -18,7 +18,7 @@ class MarkQuoteAnsweredAction
             ->label(__('Antwoord vastleggen'))
             ->icon('heroicon-o-check-circle')
             ->color('gray')
-            ->visible(fn () => $quote->status === Quote::STATUS_SENT)
+            ->visible(fn () => $quote->isAnswerable())
             ->modalHeading(__('Antwoord van de klant vastleggen'))
             ->modalDescription(__('Gebruik dit als de klant per mail of telefoon reageerde in plaats van via de offertepagina.'))
             ->form([
