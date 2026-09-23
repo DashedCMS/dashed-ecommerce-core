@@ -1686,6 +1686,7 @@ MARKDOWN,
         Livewire::component('wishlist.count', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistCount::class);
         Livewire::component('wishlist.wishlist', \Dashed\DashedEcommerceCore\Livewire\Frontend\Wishlist\WishlistPage::class);
         Livewire::component('orders.view-order', ViewOrder::class);
+        Livewire::component('quotes.quote-page', \Dashed\DashedEcommerceCore\Livewire\Frontend\Quotes\QuotePage::class);
 
         Livewire::component(
             'dashed.dashed-ecommerce-core.filament.resources.abandoned-cart-flow-resource.relation-managers.flow-steps-relation-manager',
@@ -1801,6 +1802,8 @@ MARKDOWN,
         cms()->builder(\Dashed\DashedCore\Classes\RobotsTxtBuilder::BUILDER, [
             '/download-invoice/',
             '/download-packing-slip/',
+            '/quote/',
+            '/download-quote/',
             '/proforma/',
             '/pay/',
             '/return-status/',

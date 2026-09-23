@@ -40,6 +40,9 @@ Route::middleware(['web'])->group(function () {
     Route::get('/proforma/{orderHash}', [ProformaCheckoutController::class, 'show'])
         ->middleware([FrontendMiddleware::class, 'throttle:dashed-order-pages'])
         ->name('dashed.frontend.proforma-checkout');
+    Route::get('/quote/{hash}', [QuoteController::class, 'show'])
+        ->middleware([FrontendMiddleware::class, 'throttle:dashed-order-pages'])
+        ->name('dashed.frontend.quote');
 });
 
 Route::middleware(['web'])->group(function () {
