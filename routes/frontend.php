@@ -9,6 +9,7 @@ use Dashed\DashedCore\Middleware\FrontendMiddleware;
 use Dashed\LaravelLocalization\Facades\LaravelLocalization;
 use Dashed\LaravelLocalization\Middleware\LocaleSessionRedirect;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\QuoteController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
@@ -84,6 +85,11 @@ Route::group(
         // hier tegen de limiet aan. De toegang zelf regelt InvoiceAccess.
         Route::get('/download-invoice/{orderHash}', [CartController::class, 'downloadInvoice'])->middleware('throttle:dashed-order-pages')->name('dashed.frontend.download-invoice');
         Route::get('/download-packing-slip/{orderHash}', [CartController::class, 'downloadPackingSlip'])->middleware('throttle:dashed-order-pages')->name('dashed.frontend.download-packing-slip');
+        // Op offertehash: niet te raden, en wie het probeert loopt tegen de
+        // limiet aan. De ondertekende link komt uit QuotePdf::downloadUrl().
+        Route::get('/download-quote/{hash}', [QuoteController::class, 'download'])
+            ->middleware('throttle:dashed-order-pages')
+            ->name('dashed.frontend.quote-download');
         Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->middleware('throttle:dashed-discount-code')->name('dashed.frontend.cart.apply-discount-code');
         Route::post('/add-to-cart/{product}', [CartController::class, 'addToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.add-to-cart');
         Route::post('/update-to-cart/{rowId}', [CartController::class, 'updateToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.update-to-cart');
