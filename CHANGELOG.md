@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.138.2 - 2026-09-23
+
+### Changed
+- **GS1: ontbrekende velden krijgen een suggestie uit de download.** De modal "Ontbrekende velden invullen" op een GS1-run vult elk veld vooraf in met de waarde die producten in dezelfde categorie die al bij GS1 staan het vaakst hebben (op EAN gematcht met de rijen van het bestand), en anders met wat het hele bestand het vaakst gebruikt. Alleen geldige waarden uit Reference Data tellen, een GTIN over meerdere regels telt één keer. Onder het veld staat waar de suggestie vandaan komt. Nieuw: `Gs1FieldSuggester`.
+- **GS1: kolom Categorie in de codetabel van een run**, met de categorieën van het doelproduct of anders van het verwijderde product dat de code had.
+
 ## v4.138.1 - 2026-09-22
 
 ### Fixed

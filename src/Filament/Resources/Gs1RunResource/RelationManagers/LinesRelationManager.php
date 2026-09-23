@@ -48,6 +48,18 @@ class LinesRelationManager extends RelationManager
         };
     }
 
+    /**
+     * De categorieën van het doelproduct, en anders van het verwijderde
+     * product dat de code had.
+     */
+    public static function categoryNames(Gs1RunLine $record): ?string
+    {
+        $product = $record->product ?? $record->previousProduct;
+        $names = $product?->productCategories->map(fn ($category) => (string) $category->name)->filter()->implode(', ');
+
+        return $names ?: null;
+    }
+
     public static function decisionOptions(): array
     {
         return [
@@ -61,6 +73,7 @@ class LinesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->with(['product.productCategories', 'previousProduct.productCategories']))
             ->columns([
                 TextColumn::make('gtin')->label(__('GTIN'))->searchable()->fontFamily('mono'),
                 TextColumn::make('kind')->label(__('Soort'))->badge()
@@ -71,6 +84,8 @@ class LinesRelationManager extends RelationManager
                     ->formatStateUsing(fn (?string $state) => static::decisionOptions()[$state] ?? ($state === Gs1RunLine::DECISION_TOEWIJZEN ? __('Toewijzen') : $state)),
                 TextColumn::make('product.name')->label(__('Product'))->placeholder('-'),
                 TextColumn::make('previousProduct.name')->label(__('Verwijderd product'))->placeholder('-'),
+                TextColumn::make('category')->label(__('Categorie'))->placeholder('-')->wrap()
+                    ->getStateUsing(fn (Gs1RunLine $record) => static::categoryNames($record)),
                 IconColumn::make('reuse')->label(__('Hergebruik'))->boolean()
                     ->getStateUsing(fn (Gs1RunLine $record) => $record->isReuse()),
                 TextColumn::make('applied_at')->label(__('Toegepast'))->dateTime('d-m-Y H:i')->placeholder('-'),

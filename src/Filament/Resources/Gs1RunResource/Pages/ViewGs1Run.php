@@ -11,8 +11,10 @@ use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1Assigner;
+use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FileReader;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1MissingFields;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1ReferenceData;
+use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FieldSuggester;
 use Dashed\DashedEcommerceCore\Filament\Resources\Gs1RunResource;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1RunLockedException;
 
@@ -32,7 +34,7 @@ class ViewGs1Run extends ViewRecord
                 ->icon('heroicon-o-pencil-square')
                 ->authorize(fn () => auth()->user()?->can('update', $this->record) ?? false)
                 ->visible(fn () => $this->record->isConcept() && $this->missingGroups() !== [])
-                ->modalDescription(__('Wat je kiest wordt op de categorie bewaard, of als winkelstandaard voor producten zonder categorie. Een volgende keer wordt het niet meer gevraagd.'))
+                ->modalDescription(__('Voorgesteld is wat producten in dezelfde categorie bij GS1 het vaakst hebben, anders wat je hele GS1-bestand het vaakst gebruikt. Wat je opslaat wordt op de categorie bewaard, of als winkelstandaard voor producten zonder categorie. Een volgende keer wordt het niet meer gevraagd.'))
                 ->schema(fn () => $this->missingSchema())
                 ->action(function (array $data) {
                     try {
@@ -110,12 +112,39 @@ class ViewGs1Run extends ViewRecord
         );
     }
 
+    /**
+     * Leest de download van de run opnieuw (ongeveer een seconde), alleen
+     * bij het openen van de modal. Is het bestand weg of onleesbaar, dan
+     * zijn er gewoon geen suggesties.
+     */
+    private function suggestions(array $groups): array
+    {
+        try {
+            $rows = app(Gs1FileReader::class)->read(Storage::disk('local')->path($this->record->file_path))->rows;
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return [];
+        }
+
+        return (new Gs1FieldSuggester(Gs1ReferenceData::fromArray($this->record->reference_data ?? [])))->suggest($rows, $groups);
+    }
+
+    private function suggestionHint(array $suggestion, string $groupLabel): string
+    {
+        return $suggestion['scope'] === Gs1FieldSuggester::SCOPE_CATEGORY
+            ? __('Suggestie: :aantal van :totaal producten in :groep bij GS1', ['aantal' => $suggestion['count'], 'totaal' => $suggestion['total'], 'groep' => $groupLabel])
+            : __('Suggestie: meest gebruikt in je GS1-bestand (:aantal van :totaal codes)', ['aantal' => $suggestion['count'], 'totaal' => $suggestion['total']]);
+    }
+
     private function missingSchema(): array
     {
         $reference = Gs1ReferenceData::fromArray($this->record->reference_data ?? []);
+        $groups = $this->missingGroups();
+        $suggestions = $this->suggestions($groups);
         $sections = [];
 
-        foreach ($this->missingGroups() as $group) {
+        foreach ($groups as $group) {
             $fields = [];
             foreach ($group['fields'] as $field) {
                 if (! Gs1MissingFields::answerable($field)) {
@@ -125,11 +154,17 @@ class ViewGs1Run extends ViewRecord
                 $name = "answers.{$group['key']}.{$field}";
                 $label = Gs1MissingFields::label($field);
 
-                $fields[] = match (true) {
+                $component = match (true) {
                     $field === 'quantity' => TextInput::make($name)->label($label)->numeric()->minValue(1),
                     $field === 'brand' => TextInput::make($name)->label($label)->maxLength(70),
                     default => Select::make($name)->label($label)->options($reference->options($field))->searchable(),
                 };
+
+                if ($suggestion = $suggestions[$group['key']][$field] ?? null) {
+                    $component->default($suggestion['value'])->helperText($this->suggestionHint($suggestion, $group['label']));
+                }
+
+                $fields[] = $component;
             }
 
             if ($fields !== []) {
