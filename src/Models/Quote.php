@@ -3,13 +3,14 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Collection;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Dashed\DashedEcommerceCore\Services\Quotes\QuoteTotals;
 
 class Quote extends Model
 {
@@ -156,5 +157,16 @@ class Quote extends Model
     public function publicUrl(): string
     {
         return url('/quote/'.$this->hash);
+    }
+
+    /**
+     * De total-kolom is een gecachte waarde voor de lijst; de waarheid staat in
+     * de regels. Na elke wijziging van de regels opnieuw uitrekenen en stil
+     * opslaan, zodat dit geen extra "updated"-events afvuurt.
+     */
+    public function recalculateTotal(): void
+    {
+        $this->total = QuoteTotals::for($this)->total;
+        $this->saveQuietly();
     }
 }

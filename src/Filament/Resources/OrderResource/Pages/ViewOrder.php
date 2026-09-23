@@ -383,6 +383,18 @@ class ViewOrder extends ViewRecord
 
                         $this->redirect(route('dashed.ecommerce.point-of-sale'));
                     }),
+                Action::make('copyToQuote')
+                    ->label(__('Kopieer naar offerte'))
+                    ->icon('heroicon-o-document-text')
+                    ->visible(fn () => auth()->user()?->can('edit_quote') ?? false)
+                    ->requiresConfirmation()
+                    ->modalHeading(__('Offerte maken van deze bestelling?'))
+                    ->modalDescription(__('Klantgegevens en regels gaan mee naar een nieuwe concept-offerte.'))
+                    ->action(function () {
+                        $quote = \Dashed\DashedEcommerceCore\Services\Quotes\QuoteRevision::fromOrder($this->record);
+
+                        $this->redirect(\Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::getUrl('edit', ['record' => $quote]));
+                    }),
             ])
                 ->label(__('POS'))
                 ->icon('heroicon-o-computer-desktop')

@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Pages;
 
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
-use Dashed\DashedEcommerceCore\Services\Quotes\QuoteTotals;
 use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource;
 
 class EditQuote extends EditRecord
@@ -23,6 +22,9 @@ class EditQuote extends EditRecord
                     \Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf::store($this->record->fresh());
                     $this->redirect(\Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf::downloadUrl($this->record->fresh()), navigate: false);
                 }),
+            \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\MarkQuoteAnsweredAction::make($this->record),
+            \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\CreateRevisionAction::make($this->record),
+            \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\WithdrawQuoteAction::make($this->record),
             DeleteAction::make(),
         ];
     }
@@ -33,8 +35,6 @@ class EditQuote extends EditRecord
      */
     protected function afterSave(): void
     {
-        $quote = $this->record->fresh();
-        $quote->total = QuoteTotals::for($quote)->total;
-        $quote->saveQuietly();
+        $this->record->fresh()->recalculateTotal();
     }
 }
