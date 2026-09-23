@@ -121,6 +121,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\OnAccountSettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Settings\QuoteSettingsPage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,
