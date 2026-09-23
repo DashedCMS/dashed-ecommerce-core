@@ -175,6 +175,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 AutomationRuleResource::class,
                 PrinterResource::class,
                 PrintJobResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::class,
             ]);
     }
 

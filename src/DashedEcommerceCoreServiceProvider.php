@@ -1846,6 +1846,7 @@ MARKDOWN,
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingMethod::class, \Dashed\DashedEcommerceCore\Policies\ShippingMethodPolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\ShippingZone::class, \Dashed\DashedEcommerceCore\Policies\ShippingZonePolicy::class);
         Gate::policy(\Dashed\DashedEcommerceCore\Models\Gs1Run::class, \Dashed\DashedEcommerceCore\Policies\Gs1RunPolicy::class);
+        Gate::policy(\Dashed\DashedEcommerceCore\Models\Quote::class, \Dashed\DashedEcommerceCore\Policies\QuotePolicy::class);
 
         cms()->registerRolePermissions('E-commerce', [
             'view_order' => 'Bestellingen bekijken',
@@ -1892,6 +1893,9 @@ MARKDOWN,
             'edit_order_log_template' => 'Orderlog templates bewerken',
             'delete_order_log_template' => 'Orderlog templates verwijderen',
             'view_pos' => 'Point of Sale bekijken',
+            'view_quote' => 'Offertes bekijken',
+            'edit_quote' => 'Offertes bewerken',
+            'delete_quote' => 'Offertes verwijderen',
         ]);
 
         cms()->registerRolePermissions('Verzending', [
