@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Quotes;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\QuoteLine;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteTotals;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteAcceptance;
 
@@ -86,9 +87,9 @@ class QuotePage extends Component
             'acceptName' => ['required', 'string', 'min:2', 'max:255'],
             'acceptAgreed' => ['accepted'],
         ], [
-            'acceptName.required' => __('Vul uw naam in'),
-            'acceptName.min' => __('Vul uw naam in'),
-            'acceptAgreed.accepted' => __('Vink aan dat u akkoord gaat'),
+            'acceptName.required' => Translation::get('validation-name-required', 'quote', 'Vul uw naam in'),
+            'acceptName.min' => Translation::get('validation-name-required', 'quote', 'Vul uw naam in'),
+            'acceptAgreed.accepted' => Translation::get('validation-agree-required', 'quote', 'Vink aan dat u akkoord gaat'),
         ]);
 
         $chosen = collect($this->selected)->filter()->keys()->map(fn ($id) => (int) $id)->all();
@@ -108,8 +109,8 @@ class QuotePage extends Component
         $this->validate([
             'rejectReason' => ['required', 'string', 'min:2', 'max:1000'],
         ], [
-            'rejectReason.required' => __('Geef aan waarom u afwijst'),
-            'rejectReason.min' => __('Geef aan waarom u afwijst'),
+            'rejectReason.required' => Translation::get('validation-reject-reason-required', 'quote', 'Geef aan waarom u afwijst'),
+            'rejectReason.min' => Translation::get('validation-reject-reason-required', 'quote', 'Geef aan waarom u afwijst'),
         ]);
 
         QuoteAcceptance::reject($this->quote->fresh(), $this->rejectReason);

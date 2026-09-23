@@ -51,6 +51,16 @@ class QuoteToOrder
         $order->vat_percentages = $totals->vatPerRate;
         $order->save();
 
+        // Order::boot()'s creating-hook zet locale altijd op app()->getLocale(),
+        // dus de toewijzing hierboven overleeft die eerste save() niet vanzelf.
+        // Dat werkt vandaag alleen omdat QuoteAcceptance::accept() de apptaal al
+        // gelijkzet aan de offerte voordat build() draait; een latere CMS-actie
+        // of API die dat niet doet, hoort niet stil de verkeerde taal te krijgen.
+        if ($order->locale !== $quote->locale) {
+            $order->locale = $quote->locale;
+            $order->save();
+        }
+
         foreach ($quote->selectedLines() as $line) {
             self::createOrderProduct($order, $line);
         }
