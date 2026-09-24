@@ -15,6 +15,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderReturnResource;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ExistingCreditOrderException;
 
 class OrderReturnController extends Controller
 {
@@ -91,6 +92,7 @@ class OrderReturnController extends Controller
             'restock' => ['sometimes', 'boolean'],
             'refund' => ['sometimes', 'boolean'], // geaccepteerd voor oude app-versies, genegeerd: terugbetalen is een aparte stap
             'note' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'confirm_existing_credit' => ['sometimes', 'boolean'],
             'lines' => ['sometimes', 'array'],
             'lines.*.order_return_line_id' => ['required_with:lines', 'integer'],
             'lines.*.quantity' => ['required_with:lines', 'integer', 'min:0'],
@@ -104,7 +106,21 @@ class OrderReturnController extends Controller
             app(ReturnProcessor::class)->process($return, $lines, [
                 'restock' => (bool) ($data['restock'] ?? true),
                 'note' => $data['note'] ?? null,
+                'confirm_existing_credit' => (bool) ($data['confirm_existing_credit'] ?? false),
             ]);
+        } catch (ExistingCreditOrderException $e) {
+            // De app toont de bestaande creditorders en stuurt het verzoek
+            // opnieuw met confirm_existing_credit=true als de beheerder bevestigt.
+            return response()->json([
+                'message' => $e->getMessage(),
+                'code' => 'existing_credit_order',
+                'credit_orders' => $e->creditOrders->map(fn ($credit) => [
+                    'id' => $credit->id,
+                    'invoice_id' => $credit->invoice_id,
+                    'total' => (float) $credit->total,
+                    'created_at' => $credit->created_at?->toIso8601String(),
+                ])->values(),
+            ], 409);
         } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }

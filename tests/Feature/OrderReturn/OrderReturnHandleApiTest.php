@@ -57,3 +57,22 @@ it('geeft 422 bij een niet-goedgekeurde retour en bij een te hoog aantal', funct
     $this->postJson("/api/v1/returns/{$f['return']->id}/handle", ['lines' => [['order_return_line_id' => $f['line']->id, 'quantity' => 9]]])->assertStatus(422);
     expect($f['return']->fresh()->credit_order_id)->toBeNull();
 });
+
+it('geeft 409 met de bestaande creditorders en verwerkt pas na bevestiging', function () {
+    $f = handleApiReturn();
+    $this->postJson("/api/v1/returns/{$f['return']->id}/handle", ['restock' => false, 'lines' => [['order_return_line_id' => $f['line']->id, 'quantity' => 1]]])->assertOk();
+    $eerste = $f['return']->fresh()->credit_order_id;
+
+    $tweede = OrderReturn::create(['site_id' => $f['order']->site_id, 'order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED]);
+    $lijn = OrderReturnLine::create(['order_return_id' => $tweede->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
+
+    $this->postJson("/api/v1/returns/{$tweede->id}/handle", ['restock' => false])
+        ->assertStatus(409)
+        ->assertJsonPath('code', 'existing_credit_order')
+        ->assertJsonPath('credit_orders.0.id', $eerste);
+    expect($tweede->fresh()->credit_order_id)->toBeNull();
+
+    $this->postJson("/api/v1/returns/{$tweede->id}/handle", ['restock' => false, 'confirm_existing_credit' => true])
+        ->assertOk()
+        ->assertJsonPath('data.status', OrderReturn::STATUS_HANDLED);
+});

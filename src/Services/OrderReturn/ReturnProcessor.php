@@ -23,15 +23,18 @@ class ReturnProcessor
 {
     /**
      * @param  array<int, array{order_return_line_id: int, quantity: int}>  $lines  aantal 0 = niet crediteren
-     * @param  array{restock?: bool, refund_discount?: bool, note?: string|null}  $options
+     * @param  array{restock?: bool, refund_discount?: bool, note?: string|null, confirm_existing_credit?: bool}  $options
+     *
+     * @throws ExistingCreditOrderException als de bestelling al een creditorder heeft en confirm_existing_credit niet aan staat
      */
     public function process(OrderReturn $return, array $lines, array $options = []): Order
     {
         $restock = (bool) ($options['restock'] ?? true);
         $refundDiscount = (bool) ($options['refund_discount'] ?? false);
         $note = trim((string) ($options['note'] ?? ''));
+        $confirmExistingCredit = (bool) ($options['confirm_existing_credit'] ?? false);
 
-        $creditOrder = DB::transaction(function () use ($return, $lines, $restock, $refundDiscount, $note) {
+        $creditOrder = DB::transaction(function () use ($return, $lines, $restock, $refundDiscount, $note, $confirmExistingCredit) {
             // Lock op de retourregel en statuscheck binnen de lock: twee
             // beheerders die tegelijk verwerken leveren nooit twee creditorders op.
             $locked = OrderReturn::query()->whereKey($return->id)->lockForUpdate()->first();
@@ -42,6 +45,15 @@ class ReturnProcessor
             $order = $locked->order;
             if (! $order) {
                 throw new InvalidArgumentException(__('De bestelling van deze retour bestaat niet meer.'));
+            }
+
+            // Binnen de lock, zodat een creditorder die net door een andere
+            // verwerking is aangemaakt ook meetelt.
+            if (! $confirmExistingCredit) {
+                $existing = self::existingCreditOrders($order);
+                if ($existing->isNotEmpty()) {
+                    throw new ExistingCreditOrderException($existing);
+                }
             }
 
             $returnLines = $locked->lines()->with('orderProduct')->get()->keyBy('id');
@@ -152,6 +164,17 @@ class ReturnProcessor
         $this->mailCustomer($return);
 
         return $creditOrder;
+    }
+
+    /**
+     * De creditorders die al aan deze bestelling hangen, ongeacht waar ze
+     * vandaan kwamen (eerdere retour, annuleerknop, orderwijziging).
+     *
+     * @return \Illuminate\Support\Collection<int, Order>
+     */
+    public static function existingCreditOrders(Order $order): \Illuminate\Support\Collection
+    {
+        return $order->creditOrders()->orderBy('id')->get();
     }
 
     /**

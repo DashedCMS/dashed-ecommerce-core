@@ -12,6 +12,7 @@ use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ExistingCreditOrderException;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnProcessedMail;
 
 beforeEach(function () {
@@ -149,7 +150,7 @@ it('stort een cadeaubon niet terug, ook niet bij twee deelretouren', function ()
     $tweede = processorSecondReturn($f, 1);
     app(ReturnProcessor::class)->process($tweede['return'], [
         ['order_return_line_id' => $tweede['line']->id, 'quantity' => 1],
-    ], ['restock' => false]);
+    ], ['restock' => false, 'confirm_existing_credit' => true]);
 
     // Met refillGiftcard: true was het saldo er nu twee keer de volle
     // orderkorting bij gekregen, bij elke retour opnieuw.
@@ -219,9 +220,9 @@ it('laat een tweede retour alleen het restant verwerken', function () {
     $tweede = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED]);
     $lijn = OrderReturnLine::create(['order_return_id' => $tweede->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
 
-    expect(fn () => app(ReturnProcessor::class)->process($tweede, [['order_return_line_id' => $lijn->id, 'quantity' => 2]]))->toThrow(InvalidArgumentException::class);
+    expect(fn () => app(ReturnProcessor::class)->process($tweede, [['order_return_line_id' => $lijn->id, 'quantity' => 2]], ['confirm_existing_credit' => true]))->toThrow(InvalidArgumentException::class);
 
-    $credit = app(ReturnProcessor::class)->process($tweede, [['order_return_line_id' => $lijn->id, 'quantity' => 1]], ['restock' => false]);
+    $credit = app(ReturnProcessor::class)->process($tweede, [['order_return_line_id' => $lijn->id, 'quantity' => 1]], ['restock' => false, 'confirm_existing_credit' => true]);
     expect(round(abs((float) $credit->total), 2))->toBe(20.0)
         ->and($f['shirt']->fresh()->returned_quantity)->toBe(3);
 });
@@ -234,4 +235,56 @@ it('mailt een Bol-klant niet maar verwerkt wel', function () {
     expect($credit->exists)->toBeTrue()
         ->and(OrderLog::where('order_id', $f['order']->id)->where('tag', 'order.return-mail-skipped-bol')->exists())->toBeTrue();
     Mail::assertNotQueued(OrderReturnProcessedMail::class);
+});
+
+it('maakt geen tweede creditorder zonder bevestiging als de bestelling er al een heeft', function () {
+    $f = processorReturn();
+    $eerste = app(ReturnProcessor::class)->process($f['return'], [['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 2]], ['restock' => false]);
+
+    $tweede = processorSecondReturn($f, 1);
+
+    try {
+        app(ReturnProcessor::class)->process($tweede['return'], [['order_return_line_id' => $tweede['line']->id, 'quantity' => 1]], ['restock' => false]);
+        $this->fail('Er had een ExistingCreditOrderException moeten komen.');
+    } catch (ExistingCreditOrderException $e) {
+        expect($e->creditOrders->pluck('id')->all())->toBe([$eerste->id]);
+    }
+
+    expect(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(1)
+        ->and($tweede['return']->fresh()->status)->toBe(OrderReturn::STATUS_APPROVED)
+        ->and($f['shirt']->fresh()->returned_quantity)->toBe(2);
+
+    $credit = app(ReturnProcessor::class)->process($tweede['return'], [['order_return_line_id' => $tweede['line']->id, 'quantity' => 1]], [
+        'restock' => false,
+        'confirm_existing_credit' => true,
+    ]);
+
+    expect(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(2)
+        ->and($tweede['return']->fresh()->credit_order_id)->toBe($credit->id);
+});
+
+it('vraagt ook bevestiging als de creditorder van de annuleerknop kwam', function () {
+    $f = processorReturn();
+    // Wat de annuleerknop doet: een creditorder zonder retour erachter.
+    $broek = $f['broek']->fresh();
+    $broek->refundQuantity = 1;
+    $f['order']->fresh()->markAsCancelledWithCredit(
+        sendCustomerEmail: false,
+        productsMustBeReturned: false,
+        restock: false,
+        refundDiscountCosts: false,
+        extraOrderLineName: '',
+        extraOrderLinePrice: 0,
+        chosenOrderProducts: [$broek],
+        fulfillmentStatus: $f['order']->fulfillment_status,
+        paymentMethodId: null,
+        sendAdminEmail: false,
+        refillGiftcard: false,
+    );
+    expect(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(1);
+
+    expect(fn () => app(ReturnProcessor::class)->process($f['return'], [['order_return_line_id' => $f['shirtLine']->id, 'quantity' => 1]], ['restock' => false]))
+        ->toThrow(ExistingCreditOrderException::class);
+
+    expect($f['return']->fresh()->status)->toBe(OrderReturn::STATUS_APPROVED);
 });

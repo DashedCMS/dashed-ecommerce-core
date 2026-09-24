@@ -70,6 +70,31 @@ it('verwerkt via de modal en koppelt de creditorder', function () {
         ->and(Order::find($return->credit_order_id)->credit_for_order_id)->toBe($f['order']->id);
 });
 
+it('vraagt een extra bevestiging als de bestelling al een creditorder heeft', function () {
+    $f = filamentReturn();
+    app(\Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor::class)
+        ->process($f['return'], [['order_return_line_id' => $f['line']->id, 'quantity' => 1]], ['restock' => false]);
+
+    $tweede = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now()]);
+    $lijn = OrderReturnLine::create(['order_return_id' => $tweede->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
+
+    Livewire::test(ViewOrderReturn::class, ['record' => $tweede->id])
+        ->mountAction('process')
+        ->setActionData(['lines' => [$lijn->id => 1], 'restock' => false, 'confirm_existing_credit' => false])
+        ->callMountedAction()
+        ->assertHasActionErrors(['confirm_existing_credit' => 'accepted']);
+
+    expect($tweede->fresh()->status)->toBe(OrderReturn::STATUS_APPROVED)
+        ->and(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(1);
+
+    Livewire::test(ViewOrderReturn::class, ['record' => $tweede->id])
+        ->callAction('process', data: ['lines' => [$lijn->id => 1], 'restock' => false, 'confirm_existing_credit' => true])
+        ->assertHasNoActionErrors();
+
+    expect($tweede->fresh()->status)->toBe(OrderReturn::STATUS_HANDLED)
+        ->and(Order::where('credit_for_order_id', $f['order']->id)->count())->toBe(2);
+});
+
 it('sluit via de modal met reden', function () {
     $f = filamentReturn();
 

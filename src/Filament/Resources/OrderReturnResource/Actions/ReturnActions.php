@@ -3,7 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Actions;
 
 use Filament\Actions\Action;
+use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -98,6 +100,7 @@ class ReturnActions
                 }
 
                 return [
+                    ...self::existingCreditFields($record),
                     Fieldset::make(__('Teruggekomen aantallen'))->columnSpanFull()->schema($fields)->columns(2),
                     Toggle::make('restock')->label(__('Terug op voorraad'))->default(true),
                     Toggle::make('refund_discount')
@@ -118,6 +121,7 @@ class ReturnActions
                         'restock' => (bool) ($data['restock'] ?? true),
                         'refund_discount' => (bool) ($data['refund_discount'] ?? false),
                         'note' => $data['note'] ?? null,
+                        'confirm_existing_credit' => (bool) ($data['confirm_existing_credit'] ?? false),
                     ]);
                 } catch (\InvalidArgumentException $e) {
                     Notification::make()->danger()->title($e->getMessage())->send();
@@ -134,6 +138,36 @@ class ReturnActions
                     ])
                     ->send();
             });
+    }
+
+    /**
+     * Heeft de bestelling al een creditorder, dan staat bovenaan de modal
+     * welke, met een vinkje dat aan moet voordat er nog een bij komt. De
+     * processor eist dezelfde bevestiging, dit is alleen de nette laag.
+     *
+     * @return array<int, \Filament\Schemas\Components\Component|\Filament\Forms\Components\Field>
+     */
+    protected static function existingCreditFields(OrderReturn $record): array
+    {
+        $existing = $record->order ? ReturnProcessor::existingCreditOrders($record->order) : collect();
+        if ($existing->isEmpty()) {
+            return [];
+        }
+
+        $items = $existing->map(fn ($credit) => '<li><a href="' . e(OrderResource::getUrl('view', ['record' => $credit->id])) . '" target="_blank" class="underline">'
+            . e($credit->invoice_id ?: '#' . $credit->id) . '</a> ' . e(CurrencyHelper::formatPrice($credit->total))
+            . ' (' . e($credit->created_at?->format('d-m-Y')) . ')</li>')->implode('');
+
+        return [
+            Placeholder::make('existing_credit_orders')
+                ->label(__('Er is al een creditorder voor deze bestelling'))
+                ->content(new HtmlString('<ul class="list-disc ps-5">' . $items . '</ul>'))
+                ->columnSpanFull(),
+            Checkbox::make('confirm_existing_credit')
+                ->label(__('Ik heb de bestaande creditorder gecontroleerd en wil toch een nieuwe aanmaken'))
+                ->accepted()
+                ->columnSpanFull(),
+        ];
     }
 
     public static function close(): Action
