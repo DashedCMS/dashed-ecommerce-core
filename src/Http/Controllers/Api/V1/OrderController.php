@@ -409,6 +409,64 @@ class OrderController extends Controller
     }
 
     /**
+     * Retourneerbare regels + actieve retourredenen voor het "nieuwe retour
+     * aanmelden"-scherm (spiegelt de Filament RegisterReturnAction). `remaining`
+     * = besteld − al geretourneerd; alleen regels met restant > 0.
+     */
+    public function returnableLines(int $order): JsonResponse
+    {
+        $model = Order::thisSite()->with('orderProducts')->findOrFail($order);
+
+        $lines = \Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines::forOrder($model)
+            ->map(fn ($op) => [
+                'order_product_id' => $op->id,
+                'name' => $op->name,
+                'remaining' => \Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines::remaining($op),
+            ])->values()->all();
+
+        $reasons = \Dashed\DashedEcommerceCore\Models\ReturnReason::active()->get()
+            ->map(fn ($r) => ['id' => $r->id, 'label' => $r->label])->values()->all();
+
+        return response()->json(['lines' => $lines, 'reasons' => $reasons]);
+    }
+
+    /**
+     * Beheerder meldt zelf een RMA-retour aan (spiegelt Filament "Retour
+     * aanmelden" → ReturnRegistrar). Begint direct als goedgekeurd.
+     */
+    public function registerReturn(Request $request, int $order): \Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderReturnResource|JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'lines' => ['required', 'array', 'min:1'],
+            'lines.*.order_product_id' => ['required', 'integer'],
+            'lines.*.quantity' => ['required', 'integer', 'min:1'],
+            'lines.*.return_reason_id' => ['sometimes', 'nullable', 'integer'],
+            'lines.*.reason_note' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'admin_note' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'notify_customer' => ['sometimes', 'boolean'],
+        ]);
+
+        try {
+            $return = app(\Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnRegistrar::class)->register(
+                $model,
+                $data['lines'],
+                [
+                    'admin_note' => $data['admin_note'] ?? null,
+                    'notify_customer' => (bool) ($data['notify_customer'] ?? true),
+                ],
+            );
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        $return->load(['order:id,invoice_id,first_name,last_name,email', 'lines.orderProduct', 'lines.returnReason', 'creditOrder:id,invoice_id,total']);
+
+        return new \Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderReturnResource($return);
+    }
+
+    /**
      * Zoek een bestelling op een gescande code: track & trace-code of factuurnummer.
      * Zo kun je in de inpak-scanner naast de pakbon-barcode ook een T&T-label scannen
      * om de juiste order te openen.
