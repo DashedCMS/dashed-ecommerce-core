@@ -1383,12 +1383,21 @@ class Product extends Model
     {
         $characteristics = [];
 
+        // Alles uit relaties die één keer laden, niet een query per optie en
+        // per kenmerk: de Channable-feed en de afnemersfeeds roepen dit per
+        // product aan, en bij een catalogus van een paar duizend producten
+        // liep dat op tot honderdduizenden queries per feed.
+        $chosenOptionIds = $this->productFilters
+            ->pluck('pivot.product_filter_option_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
         $activeFilters = $this->productGroup->activeProductFilters;
 
         foreach ($activeFilters as $activeFilter) {
             $value = '';
             foreach ($activeFilter->productFilterOptions as $option) {
-                if ($this->productFilters()->where('product_filter_option_id', $option->id)->exists()) {
+                if (in_array((int) $option->id, $chosenOptionIds, true)) {
                     if ($value) {
                         $value .= ', ';
                     }
@@ -1401,9 +1410,11 @@ class Product extends Model
             ];
         }
 
+        $ownCharacteristics = $this->productCharacteristics()->get()->unique('product_characteristic_id')->keyBy('product_characteristic_id');
+
         $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
         foreach ($allProductCharacteristics as $productCharacteristic) {
-            $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
+            $thisProductCharacteristic = $ownCharacteristics->get($productCharacteristic->id);
             if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! in_array($productCharacteristic->id, $withoutIds)) {
                 $characteristics[] = [
                     'name' => $productCharacteristic->name,

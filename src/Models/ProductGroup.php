@@ -446,9 +446,13 @@ class ProductGroup extends Model
     {
         $characteristics = [];
 
+        // Eén query voor alle kenmerken van de groep in plaats van één per
+        // kenmerk; zie Product::allCharacteristics().
+        $ownCharacteristics = $this->productCharacteristics()->get()->unique('product_characteristic_id')->keyBy('product_characteristic_id');
+
         $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
         foreach ($allProductCharacteristics as $productCharacteristic) {
-            $thisProductCharacteristic = $this->productCharacteristics()->where('product_characteristic_id', $productCharacteristic->id)->first();
+            $thisProductCharacteristic = $ownCharacteristics->get($productCharacteristic->id);
             if ($thisProductCharacteristic && $thisProductCharacteristic->value && ! in_array($productCharacteristic->id, $withoutIds)) {
                 $characteristics[] = [
                     'name' => $productCharacteristic->name,

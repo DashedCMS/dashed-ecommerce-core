@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.139.2 - 2026-09-24
+
+### Fixed
+- **Kenmerken zonder query per optie en per kenmerk.** `Product::allCharacteristics()` en `ProductGroup::allCharacteristicsWithoutFilters()` deden een query per filteroptie en per kenmerk. De Channable-feed en de afnemersfeeds roepen ze per product aan; bij lovora waren dat ruim 313.000 queries voor één feed van 2742 producten. Nu één keer laden per product en groep, met dezelfde uitkomst.
+
 ## v4.139.0 - 2026-09-24
 
 ### Added
