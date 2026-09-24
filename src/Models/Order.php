@@ -560,10 +560,19 @@ class Order extends Model
     /**
      * Een verwijderbare draft: een concept of proforma zonder echt factuurnummer
      * en zonder betaalverplichting.
+     *
+     * Een order die uit een offerte komt valt erbuiten, ook al ziet hij er als
+     * proforma precies zo uit. Weggooien laat de geaccepteerde offerte naar een
+     * verwijderde order wijzen: de klant krijgt op zijn offertepagina geen
+     * betaallink meer, en QuoteAcceptance::accept() stopt bij zijn eerste guard
+     * (geaccepteerd met een order_id), dus de order is ook niet opnieuw te
+     * bouwen. Dat akkoord is een toezegging van de klant en hoort niet met een
+     * verwijderknop te verdampen.
      */
     public function isDeletableDraft(): bool
     {
         return ($this->isConcept() || (bool) $this->is_proforma)
+            && ! $this->quote_id
             && ! $this->hasRealInvoice()
             && ! $this->isPaidFor();
     }

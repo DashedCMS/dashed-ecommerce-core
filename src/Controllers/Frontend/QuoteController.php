@@ -36,6 +36,18 @@ class QuoteController
     {
         $quote = Quote::where('hash', $hash)->firstOrFail();
 
+        // Het beheerdersvoorbeeld is geen klantdocument: dat gaat altijd achter
+        // de ondertekende link of een ingelogde beheerder, ook als de
+        // handtekening voor de klantdocumenten niet verplicht staat.
+        if ($request->boolean('preview')) {
+            abort_unless(QuoteAccess::allowsPreview($request), 403);
+
+            $previewPath = QuotePdf::previewPath($quote);
+            abort_unless(Storage::disk('dashed')->exists($previewPath), 404);
+
+            return Storage::disk('dashed')->download($previewPath);
+        }
+
         abort_unless(QuoteAccess::allows($request, $quote), 403);
 
         $accepted = (bool) $request->query('accepted', false);

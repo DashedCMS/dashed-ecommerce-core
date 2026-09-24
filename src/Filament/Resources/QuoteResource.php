@@ -24,7 +24,9 @@ use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
+use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteDefaults;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
@@ -80,9 +82,23 @@ class QuoteResource extends Resource
             && parent::canDelete($record);
     }
 
+    /**
+     * Een verstuurde offerte staat vast. Het document dat de klant heeft is het
+     * document, en de akkoord-PDF moet erop kunnen leunen; wie er iets aan wil
+     * veranderen maakt een nieuwe revisie, die de oude versie vervangt.
+     */
+    public static function isLocked(?Model $record): bool
+    {
+        return $record instanceof Quote && $record->sent_at !== null;
+    }
+
     public static function form(Schema $schema): Schema
     {
-        return $schema->schema([
+        // Untyped $record met opzet: Filament lost een parameter zonder type op
+        // naam op, en dat geeft netjes null op de aanmaakpagina. Een ?Model-hint
+        // laat hij daar door de container lopen en dat klapt op een abstracte
+        // klasse.
+        return $schema->disabled(fn ($record) => static::isLocked($record))->schema([
             Section::make(__('Klant'))
                 ->columnSpanFull()
                 ->columns(2)
@@ -91,8 +107,8 @@ class QuoteResource extends Resource
                         ->label(__('Klantaccount'))
                         ->searchable()
                         ->helperText(__('Leeg laten voor een prospect zonder account'))
-                        ->getSearchResultsUsing(fn (string $search) => RelationshipSearchQuery::make(User::class, $search, 'email'))
-                        ->getOptionLabelUsing(fn ($value) => User::find($value)?->email)
+                        ->getSearchResultsUsing(fn (string $search) => static::searchCustomers($search))
+                        ->getOptionLabelUsing(fn ($value) => static::customerLabel(User::find($value)))
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set) {
                             $user = $state ? User::find($state) : null;
@@ -103,6 +119,24 @@ class QuoteResource extends Resource
                             $set('last_name', $user->last_name);
                             $set('email', $user->email);
                             $set('company_name', $user->company);
+                            $set('btw_id', $user->tax_id);
+                            $set('phone_number', $user->phone_number);
+
+                            // Een account dat alleen een afleveradres heeft ingevuld
+                            // hoort toch een factuuradres op de offerte te krijgen:
+                            // het factuuradres is hier het adres dat altijd gevuld
+                            // moet zijn, want de order op rekening leunt erop.
+                            $set('invoice_street', $user->invoice_street ?: $user->street);
+                            $set('invoice_house_nr', $user->invoice_house_nr ?: $user->house_nr);
+                            $set('invoice_zip_code', $user->invoice_zip_code ?: $user->zip_code);
+                            $set('invoice_city', $user->invoice_city ?: $user->city);
+                            $set('invoice_country', $user->invoice_country ?: $user->country);
+
+                            $set('street', $user->street);
+                            $set('house_nr', $user->house_nr);
+                            $set('zip_code', $user->zip_code);
+                            $set('city', $user->city);
+                            $set('country', $user->country);
                         }),
                     TextInput::make('company_name')->label(__('Bedrijfsnaam'))->maxLength(255),
                     TextInput::make('btw_id')->label(__('BTW-nummer'))->maxLength(50),
@@ -115,6 +149,19 @@ class QuoteResource extends Resource
                     TextInput::make('invoice_zip_code')->label(__('Postcode'))->maxLength(20),
                     TextInput::make('invoice_city')->label(__('Plaats'))->maxLength(255),
                     TextInput::make('invoice_country')->label(__('Land'))->maxLength(255),
+                ]),
+
+            Section::make(__('Afleveradres'))
+                ->description(__('Leeg laten om het factuuradres te gebruiken'))
+                ->columnSpanFull()
+                ->columns(2)
+                ->collapsed()
+                ->schema([
+                    TextInput::make('street')->label(__('Straat'))->maxLength(255),
+                    TextInput::make('house_nr')->label(__('Huisnummer'))->maxLength(20),
+                    TextInput::make('zip_code')->label(__('Postcode'))->maxLength(20),
+                    TextInput::make('city')->label(__('Plaats'))->maxLength(255),
+                    TextInput::make('country')->label(__('Land'))->maxLength(255),
                 ]),
 
             Section::make(__('Offerte'))
@@ -181,6 +228,35 @@ class QuoteResource extends Resource
                         ->helperText(__('Alleen voor intern gebruik, komt niet op de offerte')),
                 ]),
         ]);
+    }
+
+    /**
+     * De accountkiezer zoekt breed: op voornaam, achternaam, bedrijf en
+     * e-mailadres, woord voor woord. User heeft geen scopeSearch, dus
+     * RelationshipSearchQuery zou hier terugvallen op een LIKE op één kolom en
+     * een achternaam nooit vinden. Zie "Breed zoeken" in CLAUDE.md; dezelfde
+     * vorm als de accountkiezers op OrderResource, POSPage en ResellerResource.
+     *
+     * @return array<int, string>
+     */
+    public static function searchCustomers(string $search): array
+    {
+        return TokenizedSearch::apply(User::query(), $search, ['first_name', 'last_name', 'company', 'email'])
+            ->limit(50)
+            ->get()
+            ->mapWithKeys(fn (User $user) => [$user->id => static::customerLabel($user)])
+            ->all();
+    }
+
+    public static function customerLabel(?User $user): string
+    {
+        if (! $user) {
+            return '';
+        }
+
+        $name = trim((string) $user->name);
+
+        return trim(($name !== '' && $name !== $user->email ? $name.' ' : '').'('.$user->email.')');
     }
 
     /** De velden van een offerteregel; ook gebruikt door de revisie-actie. */
@@ -278,6 +354,10 @@ class QuoteResource extends Resource
                     ->multiple()
                     ->options(Quote::statusLabels())
                     ->default([Quote::STATUS_CONCEPT, Quote::STATUS_SENT]),
+                SelectFilter::make('site_id')
+                    ->label(__('Site'))
+                    ->options(fn (): array => collect(Sites::getSites())->pluck('name', 'id')->all())
+                    ->visible(Sites::getAmountOfSites() > 1),
             ])
             ->recordActions([
                 EditAction::make()->button(),

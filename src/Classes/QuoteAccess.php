@@ -47,6 +47,26 @@ class QuoteAccess
             return true;
         }
 
+        return self::isAdmin($user);
+    }
+
+    /**
+     * Het voorbeeld dat een beheerder maakt is geen klantdocument: het kan
+     * inhoud bevatten die nog niet verstuurd is. Daarvoor is de hash alleen dus
+     * niet genoeg, ook niet als de handtekening voor de klantdocumenten
+     * uitstaat.
+     */
+    public static function allowsPreview(Request $request): bool
+    {
+        return $request->hasValidSignature() || self::isAdmin($request->user());
+    }
+
+    private static function isAdmin(mixed $user): bool
+    {
+        if (! $user instanceof User) {
+            return false;
+        }
+
         return in_array($user->role, ['superadmin', 'admin'], true) || $user->roles()->exists();
     }
 }

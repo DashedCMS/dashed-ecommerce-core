@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Quotes;
 
+use RuntimeException;
 use Livewire\Component;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\QuoteLine;
@@ -33,6 +34,19 @@ class QuotePage extends Component
 
         foreach ($this->quote->lines as $line) {
             $this->selected[$line->id] = $line->is_optional ? (bool) $line->is_selected : true;
+        }
+    }
+
+    /**
+     * De taal van de offerte, op elk verzoek. De controller zet hem voor de
+     * eerste render, maar booted() draait ook na elke hydratie, en zonder dit
+     * rendert elke Livewire-update in de taal van de bezoeker terwijl de inhoud
+     * in die van de offerte staat.
+     */
+    public function booted(): void
+    {
+        if ($this->quote?->locale) {
+            app()->setLocale($this->quote->locale);
         }
     }
 
@@ -94,12 +108,21 @@ class QuotePage extends Component
 
         $chosen = collect($this->selected)->filter()->keys()->map(fn ($id) => (int) $id)->all();
 
-        $quote = QuoteAcceptance::accept(
-            $this->quote->fresh(),
-            $chosen,
-            $this->acceptName,
-            (string) request()->ip(),
-        );
+        try {
+            $quote = QuoteAcceptance::accept(
+                $this->quote->fresh(),
+                $chosen,
+                $this->acceptName,
+                (string) request()->ip(),
+            );
+        } catch (RuntimeException) {
+            // De offerte is verlopen of ingetrokken terwijl deze pagina open
+            // stond. Dat heeft zijn eigen scherm; de controller stuurt een
+            // offerte die niet meer te antwoorden is daar zelf naartoe.
+            $this->redirect($this->quote->publicUrl(), navigate: false);
+
+            return;
+        }
 
         $this->redirect($this->afterAcceptUrl($quote), navigate: false);
     }
@@ -113,7 +136,13 @@ class QuotePage extends Component
             'rejectReason.min' => Translation::get('validation-reject-reason-required', 'quote', 'Geef aan waarom u afwijst'),
         ]);
 
-        QuoteAcceptance::reject($this->quote->fresh(), $this->rejectReason);
+        try {
+            QuoteAcceptance::reject($this->quote->fresh(), $this->rejectReason);
+        } catch (RuntimeException) {
+            // Verlopen of ingetrokken tijdens het invullen: naar hetzelfde
+            // eindscherm, niet naar een foutpagina. Alleen deze uitzondering,
+            // zodat een echte storing wel gewoon een storing blijft.
+        }
 
         $this->redirect($this->quote->publicUrl(), navigate: false);
     }

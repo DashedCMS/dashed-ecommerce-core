@@ -22,6 +22,15 @@ class QuoteSender
             throw new RuntimeException(__('Een offerte zonder regels kan niet verstuurd worden'));
         }
 
+        // Quote::isExpired() is voor een concept altijd false, dus zonder deze
+        // controle blijft de verstuurknop staan en komt de offerte aan terwijl de
+        // klant er al niets meer mee kan: de publieke pagina toont hem dan
+        // meteen het verlopen-scherm. Hier en niet in de knop, want dit is de
+        // enige deur waar het scherm, een revisie en een latere API door gaan.
+        if ($quote->valid_until !== null && $quote->valid_until->endOfDay()->isPast()) {
+            throw new RuntimeException(__('De geldigheidsdatum ligt in het verleden; zet "Geldig tot en met" op een datum in de toekomst'));
+        }
+
         $quote->email = $email;
         $quote->total = QuoteTotals::for($quote)->total;
         $quote->save();

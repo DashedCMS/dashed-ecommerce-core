@@ -7,6 +7,21 @@
     <div class="grid md:grid-cols-6 gap-4 custom-view-order">
         <div class="md:col-span-4">
             <div class="grid gap-4">
+                @if($record->quote)
+                    <x-filament::section>
+                        <div class="flex flex-wrap items-center gap-2 text-sm">
+                            <span>{{ __('Ontstaan uit offerte') }}</span>
+                            @can('view_quote')
+                                <x-filament::link
+                                    :href="\Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::getUrl('edit', ['record' => $record->quote])">
+                                    {{ $record->quote->displayNumber() }}
+                                </x-filament::link>
+                            @else
+                                <span class="font-medium">{{ $record->quote->displayNumber() }}</span>
+                            @endcan
+                        </div>
+                    </x-filament::section>
+                @endif
                 <div>
                     @livewire('order-view-statusses', ['order' => $record])
                 </div>

@@ -20,9 +20,32 @@ class QuotePdf
 {
     public static function path(Quote $quote, bool $accepted = false): string
     {
+        return self::pathFor($quote, $accepted ? '-akkoord' : '');
+    }
+
+    /**
+     * Het voorbeeld van de beheerder heeft zijn eigen pad. Zonder dat schrijft
+     * een klik op Voorbeeld bij een al verstuurde offerte precies het bestand
+     * over dat de klant gemaild kreeg en dat de publieke pagina aanbiedt.
+     *
+     * Dit staat bewust naast de boolean $accepted en niet als derde waarde
+     * daarvan: die boolean onderscheidt de twee documenten van de klant, het
+     * verstuurde en het bewijsstuk. Het voorbeeld is een ander soort ding, met
+     * een andere lezer (de beheerder), een wegwerplevensduur en eigen toegang.
+     * Een drietrapskeuze zou elke bestaande aanroep dwingen een toestand te
+     * noemen, en het voorbeeldpad bereikbaar maken vanaf plekken die het
+     * klantdocument bedoelen.
+     */
+    public static function previewPath(Quote $quote): string
+    {
+        return self::pathFor($quote, '-voorbeeld');
+    }
+
+    private static function pathFor(Quote $quote, string $suffix): string
+    {
         $name = $quote->quote_number ?: ('concept-'.$quote->id);
 
-        return 'dashed/quotes/quote-'.$name.'-v'.$quote->version.'-'.$quote->hash.($accepted ? '-akkoord' : '').'.pdf';
+        return 'dashed/quotes/quote-'.$name.'-v'.$quote->version.'-'.$quote->hash.$suffix.'.pdf';
     }
 
     public static function render(Quote $quote, bool $accepted = false): string
@@ -64,6 +87,28 @@ class QuotePdf
         return URL::signedRoute('dashed.frontend.quote-download', [
             'hash' => $quote->hash,
             'accepted' => $accepted ? 1 : 0,
+        ]);
+    }
+
+    /** Het voorbeeld opnieuw schrijven en de ondertekende link erop teruggeven. */
+    public static function storePreview(Quote $quote): string
+    {
+        $path = self::previewPath($quote);
+
+        Storage::disk('dashed')->put($path, self::render($quote), 'private');
+
+        return $path;
+    }
+
+    public static function previewDownloadUrl(Quote $quote): ?string
+    {
+        if (! Storage::disk('dashed')->exists(self::previewPath($quote))) {
+            return null;
+        }
+
+        return URL::signedRoute('dashed.frontend.quote-download', [
+            'hash' => $quote->hash,
+            'preview' => 1,
         ]);
     }
 }

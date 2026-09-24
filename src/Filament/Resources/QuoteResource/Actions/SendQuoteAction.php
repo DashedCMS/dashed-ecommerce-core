@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions;
 
+use RuntimeException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -52,7 +53,21 @@ class SendQuoteAction
                     return;
                 }
 
-                QuoteSender::send($quote, $data['email'], $data['cc'] ?? null, $data['message'] ?? null);
+                // QuoteSender weigert een offerte zonder regels en een
+                // geldigheidsdatum in het verleden. Dat is een melding voor de
+                // beheerder, geen foutpagina.
+                try {
+                    QuoteSender::send($quote, $data['email'], $data['cc'] ?? null, $data['message'] ?? null);
+                } catch (RuntimeException $exception) {
+                    Notification::make()
+                        ->title(__('De offerte is niet verstuurd'))
+                        ->body($exception->getMessage())
+                        ->danger()
+                        ->persistent()
+                        ->send();
+
+                    return;
+                }
 
                 Notification::make()
                     ->title(__('De offerte is verstuurd'))

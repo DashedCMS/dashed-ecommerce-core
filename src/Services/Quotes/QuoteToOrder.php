@@ -38,10 +38,24 @@ class QuoteToOrder
 
         foreach ([
             'company_name', 'btw_id', 'first_name', 'last_name', 'email', 'phone_number',
-            'street', 'house_nr', 'zip_code', 'city', 'country',
             'invoice_street', 'invoice_house_nr', 'invoice_zip_code', 'invoice_city', 'invoice_country',
         ] as $field) {
             $order->{$field} = $quote->{$field};
+        }
+
+        // Het afleveradres valt terug op het factuuradres. Bij vooraf betalen
+        // vult de proforma-checkout het alsnog in, maar op rekening is er geen
+        // checkout: die order gaat rechtstreeks naar waiting_for_confirmation
+        // met een factuur, en Order zelf kent geen terugval van factuur- naar
+        // afleveradres.
+        foreach ([
+            'street' => 'invoice_street',
+            'house_nr' => 'invoice_house_nr',
+            'zip_code' => 'invoice_zip_code',
+            'city' => 'invoice_city',
+            'country' => 'invoice_country',
+        ] as $field => $invoiceField) {
+            $order->{$field} = filled($quote->{$field}) ? $quote->{$field} : $quote->{$invoiceField};
         }
 
         $order->subtotal = $totals->subtotal;
@@ -51,13 +65,20 @@ class QuoteToOrder
         $order->vat_percentages = $totals->vatPerRate;
         $order->save();
 
-        // Order::boot()'s creating-hook zet locale altijd op app()->getLocale(),
-        // dus de toewijzing hierboven overleeft die eerste save() niet vanzelf.
-        // Dat werkt vandaag alleen omdat QuoteAcceptance::accept() de apptaal al
+        // Order::boot()'s creating-hook zet locale altijd op app()->getLocale()
+        // en site_id altijd op de actieve site, dus een toewijzing hierboven
+        // overleeft die eerste save() niet vanzelf. Voor de taal werkt dat
+        // vandaag alleen omdat QuoteAcceptance::accept() de apptaal al
         // gelijkzet aan de offerte voordat build() draait; een latere CMS-actie
-        // of API die dat niet doet, hoort niet stil de verkeerde taal te krijgen.
-        if ($order->locale !== $quote->locale) {
+        // of API die dat niet doet, hoort niet stil de verkeerde taal te
+        // krijgen. De site is nooit goed te raden: een akkoord uit de wachtrij
+        // of van de console heeft geen actieve site, en een klant die de link op
+        // een zustersite opent zou zijn order daar laten landen. Dat verschuift
+        // ook welke betaalmethode op rekening gevonden wordt, want die zoekopdracht
+        // filtert op site_id, en dat gebeurt hieronder in placeOnAccount().
+        if ($order->locale !== $quote->locale || (string) $order->site_id !== (string) $quote->site_id) {
             $order->locale = $quote->locale;
+            $order->site_id = $quote->site_id;
             $order->save();
         }
 
