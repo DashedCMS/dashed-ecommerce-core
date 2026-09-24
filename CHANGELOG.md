@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.139.0 - 2026-09-24
+
+### Added
+- **Offertes.** Eigen model (`Quote`, `QuoteLine`) met regels inclusief btw, optionele keuzeregels, totalen per btw-tarief (`QuoteTotals`), nummering per site bij het eerste versturen en revisies die het nummer erven. Scherm Offertes in het CMS met versturen (instelbare mail met PDF-bijlage), herinnering, intrekken, antwoord vastleggen en een offerte maken vanuit een bestelling.
+- **Publieke offertepagina** met keuzeregels, akkoord met naam en vinkje (nooit via een link in de mail) of afwijzen met reden. Bij akkoord een tweede PDF met de gekozen regels, naam, datum en IP-adres. Downloads achter `QuoteAccess`; `dashed-ecommerce-core.quotes.require_signature` maakt de handtekening verplicht.
+- **Van offerte naar bestelling** via `QuoteToOrder`: vooraf betalen via een proforma met betaallink, of op rekening. Een geweigerde kredietcontrole laat de order als concept staan met een melding aan de beheerders.
+- **Verlopen en herinneringen**: offertes verlopen automatisch en krijgen op tijd een herinnering, per site in te stellen.
+- Migraties voor `dashed__quotes`, `dashed__quote_lines` en `quote_id` op orders.
+
+### Fixed (na eindreview)
+- Voorbeeld-PDF alleen via ondertekende link of voor een beheerder; order uit een offerte krijgt de site van de offerte en valt voor het afleveradres terug op het factuuradres; versturen met een verlopen geldigheidsdatum wordt geweigerd; taal van de offerte blijft staan op Livewire-updates; een order uit een offerte is niet als concept te verwijderen.
+
 ## v4.138.3 - 2026-09-23
 
 ### Added
