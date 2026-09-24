@@ -445,7 +445,7 @@ trait ProductCartActions
 
         $this->calculateCurrentPrices();
 
-        $this->volumeDiscounts = ($this->product && ! $this->product->hasCustomPriceForUser()) ? $this->product->volumeDiscounts : null;
+        $this->volumeDiscounts = ($this->product && ! $this->product->hasCustomPriceForUser() && ! $this->product->isExcludedFromDiscounts()) ? $this->product->volumeDiscounts : null;
         if ($this->volumeDiscounts) {
             $this->volumeDiscounts = $this->volumeDiscounts
                 ->map(function ($volumeDiscount) {

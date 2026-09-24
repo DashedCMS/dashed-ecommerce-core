@@ -307,7 +307,7 @@ class CartHelper
                 }
             }
         } elseif (static::$discountCode->type == 'amount') {
-            $grossDiscount = (float) static::$discountCode->discount_amount;
+            $grossDiscount = $this->getAmountDiscount();
             $vatPartOfDiscount = 0.0;
 
             foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
@@ -587,6 +587,46 @@ class CartHelper
         });
     }
 
+    /**
+     * Het bedrag dat een code met een vast bedrag van de wagen afhaalt: nooit
+     * meer dan wat de producten waar de code voor geldt samen kosten, zodat
+     * een product dat van korting is uitgesloten niet alsnog gratis wordt.
+     * Een cadeaubon is betaalmiddel en mag over de hele wagen.
+     */
+    public function getAmountDiscount(): float
+    {
+        $discountCode = static::$discountCode;
+
+        if (! $discountCode || $discountCode->type !== 'amount') {
+            return 0.0;
+        }
+
+        $amount = (float) $discountCode->discount_amount;
+
+        if ($discountCode->is_giftcard) {
+            return $amount;
+        }
+
+        $this->setCartItems();
+        $this->preloadCartProducts();
+
+        $eligible = 0.0;
+
+        foreach (static::$cartItems as $item) {
+            $product = $this->getProductForCartItem($item);
+
+            if ($product) {
+                $item->model = $product;
+            }
+
+            if ($product ? $discountCode->appliesToProduct($product) : ! in_array($discountCode->valid_for, ['categories', 'products'], true)) {
+                $eligible += Product::getShoppingCartItemPrice($item);
+            }
+        }
+
+        return min($amount, round($eligible, 2));
+    }
+
     public function getProductForCartItem($cartItem): ?Product
     {
         $id = $cartItem->id; // product_id
@@ -835,7 +875,7 @@ class CartHelper
         $taxWithoutDiscount = static::$taxWithoutDiscount;
 
         if (static::$discountCode && static::$discountCode->type == 'amount') {
-            $discountAmount = static::$discountCode->discount_amount;
+            $discountAmount = $this->getAmountDiscount();
 
             if (static::$calculateInclusiveTax) {
                 foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
@@ -1037,7 +1077,7 @@ class CartHelper
                         - Product::getShoppingCartItemPrice($item, static::$discountCode);
                 }
             } elseif (static::$discountCode->type == 'amount') {
-                $totalDiscount = static::$discountCode->discount_amount;
+                $totalDiscount = $this->getAmountDiscount();
             }
         }
 
@@ -1201,7 +1241,7 @@ class CartHelper
         $totalVatPerPercentage = static::$totalVatPerPercentage;
 
         if (static::$discountCode && static::$discountCode->type == 'amount') {
-            $discount = static::$discountCode->discount_amount;
+            $discount = $this->getAmountDiscount();
 
             if (static::$calculateInclusiveTax) {
                 foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
@@ -1896,7 +1936,7 @@ class CartHelper
             if ($model) {
                 $price = $runtimeItem->options['originalPrice'] ?? null;
 
-                if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty()) {
+                if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty() && ! $model->isExcludedFromDiscounts()) {
                     $volumeDiscount = $model->volumeDiscounts
                         ->where('min_quantity', '<=', $runtimeItem->qty)
                         ->sortByDesc('min_quantity')

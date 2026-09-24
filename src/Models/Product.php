@@ -88,6 +88,7 @@ class Product extends Model
     protected $casts = [
         'site_ids' => 'array',
         'gs1_excluded' => 'boolean',
+        'exclude_from_discounts' => 'boolean',
         'images' => 'array',
         'copyable_to_childs' => 'array',
         'start_date' => 'datetime',
@@ -1298,6 +1299,17 @@ class Product extends Model
             ->withTrashed();
     }
 
+    /**
+     * Krijgt dit product nooit korting? Staat aan op het product zelf of op
+     * zijn productgroep. Geldt voor kortingscodes, globale kortingen en
+     * staffelkorting; een cadeaubon is betaalmiddel en blijft bruikbaar.
+     */
+    public function isExcludedFromDiscounts(): bool
+    {
+        return (bool) $this->exclude_from_discounts
+            || (bool) $this->productGroup?->exclude_from_discounts;
+    }
+
     public function showableCharacteristics($withoutIds = [])
     {
         return Cache::rememberForever('product-showable-characteristics-'.$this->id, function () use ($withoutIds) {
@@ -1717,7 +1729,7 @@ class Product extends Model
         }
 
         // 9) Volume discounts (alleen als er een model is en de gebruiker geen eigen prijs heeft)
-        if ($model && method_exists($model, 'volumeDiscounts') && ! $model->hasCustomPriceForUser()) {
+        if ($model && method_exists($model, 'volumeDiscounts') && ! $model->hasCustomPriceForUser() && ! $model->isExcludedFromDiscounts()) {
             $volumeDiscount = $model->volumeDiscounts()
                 ->where('min_quantity', '<=', $itemQty)
                 ->orderBy('min_quantity', 'desc')
@@ -1733,22 +1745,7 @@ class Product extends Model
             $discountValidForProduct = false;
 
             if ($model) {
-                if ($discountCode->valid_for === 'categories') {
-                    $productCategoryIds = $model->productCategories()
-                        ->pluck('product_category_id');
-
-                    $discountValidForProduct = $discountCode
-                        ->productCategories()
-                        ->whereIn('product_category_id', $productCategoryIds)
-                        ->exists();
-                } elseif ($discountCode->valid_for === 'products') {
-                    $discountValidForProduct = $discountCode
-                        ->products()
-                        ->where('product_id', $model->id)
-                        ->exists();
-                } else {
-                    $discountValidForProduct = true;
-                }
+                $discountValidForProduct = $discountCode->appliesToProduct($model);
             } else {
                 // Custom items: alleen geldig als discount niet beperkt is tot categories/products
                 $discountValidForProduct = $discountCode->valid_for !== 'categories'

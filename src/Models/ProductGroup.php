@@ -44,6 +44,7 @@ class ProductGroup extends Model
         'missing_variations' => 'array',
         'excluded_variations' => 'array',
         'gs1_excluded' => 'boolean',
+        'exclude_from_discounts' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

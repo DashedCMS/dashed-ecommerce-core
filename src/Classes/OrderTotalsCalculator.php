@@ -165,7 +165,8 @@ class OrderTotalsCalculator
      *
      * Zelfde afweging als Product::getShoppingCartItemPrice() stap 10, de plek
      * waar de winkelwagen een procentuele code toepast: de code kan tot
-     * bepaalde categorieën of producten beperkt zijn, en een regel zonder
+     * bepaalde categorieën of producten beperkt zijn, het product kan van
+     * korting zijn uitgesloten, en een regel zonder
      * gekoppeld product telt daar als custom item dat alleen korting krijgt als
      * de code niet zo beperkt is.
      *
@@ -194,17 +195,7 @@ class OrderTotalsCalculator
             return in_array($discountCode->valid_for, ['categories', 'products'], true) ? 0.0 : $percentage;
         }
 
-        if ($discountCode->valid_for === 'categories') {
-            return $discountCode->productCategories()
-                ->whereIn('product_category_id', $product->productCategories()->pluck('product_category_id'))
-                ->exists() ? $percentage : 0.0;
-        }
-
-        if ($discountCode->valid_for === 'products') {
-            return $discountCode->products()->where('product_id', $product->id)->exists() ? $percentage : 0.0;
-        }
-
-        return $percentage;
+        return $discountCode->appliesToProduct($product) ? $percentage : 0.0;
     }
 
     /**

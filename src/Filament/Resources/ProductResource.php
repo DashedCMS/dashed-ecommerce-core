@@ -131,6 +131,9 @@ class ProductResource extends Resource
                 Toggle::make('public')
                     ->label(__('Openbaar'))
                     ->default(1),
+                Toggle::make('exclude_from_discounts')
+                    ->label(__('Uitsluiten van korting'))
+                    ->helperText(__('Kortingscodes, acties en staffelkorting gelden niet voor dit product. Een cadeaubon blijft bruikbaar. Kan ook voor een hele productgroep.')),
                 Toggle::make('is_bundle')
                     ->label(__('Bundel product'))
                     ->helperText(__('Bestaat dit product uit meerdere andere producten?'))

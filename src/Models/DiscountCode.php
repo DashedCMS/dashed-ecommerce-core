@@ -186,21 +186,7 @@ class DiscountCode extends Model
         if ($this->type == 'amount') {
             return $discountedPrice;
         }
-        $discountValidForProduct = false;
-
-        if ($this->valid_for == 'categories') {
-            if ($this->productCategories()->whereIn('product_category_id', $product->productCategories()->pluck('product_category_id'))->exists()) {
-                $discountValidForProduct = true;
-            }
-        } elseif ($this->valid_for == 'products') {
-            if ($this->products()->where('product_id', $product->id)->exists()) {
-                $discountValidForProduct = true;
-            }
-        } else {
-            $discountValidForProduct = true;
-        }
-
-        if ($discountValidForProduct) {
+        if ($this->appliesToProduct($product)) {
             if ($this->type == 'percentage') {
                 $discountedPrice = round(($discountedPrice / $quantity / 100) * (100 - $this->discount_percentage), 2) * $quantity;
             } elseif ($this->type == 'amount') {
@@ -312,7 +298,7 @@ class DiscountCode extends Model
             $amountOfCart = 0;
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
-                if ($item->model && $this->productCategories()->whereIn('product_category_id', $item->model->productCategories()->pluck('product_category_id'))->exists()) {
+                if ($item->model && $this->appliesToProduct($item->model)) {
                     $amountOfCart = $amountOfCart + ((float) $item->model->priceForUser() * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
@@ -335,7 +321,7 @@ class DiscountCode extends Model
             $amountOfCart = 0;
             $productsInCart = 0;
             foreach ($itemsInCart as $item) {
-                if ($item->model && $this->products()->where('product_id', $item->model->id)->exists()) {
+                if ($item->model && $this->appliesToProduct($item->model)) {
                     $amountOfCart = $amountOfCart + ((float) $item->model->priceForUser() * $item->qty);
                     $productsInCart = $productsInCart + $item->qty;
                 }
@@ -356,6 +342,12 @@ class DiscountCode extends Model
             }
         } else {
             if ($itemsInCart->count() == 0) {
+                return false;
+            }
+
+            // Alleen producten die van korting zijn uitgesloten: dan levert de
+            // code niets op en weigeren we hem liever meteen.
+            if (! $this->is_giftcard && $itemsInCart->every(fn ($item) => $item->model && $item->model->isExcludedFromDiscounts())) {
                 return false;
             }
 
@@ -388,19 +380,29 @@ class DiscountCode extends Model
             return false;
         }
 
-        if ($this->valid_for == 'categories') {
-            if ($this->productCategories()->whereIn('product_category_id', $product->productCategories()->pluck('product_category_id'))->exists()) {
-                return true;
-            }
-        } elseif ($this->valid_for == 'products') {
-            if ($this->products()->where('product_id', $product->id)->exists()) {
-                return true;
-            }
-        } else {
-            return true;
+        return $this->appliesToProduct($product);
+    }
+
+    /**
+     * Valt dit product onder de code? Kijkt naar de beperking tot categorieën
+     * of producten én naar de uitsluiting van korting op het product of zijn
+     * groep. Een cadeaubon is betaalmiddel en telt die uitsluiting niet.
+     */
+    public function appliesToProduct(Product $product): bool
+    {
+        if (! $this->is_giftcard && $product->isExcludedFromDiscounts()) {
+            return false;
         }
 
-        return false;
+        if ($this->valid_for == 'categories') {
+            return $this->productCategories()->whereIn('product_category_id', $product->productCategories()->pluck('product_category_id'))->exists();
+        }
+
+        if ($this->valid_for == 'products') {
+            return $this->products()->where('product_id', $product->id)->exists();
+        }
+
+        return true;
     }
 
     public function scopeIsGlobalDiscount($query)

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.141.0 - 2026-09-28
+
+### Added
+- **Producten en productgroepen uitsluiten van korting.** Schakelaar "Uitsluiten van korting" op het product en op de productgroep (kolom `exclude_from_discounts`, migratie `add_exclude_from_discounts_to_products_and_groups`); `Product::isExcludedFromDiscounts()` kijkt naar beide. Een uitgesloten product krijgt geen procentuele code, geen globale korting en geen staffelkorting (de staffels verdwijnen ook van de productpagina). Een code met een vast bedrag gaat nooit verder dan wat de producten waar hij voor geldt samen kosten (`CartHelper::getAmountDiscount()`). Een kortingscode wordt geweigerd als de wagen alleen uitgesloten producten bevat. Cadeaubonnen zijn betaalmiddel en blijven over de hele wagen bruikbaar. De afweging per product staat op één plek: `DiscountCode::appliesToProduct()`, ook gebruikt door `OrderTotalsCalculator::percentageForProduct()`. De kassa (`POSCart`) rekent kortingen apart en valt hier nog buiten.
+
 ## v4.140.2 - 2026-09-28
 
 ### Fixed
