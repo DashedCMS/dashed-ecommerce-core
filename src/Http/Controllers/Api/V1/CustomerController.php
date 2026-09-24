@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
+use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 
 /**
  * Klanten = aggregatie van bestellingen op e-mailadres (er is geen los klant-
@@ -18,6 +20,34 @@ use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
 class CustomerController extends Controller
 {
     private const PAID_STATUSES = ['paid', 'waiting_for_confirmation', 'partially_paid'];
+
+    /**
+     * Zoek échte klant-accounts (User) met hun id — voor het koppelen van een
+     * account aan de kassa-bon (customer_user_id). Spiegelt de Filament POS
+     * "Account"-select: TokenizedSearch over first_name/last_name/email. In
+     * tegenstelling tot index() (e-mail-aggregatie zonder id) geeft dit de
+     * user-id terug zodat de app kan koppelen.
+     */
+    public function accounts(Request $request): JsonResponse
+    {
+        $search = trim((string) $request->query('search', ''));
+        if (mb_strlen($search) < 2) {
+            return response()->json(['data' => []]);
+        }
+
+        $users = TokenizedSearch::apply(User::query(), $search, ['first_name', 'last_name', 'email'])
+            ->limit(25)
+            ->get(['id', 'first_name', 'last_name', 'email', 'company']);
+
+        return response()->json([
+            'data' => $users->map(fn (User $u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'company' => $u->company,
+            ])->values(),
+        ]);
+    }
 
     public function index(Request $request): JsonResponse
     {

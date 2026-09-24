@@ -127,6 +127,7 @@ Route::prefix('api/v1')
         Route::get('automation-rule-runs', [AutomationRuleController::class, 'runs'])->middleware('ability:orders.read');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
+        Route::get('customers/accounts', [CustomerController::class, 'accounts'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
 
         // Verzend-hub: één overzicht van alle zendingen over de carriers heen.
