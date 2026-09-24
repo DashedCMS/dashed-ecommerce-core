@@ -9,25 +9,37 @@
 @endphp
 
 <x-checkout-master>
-    <section class="py-[clamp(40px,6vw,80px)]">
-        <x-container>
-            <div class="mx-auto max-w-md text-center">
-                <h1 class="font-display text-[clamp(26px,3vw,38px)] text-black">
-                    {{ Translation::get('quote', 'quote', 'Offerte') }} {{ $quote->displayNumber() }}
-                </h1>
-                <p class="mt-4">{{ $bericht }}</p>
+    <section class="dq">
+        @include('dashed-ecommerce-core::quotes.partials.styles', [
+            'color' => \Dashed\DashedEcommerceCore\Services\Quotes\QuoteBranding::for($quote)->color(),
+        ])
 
-                @if ($quote->order)
-                    <a href="{{ route('dashed.frontend.proforma-checkout', ['orderHash' => $quote->order->hash]) }}"
-                       class="button button--primary mt-8 inline-flex">
-                        {{ Translation::get('to-payment', 'quote', 'Naar de betaling') }}
-                    </a>
-                @else
-                    <a href="{{ url('/') }}" class="button button--primary mt-8 inline-flex">
-                        {{ Translation::get('to-homepage', 'quote', 'Naar de homepage') }}
-                    </a>
-                @endif
+        <div class="dq-wrap" style="max-width: 560px">
+            <div class="dq-card">
+                <div class="dq-head dq-center" style="display: block">
+                    <p class="dq-eyebrow">{{ Translation::get('quote', 'quote', 'Offerte') }} {{ $quote->displayNumber() }}</p>
+                    @if ($quote->title)
+                        <h1 class="dq-h1">{{ $quote->title }}</h1>
+                    @endif
+                    <p class="dq-sub" style="font-size: 17px; color: #3f3f46">{{ $bericht }}</p>
+
+                    @if ($quote->order)
+                        <a href="{{ route('dashed.frontend.proforma-checkout', ['orderHash' => $quote->order->hash]) }}" class="dq-btn">
+                            {{ Translation::get('to-payment', 'quote', 'Naar de betaling') }}
+                        </a>
+                    @else
+                        <a href="{{ url('/') }}" class="dq-btn">
+                            {{ Translation::get('to-homepage', 'quote', 'Naar de homepage') }}
+                        </a>
+                    @endif
+
+                    @if ($quote->status === \Dashed\DashedEcommerceCore\Models\Quote::STATUS_ACCEPTED && ($pdf = \Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf::downloadUrl($quote, accepted: true)))
+                        <p style="margin-top: 16px">
+                            <a href="{{ $pdf }}" class="dq-link">{{ Translation::get('download-signed-pdf', 'quote', 'Getekende offerte downloaden') }}</a>
+                        </p>
+                    @endif
+                </div>
             </div>
-        </x-container>
+        </div>
     </section>
 </x-checkout-master>

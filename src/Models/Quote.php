@@ -29,6 +29,9 @@ class Quote extends Model
 
     protected $guarded = [];
 
+    /** Een PNG-data-URL van tientallen kilobytes hoort niet in elke array of JSON. */
+    protected $hidden = ['accepted_signature'];
+
     protected $casts = [
         'valid_until' => 'date',
         'prices_ex_vat' => 'boolean',

@@ -8,6 +8,7 @@ use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\QuoteLine;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteTotals;
+use Dashed\DashedEcommerceCore\Services\Quotes\QuoteSignature;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteAcceptance;
 
 class QuotePage extends Component
@@ -22,6 +23,9 @@ class QuotePage extends Component
     public string $acceptName = '';
 
     public bool $acceptAgreed = false;
+
+    /** PNG-data-URL uit het tekenvlak, gezet door de browser. */
+    public string $signature = '';
 
     public string $rejectReason = '';
 
@@ -100,10 +104,16 @@ class QuotePage extends Component
         $this->validate([
             'acceptName' => ['required', 'string', 'min:2', 'max:255'],
             'acceptAgreed' => ['accepted'],
+            'signature' => ['required', 'string', function ($attribute, $value, $fail) {
+                if (! QuoteSignature::normalize($value)) {
+                    $fail(Translation::get('validation-signature-required', 'quote', 'Zet uw handtekening in het vak'));
+                }
+            }],
         ], [
             'acceptName.required' => Translation::get('validation-name-required', 'quote', 'Vul uw naam in'),
             'acceptName.min' => Translation::get('validation-name-required', 'quote', 'Vul uw naam in'),
             'acceptAgreed.accepted' => Translation::get('validation-agree-required', 'quote', 'Vink aan dat u akkoord gaat'),
+            'signature.required' => Translation::get('validation-signature-required', 'quote', 'Zet uw handtekening in het vak'),
         ]);
 
         $chosen = collect($this->selected)->filter()->keys()->map(fn ($id) => (int) $id)->all();
@@ -114,6 +124,7 @@ class QuotePage extends Component
                 $chosen,
                 $this->acceptName,
                 (string) request()->ip(),
+                $this->signature,
             );
         } catch (RuntimeException) {
             // De offerte is verlopen of ingetrokken terwijl deze pagina open

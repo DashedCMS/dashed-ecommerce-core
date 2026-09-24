@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.140.0 - 2026-09-24
+
+### Added
+- **Handtekening bij akkoord op een offerte.** De akkoordpagina heeft een tekenvak (muis of vinger); akkoord vraagt nu naam, handtekening en het vinkje. De handtekening staat op `accepted_signature` en in de akkoord-PDF. `QuoteSignature::normalize()` laat alleen een echte PNG tot 300 kB door. Migratie `add_accepted_signature_to_dashed__quotes`.
+
+### Changed
+- **Offerte-PDF en offertepagina opnieuw opgemaakt.** Logo, huiskleur, Aan/Van/Details in drie kolommen, regeltabel met gekleurde kop, totaalblok en voetbalk. Opsommingen in intro en voorwaarden worden als lijst getoond. De pagina's hebben een eigen stijlblok in plaats van Tailwind-klassen, zodat ze ook in projecten zonder `vendor/dashed` in de Tailwind-build opgemaakt zijn. Logo, kleur en afzender komen uit `QuoteBranding`, op de site van de offerte. Na akkoord is de getekende PDF te downloaden vanaf het eindscherm.
+
 ## v4.139.2 - 2026-09-24
 
 ### Fixed

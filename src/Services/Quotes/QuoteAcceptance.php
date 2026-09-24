@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Services\Quotes;
 
 use RuntimeException;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\App;
 use Dashed\DashedEcommerceCore\Models\Quote;
 
 /**
@@ -28,8 +28,11 @@ class QuoteAcceptance
      * order) telt hier niet als "klaar": deze aanroep slaat de overgang dan
      * over en bouwt gewoon de order alsnog. Alleen een geaccepteerde offerte
      * met een order erop is echt af.
+     *
+     * De handtekening is een PNG-data-URL uit het tekenvlak; wat
+     * QuoteSignature niet als echte PNG herkent wordt niet opgeslagen.
      */
-    public static function accept(Quote $quote, array $selectedLineIds, string $name, string $ip): Quote
+    public static function accept(Quote $quote, array $selectedLineIds, string $name, string $ip, ?string $signature = null): Quote
     {
         if ($quote->status === Quote::STATUS_ACCEPTED && $quote->order_id) {
             return $quote;
@@ -44,7 +47,7 @@ class QuoteAcceptance
 
             $didAccept = false;
 
-            $quote = DB::transaction(function () use ($quote, $selectedLineIds, $name, $ip, &$didAccept) {
+            $quote = DB::transaction(function () use ($quote, $selectedLineIds, $name, $ip, $signature, &$didAccept) {
                 /** @var Quote $locked */
                 $locked = Quote::query()->whereKey($quote->id)->lockForUpdate()->first();
 
@@ -68,6 +71,7 @@ class QuoteAcceptance
                 $locked->accepted_at = now();
                 $locked->accepted_name = $name;
                 $locked->accepted_ip = $ip;
+                $locked->accepted_signature = QuoteSignature::normalize($signature);
                 $locked->total = QuoteTotals::for($locked)->total;
                 $locked->save();
 
