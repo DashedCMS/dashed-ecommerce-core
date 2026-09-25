@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Services\Quotes;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
@@ -53,6 +54,13 @@ class QuoteConverter
             $quote = $quote->fresh(['lines', 'order', 'user']);
 
             if ($quote->order) {
+                // Een order die nog concept is en geen proforma, is nooit
+                // geplaatst: een geweigerde omzetting op rekening, of een
+                // plaatsing die halverwege klapte. Dat is geen succes.
+                if ($quote->order->status === 'concept' && ! $quote->order->is_proforma) {
+                    return new QuoteConversionResult($quote->order, null, 'not_placed');
+                }
+
                 return new QuoteConversionResult($quote->order, self::redirectFor($quote->order));
             }
 
@@ -86,9 +94,18 @@ class QuoteConverter
             App::setLocale($quote->locale);
 
             try {
-                $order = QuoteToOrder::build($quote);
-                $quote->order_id = $order->id;
-                $quote->save();
+                // Bouwen en koppelen in een transactie: build() slaat de order
+                // (met quote_id) op voordat de regels erin staan. Klapt het
+                // daartussen, dan bleef een order achter die de unieke index op
+                // quote_id bezet hield, en liep elke nieuwe poging daarop vast.
+                // Het plaatsen blijft erbuiten, want dat verstuurt mails en jobs.
+                $order = DB::transaction(function () use ($quote) {
+                    $order = QuoteToOrder::build($quote);
+                    $quote->order_id = $order->id;
+                    $quote->save();
+
+                    return $order;
+                });
 
                 $result = match ($mode) {
                     self::CHECKOUT, self::DRAFT => self::asProforma($order),
