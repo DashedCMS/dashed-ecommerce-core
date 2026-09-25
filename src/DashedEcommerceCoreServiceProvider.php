@@ -147,6 +147,13 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Listeners\LogSentOrderMail::class,
         );
 
+        // Offertes: meldingen hangen aan events, zodat akkoord, afwijzing en
+        // omzetten zelf niets van mails weten.
+        \Illuminate\Support\Facades\Event::listen(
+            [\Dashed\DashedEcommerceCore\Events\Quotes\QuoteAccepted::class, \Dashed\DashedEcommerceCore\Events\Quotes\QuoteRejected::class],
+            \Dashed\DashedEcommerceCore\Listeners\Quotes\NotifyAdminsOfQuoteAnswer::class,
+        );
+
         // De print-queue-routes (routes/print-queue-api.php) beschermen elke
         // daemon-call met de 'ensure.printer'-alias. Die moet hier geregistreerd
         // worden, anders faalt elke call met "Target class [ensure.printer] does

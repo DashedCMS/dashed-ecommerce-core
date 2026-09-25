@@ -135,7 +135,7 @@ class QuotePage extends Component
             return;
         }
 
-        $this->redirect($this->afterAcceptUrl($quote), navigate: false);
+        $this->redirect($quote->publicUrl(), navigate: false);
     }
 
     public function reject(): void
@@ -156,22 +156,6 @@ class QuotePage extends Component
         }
 
         $this->redirect($this->quote->publicUrl(), navigate: false);
-    }
-
-    /**
-     * Vooraf betalen gaat naar de bestaande proforma-checkout; op rekening
-     * naar het bedanktscherm. Is de order door een kredietweigering concept
-     * gebleven, dan ook naar het bedanktscherm: de klant hoeft daar niets mee.
-     */
-    private function afterAcceptUrl(Quote $quote): string
-    {
-        $order = $quote->order;
-
-        if ($order && $order->is_proforma) {
-            return route('dashed.frontend.proforma-checkout', ['orderHash' => $order->hash]);
-        }
-
-        return $quote->publicUrl();
     }
 
     public function render()
