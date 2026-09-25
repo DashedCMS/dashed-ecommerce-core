@@ -35,7 +35,7 @@ function makeBackorderCartProduct(): Product
         'stock' => 1,
         // Hoog total_stock zodat removeInvalidItems het item niet terugbrengt
         // (zoals calculateStock dat doet voor out_of_stock_sellable producten).
-        'total_stock' => 100000,
+        'total_stock' => 1000,
         'in_stock' => 1,
         'stock_status' => 'in_stock',
         'expected_delivery_in_days' => 5,

@@ -278,7 +278,7 @@ class DiscountCode extends Model
         if ($this->use_stock) {
             return $this->stock - $this->orders->where('status', 'pending')->count();
         } else {
-            return 100000;
+            return Product::UNLIMITED_STOCK;
         }
     }
 

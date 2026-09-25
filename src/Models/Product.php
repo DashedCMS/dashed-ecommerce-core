@@ -52,6 +52,13 @@ class Product extends Model
     use LogsActivity;
     use SoftDeletes;
 
+    /**
+     * Voorraad voor alles wat onbeperkt verkoopbaar is (geen voorraadbeheer,
+     * of doorverkopen als het op is). Een getal en geen null, omdat
+     * total_stock overal als aantal gelezen wordt.
+     */
+    public const UNLIMITED_STOCK = 1000;
+
     protected $table = 'dashed__products';
 
     public $translatable = [
@@ -649,7 +656,7 @@ class Product extends Model
         $stock = 0;
 
         if ($this->is_bundle) {
-            $minStock = 100000;
+            $minStock = self::UNLIMITED_STOCK;
             foreach ($this->bundleProducts as $bundleProduct) {
                 if ($bundleProduct->stock() < $minStock) {
                     $minStock = $bundleProduct->stock();
@@ -659,13 +666,13 @@ class Product extends Model
             $stock = $minStock;
         } elseif ($this->use_stock) {
             if ($this->outOfStockSellable()) {
-                $stock = 100000;
+                $stock = self::UNLIMITED_STOCK;
             } else {
                 $stock = $this->stock;
             }
         } else {
             if ($this->stock_status == 'in_stock') {
-                $stock = 100000;
+                $stock = self::UNLIMITED_STOCK;
             } else {
                 $stock = 0;
             }
@@ -790,7 +797,7 @@ class Product extends Model
             return (int) $this->stock - (int) $reserved;
         }
 
-        return $this->stock_status == 'in_stock' ? 100000 : 0;
+        return $this->stock_status == 'in_stock' ? self::UNLIMITED_STOCK : 0;
     }
 
     public function inStock(): bool

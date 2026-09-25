@@ -59,7 +59,7 @@ class ProductTable extends TableWidget
                 TextColumn::make('stock')
                     ->label(__('Voorraad'))
                     ->sortable()
-                    ->getStateUsing(fn ($record) => $record->use_stock ? $record->stock : ($record->stock_status == 'in_stock' ? 100000 : 0)),
+                    ->getStateUsing(fn ($record) => $record->use_stock ? $record->stock : ($record->stock_status == 'in_stock' ? Product::UNLIMITED_STOCK : 0)),
                 TextColumn::make('amountSold')
                     ->money('EUR')
                     ->label(__('Totaal opgeleverd'))
