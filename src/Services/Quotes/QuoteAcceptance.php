@@ -80,7 +80,11 @@ class QuoteAcceptance
             return $quote;
         }
 
-        QuotePdf::store($quote, accepted: true);
+        // Binnen rescue(): een mislukte PDF-schrijving mag het akkoord en de
+        // meldingen niet tegenhouden. Mail en pagina checken toch al exists()
+        // en laten de downloadlink dan gewoon weg; een volgende poging kan
+        // niet meer herkansen, want de status staat al op geaccepteerd.
+        rescue(fn () => QuotePdf::store($quote, accepted: true));
 
         QuoteAccepted::dispatch($quote, $notifyCustomer);
 
