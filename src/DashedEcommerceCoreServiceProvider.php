@@ -154,6 +154,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Listeners\Quotes\NotifyAdminsOfQuoteAnswer::class,
         );
 
+        // Klantmails bij akkoord, afwijzing, intrekken en verlopen.
+        \Illuminate\Support\Facades\Event::listen(
+            [
+                \Dashed\DashedEcommerceCore\Events\Quotes\QuoteAccepted::class,
+                \Dashed\DashedEcommerceCore\Events\Quotes\QuoteRejected::class,
+                \Dashed\DashedEcommerceCore\Events\Quotes\QuoteWithdrawn::class,
+                \Dashed\DashedEcommerceCore\Events\Quotes\QuoteExpired::class,
+            ],
+            \Dashed\DashedEcommerceCore\Listeners\Quotes\SendQuoteCustomerMail::class,
+        );
+
         // De print-queue-routes (routes/print-queue-api.php) beschermen elke
         // daemon-call met de 'ensure.printer'-alias. Die moet hier geregistreerd
         // worden, anders faalt elke call met "Target class [ensure.printer] does
@@ -281,7 +292,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnProcessedMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRefundedMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\QuoteMail::class)
-            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\QuoteReminderMail::class);
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\QuoteReminderMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\Quotes\QuoteAcceptedCustomerMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\Quotes\QuoteRejectedCustomerMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\Quotes\QuoteWithdrawnCustomerMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\Quotes\QuoteExpiredCustomerMail::class);
 
         cms()->registerResourceDocs(
             resource: \Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource::class,

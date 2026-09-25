@@ -7,6 +7,7 @@ namespace Dashed\DashedEcommerceCore\Commands;
 use Illuminate\Console\Command;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Quote;
+use Dashed\DashedEcommerceCore\Events\Quotes\QuoteExpired;
 use Filament\Notifications\Notification as FilamentNotification;
 
 class ExpireQuotesCommand extends Command
@@ -26,6 +27,8 @@ class ExpireQuotesCommand extends Command
         foreach ($expired as $quote) {
             $quote->status = Quote::STATUS_EXPIRED;
             $quote->save();
+
+            QuoteExpired::dispatch($quote);
         }
 
         if ($expired->isNotEmpty()) {

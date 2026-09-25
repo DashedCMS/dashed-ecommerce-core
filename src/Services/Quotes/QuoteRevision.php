@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Quote;
+use Dashed\DashedEcommerceCore\Events\Quotes\QuoteWithdrawn;
 
 /**
  * Revisies, intrekken, en een offerte beginnen vanuit een bestelling.
@@ -89,6 +90,8 @@ class QuoteRevision
 
         $quote->status = Quote::STATUS_WITHDRAWN;
         $quote->save();
+
+        QuoteWithdrawn::dispatch($quote);
 
         return $quote;
     }
