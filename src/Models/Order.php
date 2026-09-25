@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Models;
 
 use Exception;
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Dashed\DashedCore\Models\User;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Support\Facades\App;
@@ -564,9 +564,10 @@ class Order extends Model
      * Een order die uit een offerte komt valt erbuiten, ook al ziet hij er als
      * proforma precies zo uit. Weggooien laat de geaccepteerde offerte naar een
      * verwijderde order wijzen: de klant krijgt op zijn offertepagina geen
-     * betaallink meer, en QuoteAcceptance::accept() stopt bij zijn eerste guard
-     * (geaccepteerd met een order_id), dus de order is ook niet opnieuw te
-     * bouwen. Dat akkoord is een toezegging van de klant en hoort niet met een
+     * betaallink meer, en de order is ook niet opnieuw te maken: orders uit een
+     * offerte komen alleen via QuoteConverter, en een nieuwe omzetting loopt
+     * vast op de unieke index op quote_id, die de verwijderde order bezet
+     * houdt. Dat akkoord is een toezegging van de klant en hoort niet met een
      * verwijderknop te verdampen.
      */
     public function isDeletableDraft(): bool
