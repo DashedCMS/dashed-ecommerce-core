@@ -203,6 +203,12 @@ class EditProductGroup extends EditRecord
             ->color('gray')
             ->button();
 
+        // Acties die een ander pakket op de productgroep zet (bijvoorbeeld
+        // dashed-ecommerce-bol), zonder dat ec-core dat pakket kent.
+        foreach (ecommerce()->builder('productGroupHeaderActions') as $makeAction) {
+            $buttons[] = $makeAction();
+        }
+
         if (class_exists(AnalyzeSeoAction::class)) {
             $buttons[] = AnalyzeSeoAction::make();
         }

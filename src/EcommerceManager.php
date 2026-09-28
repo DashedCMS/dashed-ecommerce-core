@@ -10,6 +10,8 @@ class EcommerceManager
         'paymentServiceProviders' => [],
         'fulfillmentProviders' => [],
         'productPriceFields' => [],
+        'productGroupHeaderActions' => [],
+        'productGroupBulkActions' => [],
         'customOrderFields' => [
 //            Example:
 //            'orderNumber' => [

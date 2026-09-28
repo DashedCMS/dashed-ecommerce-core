@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Resources;
 
+use Dashed\DashedEcommerceCore\Classes\BolTitleTemplate;
+use Dashed\DashedEcommerceCore\Classes\ProductFeedAttributes;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedTranslations\Models\Translation;
@@ -18,33 +20,10 @@ class ProductFeedResource extends JsonResource
 
         $categories = $product->productCategories?->pluck('name')->values()->all() ?? [];
 
-        $filters = $product->productGroup?->simpleFilters() ?? [];
-        $productFilters = $product->relationLoaded('productFilters') ? $product->productFilters : collect();
-
-        // Map: filterId => activeOptionId
-        $activeByFilterId = [];
-        foreach ($productFilters as $pf) {
-            $activeByFilterId[(int)$pf->product_filter_id] = (int)($pf->pivot->product_filter_option_id ?? 0);
-        }
-
-        // Zet active op filters
-        foreach ($filters as &$filter) {
-            $filterId = (int)($filter['id'] ?? 0);
-            if (! $filterId) {
-                continue;
-            }
-
-            $active = $activeByFilterId[$filterId] ?? null;
-
-            if ($active) {
-                $filter['active'] = $active;
-            } elseif (count($filter['options'] ?? []) === 1) {
-                $filter['active'] = $filter['options'][0]['id'];
-            } else {
-                $filter['active'] = null;
-            }
-        }
-        unset($filter);
+        $filters = ProductFeedAttributes::activeFilters(
+            $product,
+            $product->productGroup?->simpleFilters() ?? []
+        );
 
         $images = $product->originalImagesToShow;
         if (empty($images) && $product->productGroup) {
@@ -83,47 +62,7 @@ class ProductFeedResource extends JsonResource
             );
         }
 
-        // Attributes (veiligere keys)
-        $attributes = [];
-
-        if ($product->productGroup && $product->productGroup->relationLoaded('activeProductFilters')) {
-            foreach ($product->productGroup->activeProductFilters as $filterModel) {
-                $filterId = (int)$filterModel->id;
-                $activeId = null;
-
-                foreach ($filters as $f) {
-                    if ((int)($f['id'] ?? 0) === $filterId) {
-                        $activeId = $f['active'] ?? null;
-
-                        break;
-                    }
-                }
-
-                $value = '';
-                if ($activeId) {
-                    $opt = $filterModel->productFilterOptions->firstWhere('id', (int)$activeId);
-                    $value = $opt?->name ?? '';
-                }
-
-                if ($value !== '') {
-                    $attributes[$filterModel->name] = $value;
-                }
-            }
-        }
-
-        if ($product->productGroup) {
-            foreach ($product->productGroup->allCharacteristicsWithoutFilters() as $gc) {
-                if (! empty($gc['value'])) {
-                    $attributes[$gc['name']] = $gc['value'];
-                }
-            }
-        }
-
-        foreach ($product->allCharacteristics() as $gc) {
-            if (! empty($gc['value'])) {
-                $attributes[$gc['name']] = $gc['value'];
-            }
-        }
+        $attributes = ProductFeedAttributes::forProduct($product, $filters);
 
         $array = [
             'id' => $product->id,
@@ -174,11 +113,7 @@ class ProductFeedResource extends JsonResource
         }
 
         if ($array['bol_title']) {
-            $bolTitle = str($array['bol_title']);
-            foreach ($attributes as $name => $value) {
-                $bolTitle = $bolTitle->replace(':' . str($name)->lower() . ':', $value);
-            }
-            $array['bol_title'] = $bolTitle->toString();
+            $array['bol_title'] = BolTitleTemplate::render((string) $array['bol_title'], $attributes);
         }
 
         $array['bol_description'] = self::bolDescription($description);

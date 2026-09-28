@@ -679,11 +679,11 @@ class ProductGroupResource extends Resource
                 RestoreAction::make(),
                 ForceDeleteAction::make(),
             ])
-            ->toolbarActions(ToolbarActions::getActions([
+            ->toolbarActions(ToolbarActions::getActions(array_merge([
                 BulkAssignCategoriesBulkAction::make(),
                 RestoreBulkAction::make(),
                 ForceDeleteBulkAction::make(),
-            ]))
+            ], array_map(fn ($makeAction) => $makeAction(), array_values(ecommerce()->builder('productGroupBulkActions'))))))
             ->filters([
                 TrashedFilter::make(),
                 Filter::make('categories')
