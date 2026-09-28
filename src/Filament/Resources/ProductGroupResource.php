@@ -574,7 +574,8 @@ class ProductGroupResource extends Resource
                             ->required()
                             ->default(5),
                         TextInput::make('discount_price')
-                            ->label(__('Kortings prijs'))
+                            ->label(__('Korting per stuk'))
+                            ->helperText(__('Dit bedrag gaat van de prijs van elk stuk af.'))
                             ->numeric()
                             ->required()
                             ->visible(fn (Get $get) => $get('type') == 'fixed')

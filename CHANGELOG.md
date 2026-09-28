@@ -6,6 +6,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Fixed
 - **Volumekorting per volle set (1+1-acties).** Een volumekorting gold altijd voor alle stuks in de regel, dus een 1+1-actie (50% vanaf 2) gaf bij 3 stuks ook 50% op het derde stuk: €2,985 in plaats van €3,98 bij een stukprijs van €1,99. Met de nieuwe schakelaar "Alleen per volle set" (`apply_per_set`) op een volumekorting geldt de korting alleen voor volle sets van het "vanaf aantal"; de rest betaalt de volle prijs. Staat standaard uit, zodat "vanaf 10 stuks 10%" op alle stuks blijft werken. `ProductGroupVolumeDiscount::getLinePrice()` rekent het uit, voor het regeltotaal in `Product::getShoppingCartItemPrice()` en voor de `unit_price`-snapshot in `CartHelper::removeInvalidItems()`. Migratie `add_apply_per_set_to_dashed__product_group_volume_discounts`.
+- **Volumekorting met vast bedrag maakte de regel gratis.** `ProductGroupVolumeDiscount` las `discount_amount`, maar de kolom heet `discount_price`; daardoor was de prijs van elke regel met zo'n korting €0. Een vast bedrag is nu korting per stuk (in het beheer "Korting per stuk"), nooit meer dan de prijs zelf. `getDiscountedPrice()` geeft voor beide types het kortingsbedrag terug.
 
 ## v4.140.0 - 2026-09-24
 

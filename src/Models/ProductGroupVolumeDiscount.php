@@ -58,32 +58,46 @@ class ProductGroupVolumeDiscount extends Model
      * Prijs van een hele regel van $quantity stuks. Met apply_per_set telt de
      * korting alleen voor volle sets van min_quantity stuks: bij 1+1 (50% vanaf
      * 2) krijgen 3 stuks korting op 2 stuks en betaalt het derde de volle prijs.
+     * Een vast bedrag (discount_price) is korting per stuk.
      */
     public function getLinePrice(float $lineTotal, int $quantity): float
     {
-        $discountedLineTotal = (float) $this->getPrice($lineTotal);
+        if ($quantity <= 0) {
+            return (float) $this->getPrice($lineTotal);
+        }
 
-        if (! $this->apply_per_set || $quantity <= 0) {
+        $discountedQuantity = $quantity;
+        if ($this->apply_per_set) {
+            $setSize = max(1, (int) $this->min_quantity);
+            $discountedQuantity = intdiv($quantity, $setSize) * $setSize;
+        }
+
+        if ($this->type != 'percentage') {
+            return max(0.0, $lineTotal - (float) $this->discount_price * $discountedQuantity);
+        }
+
+        $discountedLineTotal = (float) $this->getPrice($lineTotal);
+        if ($discountedQuantity === $quantity) {
             return $discountedLineTotal;
         }
 
-        $setSize = max(1, (int) $this->min_quantity);
-        $quantityInSets = intdiv($quantity, $setSize) * $setSize;
-        $discount = round(($lineTotal - $discountedLineTotal) * $quantityInSets / $quantity, 2);
+        $discount = round(($lineTotal - $discountedLineTotal) * $discountedQuantity / $quantity, 2);
 
         return $lineTotal - $discount;
     }
 
+    /**
+     * Het kortingsbedrag op $price (niet de prijs na korting).
+     */
     public function getDiscountedPrice($price, bool $formatResult = false): string|float
     {
-        $discountedPrice = $price;
         if ($this->type == 'percentage') {
-            $discountedPrice = $discountedPrice - ($discountedPrice / 100 * (100 - $this->discount_percentage));
+            $discount = $price - ($price / 100 * (100 - $this->discount_percentage));
         } else {
-            $discountedPrice = $discountedPrice - $this->discount_amount;
+            $discount = min((float) $price, (float) $this->discount_price);
         }
 
-        return $formatResult ? CurrencyHelper::formatPrice($discountedPrice) : $discountedPrice;
+        return $formatResult ? CurrencyHelper::formatPrice($discount) : $discount;
     }
 
     public function getDiscountString(): string
@@ -91,7 +105,7 @@ class ProductGroupVolumeDiscount extends Model
         if ($this->type == 'percentage') {
             return $this->discount_percentage . '%';
         } else {
-            return CurrencyHelper::formatPrice($this->discount_amount);
+            return CurrencyHelper::formatPrice($this->discount_price);
         }
     }
 }
