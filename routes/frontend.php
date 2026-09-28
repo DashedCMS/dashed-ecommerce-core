@@ -93,6 +93,11 @@ Route::group(
         Route::get('/download-quote/{hash}', [QuoteController::class, 'download'])
             ->middleware('throttle:dashed-order-pages')
             ->name('dashed.frontend.quote-download');
+        // De klant kiest na zijn akkoord om te bestellen. Toegang is de hash,
+        // net als de pagina; QuoteConverter maakt het idempotent.
+        Route::post('/quote/{hash}/order', [QuoteController::class, 'order'])
+            ->middleware('throttle:dashed-order-pages')
+            ->name('dashed.frontend.quote-order');
         Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->middleware('throttle:dashed-discount-code')->name('dashed.frontend.cart.apply-discount-code');
         Route::post('/add-to-cart/{product}', [CartController::class, 'addToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.add-to-cart');
         Route::post('/update-to-cart/{rowId}', [CartController::class, 'updateToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.update-to-cart');

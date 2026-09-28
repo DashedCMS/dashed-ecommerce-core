@@ -7,11 +7,13 @@ use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\SendQuoteAction;
-use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\CreateRevisionAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\WithdrawQuoteAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\CreateRevisionAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\MarkQuoteAnsweredAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions\ConvertQuoteToOrderAction;
 
 class EditQuote extends EditRecord
 {
@@ -39,6 +41,13 @@ class EditQuote extends EditRecord
                 ->visible(fn () => QuotePdf::downloadUrl($this->record, accepted: true) !== null)
                 ->action(fn () => $this->redirect(QuotePdf::downloadUrl($this->record->fresh(), accepted: true), navigate: false)),
             MarkQuoteAnsweredAction::make($this->record),
+            ConvertQuoteToOrderAction::make($this->record),
+            Action::make('viewOrder')
+                ->label(__('Bestelling bekijken'))
+                ->icon('heroicon-o-shopping-bag')
+                ->color('gray')
+                ->visible(fn () => $this->record->order_id !== null)
+                ->url(fn () => OrderResource::getUrl('view', ['record' => $this->record->order_id])),
             CreateRevisionAction::make($this->record),
             WithdrawQuoteAction::make($this->record),
             DeleteAction::make(),

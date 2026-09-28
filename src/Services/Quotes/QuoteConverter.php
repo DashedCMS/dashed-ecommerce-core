@@ -70,6 +70,12 @@ class QuoteConverter
 
             $byAdmin = (bool) ($options['by_admin'] ?? false);
 
+            // Zonder e-mailadres kan er geen betaallink verstuurd worden; dat
+            // vooraf weigeren, zonder order, net als bij on_account.
+            if ($mode === self::PAYMENT_LINK && ! $quote->email) {
+                return new QuoteConversionResult(refusal: 'no_email');
+            }
+
             // Een beheerder krijgt een weigering vooraf, zonder order: hij kan
             // een andere modus kiezen of doorzetten. NOT_ENABLED (geen methode
             // op rekening gekoppeld) weigert refusalBeforeCreate() altijd.
@@ -119,16 +125,28 @@ class QuoteConverter
                 App::setLocale($originalLocale);
             }
 
-            QuoteConverted::dispatch($quote, $result->order, $mode);
+            // Alleen vuren bij een omzetting die echt gelukt is: een geweigerd
+            // op-rekening-verzoek laat een concept achter dat niet geplaatst
+            // is, en dat is geen omzetting om op te reageren (geen mail, geen
+            // webhook).
+            if ($result->ok()) {
+                QuoteConverted::dispatch($quote, $result->order, $mode);
+            }
 
             return $result;
         });
     }
 
-    /** Waar de klant heen moet voor deze order, of null als er niets te betalen is. */
+    /**
+     * Waar de klant heen moet voor deze order, of null als er niets te
+     * betalen is. Zelfde voorwaarde als ProformaCheckoutController: een order
+     * die al wacht op bevestiging (overboeking) of deels betaald is, telt
+     * ook als betaald voor deze knop, anders belandt de klant op de
+     * "al betaald"-pagina van de proforma-checkout.
+     */
     public static function redirectFor(Order $order): ?string
     {
-        if ($order->is_proforma && $order->status !== 'paid') {
+        if ($order->is_proforma && ! $order->isPaidFor()) {
             return route('dashed.frontend.proforma-checkout', ['orderHash' => $order->hash]);
         }
 

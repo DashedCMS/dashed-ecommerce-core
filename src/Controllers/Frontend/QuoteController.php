@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Classes\QuoteAccess;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf;
+use Dashed\DashedEcommerceCore\Services\Quotes\QuoteConverter;
 
 class QuoteController
 {
@@ -30,6 +32,25 @@ class QuoteController
         }
 
         return view('dashed-ecommerce-core::quotes.show', ['quote' => $quote]);
+    }
+
+    public function order(string $hash)
+    {
+        $quote = Quote::where('hash', $hash)->whereNotNull('sent_at')->firstOrFail();
+
+        $mode = $quote->payment_route === Quote::ROUTE_ON_ACCOUNT
+            ? QuoteConverter::ON_ACCOUNT
+            : QuoteConverter::CHECKOUT;
+
+        try {
+            $result = QuoteConverter::convert($quote, $mode);
+        } catch (LockTimeoutException) {
+            // Een tweede klik terwijl de eerste nog bezig is: geen 500, gewoon
+            // terug naar de offertepagina, die de actuele stand toont.
+            return redirect($quote->publicUrl());
+        }
+
+        return redirect($result->redirectUrl ?? $quote->publicUrl());
     }
 
     public function download(Request $request, string $hash)

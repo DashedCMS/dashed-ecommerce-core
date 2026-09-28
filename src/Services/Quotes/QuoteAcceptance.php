@@ -36,42 +36,63 @@ class QuoteAcceptance
             throw new RuntimeException(__('Deze offerte kan niet meer geaccepteerd worden'));
         }
 
-        App::setLocale($quote->locale);
-
+        $originalLocale = App::getLocale();
         $didAccept = false;
 
-        $quote = DB::transaction(function () use ($quote, $selectedLineIds, $name, $ip, $signature, &$didAccept) {
-            /** @var Quote $locked */
-            $locked = Quote::query()->whereKey($quote->id)->lockForUpdate()->first();
+        // De taal van de offerte geldt voor de transactie en de akkoord-PDF
+        // (die leest :variabelen: via Translation::get(), en die kijkt naar
+        // app()->getLocale()). Buiten deze try/finally lekte die taal door
+        // naar de beheerdersmelding en de app-push die na het akkoord volgen:
+        // die horen in de taal van de beheerder te staan, niet in die van de
+        // offerte. De klantmail-luisteraar zet voor zichzelf al een eigen
+        // locale (SendQuoteCustomerMail), dus die heeft hier niets aan nodig.
+        App::setLocale($quote->locale);
 
-            if ($locked->status !== Quote::STATUS_SENT) {
-                return $locked;
-            }
+        try {
+            $quote = DB::transaction(function () use ($quote, $selectedLineIds, $name, $ip, $signature, &$didAccept) {
+                /** @var Quote $locked */
+                $locked = Quote::query()->whereKey($quote->id)->lockForUpdate()->first();
 
-            // Wat de klant koos vastleggen op de regels zelf: de akkoord-PDF
-            // en de order lezen daarna gewoon de regels, zonder losse lijst.
-            foreach ($locked->lines as $line) {
-                if (! $line->is_optional) {
-                    continue;
+                if ($locked->status !== Quote::STATUS_SENT) {
+                    return $locked;
                 }
-                $line->is_selected = in_array($line->id, $selectedLineIds, true);
-                $line->save();
+
+                // Wat de klant koos vastleggen op de regels zelf: de akkoord-PDF
+                // en de order lezen daarna gewoon de regels, zonder losse lijst.
+                foreach ($locked->lines as $line) {
+                    if (! $line->is_optional) {
+                        continue;
+                    }
+                    $line->is_selected = in_array($line->id, $selectedLineIds, true);
+                    $line->save();
+                }
+
+                $locked->load('lines');
+
+                $locked->status = Quote::STATUS_ACCEPTED;
+                $locked->accepted_at = now();
+                $locked->accepted_name = $name;
+                $locked->accepted_ip = $ip;
+                $locked->accepted_signature = QuoteSignature::normalize($signature);
+                $locked->total = QuoteTotals::for($locked)->total;
+                $locked->save();
+
+                $didAccept = true;
+
+                return $locked;
+            });
+
+            if ($didAccept) {
+                // Binnen rescue(): een mislukte PDF-schrijving mag het akkoord
+                // en de meldingen niet tegenhouden. Mail en pagina checken toch
+                // al exists() en laten de downloadlink dan gewoon weg; een
+                // volgende poging kan niet meer herkansen, want de status staat
+                // al op geaccepteerd.
+                rescue(fn () => QuotePdf::store($quote, accepted: true));
             }
-
-            $locked->load('lines');
-
-            $locked->status = Quote::STATUS_ACCEPTED;
-            $locked->accepted_at = now();
-            $locked->accepted_name = $name;
-            $locked->accepted_ip = $ip;
-            $locked->accepted_signature = QuoteSignature::normalize($signature);
-            $locked->total = QuoteTotals::for($locked)->total;
-            $locked->save();
-
-            $didAccept = true;
-
-            return $locked;
-        });
+        } finally {
+            App::setLocale($originalLocale);
+        }
 
         // Deze aanroep heeft de overgang niet zelf gedaan: een ander
         // verzoek won de lock. Die is dan zelf verantwoordelijk voor de
@@ -80,12 +101,8 @@ class QuoteAcceptance
             return $quote;
         }
 
-        // Binnen rescue(): een mislukte PDF-schrijving mag het akkoord en de
-        // meldingen niet tegenhouden. Mail en pagina checken toch al exists()
-        // en laten de downloadlink dan gewoon weg; een volgende poging kan
-        // niet meer herkansen, want de status staat al op geaccepteerd.
-        rescue(fn () => QuotePdf::store($quote, accepted: true));
-
+        // Locale hier weer op de oorspronkelijke stand: de beheerdersmelding
+        // (belletje, mail, app-push) die op dit event volgt hoort in die taal.
         QuoteAccepted::dispatch($quote, $notifyCustomer);
 
         return $quote;

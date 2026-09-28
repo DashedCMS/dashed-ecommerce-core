@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.142.0 - 2026-09-28
+
+### Added
+- **De klant kiest na akkoord hoe hij bestelt.** Het eindscherm van een geaccepteerde offerte toont "Nu bestellen en betalen" (of "Bestelling plaatsen op factuur" bij op rekening), die via `POST /quote/{hash}/order` doorloopt naar `QuoteConverter::convert()`.
+- **`QuoteConverter`: de enige deur van offerte naar bestelling**, met vijf modi (checkout, betaallink, op rekening, alleen de order aanmaken, betaald). Een lock per offerte en een transactie rond bouwen en koppelen maken hem idempotent bij een dubbelklik of een ververste pagina; de unieke index op `dashed__orders.quote_id` is de databasebackstop. Bij "betaald" wordt de pincode (`ManualPaymentPin`) gecontroleerd voordat er een order bestaat.
+- **CMS-actie "Omzetten naar bestelling"** en "Bestelling bekijken" op een geaccepteerde offerte, en een schakelaar "Klant informeren" bij het met de hand vastleggen van een antwoord.
+- **Vier klantmails**: akkoord (met de getekende PDF), afwijzing, ingetrokken en verlopen, in de taal van de offerte.
+- **Events** `QuoteAccepted`, `QuoteRejected`, `QuoteWithdrawn`, `QuoteExpired` en `QuoteConverted`; dashed-mobile-api luistert erop voor een app-melding van type `quote.answered`.
+
+### Changed
+- **Akkoord maakt geen order meer.** `QuoteToOrder::build()` bouwt alleen nog de conceptorder uit de offerteregels; plaatsen (proforma, op rekening, betaald) loopt voortaan altijd via `QuoteConverter`.
+
 ## v4.141.0 - 2026-09-28
 
 ### Added
