@@ -585,6 +585,10 @@ class ProductGroupResource extends Resource
                             ->required()
                             ->visible(fn (Get $get) => $get('type') == 'percentage')
                             ->suffix('%'),
+                        Toggle::make('apply_per_set')
+                            ->label(__('Alleen per volle set'))
+                            ->helperText(__('Voor acties als 1+1 gratis: de korting geldt alleen voor volle sets van het "vanaf aantal". Bij 1+1 (50% vanaf 2) krijgen 3 stuks korting op 2 stuks en betaalt het derde de volle prijs.'))
+                            ->default(false),
                         Toggle::make('active_for_all_variants')
                             ->label(__('Actief voor alle varianten'))
                             ->default(true)

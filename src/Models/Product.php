@@ -1724,7 +1724,7 @@ class Product extends Model
                 ->first();
 
             if ($volumeDiscount) {
-                $price = (float) $volumeDiscount->getPrice($price);
+                $price = $volumeDiscount->getLinePrice($price, $itemQty);
             }
         }
 

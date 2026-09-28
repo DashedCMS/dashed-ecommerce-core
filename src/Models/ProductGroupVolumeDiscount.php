@@ -17,6 +17,7 @@ class ProductGroupVolumeDiscount extends Model
     protected $table = 'dashed__product_group_volume_discounts';
 
     protected $casts = [
+        'apply_per_set' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -51,6 +52,26 @@ class ProductGroupVolumeDiscount extends Model
         $price -= $this->getDiscountedPrice($price, false);
 
         return $formatResult ? CurrencyHelper::formatPrice($price) : $price;
+    }
+
+    /**
+     * Prijs van een hele regel van $quantity stuks. Met apply_per_set telt de
+     * korting alleen voor volle sets van min_quantity stuks: bij 1+1 (50% vanaf
+     * 2) krijgen 3 stuks korting op 2 stuks en betaalt het derde de volle prijs.
+     */
+    public function getLinePrice(float $lineTotal, int $quantity): float
+    {
+        $discountedLineTotal = (float) $this->getPrice($lineTotal);
+
+        if (! $this->apply_per_set || $quantity <= 0) {
+            return $discountedLineTotal;
+        }
+
+        $setSize = max(1, (int) $this->min_quantity);
+        $quantityInSets = intdiv($quantity, $setSize) * $setSize;
+        $discount = round(($lineTotal - $discountedLineTotal) * $quantityInSets / $quantity, 2);
+
+        return $lineTotal - $discount;
     }
 
     public function getDiscountedPrice($price, bool $formatResult = false): string|float

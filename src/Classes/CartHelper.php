@@ -1912,7 +1912,8 @@ class CartHelper
                         }
 
                         $base = (float) ($runtimeItem->options['originalPrice'] ?? $dbItem->unit_price ?? $model->price);
-                        $price = $volumeDiscount->getPrice($base);
+                        $qty = max(1, (int) $runtimeItem->qty);
+                        $price = round($volumeDiscount->getLinePrice($base * $qty, $qty) / $qty, 2);
                     }
                 }
 
