@@ -65,6 +65,14 @@ class OrderReturnResource extends JsonResource
                     'reason_note' => $line->reason_note,
                 ];
             })->values()->all(),
+            // Berichten-thread klant↔admin — alleen op de detail-call (whenLoaded);
+            // de lijst laat 'm bewust weg.
+            'messages' => $this->whenLoaded('messages', fn () => $this->messages->map(fn ($m): array => [
+                'id' => $m->id,
+                'sender' => $m->sender,
+                'message' => $m->message,
+                'created_at' => optional($m->created_at)->toIso8601String(),
+            ])->values()->all()),
         ];
     }
 }

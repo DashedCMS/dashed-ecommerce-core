@@ -11,7 +11,9 @@ use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderReturnResource;
@@ -129,6 +131,79 @@ class OrderReturnController extends Controller
     }
 
     /**
+     * Sluiten zonder creditering (Filament "Sluiten zonder creditering"): de
+     * retour is afgehandeld maar er komt geen creditorder. Altijd met reden;
+     * alleen vanuit goedgekeurd (model bewaakt dat).
+     */
+    public function close(Request $request, int $orderReturn): OrderReturnResource|JsonResponse
+    {
+        $return = $this->find($orderReturn);
+        $data = $request->validate(['reason' => ['required', 'string', 'min:1']]);
+
+        try {
+            $return->close($data['reason']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return new OrderReturnResource($this->find($orderReturn));
+    }
+
+    /**
+     * Terugbetaling registreren (Filament "Terugbetaling registreren"): boekt een
+     * negatieve, betaalde betaling op de creditorder. Alleen bij een verwerkte
+     * retour met creditorder die nog niet is terugbetaald.
+     */
+    public function registerRefund(Request $request, int $orderReturn): OrderReturnResource|JsonResponse
+    {
+        $return = $this->find($orderReturn);
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0'],
+            'method' => ['required', 'string', 'min:1'],
+        ]);
+
+        try {
+            app(RefundRegistrar::class)->register($return, (float) $data['amount'], $data['method']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return new OrderReturnResource($this->find($orderReturn));
+    }
+
+    /** Mogelijke terugbetaal-methodes (spiegelt de Filament refund-actie). */
+    public function refundMethods(): JsonResponse
+    {
+        $methods = ['Bankoverschrijving', 'Contant'];
+        foreach (PaymentMethod::query()->orderBy('name')->get() as $method) {
+            $name = is_array($method->name)
+                ? ($method->name[app()->getLocale()] ?? reset($method->name))
+                : $method->name;
+            if ($name && ! in_array($name, $methods, true)) {
+                $methods[] = $name;
+            }
+        }
+
+        return response()->json(['methods' => array_values($methods)]);
+    }
+
+    /**
+     * Antwoord in de berichten-thread met de klant. Hergebruikt sendCustomEmail
+     * (logt het admin-bericht in de thread én mailt de klant), zoals de Filament
+     * "Stuur e-mail"-actie, maar met alleen een bericht (standaard-onderwerp).
+     */
+    public function reply(Request $request, int $orderReturn): OrderReturnResource
+    {
+        $return = $this->find($orderReturn);
+        $data = $request->validate(['message' => ['required', 'string', 'min:1']]);
+
+        $message = str_contains($data['message'], '<') ? $data['message'] : nl2br(e($data['message']));
+        $return->sendCustomEmail(OrderReturnCustomMail::defaultSubject(), $message);
+
+        return new OrderReturnResource($this->find($orderReturn));
+    }
+
+    /**
      * Record-onafhankelijke standaard-onderwerp/-bericht voor een handmatig
      * bericht aan de klant (spiegelt de Filament "Stuur e-mail"-actie). De app
      * gebruikt dit om het opstelscherm voor te vullen.
@@ -181,7 +256,7 @@ class OrderReturnController extends Controller
     {
         return OrderReturn::query()
             ->where('site_id', Sites::getActive())
-            ->with(self::EAGER)
+            ->with(array_merge(self::EAGER, ['messages']))
             ->findOrFail($id);
     }
 

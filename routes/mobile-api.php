@@ -127,6 +127,7 @@ Route::prefix('api/v1')
         Route::get('automation-rule-runs', [AutomationRuleController::class, 'runs'])->middleware('ability:orders.read');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
+        Route::get('customers/accounts', [CustomerController::class, 'accounts'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
 
         // Verzend-hub: één overzicht van alle zendingen over de carriers heen.
@@ -152,6 +153,8 @@ Route::prefix('api/v1')
         Route::post('orders/{order}/regenerate-invoice', [OrderController::class, 'regenerateInvoice'])->middleware('ability:orders.write');
         Route::post('orders/{order}/fulfillment', [OrderController::class, 'changeFulfillment'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return', [OrderController::class, 'returnOrder'])->middleware('ability:orders.write');
+        Route::get('orders/{order}/returnable-lines', [OrderController::class, 'returnableLines'])->middleware('ability:orders.read');
+        Route::post('orders/{order}/register-return', [OrderController::class, 'registerReturn'])->middleware('ability:orders.write');
         Route::post('orders/{order}/return-label', [ShipmentController::class, 'returnLabel'])->middleware('ability:orders.write');
         Route::post('orders/{order}/packed', [OrderController::class, 'packed'])->middleware('ability:orders.write');
         Route::get('orders/{order}/invoice-url', [OrderController::class, 'invoiceUrl'])->middleware('ability:orders.read');
@@ -177,13 +180,17 @@ Route::prefix('api/v1')
 
         // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write.
         Route::get('returns', [OrderReturnController::class, 'index'])->middleware('ability:orders.read');
-        // Vóór de {orderReturn}-wildcard, anders wordt 'email-defaults' als id opgevat.
+        // Vóór de {orderReturn}-wildcard, anders worden 'email-defaults' / 'refund-methods' als id opgevat.
         Route::get('returns/email-defaults', [OrderReturnController::class, 'emailDefaults'])->middleware('ability:orders.read');
+        Route::get('returns/refund-methods', [OrderReturnController::class, 'refundMethods'])->middleware('ability:orders.read');
         Route::get('returns/{orderReturn}', [OrderReturnController::class, 'show'])->middleware('ability:orders.read');
         Route::get('returns/{orderReturn}/label', [OrderReturnController::class, 'label'])->middleware('ability:orders.read');
         Route::post('returns/{orderReturn}/approve', [OrderReturnController::class, 'approve'])->middleware('ability:orders.write');
         Route::post('returns/{orderReturn}/reject', [OrderReturnController::class, 'reject'])->middleware('ability:orders.write');
         Route::post('returns/{orderReturn}/handle', [OrderReturnController::class, 'handle'])->middleware('ability:orders.write');
+        Route::post('returns/{orderReturn}/close', [OrderReturnController::class, 'close'])->middleware('ability:orders.write');
+        Route::post('returns/{orderReturn}/refund', [OrderReturnController::class, 'registerRefund'])->middleware('ability:orders.write');
+        Route::post('returns/{orderReturn}/reply', [OrderReturnController::class, 'reply'])->middleware('ability:orders.write');
         Route::post('returns/{orderReturn}/email', [OrderReturnController::class, 'sendEmail'])->middleware('ability:orders.write');
 
         // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
