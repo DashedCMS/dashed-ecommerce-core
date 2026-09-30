@@ -129,6 +129,15 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // Gewicht in de zoekpopup van het menu (NavigationSearch in dashed-core).
+        cms()->builder('navigationSearchPriority', [
+            \Dashed\DashedEcommerceCore\Filament\Resources\OrderResource::class => 95,
+            \Dashed\DashedEcommerceCore\Filament\Resources\ProductResource::class => 90,
+            \Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource::class => 85,
+            \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::class => 60,
+            \Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource::class => 55,
+        ]);
+
         // De proforma-checkout-view van dit package gebruikt <x-checkout-master>. Dat component is
         // projectspecifiek (clean checkout-layout) en ontbrak op de meeste sites, waardoor
         // `php artisan view:cache` bij elke deploy afbrak met "Unable to locate a class or view for

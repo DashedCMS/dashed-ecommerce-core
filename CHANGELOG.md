@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.146.0 - 2026-09-30
+
+### Added
+- **Bestellingen, Producten, Productgroepen, Offertes en Retouren bovenaan in de zoekpopup van het menu** (`navigationSearchPriority`). Vereist dashed-core v4.76.0 voor het effect.
+
 ## v4.145.0 - 2026-09-30
 
 ### Added
