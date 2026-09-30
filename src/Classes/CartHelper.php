@@ -198,7 +198,7 @@ class CartHelper
     // Helpers
     // -------------------------------------------------------------------------
 
-    protected function getCartItemVatRate(object $cartItem): float
+    public function getCartItemVatRate(object $cartItem): float
     {
         $product = $cartItem->model ?? $this->getProductForCartItem($cartItem);
 

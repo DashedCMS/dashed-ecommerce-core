@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.146.1 - 2026-09-30
+
+### Fixed
+- **Handmatige bestelling in het CMS viel om op "Undefined property: stdClass::$taxRate".** Sinds de DB-cart zijn winkelwagenregels kale objecten zonder de `taxRate` van hardevine/shoppingcart; een gewoon product in een handorder of POS-order raakte daardoor die property. Het btw-tarief komt nu via `CartHelper::getCartItemVatRate()` (nu publiek) van het product, met het opgegeven tarief in de opties (custom producten, conceptorders) nog steeds voorop.
+
 ## v4.146.0 - 2026-09-30
 
 ### Added
