@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.144.0 - 2026-09-30
+
+### Added
+- **Bol-titelsjabloon op één plek invullen.** `BolTitleTemplate::render()` vult een sjabloon met plaatshouders als `:kleur:` per variant in; de productfeed, het voorbeeld in de Bol-modal en de controle gebruiken allemaal dezelfde code. Een plaatshouder die bij een variant niet te vullen is wordt weggehaald, samen met een los scheidingsteken, in plaats van letterlijk naar Bol te gaan. `ProductFeedAttributes` bouwt de feedattributen zoals de feed dat altijd deed.
+- **Acties van andere pakketten op een productgroep** via `ecommerce()->builder('productGroupHeaderActions')` en `productGroupBulkActions`, zodat dashed-ecommerce-bol zijn knoppen kan toevoegen zonder dat ec-core Bol of AI kent.
+
 ## v4.142.0 - 2026-09-28
 
 ### Added
