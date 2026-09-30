@@ -78,7 +78,14 @@ class OrderController extends Controller
             // Slimme zoek: splits op spaties; ELK woord moet ergens matchen (over
             // de kolommen), en ALLE woorden samen (AND). Zo vindt "Jan Jansen"
             // een order met voornaam Jan + achternaam Jansen (en omgekeerd).
-            $columns = ['invoice_id', 'first_name', 'last_name', 'email', 'company_name', 'city'];
+            // Naast klant/order ook op adres/contact (verzend- én factuuradres),
+            // zodat je een bestelling op straat/postcode/plaats/telefoon vindt.
+            $columns = [
+                'invoice_id', 'first_name', 'last_name', 'email', 'phone_number', 'company_name', 'btw_id',
+                'street', 'house_nr', 'zip_code', 'city', 'country',
+                'invoice_first_name', 'invoice_last_name',
+                'invoice_street', 'invoice_house_nr', 'invoice_zip_code', 'invoice_city', 'invoice_country',
+            ];
             $terms = preg_split('/\s+/', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [$search];
 
             $query->where(function (Builder $outer) use ($terms, $columns): void {
