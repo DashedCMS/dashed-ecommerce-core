@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.145.0 - 2026-09-30
+
+### Added
+- **Mobiele app: retouren volledig vanuit de app.** Nieuwe endpoints om een retour te sluiten zonder creditering (`returns/{id}/close`, reden verplicht), een terugbetaling te registreren via `RefundRegistrar` (`returns/{id}/refund`, met `returns/refund-methods`), te antwoorden in de berichten-thread (`returns/{id}/reply`), en vanuit een bestelling een retour aan te melden (`orders/{id}/returnable-lines`, `orders/{id}/register-return`). `OrderReturnResource` geeft op het detail de berichten mee. De 409 `existing_credit_order` blijft gelden; de app moet die nog afhandelen.
+- **Mobiele app: klantaccount zoeken voor de kassa** (`GET api/v1/customers/accounts?search=`), met id, naam, e-mail en bedrijf via `TokenizedSearch`, zodat de app een account echt aan een bon kan koppelen.
+
+### Changed
+- **Mobiele app: orders zoeken ook op adres.** De orderlijst zoekt nu ook op straat, huisnummer, postcode, land, telefoon, btw-id en het factuuradres, met behoud van het woord-voor-woord zoeken.
+
 ## v4.144.0 - 2026-09-30
 
 ### Added
