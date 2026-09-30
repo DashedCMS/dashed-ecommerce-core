@@ -7,7 +7,7 @@ use Filament\Widgets\Widget;
 
 class DateRangeFilterWidget extends Widget
 {
-    protected static string $view = 'dashed-ecommerce-core::widgets.date-range-filter-widget';
+    protected string $view = 'dashed-ecommerce-core::widgets.date-range-filter-widget';
 
     public static function canView(): bool
     {
