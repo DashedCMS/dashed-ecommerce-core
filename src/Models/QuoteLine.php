@@ -56,11 +56,13 @@ class QuoteLine extends Model
     /**
      * De foto's bij deze regel als URL's, in de volgorde van het formulier.
      *
-     * Een media-id gaat via de mediabibliotheek; bestaat het bestand niet meer,
-     * dan valt de foto weg, zodat er nooit een kapot plaatje op de offerte
-     * staat. Een waarde die al een URL is gaat ongewijzigd door, mits ze naar
-     * een gewoon webadres of een pad op deze site wijst: alles wat hier
-     * uitkomt belandt in een src- of href-attribuut van een klantdocument.
+     * Een media-id gaat via de mediabibliotheek; bestaat het bestand niet meer
+     * of gaat het opzoeken mis, dan valt de foto weg, zodat er nooit een kapot
+     * plaatje op de offerte staat en de pagina of PDF niet breekt. Elke
+     * kandidaat gaat door `veiligeUrl()`: alleen http(s)-adressen, protocol-
+     * relatieve adressen en paden op deze site komen er uit, met spatie en
+     * haakjes gecodeerd, zodat het resultaat veilig in een src-, href- of
+     * CSS-url() kan, zonder dat elke aanroeper zelf hoeft te escapen.
      *
      * @return array<int, string>
      */
@@ -70,18 +72,41 @@ class QuoteLine extends Model
 
         foreach ((array) ($this->images ?? []) as $image) {
             if (is_int($image) || (is_string($image) && ctype_digit($image))) {
-                $media = mediaHelper()->getSingleMedia((int) $image, $conversion);
-                $url = is_object($media) ? ($media->url ?? null) : $media;
+                $url = null;
+
+                if ((int) $image > 0) {
+                    try {
+                        $media = mediaHelper()->getSingleMedia((int) $image, $conversion);
+                        $url = is_object($media) ? ($media->url ?? null) : $media;
+                    } catch (\Throwable $e) {
+                        report($e);
+                    }
+                }
             } else {
                 $url = $image;
             }
 
-            if (is_string($url) && preg_match('#^(https?:)?//\S+$|^/[^/\s]\S*$#i', trim($url))) {
-                $urls[] = trim($url);
+            if ($url = self::veiligeUrl($url)) {
+                $urls[] = $url;
             }
         }
 
         return $urls;
+    }
+
+    private static function veiligeUrl(mixed $url): ?string
+    {
+        if (! is_string($url) || ($url = trim($url)) === '') {
+            return null;
+        }
+
+        $url = strtr($url, [' ' => '%20', '(' => '%28', ')' => '%29', "'" => '%27']);
+
+        if (preg_match('/["<>\\\\`\s\x00-\x1f\x7f]/', $url)) {
+            return null;
+        }
+
+        return preg_match('#^(https?://[^/]|//[^/]|/[^/\\\\])#i', $url) ? $url : null;
     }
 
     /** Telt deze regel mee in het totaal? */

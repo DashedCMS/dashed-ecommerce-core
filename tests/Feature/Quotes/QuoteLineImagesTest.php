@@ -69,3 +69,47 @@ it('neemt de foto\'s mee naar een revisie', function () {
         'Ontwerp' => null,
     ]);
 });
+
+it('laat onveilige of onbruikbare waarden vallen', function () {
+    $regel = new QuoteLine(['images' => [
+        'https://x.test/a"onerror="alert(1)',
+        'https://x.test/a"><script>alert(1)</script>',
+        '/\evil.example/x.jpg',
+        'https:///x',
+        "https://x.test/a\x00b",
+        'HTTPS://',
+        'ftp://x.test/a.jpg',
+        0,
+        -3,
+    ]]);
+
+    expect($regel->imageUrls())->toBe([]);
+});
+
+it('codeert tekens die in een bestandsnaam mogen maar in een attribuut gevaarlijk zijn', function () {
+    $regel = new QuoteLine(['images' => [
+        'https://cdn.test/uploads/pot rood.jpg',
+        'https://cdn.test/foto (1).jpg',
+        "https://x.test/a'),url(//evil/x.png",
+        'HTTPS://cdn.test/a.jpg',
+    ]]);
+
+    expect($regel->imageUrls())->toBe([
+        'https://cdn.test/uploads/pot%20rood.jpg',
+        'https://cdn.test/foto%20%281%29.jpg',
+        'https://x.test/a%27%29,url%28//evil/x.png',
+        'HTTPS://cdn.test/a.jpg',
+    ]);
+});
+
+it('laat een kapot media-item vallen zonder de rest te breken', function () {
+    $GLOBALS['mediahelper_stub_gooit_voor_id'] = 77;
+
+    try {
+        $regel = new QuoteLine(['images' => [77, 'https://cdn.example.test/pot.jpg']]);
+
+        expect($regel->imageUrls())->toBe(['https://cdn.example.test/pot.jpg']);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_gooit_voor_id']);
+    }
+});

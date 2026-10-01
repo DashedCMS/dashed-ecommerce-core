@@ -21,6 +21,12 @@ if (! function_exists('mediaHelper')) {
         return new class () {
             public function getSingleMedia(null|int|string|array $mediaId, array|string $conversion = 'medium'): string
             {
+                // Alleen voor een test die een kapot media-item wil nabootsen:
+                // zet $GLOBALS['mediahelper_stub_gooit_voor_id'] en zet hem daarna terug.
+                if (isset($GLOBALS['mediahelper_stub_gooit_voor_id']) && $mediaId === $GLOBALS['mediahelper_stub_gooit_voor_id']) {
+                    throw new RuntimeException('Kapot media-item');
+                }
+
                 return '';
             }
         };
