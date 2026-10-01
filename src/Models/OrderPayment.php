@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedCore\Models\Customsetting;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Dashed\DashedEcommerceCore\Database\Factories\OrderPaymentFactory;
 
 class OrderPayment extends Model
 {
+    use HasFactory;
     use LogsActivity;
 
     protected static $logFillable = true;
@@ -40,6 +43,11 @@ class OrderPayment extends Model
         'psp_request' => 'array',
         'psp_response' => 'array',
     ];
+
+    protected static function newFactory(): OrderPaymentFactory
+    {
+        return OrderPaymentFactory::new();
+    }
 
     public static function boot()
     {

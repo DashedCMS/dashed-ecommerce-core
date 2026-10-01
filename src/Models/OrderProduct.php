@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedEcommerceCore\Classes\TaxHelper;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
+use Dashed\DashedEcommerceCore\Database\Factories\OrderProductFactory;
 
 class OrderProduct extends Model
 {
+    use HasFactory;
     use SoftDeletes;
     use LogsActivity;
 
@@ -41,6 +44,11 @@ class OrderProduct extends Model
         'returned_quantity' => 'integer',
         'skip_stock' => 'boolean',
     ];
+
+    protected static function newFactory(): OrderProductFactory
+    {
+        return OrderProductFactory::new();
+    }
 
     public function scopeSearch($query, ?string $search)
     {

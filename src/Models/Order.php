@@ -37,7 +37,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledMail;
+use Dashed\DashedEcommerceCore\Database\Factories\OrderFactory;
 use Dashed\DashedEcommerceCore\Jobs\SyncProductStockJob;
 use Dashed\DashedEcommerceCore\Jobs\SendGAEcommerceHitJob;
 use Dashed\DashedEcommerceCore\Mail\ProductOnLowStockEmail;
@@ -60,6 +62,7 @@ use Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusReadyForP
 class Order extends Model
 {
     use HasDynamicRelation;
+    use HasFactory;
     use LogsActivity;
     use SoftDeletes;
 
@@ -117,6 +120,11 @@ class Order extends Model
         'orderProducts',
         'orderPayments',
     ];
+
+    protected static function newFactory(): OrderFactory
+    {
+        return OrderFactory::new();
+    }
 
     public static function boot()
     {
