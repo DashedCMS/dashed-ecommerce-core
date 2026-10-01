@@ -401,7 +401,7 @@ class TransactionController extends Controller
         }
 
         if ($order->status == 'cancelled') {
-            return ShoppingCart::cancelledPaymentRedirect();
+            return ShoppingCart::cancelledPaymentRedirect($order);
         }
 
         if (view()->exists('dashed.orders.view-order')) {

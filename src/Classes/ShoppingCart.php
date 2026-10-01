@@ -9,6 +9,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
@@ -16,6 +17,7 @@ use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\ShippingZone;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Illuminate\Support\Collection as SupportCollection;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentFailure;
 
 class ShoppingCart
 {
@@ -75,18 +77,27 @@ class ShoppingCart
     }
 
     /**
-     * Waar de klant heen gaat als de betaling bij de PSP is afgewezen of
-     * geannuleerd. Het winkelwagentje wordt pas geleegd bij een geslaagde
-     * betaling, dus alles staat nog klaar: terug naar de checkout om het
-     * met een andere betaalmethode te proberen, in plaats van de homepage.
-     * Zonder ingestelde checkoutpagina blijft de homepage over.
+     * Terug naar de checkout na een geannuleerde betaling. Met de order gaan
+     * order-id, afgewezen ja/nee en de betaalmethode mee in de flash
+     * (PaymentFailure), zodat de checkout een afwijzing door de betaalmethode
+     * (Riverty) zelf kan uitleggen; dan blijft de algemene toast achterwege,
+     * anders staan er twee meldingen.
      */
-    public static function cancelledPaymentRedirect()
+    public static function cancelledPaymentRedirect(?Order $order = null)
     {
-        $message = Translation::get('payment-declined-try-again', 'checkout', 'Je betaling is afgewezen of niet voltooid. Probeer het opnieuw met een andere betaalmethode.');
         $checkoutUrl = self::getCheckoutUrl();
+        $redirect = redirect($checkoutUrl && $checkoutUrl !== '#' ? $checkoutUrl : '/');
 
-        return redirect($checkoutUrl && $checkoutUrl !== '#' ? $checkoutUrl : '/')->with('error', $message);
+        if ($order) {
+            $data = PaymentFailure::sessionData($order);
+            $redirect->with($data);
+
+            if ($data[PaymentFailure::SESSION_DECLINED]) {
+                return $redirect;
+            }
+        }
+
+        return $redirect->with('error', Translation::get('payment-declined-try-again', 'checkout', 'Je betaling is afgewezen of niet voltooid. Probeer het opnieuw met een andere betaalmethode.'));
     }
 
     public static function getCompleteUrl()
