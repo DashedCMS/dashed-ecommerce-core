@@ -285,6 +285,9 @@ class QuoteResource extends Resource
                 }),
             TextInput::make('name')->label(__('Omschrijving'))->required()->maxLength(255),
             Textarea::make('description')->label(__('Toelichting'))->rows(3)->columnSpanFull(),
+            mediaHelper()->field('images', __("Foto's"), multiple: true, isImage: true, defaultFolder: 'offertes')
+                ->helperText(__('Staan bij deze regel in de PDF en op de offertepagina'))
+                ->columnSpanFull(),
             TextInput::make('sku')->label(__('Artikelnummer'))->maxLength(255),
             TextInput::make('quantity')->label(__('Aantal'))->numeric()->minValue(1)->default(1)->required(),
             TextInput::make('vat_rate')->label(__('BTW-tarief'))->numeric()->default(21)->required()->suffix('%'),

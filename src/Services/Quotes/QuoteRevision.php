@@ -59,6 +59,7 @@ class QuoteRevision
                     'product_id' => $line->product_id,
                     'name' => $line->name,
                     'description' => $line->description,
+                    'images' => $line->images,
                     'sku' => $line->sku,
                     'quantity' => $line->quantity,
                     'unit_price' => $line->unit_price,
