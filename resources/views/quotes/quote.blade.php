@@ -97,7 +97,7 @@
         .lines .name { font-weight: bold; color: #18181b; }
         .lines .desc { color: #52525b; margin-top: 3px; }
         .lines .photos { margin-top: 6px; }
-        .lines .photo { height: 72px; width: auto; margin: 0 6px 4px 0; border: 1px solid #e4e4e7; border-radius: 4px; }
+        .lines .photo { height: 72px; width: auto; max-width: 100%; vertical-align: top; margin: 0 6px 4px 0; border: 1px solid #e4e4e7; border-radius: 4px; }
         .lines .dimmed td, .lines .dimmed .name { color: #a1a1aa; }
 
         .pill {
@@ -260,7 +260,7 @@
                 @if ($line->description)
                     <p class="desc">{!! nl2br(e($line->description)) !!}</p>
                 @endif
-                @php($photos = $line->imageUrls('medium'))
+                @php($photos = $line->imageUrls(\Dashed\DashedEcommerceCore\Models\QuoteLine::PDF_IMAGE_CONVERSION))
                 @if ($photos)
                     <div class="photos">
                         @foreach ($photos as $photo)

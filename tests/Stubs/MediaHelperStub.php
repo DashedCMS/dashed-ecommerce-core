@@ -19,8 +19,14 @@ if (! function_exists('mediaHelper')) {
     function mediaHelper(): object
     {
         return new class () {
-            public function getSingleMedia(null|int|string|array $mediaId, array|string $conversion = 'medium'): string
+            public function getSingleMedia(null|int|string|array $mediaId, array|string $conversion = 'medium'): object|string
             {
+                // Alleen voor een test die wil zien welke conversies er worden opgevraagd:
+                // zet $GLOBALS['mediahelper_stub_aanroepen'] = [] en zet hem daarna terug.
+                if (isset($GLOBALS['mediahelper_stub_aanroepen'])) {
+                    $GLOBALS['mediahelper_stub_aanroepen'][] = [$mediaId, $conversion];
+                }
+
                 // Alleen voor een test die een kapot media-item wil nabootsen:
                 // zet $GLOBALS['mediahelper_stub_gooit_voor_id'] en zet hem daarna terug.
                 if (isset($GLOBALS['mediahelper_stub_gooit_voor_id']) && $mediaId === $GLOBALS['mediahelper_stub_gooit_voor_id']) {
@@ -29,10 +35,13 @@ if (! function_exists('mediaHelper')) {
 
                 // Idem voor een test die een URL per id en conversie nodig heeft:
                 // zet $GLOBALS['mediahelper_stub_urls'] = ['<id>:<conversie>' => 'url'] en zet hem daarna terug.
-                $sleutel = $mediaId.':'.(is_string($conversion) ? $conversion : 'medium');
+                // Net als de echte helper komt er dan een object met `url` terug.
+                if (isset($GLOBALS['mediahelper_stub_urls']) && (is_int($mediaId) || is_string($mediaId))) {
+                    $sleutel = $mediaId.':'.(is_string($conversion) ? $conversion : 'medium');
 
-                if (isset($GLOBALS['mediahelper_stub_urls'][$sleutel])) {
-                    return $GLOBALS['mediahelper_stub_urls'][$sleutel];
+                    if (isset($GLOBALS['mediahelper_stub_urls'][$sleutel])) {
+                        return (object) ['url' => $GLOBALS['mediahelper_stub_urls'][$sleutel]];
+                    }
                 }
 
                 return '';

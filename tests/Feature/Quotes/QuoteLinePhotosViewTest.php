@@ -71,3 +71,25 @@ it('toont de foto\'s op de online pagina als links naar het origineel zonder de 
     $stijl = file_get_contents(__DIR__.'/../../../resources/views/quotes/partials/styles.blade.php');
     expect($stijl)->toContain('.dq-photos')->and($stijl)->toContain('.dq-photo img');
 });
+
+it('gebruikt in de pdf de kleine conversie en zet de foto\'s bovenaan de regel', function () {
+    $GLOBALS['mediahelper_stub_urls'] = [
+        '11:medium' => 'https://cdn.example.test/11-medium.jpg',
+        '11:small' => 'https://cdn.example.test/11-small.jpg',
+    ];
+
+    try {
+        $offerte = Quote::create(['title' => 'Conversie', 'email' => 'klant@example.test', 'valid_until' => now()->addDays(14)]);
+        $offerte->lines()->create(['name' => 'Pot', 'quantity' => 1, 'unit_price' => 10, 'images' => [11]]);
+
+        $html = fotoPdfHtml($offerte);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_urls']);
+    }
+
+    expect($html)->toContain('src="https://cdn.example.test/11-small.jpg"')
+        ->and($html)->not->toContain('11-medium.jpg');
+
+    preg_match('/\.lines \.photo \{[^}]*\}/', $html, $stijl);
+    expect($stijl[0] ?? '')->toContain('vertical-align: top')->and($stijl[0] ?? '')->toContain('max-width: 100%');
+});

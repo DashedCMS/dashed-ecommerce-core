@@ -149,3 +149,60 @@ it('houdt thumb en origineel bij elkaar als alleen het origineel niet op te hale
         unset($GLOBALS['mediahelper_stub_urls']);
     }
 });
+
+it('geeft een media-id via de url van het media-object terug, zoals de echte helper', function () {
+    $GLOBALS['mediahelper_stub_urls'] = [
+        '8:medium' => 'https://cdn.example.test/8-medium.jpg',
+        '8:original' => 'https://cdn.example.test/8-origineel.jpg',
+    ];
+
+    try {
+        // De echte helper geeft een object met `url`; de stub doet dat nu ook.
+        expect(mediaHelper()->getSingleMedia(8, 'medium'))->toBeObject();
+
+        $regel = new QuoteLine(['images' => [8]]);
+
+        expect($regel->imageUrls())->toBe(['https://cdn.example.test/8-medium.jpg'])
+            ->and($regel->imagePairs())->toBe([
+                ['thumb' => 'https://cdn.example.test/8-medium.jpg', 'original' => 'https://cdn.example.test/8-origineel.jpg'],
+            ]);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_urls']);
+    }
+});
+
+it('vraagt bij het opslaan van een regel met foto\'s de conversies alvast op', function () {
+    $GLOBALS['mediahelper_stub_urls'] = ['9:medium' => 'https://cdn.example.test/9-medium.jpg'];
+    $GLOBALS['mediahelper_stub_aanroepen'] = [];
+
+    try {
+        fotoOfferte()->lines()->create(['name' => 'Pot', 'quantity' => 1, 'unit_price' => 10, 'images' => [9]]);
+
+        expect($GLOBALS['mediahelper_stub_aanroepen'])->toContain(
+            [9, 'medium'],
+            [9, 'original'],
+            [9, QuoteLine::PDF_IMAGE_CONVERSION],
+        );
+
+        $GLOBALS['mediahelper_stub_aanroepen'] = [];
+        fotoOfferte()->lines()->create(['name' => 'Deksel', 'quantity' => 1, 'unit_price' => 4]);
+        fotoOfferte()->lines()->create(['name' => 'Schotel', 'quantity' => 1, 'unit_price' => 4, 'images' => []]);
+
+        expect($GLOBALS['mediahelper_stub_aanroepen'])->toBe([]);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_urls'], $GLOBALS['mediahelper_stub_aanroepen']);
+    }
+});
+
+it('laat het opslaan niet mislukken als de mediahelper gooit', function () {
+    $GLOBALS['mediahelper_stub_gooit_voor_id'] = 10;
+
+    try {
+        $regel = fotoOfferte()->lines()->create(['name' => 'Pot', 'quantity' => 1, 'unit_price' => 10, 'images' => [10]]);
+
+        expect($regel->exists)->toBeTrue()
+            ->and($regel->fresh()->images)->toBe([10]);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_gooit_voor_id']);
+    }
+});
