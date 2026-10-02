@@ -586,6 +586,7 @@ class OrderSettingsPage extends Page
                         ->success()
                         ->send();
                 }),
+            ...$this->getActions(),
         ];
     }
 
@@ -594,7 +595,7 @@ class OrderSettingsPage extends Page
         return [
             Action::make('testInvoicePrinter')
                 ->label(__('Test factuur printer'))
-                ->visible(Customsetting::get('packing_slip_printer_connector_descriptor', null, false))
+                ->visible(Customsetting::get('invoice_printer_connector_descriptor', null, false))
                 ->action(function () {
                     $order = Order::isPaid()->latest()->first();
 
