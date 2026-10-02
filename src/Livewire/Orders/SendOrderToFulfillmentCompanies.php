@@ -25,7 +25,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
     use InteractsWithActions;
 
     public Order $order;
-    public Collection $orderProductsToSent;
+    public Collection $orderProducts;
     public bool $isPos = false;
     public ?string $buttonText = '';
     public ?string $buttonClass = '';
