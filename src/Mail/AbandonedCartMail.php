@@ -47,6 +47,7 @@ class AbandonedCartMail extends Mailable
             ':cartTotal:' => $cartTotal,
             ':orderId:' => '',
             ':orderDate:' => '',
+            ':paymentAdvice:' => '',
         ], $source->variables());
 
         $subject = str_replace(array_keys($variables), array_values($variables), $this->step->getTranslation('subject', $locale));

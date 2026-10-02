@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.147.0 - 2026-10-02
+
+### Added
+- **Een afwijzing door de betaalmethode is herkenbaar.** `OrderPayment::isDeclined()` leest de ruwe PSP-staat in `attributes['psp_state']` (dashed-ecommerce-paynl ≥ 4.4 vult hem: `DENIED_xx` bij een Riverty-kredietcheck, `CANCEL` als de klant zelf afbreekt). `Services\Payments\PaymentFailure` bundelt order-id, afgewezen ja/nee, betaalmethode-id en -naam van de laatste betaling.
+- **De checkout hoort waarom een betaling mislukte.** `ShoppingCart::cancelledPaymentRedirect($order)` en de herstel-link uit de mail zetten `cancelled_order_id`, `payment_declined` en `declined_payment_method_id` in de sessie-flash. Bij een afwijzing blijft de algemene toast ("afgewezen of niet voltooid") achterwege, zodat de shop zelf kan uitleggen dat achteraf betalen niet is geaccepteerd en iDEAL kan voorselecteren.
+- **Plaatshouder `:paymentAdvice:` in de verlaten-wagen-mail** voor een geannuleerde order: "Achteraf betalen via :method: is … niet geaccepteerd. Kies iDEAL …" bij een afwijzing, anders "Je kunt de betaling alsnog afronden …" (Translation-tag `abandoned-cart`, sleutels `payment-advice-declined` en `payment-advice-cancelled`). Voor een verlaten wagen is hij leeg.
+
+### Fixed
+- **De knop in de mail na een geannuleerde order gaf altijd 403.** `AbandonedCartMail` plakt `email_id` (en `discount`, `type`) achter de al ondertekende `/recover-order/{hash}`-link, terwijl de route-middleware `signed` en `OrderRecoveryController` een exacte handtekening eisten. Beide negeren die parameters nu; de klik- en conversieregistratie van de cancelled-order-flow werkt daarmee voor het eerst.
+
 ## v4.146.1 - 2026-09-30
 
 ### Fixed
