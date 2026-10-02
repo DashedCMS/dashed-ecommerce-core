@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\QuoteLine;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteRevision;
@@ -191,6 +192,36 @@ it('vraagt bij het opslaan van een regel met foto\'s de conversies alvast op', f
         expect($GLOBALS['mediahelper_stub_aanroepen'])->toBe([]);
     } finally {
         unset($GLOBALS['mediahelper_stub_urls'], $GLOBALS['mediahelper_stub_aanroepen']);
+    }
+});
+
+it('vraagt de conversies binnen een transactie pas na de commit op', function () {
+    $GLOBALS['mediahelper_stub_aanroepen'] = [];
+
+    try {
+        DB::transaction(function () {
+            fotoOfferte()->lines()->create(['name' => 'Pot', 'quantity' => 1, 'unit_price' => 10, 'images' => [9]]);
+
+            expect($GLOBALS['mediahelper_stub_aanroepen'])->toBe([]);
+        });
+
+        expect($GLOBALS['mediahelper_stub_aanroepen'])->toContain([9, QuoteLine::PDF_IMAGE_CONVERSION]);
+
+        // Een teruggedraaide transactie vraagt niets op: de regel bestaat dan niet.
+        $GLOBALS['mediahelper_stub_aanroepen'] = [];
+
+        try {
+            DB::transaction(function () {
+                fotoOfferte()->lines()->create(['name' => 'Pot', 'quantity' => 1, 'unit_price' => 10, 'images' => [9]]);
+
+                throw new RuntimeException('terugdraaien');
+            });
+        } catch (RuntimeException) {
+        }
+
+        expect($GLOBALS['mediahelper_stub_aanroepen'])->toBe([]);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_aanroepen']);
     }
 });
 

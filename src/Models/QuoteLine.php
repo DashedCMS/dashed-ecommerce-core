@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -43,12 +44,19 @@ class QuoteLine extends Model
                 return;
             }
 
-            try {
-                $line->imagePairs();
-                $line->imageUrls(self::PDF_IMAGE_CONVERSION);
-            } catch (\Throwable $e) {
-                report($e);
-            }
+            // Pas na de commit. Regels ontstaan vaak binnen een transactie (een
+            // revisie, een offerte uit een berekening); de wachtrij-job die de
+            // conversie maakt ziet het media-item dan nog zonder de aangevraagde
+            // conversie en slaat haar over, waarna de PDF het origineel houdt.
+            // Zonder lopende transactie draait dit meteen.
+            DB::afterCommit(function () use ($line) {
+                try {
+                    $line->imagePairs();
+                    $line->imageUrls(self::PDF_IMAGE_CONVERSION);
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            });
         });
     }
 
