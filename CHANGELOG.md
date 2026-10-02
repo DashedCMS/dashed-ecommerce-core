@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.147.1 - 2026-10-02
+
+### Fixed
+- **De kortingscode uit de herstelmail na een geannuleerde order wordt nu toegepast.** `AbandonedCartMail` zet `discount=` achter de knop-URL, maar `OrderRecoveryController` las hem niet; de klant moest de code zelf intypen. De controller zet hem nu, net als `CartController::restoreCart()`, als `discountCode` in de sessie, zodat de checkout hem toepast en valideert.
+
 ## v4.147.0 - 2026-10-02
 
 ### Added

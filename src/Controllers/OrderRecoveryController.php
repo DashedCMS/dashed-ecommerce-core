@@ -77,6 +77,14 @@ class OrderRecoveryController extends Controller
         // afgewezen methode verborgen).
         PaymentFailure::flash($orderModel);
 
+        // AbandonedCartMail zet de kortingscode van de stap als discount= achter
+        // de knop-URL; de checkout past hem toe en valideert hem. Net als
+        // CartController::restoreCart alleen accepteren wat er als code uitziet.
+        $discount = (string) $request->query('discount', '');
+        if ($discount !== '' && preg_match('/^[A-Za-z0-9_\-]{1,64}$/', $discount)) {
+            session(['discountCode' => $discount]);
+        }
+
         $checkoutUrl = ShoppingCart::getCheckoutUrl();
         if (! $checkoutUrl || $checkoutUrl === '#') {
             $checkoutUrl = ShoppingCart::getCartUrl() ?: '/';

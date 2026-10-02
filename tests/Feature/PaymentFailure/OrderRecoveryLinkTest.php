@@ -58,3 +58,19 @@ it('weigert een verlopen link', function () {
 
     $this->get($url . '&email_id=1')->assertForbidden();
 });
+
+it('zet de kortingscode uit de knop-URL in de sessie', function () {
+    [, , $url] = maakHerstelmail();
+
+    $this->get($url . '&discount=TERUG-ABCD1234')->assertRedirect();
+
+    expect(session('discountCode'))->toBe('TERUG-ABCD1234');
+});
+
+it('negeert een kortingscode die er niet als code uitziet', function () {
+    [, , $url] = maakHerstelmail();
+
+    $this->get($url . '&discount=' . urlencode('bad code!'))->assertRedirect();
+
+    expect(session('discountCode'))->toBeNull();
+});
