@@ -37,13 +37,15 @@ class AbandonedCartTriggers
     /** @return array<string, string> */
     public static function labels(): array
     {
-        return array_map(fn (array $t) => $t['label'], static::$triggers);
+        // Geregistreerd in de serviceprovider, dus als Nederlandse sleutel;
+        // vertalen bij het tonen zodat het formulier de beheerder volgt.
+        return array_map(fn (array $t) => __($t['label']), static::$triggers);
     }
 
     /** @return array<string, string> */
     public static function descriptions(): array
     {
-        return array_map(fn (array $t) => $t['description'], static::$triggers);
+        return array_map(fn (array $t) => __($t['description']), static::$triggers);
     }
 
     public static function resolve(AbandonedCartEmail $record): AbandonedCartSource
