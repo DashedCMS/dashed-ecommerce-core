@@ -16,6 +16,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Infolists\Components\TextEntry;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedEcommerceCore\Models\OrderLogTemplate;
@@ -118,7 +119,7 @@ class OrderLogTemplateResource extends Resource
 
             ])
             ->filters([
-                //
+                TrashedFilter::make(),
             ])
             ->reorderable('order')
             ->recordActions([

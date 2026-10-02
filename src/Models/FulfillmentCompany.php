@@ -20,6 +20,8 @@ class FulfillmentCompany extends Model
 
     protected $fillable = [
         'name',
+        'email',
+        'process_automatically',
     ];
 
     public $translatable = [];
