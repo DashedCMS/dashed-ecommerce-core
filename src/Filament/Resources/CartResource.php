@@ -18,6 +18,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers\
 
 class CartResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = Cart::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-cart';

@@ -20,6 +20,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Actions\Re
 
 class OrderReturnResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = OrderReturn::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-uturn-left';

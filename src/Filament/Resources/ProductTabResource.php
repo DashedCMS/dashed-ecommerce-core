@@ -28,6 +28,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductTabResource\Pages\Creat
 
 class ProductTabResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
     use HasCustomBlocksTab;
 

@@ -10,6 +10,8 @@ use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 
 class CheckoutAbandonmentsPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-cart';
 
     protected static string|UnitEnum|null $navigationGroup = 'Statistieken';

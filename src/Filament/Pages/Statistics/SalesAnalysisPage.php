@@ -21,6 +21,7 @@ use Dashed\DashedEcommerceCore\Support\Analysis\SalesAnalysisRegistry;
 
 class SalesAnalysisPage extends Page implements HasSchemas
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use InteractsWithSchemas;
 
     protected static \BackedEnum | null | string $navigationIcon = 'heroicon-o-light-bulb';

@@ -54,6 +54,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ModifyOrde
 
 class OrderResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use WithFileUploads;
     use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
 

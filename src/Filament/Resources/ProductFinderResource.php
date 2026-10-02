@@ -22,6 +22,8 @@ use Dashed\DashedEcommerceCore\Models\ProductCategory;
 
 class ProductFinderResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = ProductFinder::class;
 
     protected static ?string $recordTitleAttribute = 'name';

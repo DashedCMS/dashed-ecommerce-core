@@ -16,6 +16,8 @@ use Dashed\DashedEcommerceCore\Support\InsightsService;
  */
 class InsightsPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-trending-up';
 
     protected static string|UnitEnum|null $navigationGroup = 'Statistieken';

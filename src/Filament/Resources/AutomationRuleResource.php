@@ -56,6 +56,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Relatio
  */
 class AutomationRuleResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     /**
      * Mens-leesbare labels voor ConditionEvaluator's operators. Vaste lijst,
      * geen registry — de operators zijn intern engine-gedrag, geen per-trigger

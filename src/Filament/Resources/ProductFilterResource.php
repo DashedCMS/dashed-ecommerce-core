@@ -27,6 +27,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterResource\Relation
 
 class ProductFilterResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
     use HasCustomBlocksTab;
 

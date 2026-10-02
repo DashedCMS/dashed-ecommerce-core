@@ -8,6 +8,8 @@ use Filament\Notifications\Notification;
 
 class ShippingLabelErrors extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
+
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-exclamation-triangle';
     protected static ?string $title = 'Labels met fouten';
     protected static ?string $slug = 'shipping-label-errors';

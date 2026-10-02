@@ -17,6 +17,8 @@ use Filament\Resources\RelationManagers\RelationManager;
  */
 class RunsRelationManager extends RelationManager
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesRelationManagerLabels;
+
     protected static string $relationship = 'runs';
 
     protected static ?string $title = 'Recente runs';

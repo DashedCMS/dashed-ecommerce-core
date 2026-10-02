@@ -22,6 +22,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ReturnReasonResource\Pages\Cre
 
 class ReturnReasonResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = ReturnReason::class;

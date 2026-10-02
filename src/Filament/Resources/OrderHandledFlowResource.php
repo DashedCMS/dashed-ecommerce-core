@@ -35,6 +35,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderHandledFlowResource\Pages
 
 class OrderHandledFlowResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     public const VARIABLES_HELP = 'Variabelen: :siteName: :siteUrl: :orderNumber: :customerName: :firstName: :discountCode: :discountValue: :reviewUrl: (A/B-getest per inschrijving als meerdere URLs zijn ingesteld)';
 
     protected static ?string $model = OrderHandledFlow::class;

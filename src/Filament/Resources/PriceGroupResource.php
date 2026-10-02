@@ -26,6 +26,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PriceGroupResource\Pages\Creat
 
 class PriceGroupResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = PriceGroup::class;
 
     protected static ?string $recordTitleAttribute = 'name';

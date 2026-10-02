@@ -21,6 +21,8 @@ use Dashed\DashedEcommerceCore\Services\Recommendations\Context\RecommendationCo
  */
 class RecommendationsDebugPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
+
     protected static string|UnitEnum|null $navigationGroup = 'Systeem';
     protected static ?int $navigationSort = 99100;
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-beaker';

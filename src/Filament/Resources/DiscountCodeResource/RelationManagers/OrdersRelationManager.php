@@ -10,6 +10,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OrdersRelationManager extends RelationManager
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesRelationManagerLabels;
+
     protected static string $relationship = 'orders';
 
     protected static ?string $title = 'Gekoppelde bestellingen';

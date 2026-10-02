@@ -32,6 +32,7 @@ use LaraZeus\SpatieTranslatable\Resources\RelationManagers\Concerns\Translatable
 
 class FlowStepsRelationManager extends RelationManager
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesRelationManagerLabels;
     use Translatable;
 
     protected static string $relationship = 'steps';

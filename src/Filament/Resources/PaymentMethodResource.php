@@ -31,6 +31,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PaymentMethodResource\Pages\Cr
 
 class PaymentMethodResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = PaymentMethod::class;

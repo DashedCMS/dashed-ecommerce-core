@@ -22,6 +22,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\FulfillmentCompanyResource\Pag
 
 class FulfillmentCompanyResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     //    use Translatable;
 
     protected static ?string $model = FulfillmentCompany::class;

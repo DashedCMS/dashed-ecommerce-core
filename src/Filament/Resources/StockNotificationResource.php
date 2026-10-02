@@ -15,6 +15,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\StockNotificationResource\Page
 
 class StockNotificationResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = StockNotification::class;
 
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-bell-alert';

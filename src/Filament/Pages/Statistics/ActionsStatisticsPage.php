@@ -18,6 +18,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\ActionStatisticsTable
 
 class ActionsStatisticsPage extends Page implements HasSchemas
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use InteractsWithSchemas;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-presentation-chart-line';

@@ -33,6 +33,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\GiftcardResource\Pages\CreateG
 
 class GiftcardResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
 
     protected static ?string $model = DiscountCode::class;

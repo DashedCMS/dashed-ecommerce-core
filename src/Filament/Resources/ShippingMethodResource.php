@@ -32,6 +32,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ShippingMethodResource\Pages\C
 
 class ShippingMethodResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = ShippingMethod::class;

@@ -30,6 +30,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductGroupOpenOrdersWi
 
 class EditProductGroup extends EditRecord
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasEditableCMSActions;
 
     protected static string $resource = ProductGroupResource::class;

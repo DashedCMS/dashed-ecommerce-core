@@ -26,6 +26,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\AbandonedCartFlowResource\Page
 
 class AbandonedCartFlowResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = AbandonedCartFlow::class;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-envelope';

@@ -25,6 +25,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductCharacteristicResource\
 
 class ProductCharacteristicResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = ProductCharacteristics::class;

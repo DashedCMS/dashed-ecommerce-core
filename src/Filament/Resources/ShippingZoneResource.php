@@ -28,6 +28,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ShippingZoneResource\Pages\Cre
 
 class ShippingZoneResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = ShippingZone::class;

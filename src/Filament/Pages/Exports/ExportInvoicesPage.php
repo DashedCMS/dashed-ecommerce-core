@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Exports\Concerns\HasDateRangePrese
 
 class ExportInvoicesPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasDateRangePresets;
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-cloud-arrow-down';
     protected static ?string $navigationLabel = 'Exporteer facturen';

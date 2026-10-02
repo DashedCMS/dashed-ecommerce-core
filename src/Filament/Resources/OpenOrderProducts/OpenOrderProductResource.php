@@ -13,6 +13,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables\OpenO
 
 class OpenOrderProductResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = OrderProduct::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';

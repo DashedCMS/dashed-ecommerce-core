@@ -32,6 +32,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pages\Cre
 
 class DiscountCodeResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use \Dashed\DashedCore\Filament\Concerns\HasLastEditedColumn;
 
     protected static ?string $model = DiscountCode::class;

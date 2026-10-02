@@ -23,6 +23,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductFilterOptionResource\Pa
 
 class ProductFilterOptionResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = ProductFilterOption::class;

@@ -32,6 +32,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource\Pages\Lis
 
 class PricePerUserResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use HasCustomBlocksTab;
 
     protected static ?string $model = User::class;
@@ -244,6 +245,9 @@ class PricePerUserResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('id')
+                    ->label(__('ID'))
+                    ->sortable(),
                 TextColumn::make('name')
                     ->label(__('Naam'))
                     ->searchable(['first_name', 'last_name'])
@@ -251,6 +255,10 @@ class PricePerUserResource extends Resource
                 TextColumn::make('email')
                     ->label(__('E-mail'))
                     ->searchable()
+                    ->sortable(),
+                TextColumn::make('created_at')
+                    ->label(__('Aangemaakt op'))
+                    ->dateTime('d-m-Y H:i')
                     ->sortable(),
             ])
             ->reorderable('order')

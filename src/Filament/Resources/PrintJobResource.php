@@ -20,6 +20,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PrintJobResource\Pages;
 
 class PrintJobResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = PrintJob::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-queue-list';

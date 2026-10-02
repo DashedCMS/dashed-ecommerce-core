@@ -32,6 +32,7 @@ use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
 
 class CreateOrder extends Page implements HasSchemas
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use OrderResource\Concerns\CreateManualOrderActions;
     protected static string $resource = OrderResource::class;
     protected static ?string $title = 'Bestelling aanmaken';

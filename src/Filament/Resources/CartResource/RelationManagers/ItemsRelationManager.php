@@ -9,6 +9,8 @@ use Filament\Resources\RelationManagers\RelationManager;
 
 class ItemsRelationManager extends RelationManager
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesRelationManagerLabels;
+
     protected static string $relationship = 'items';
 
     protected static ?string $title = 'Items';

@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Services\Quotes\QuoteDefaults;
 
 class QuoteSettingsPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasSettingsPermission;
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-document-text';

@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Filament\Pages\Exports\Concerns\HasDateRangePrese
 
 class ExportOrdersPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasDateRangePresets;
 
     protected string $startDateField = 'startDate';

@@ -10,6 +10,8 @@ use Dashed\DashedCore\Models\Customsetting;
 
 class POSPageRedirect extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
+
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationLabel = 'Point of Sale';
     protected static string | UnitEnum | null $navigationGroup = 'E-commerce';

@@ -29,6 +29,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\PrinterResource\Pages;
 
 class PrinterResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
+
     protected static ?string $model = Printer::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-printer';

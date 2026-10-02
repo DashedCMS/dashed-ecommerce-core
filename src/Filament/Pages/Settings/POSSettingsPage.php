@@ -21,6 +21,7 @@ use Dashed\DashedCore\Traits\HasSettingsPermission;
 
 class POSSettingsPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasSettingsPermission;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';

@@ -20,6 +20,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductOpenOrdersWidget;
 
 class EditProduct extends EditRecord
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasEditableCMSActions;
 
     protected static string $resource = ProductResource::class;

@@ -24,6 +24,7 @@ use Dashed\DashedEcommerceCore\Services\CustomerMatch\CustomerMatchExporter;
 
 class CustomerMatchSettingsPage extends Page
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasSettingsPermission;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-megaphone';

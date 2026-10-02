@@ -29,6 +29,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderLogTemplateResource\Pages
 
 class OrderLogTemplateResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
 
     protected static ?string $model = OrderLogTemplate::class;

@@ -60,6 +60,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource\RelationM
 
 class ProductGroupResource extends Resource
 {
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesResourceLabels;
     use Translatable;
     use HasVisitableTab;
     use HasCustomBlocksTab;
