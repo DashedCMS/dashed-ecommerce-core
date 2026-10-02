@@ -27,6 +27,14 @@ if (! function_exists('mediaHelper')) {
                     throw new RuntimeException('Kapot media-item');
                 }
 
+                // Idem voor een test die een URL per id en conversie nodig heeft:
+                // zet $GLOBALS['mediahelper_stub_urls'] = ['<id>:<conversie>' => 'url'] en zet hem daarna terug.
+                $sleutel = $mediaId.':'.(is_string($conversion) ? $conversion : 'medium');
+
+                if (isset($GLOBALS['mediahelper_stub_urls'][$sleutel])) {
+                    return $GLOBALS['mediahelper_stub_urls'][$sleutel];
+                }
+
                 return '';
             }
         };

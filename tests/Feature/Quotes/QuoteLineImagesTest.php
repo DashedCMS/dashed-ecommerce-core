@@ -113,3 +113,39 @@ it('laat een kapot media-item vallen zonder de rest te breken', function () {
         unset($GLOBALS['mediahelper_stub_gooit_voor_id']);
     }
 });
+
+it('geeft per foto een paar van thumb en origineel en laat onbruikbare foto\'s vallen', function () {
+    $regel = new QuoteLine(['images' => [
+        'https://cdn.example.test/a.jpg',
+        'https://cdn.example.test/b.jpg',
+        999999,                  // onbekend media-id: de stub geeft ''
+        'javascript:alert(1)',
+    ]]);
+
+    expect($regel->imagePairs())->toBe([
+        ['thumb' => 'https://cdn.example.test/a.jpg', 'original' => 'https://cdn.example.test/a.jpg'],
+        ['thumb' => 'https://cdn.example.test/b.jpg', 'original' => 'https://cdn.example.test/b.jpg'],
+    ])
+        ->and((new QuoteLine())->imagePairs())->toBe([])
+        ->and((new QuoteLine(['images' => []]))->imagePairs())->toBe([]);
+});
+
+it('houdt thumb en origineel bij elkaar als alleen het origineel niet op te halen is', function () {
+    $GLOBALS['mediahelper_stub_urls'] = [
+        '5:medium' => 'https://cdn.example.test/5-medium.jpg',
+        // 5:original ontbreekt: de stub geeft ''
+        '6:medium' => 'https://cdn.example.test/6-medium.jpg',
+        '6:original' => 'https://cdn.example.test/6-origineel.jpg',
+    ];
+
+    try {
+        $regel = new QuoteLine(['images' => [5, 6]]);
+
+        expect($regel->imagePairs())->toBe([
+            ['thumb' => 'https://cdn.example.test/5-medium.jpg', 'original' => 'https://cdn.example.test/5-medium.jpg'],
+            ['thumb' => 'https://cdn.example.test/6-medium.jpg', 'original' => 'https://cdn.example.test/6-origineel.jpg'],
+        ]);
+    } finally {
+        unset($GLOBALS['mediahelper_stub_urls']);
+    }
+});

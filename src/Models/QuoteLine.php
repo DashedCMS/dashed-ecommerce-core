@@ -71,27 +71,62 @@ class QuoteLine extends Model
         $urls = [];
 
         foreach ((array) ($this->images ?? []) as $image) {
-            if (is_int($image) || (is_string($image) && ctype_digit($image))) {
-                $url = null;
-
-                if ((int) $image > 0) {
-                    try {
-                        $media = mediaHelper()->getSingleMedia((int) $image, $conversion);
-                        $url = is_object($media) ? ($media->url ?? null) : $media;
-                    } catch (\Throwable $e) {
-                        report($e);
-                    }
-                }
-            } else {
-                $url = $image;
-            }
-
-            if ($url = self::veiligeUrl($url)) {
+            if ($url = self::fotoUrl($image, $conversion)) {
                 $urls[] = $url;
             }
         }
 
         return $urls;
+    }
+
+    /**
+     * De foto's van deze regel als paren, in één ronde langs de opgeslagen
+     * waarden: `thumb` is de medium-URL, `original` de originele. Een foto
+     * zonder bruikbare thumb valt helemaal weg; kan het origineel niet worden
+     * opgehaald, dan wijst `original` naar de thumb. Zo lopen miniatuur en
+     * link nooit uit de pas, wat twee losse `imageUrls()`-lijsten wel kunnen.
+     *
+     * @return array<int, array{thumb: string, original: string}>
+     */
+    public function imagePairs(): array
+    {
+        $pairs = [];
+
+        foreach ((array) ($this->images ?? []) as $image) {
+            $thumb = self::fotoUrl($image, 'medium');
+
+            if (! $thumb) {
+                continue;
+            }
+
+            $pairs[] = [
+                'thumb' => $thumb,
+                'original' => self::fotoUrl($image, 'original') ?? $thumb,
+            ];
+        }
+
+        return $pairs;
+    }
+
+    /** Eén opgeslagen foto (media-id of URL) als veilige URL voor deze conversie, of null. */
+    private static function fotoUrl(mixed $image, array|string $conversion): ?string
+    {
+        if (is_int($image) || (is_string($image) && ctype_digit($image))) {
+            $url = null;
+
+            if ((int) $image > 0) {
+                try {
+                    $media = mediaHelper()->getSingleMedia((int) $image, $conversion);
+                    $url = is_object($media) ? ($media->url ?? null) : $media;
+                } catch (\Throwable $e) {
+                    report($e);
+                }
+            }
+        } else {
+            $url = $image;
+        }
+
+        return self::veiligeUrl($url);
     }
 
     private static function veiligeUrl(mixed $url): ?string

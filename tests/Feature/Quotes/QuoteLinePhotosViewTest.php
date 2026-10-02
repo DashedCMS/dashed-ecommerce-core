@@ -66,6 +66,8 @@ it('toont de foto\'s op de online pagina als links naar het origineel zonder de 
         ->and($blok[0])->toContain('rel="noopener"')
         ->and($blok[0])->not->toContain('wire:click');
 
+    expect($view)->toContain('$line->imagePairs()')->and($view)->not->toContain('$originals[');
+
     $stijl = file_get_contents(__DIR__.'/../../../resources/views/quotes/partials/styles.blade.php');
     expect($stijl)->toContain('.dq-photos')->and($stijl)->toContain('.dq-photo img');
 });

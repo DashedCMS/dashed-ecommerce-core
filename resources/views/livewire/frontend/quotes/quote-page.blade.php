@@ -123,13 +123,12 @@
                                     @if ($line->description)
                                         <p class="dq-desc">{!! nl2br(e($line->description)) !!}</p>
                                     @endif
-                                    @php($photos = $line->imageUrls('medium'))
+                                    @php($photos = $line->imagePairs())
                                     @if ($photos)
-                                        @php($originals = $line->imageUrls('original'))
                                         <div class="dq-photos">
-                                            @foreach ($photos as $index => $photo)
-                                                <a href="{{ $originals[$index] ?? $photo }}" class="dq-photo" target="_blank" rel="noopener">
-                                                    <img src="{{ $photo }}" alt="{{ $line->name }}" loading="lazy">
+                                            @foreach ($photos as $photo)
+                                                <a href="{{ $photo['original'] }}" class="dq-photo" target="_blank" rel="noopener">
+                                                    <img src="{{ $photo['thumb'] }}" alt="{{ $line->name }}" loading="lazy">
                                                 </a>
                                             @endforeach
                                         </div>

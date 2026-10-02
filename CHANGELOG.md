@@ -5,7 +5,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ## v4.148.0 - 2026-10-02
 
 ### Added
-- **Foto's op een offerteregel.** Elke regel van een offerte heeft een veld "Foto's" (mediabibliotheek, meerdere). Ze staan onder de omschrijving in de PDF en op de online offertepagina, daar als link naar het origineel; een revisie neemt ze mee. `QuoteLine::imageUrls()` geeft de URL's en laat een foto die niet meer in de mediabibliotheek staat weg. Nieuwe kolom `dashed__quote_lines.images` (migratie).
+- **Foto's op een offerteregel.** Elke regel van een offerte heeft een veld "Foto's" (mediabibliotheek, meerdere). Ze staan onder de omschrijving in de PDF en op de online offertepagina, daar als link naar het origineel; een revisie neemt ze mee. `QuoteLine::imageUrls()` en `imagePairs()` (miniatuur plus origineel per foto) geven de URL's en laat een foto die niet meer in de mediabibliotheek staat weg. Nieuwe kolom `dashed__quote_lines.images` (migratie).
 
 ## v4.147.1 - 2026-10-02
 
