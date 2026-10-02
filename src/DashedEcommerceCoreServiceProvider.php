@@ -2691,6 +2691,7 @@ MARKDOWN,
 
         $package
             ->name('dashed-ecommerce-core')
+            ->hasTranslations()
             ->hasRoutes([
                 'frontend',
                 'point-of-sale',
