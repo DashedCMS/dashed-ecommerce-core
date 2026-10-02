@@ -54,9 +54,14 @@ class UpdateProductStockInformationJob implements ShouldQueue
             }
         }
 
-        $this->product->productGroup->total_stock = $this->product->productGroup->products->sum('total_stock');
-        $this->product->productGroup->total_purchases = $this->product->productGroup->products->sum('total_purchases');
-        $this->product->productGroup->saveQuietly();
+        // BUG-008: product_group_id is nullable (een losstaand product zonder
+        // groep); zonder deze guard crasht elke voorraadupdate van zo'n
+        // product, bijvoorbeeld de afboeking na een handmatige bestelling.
+        if ($this->product->productGroup) {
+            $this->product->productGroup->total_stock = $this->product->productGroup->products->sum('total_stock');
+            $this->product->productGroup->total_purchases = $this->product->productGroup->products->sum('total_purchases');
+            $this->product->productGroup->saveQuietly();
+        }
 
         if (class_exists(CacheInvalidator::class)) {
             CacheInvalidator::flushSite();

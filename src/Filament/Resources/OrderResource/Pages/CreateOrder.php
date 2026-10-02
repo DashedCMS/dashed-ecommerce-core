@@ -333,7 +333,11 @@ BLADE
 
         return $schema
             ->fill([
-                'country' => Countries::getAllSelectedCountries()[0],
+                // BUG-006: zonder een actieve verzendzone (bijv. een verse
+                // installatie) is getAllSelectedCountries() leeg en liet
+                // [0] de hele pagina crashen. Geen land voorinvullen is dan
+                // het enige zinnige alternatief; het veld blijft verplicht.
+                'country' => Countries::getAllSelectedCountries()[0] ?? null,
             ])
             ->schema($newSchema);
     }

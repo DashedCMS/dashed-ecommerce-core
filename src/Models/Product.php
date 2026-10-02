@@ -188,7 +188,15 @@ class Product extends Model
             $product->removeInvalidImages();
 
             ProductSavedEvent::dispatch($product);
-            UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+
+            // BUG-007: product_group_id is nullable (een losstaand product
+            // zonder groep); zonder deze guard crasht elke save van zo'n
+            // product op UpdateProductInformationJob's niet-nullable
+            // ProductGroup-argument, bijvoorbeeld bij de voorraadafboeking
+            // van een handmatige bestelling.
+            if ($product->productGroup) {
+                UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+            }
 
             // Sync stock to linked products when stock changes
             if ($product->wasChanged('stock') && $product->stockSyncGroup()) {
@@ -216,7 +224,10 @@ class Product extends Model
         });
 
         static::deleted(function ($product) {
-            UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+            // BUG-007, zie de saved-hook hierboven.
+            if ($product->productGroup) {
+                UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+            }
             static::bumpSearchbarCacheVersion();
 
             if (class_exists(CacheInvalidator::class)) {
