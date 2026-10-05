@@ -10,11 +10,12 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOrderPlacer;
@@ -372,6 +373,11 @@ class ProformaCheckout extends Component
                 $orderProduct->product_extras = [];
                 $orderProduct->sku = 'shipping_costs';
                 $orderProduct->save();
+            }
+
+            // OSS: order-btw volgt de regels, ook de verzendregel. Niet bij korting: die zit niet in de regelprijzen.
+            if ((float) $order->discount <= 0) {
+                OssVat::recalculateOrderVat($order);
             }
 
             $order->createInvoice();

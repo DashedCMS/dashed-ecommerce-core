@@ -5,6 +5,8 @@ namespace Dashed\DashedEcommerceCore\Services\AbandonedCart;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentFailure;
 
 class CancelledOrderAbandonedSource implements AbandonedCartSource
 {
@@ -64,7 +66,35 @@ class CancelledOrderAbandonedSource implements AbandonedCartSource
         return [
             ':orderId:' => (string) ($this->order->invoice_id ?? $this->order->id),
             ':orderDate:' => $this->order->created_at?->format('j F Y') ?? '',
+            ':paymentAdvice:' => $this->paymentAdvice(),
         ];
+    }
+
+    /**
+     * Eén zin per oorzaak, in het CMS aanpasbaar (tag abandoned-cart). Bij een
+     * afwijzing door de betaalmethode (Riverty-kredietcheck) is "probeer het
+     * opnieuw" verkeerd advies; dan sturen we naar iDEAL.
+     */
+    private function paymentAdvice(): string
+    {
+        if (PaymentFailure::isDeclined($this->order)) {
+            // :method: zelf vervangen: Translation::get() doet dat alleen als de
+            // vertaaltabel bestaat, en in het testharnas van dit pakket is dat
+            // niet zo (dashed-translations zit niet in TestCase::getPackageProviders).
+            $tekst = (string) Translation::get(
+                'payment-advice-declined',
+                'abandoned-cart',
+                'Achteraf betalen via :method: is voor deze bestelling niet geaccepteerd. Kies iDEAL en je bestelling is direct rond.'
+            );
+
+            return str_replace(':method:', PaymentFailure::methodName($this->order), $tekst);
+        }
+
+        return (string) Translation::get(
+            'payment-advice-cancelled',
+            'abandoned-cart',
+            'Je kunt de betaling alsnog afronden, ook met een andere betaalmethode.'
+        );
     }
 
     public function isValid(): bool

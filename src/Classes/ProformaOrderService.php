@@ -69,6 +69,11 @@ class ProformaOrderService
             $shippingLine->save();
         }
 
+        // OSS: order-btw volgt de regels, ook de verzendregel. Niet bij korting: die zit niet in de regelprijzen.
+        if ((float) $order->discount <= 0) {
+            OssVat::recalculateOrderVat($order);
+        }
+
         $checkoutUrl = url('/proforma/' . $order->hash);
 
         Mail::to($order->email)->send(new ProformaCheckoutMail($order, $checkoutUrl));

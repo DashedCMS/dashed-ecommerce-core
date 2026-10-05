@@ -120,9 +120,11 @@ Route::middleware(['web', AdminMiddleware::class])->group(function () {
     })->name('dashed.ecommerce.customer-point-of-sale');
 });
 
+// De mail plakt email_id (klikregistratie), discount en type achter de al
+// ondertekende link; die tellen niet mee voor de handtekening.
 Route::get('/recover-order/{order}', [\Dashed\DashedEcommerceCore\Controllers\OrderRecoveryController::class, 'resume'])
     ->name('dashed.frontend.recover-order')
-    ->middleware('signed');
+    ->middleware(\Illuminate\Routing\Middleware\ValidateSignature::absolute(['email_id', 'discount', 'type']));
 
 Route::get('/abandoned-cart/unsubscribe/{record}', [\Dashed\DashedEcommerceCore\Controllers\AbandonedCartUnsubscribeController::class, 'unsubscribe'])
     ->name('dashed.frontend.abandoned-cart.unsubscribe')

@@ -8,12 +8,13 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartClick;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
+use Dashed\DashedEcommerceCore\Services\Payments\PaymentFailure;
 
 class OrderRecoveryController extends Controller
 {
     public function resume(Request $request, string $order)
     {
-        if (! $request->hasValidSignature()) {
+        if (! $request->hasValidSignatureWhileIgnoring(['email_id', 'discount', 'type'])) {
             abort(403);
         }
 
@@ -70,6 +71,19 @@ class OrderRecoveryController extends Controller
         // aan CartController::restoreCart). Wordt door Checkout::placeOrder
         // gepulled en op de nieuwe order opgeslagen.
         session(['abandoned_cart_recovery' => true]);
+
+        // Dezelfde drie flash-waarden als de terugkeer van de PSP, zodat de
+        // checkout een klant uit de mail net zo opvangt (uitleg, iDEAL voor,
+        // afgewezen methode verborgen).
+        PaymentFailure::flash($orderModel);
+
+        // AbandonedCartMail zet de kortingscode van de stap als discount= achter
+        // de knop-URL; de checkout past hem toe en valideert hem. Net als
+        // CartController::restoreCart alleen accepteren wat er als code uitziet.
+        $discount = (string) $request->query('discount', '');
+        if ($discount !== '' && preg_match('/^[A-Za-z0-9_\-]{1,64}$/', $discount)) {
+            session(['discountCode' => $discount]);
+        }
 
         $checkoutUrl = ShoppingCart::getCheckoutUrl();
         if (! $checkoutUrl || $checkoutUrl === '#') {

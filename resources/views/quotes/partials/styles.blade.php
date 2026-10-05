@@ -41,6 +41,10 @@
     .dq-line-main input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--dq-brand); flex: none; }
     .dq-name { font-weight: 600; color: var(--dq-ink); margin: 0; }
     .dq-desc { font-size: 14px; color: var(--dq-muted); margin: 4px 0 0; }
+    .dq-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .dq-photo { display: block; border: 1px solid var(--dq-line); border-radius: 8px; overflow: hidden; line-height: 0; }
+    .dq-photo:hover { border-color: var(--dq-brand); }
+    .dq-photo img { display: block; height: 96px; width: auto; max-width: 100%; }
     .dq-pill { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--dq-brand); border: 1px solid var(--dq-brand); border-radius: 999px; padding: 1px 8px; }
     .dq-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .dq-totals { margin: 20px 0 0 auto; max-width: 340px; }

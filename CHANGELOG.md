@@ -7,6 +7,38 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Fixed
 - **Productpagina en add-to-cart: gemanipuleerde Livewire-updates gaven een 500.** Updates die een model, een collectie of de filterstructuur zelf vervangen worden met een 400 geweigerd (`ProductCartActions::updatingProductCartActions`); thema's binden alleen losse waarden zoals `filters.N.active` en `extras.N.value`.
 
+## v4.149.0 - 2026-10-05
+
+### Added
+- **OSS: btw van het bestemmingsland.** Nieuwe schakelaar "OSS toepassen" op BTW-instellingen (per site, standaard uit) met een tarieventabel per EU-land (alleen afwijkingen van de standaardtabel worden bewaard). Staat hij aan, dan krijgt een verzonden order van een particulier in een ander EU-land het standaardtarief van dat land op de orderregels (alleen het eigen standaardtarief wordt omgezet; 0% en verlaagde tarieven blijven staan); de prijs incl. btw verandert niet. Wagen, checkout, handmatige orders, de kassa, conceptorders, proforma's en offertes rekenen ermee; importen kunnen `OssVat::recalculateOrderVat()` gebruiken. De regels staan in `Classes\OssVat`. Ophalen, een kassaorder zonder verzendmethode, verlegde btw en landen buiten de EU vallen erbuiten. Werkt alleen als de prijzen inclusief belasting zijn ingesteld. Bekende beperking: een concept- of proforma-order mét korting naar een ander EU-land houdt de order-btw op het eigen tarief (de regels en de verzamelfactuur kloppen wel).
+
+### Changed
+- **Verzamelfactuur.** De tabel "OSS omzet" toont de omzet per land en tarief, met een totaalregel; "Omzet normale verzendzones" bevat alleen nog de overige omzet en de totalen tonen de buitenlandse btw op een eigen regel. Staat de schakelaar aan, dan geldt dat voor elke periode die je exporteert, ook voor orders die eerder met het eigen tarief zijn opgeslagen. De berekening staat in `Classes\InvoiceExport\VatBreakdown`. Ook zonder de schakelaar: de oude OSS-tabel per verzendzone (orders met een tarief anders dan 9 of 21) is vervallen, die omzet staat nu bij de normale zones; een creditorder wordt per regeltarief uitgesplitst in plaats van via de terugval op `vat_percentages`; een verschil van één cent tussen regels en ordertotaal wordt nu ook geschaald. De totalen bovenaan veranderen daardoor niet.
+- `CartHelper::getVatRateForShippingMethod()` geeft een `float` terug (was `int`); `setShippingMethod()` en `setVatReverseCharge()` laten de btw-basis opnieuw berekenen.
+
+### Fixed
+- `Countries::getCountryIsoCode()` herkent nu ook de eigen schrijfwijze van Cyprus, Griekenland, Hongarije, Litouwen en Slowakije.
+
+## v4.148.0 - 2026-10-02
+
+### Added
+- **Foto's op een offerteregel.** Elke regel van een offerte heeft een veld "Foto's" (mediabibliotheek, maximaal 6). Ze staan onder de omschrijving in de PDF (conversie `small`, `QuoteLine::PDF_IMAGE_CONVERSION`) en op de online offertepagina, daar als link naar het origineel; een revisie neemt ze mee. `QuoteLine::imageUrls()` en `QuoteLine::imagePairs()` (thumb en origineel per foto) geven veilige URL's en laten een foto weg die niet meer in de mediabibliotheek staat, ook als de helper de oude URL nog in de cache heeft (één bestaanscontrole per regel, alleen als dashed-files geïnstalleerd is). Na het opslaan van een regel met nieuwe foto's (na de commit van een lopende transactie) worden de conversies voor de PDF en de pagina alvast opgevraagd; de mediabibliotheek zet ze dan in de wachtrij, zodat ze er doorgaans zijn voordat de offerte verstuurd wordt en de PDF niet de originelen op ware grootte hoeft te bevatten. Een fout daarbij laat het opslaan nooit mislukken. Nieuwe kolom `dashed__quote_lines.images` (migratie).
+
+## v4.147.1 - 2026-10-02
+
+### Fixed
+- **De kortingscode uit de herstelmail na een geannuleerde order wordt nu toegepast.** `AbandonedCartMail` zet `discount=` achter de knop-URL, maar `OrderRecoveryController` las hem niet; de klant moest de code zelf intypen. De controller zet hem nu, net als `CartController::restoreCart()`, als `discountCode` in de sessie, zodat de checkout hem toepast en valideert.
+
+## v4.147.0 - 2026-10-02
+
+### Added
+- **Een afwijzing door de betaalmethode is herkenbaar.** `OrderPayment::isDeclined()` leest de ruwe PSP-staat in `attributes['psp_state']` (dashed-ecommerce-paynl ≥ 4.4 vult hem: `DENIED_xx` bij een Riverty-kredietcheck, `CANCEL` als de klant zelf afbreekt). `Services\Payments\PaymentFailure` bundelt order-id, afgewezen ja/nee, betaalmethode-id en -naam van de laatste betaling.
+- **De checkout hoort waarom een betaling mislukte.** `ShoppingCart::cancelledPaymentRedirect($order)` en de herstel-link uit de mail zetten `cancelled_order_id`, `payment_declined` en `declined_payment_method_id` in de sessie-flash. Bij een afwijzing blijft de algemene toast ("afgewezen of niet voltooid") achterwege, zodat de shop zelf kan uitleggen dat achteraf betalen niet is geaccepteerd en iDEAL kan voorselecteren.
+- **Plaatshouder `:paymentAdvice:` in de verlaten-wagen-mail** voor een geannuleerde order: "Achteraf betalen via :method: is … niet geaccepteerd. Kies iDEAL …" bij een afwijzing, anders "Je kunt de betaling alsnog afronden …" (Translation-tag `abandoned-cart`, sleutels `payment-advice-declined` en `payment-advice-cancelled`). Voor een verlaten wagen is hij leeg.
+
+### Fixed
+- **De knop in de mail na een geannuleerde order gaf altijd 403.** `AbandonedCartMail` plakt `email_id` (en `discount`, `type`) achter de al ondertekende `/recover-order/{hash}`-link, terwijl de route-middleware `signed` en `OrderRecoveryController` een exacte handtekening eisten. Beide negeren die parameters nu; de klik- en conversieregistratie van de cancelled-order-flow werkt daarmee voor het eerst.
+
 ## v4.146.1 - 2026-09-30
 
 ### Fixed

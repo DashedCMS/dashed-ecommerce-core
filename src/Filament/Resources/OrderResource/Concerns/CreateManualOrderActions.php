@@ -285,6 +285,7 @@ trait CreateManualOrderActions
             cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
         }
 
+        cartHelper()->setVatCountry($this->country);
         cartHelper()->updateData();
 
         $this->totalUnformatted = cartHelper()->getTotal();
@@ -321,6 +322,7 @@ trait CreateManualOrderActions
             cartHelper()->setShippingZone(ShoppingCart::getShippingZoneByCountry($this->country)->id ?? null);
         }
 
+        cartHelper()->setVatCountry($this->country);
         cartHelper()->updateData();
 
         if (! $cartItems->count()) {

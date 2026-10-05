@@ -84,7 +84,7 @@ class ViewOrder extends Component
         if ($order->status == 'cancelled') {
             // Geannuleerd of afgewezen in het betaalscherm van de PSP, welke
             // dat ook was: terug naar de checkout, zie ShoppingCart.
-            return ShoppingCart::cancelledPaymentRedirect();
+            return ShoppingCart::cancelledPaymentRedirect($order);
         }
 
         $this->order = $order;

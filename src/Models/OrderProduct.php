@@ -6,6 +6,7 @@ use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Classes\TaxHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -66,14 +67,34 @@ class OrderProduct extends Model
         static::creating(function ($orderProduct) {
             $orderProduct->skip_stock = $orderProduct->resolveSkipStock();
 
+            // Zonder OSS op de actieve site blijft de order ongeladen: precies het oude pad.
+            $order = OssVat::enabled() ? $orderProduct->order : null;
+            $ossCountry = $order ? OssVat::destinationFor($order) : null;
+            // Op een creditorder spiegelt de regel het tarief van de oorspronkelijke regel.
+            $keepsGivenRate = $ossCountry && filled($order->credit_for_order_id) && $orderProduct->vat_rate !== null;
+
             if ($orderProduct->product) {
-                $orderProduct->vat_rate = $orderProduct->product->vat_rate;
+                if (! $keepsGivenRate) {
+                    // Een product zonder tarief houdt null (btw via de 21-terugval), ook op een OSS-order.
+                    $orderProduct->vat_rate = $ossCountry && $orderProduct->product->vat_rate !== null
+                        ? OssVat::rateFor($ossCountry, (float) $orderProduct->product->vat_rate, $order->site_id)
+                        : $orderProduct->product->vat_rate;
+                }
                 $orderProduct->btw = $orderProduct->price / (100 + ($orderProduct->vat_rate ?? 21)) * ($orderProduct->vat_rate ?? 21);
                 $orderProduct->fulfillment_provider = $orderProduct->product->fulfillment_provider;
             } else {
                 if (! $orderProduct->vat_rate && $orderProduct->btw > 0.00) {
                     $orderProduct->vat_rate = round($orderProduct->btw / ($orderProduct->price - $orderProduct->btw), 2) * 100;
                 }
+
+                if ($ossCountry && ! $keepsGivenRate && $orderProduct->vat_rate > 0.00) {
+                    $ossRate = OssVat::rateFor($ossCountry, (float) $orderProduct->vat_rate, $order->site_id);
+                    if (abs($ossRate - (float) $orderProduct->vat_rate) > 0.001) {
+                        $orderProduct->vat_rate = $ossRate;
+                        $orderProduct->btw = $orderProduct->price / (100 + $ossRate) * $ossRate;
+                    }
+                }
+
                 if ($orderProduct->btw == 0.00 && $orderProduct->vat_rate > 0.00) {
                     $orderProduct->btw = $orderProduct->price / (100 + ($orderProduct->vat_rate ?? 21)) * ($orderProduct->vat_rate ?? 21);
                 }

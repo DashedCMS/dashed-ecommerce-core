@@ -83,6 +83,12 @@ class ConceptOrderService
                 ]);
             }
 
+            // OSS: order-btw volgt de regels. Niet bij korting: die zit niet in de
+            // regelprijzen, dus de som van de regel-btw zou te hoog uitvallen.
+            if ((float) $order->discount <= 0) {
+                OssVat::recalculateOrderVat($order);
+            }
+
             $posCart->products = [];
             $posCart->discount_code = null;
             $posCart->save();

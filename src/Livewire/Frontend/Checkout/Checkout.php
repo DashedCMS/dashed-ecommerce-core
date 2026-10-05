@@ -25,20 +25,20 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\CartHelper;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\PaymentMethod;
-use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
-use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
-use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOrderPlacer;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
+use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOrderPlacer;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
 use Dashed\DashedEcommerceCore\Jobs\AbandonedCart\ScheduleAbandonedCartEmailsForCartJob;
 
@@ -527,6 +527,7 @@ class Checkout extends Component
         cartHelper()->setShippingMethod($this->shippingMethod);
         cartHelper()->setShippingZone($shippingZone->id ?? null);
         cartHelper()->setPaymentMethod($this->paymentMethod);
+        cartHelper()->setVatCountry($this->country);
         cartHelper()->setVatReverseCharge($vatReverseCharge);
 
         $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();

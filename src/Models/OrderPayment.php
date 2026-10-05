@@ -120,6 +120,21 @@ class OrderPayment extends Model
             ->withTrashed();
     }
 
+    /**
+     * Pay.nl (dashed-ecommerce-paynl ≥ 4.4) bewaart de ruwe staat in
+     * attributes['psp_state']; DENIED_xx betekent dat de betaalmethode
+     * weigerde (Riverty-kredietcheck), tegenover CANCEL als de klant zelf
+     * afbrak. Andere PSP's vullen de sleutel niet en gelden dus nooit als
+     * afgewezen.
+     */
+    public function isDeclined(): bool
+    {
+        $attributes = $this->getAttribute('attributes');
+        $state = is_array($attributes) ? ($attributes['psp_state'] ?? null) : null;
+
+        return is_string($state) && str_starts_with(strtoupper($state), 'DENIED');
+    }
+
     public function scopePaid($query)
     {
         return $query->where('status', 'paid');

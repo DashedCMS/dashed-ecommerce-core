@@ -7,17 +7,17 @@ use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Collection;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
@@ -31,10 +31,10 @@ use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
-use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
+use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
+use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 
 class PointOfSaleApiController extends Controller
 {
@@ -1376,6 +1376,10 @@ class PointOfSaleApiController extends Controller
             $shippingLine->sku = 'shipping_costs';
             $shippingLine->save();
         }
+
+        // De kassa rekent de order-btw vooraf met het eigen tarief uit; bij een
+        // verzending naar een ander EU-land volgen de regels het landtarief.
+        OssVat::recalculateOrderVat($order);
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;

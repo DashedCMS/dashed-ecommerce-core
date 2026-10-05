@@ -48,7 +48,7 @@ class CartHelper
 
     public static ?array $vatPercentageOfTotals = [];
 
-    public static int $vatRates = 0;
+    public static float $vatRates = 0;
 
     public static array $taxPercentages = [];
 
@@ -75,6 +75,13 @@ class CartHelper
     public static bool $vatReverseCharge = false;
 
     public static bool $vatReverseChargeInitialized = false;
+
+    public static ?string $vatCountry = null;
+
+    public static bool $vatCountryInitialized = false;
+
+    /** @var array<int, bool> verzendmethode-id → wordt er verzonden (geen ophalen) */
+    protected static array $shippedByShippingMethod = [];
 
     public static ?string $cartType = 'default';
 
@@ -134,6 +141,8 @@ class CartHelper
         static::$depositAmountInitialized = false;
         static::$taxPercentagesInitialized = false;
         static::$vatReverseChargeInitialized = false;
+        static::$vatCountryInitialized = false;
+        static::$shippedByShippingMethod = [];
     }
 
     public function __construct()
@@ -179,6 +188,8 @@ class CartHelper
         static::$depositPaymentMethod = static::$cart?->deposit_payment_method_id;
         static::$vatReverseCharge = (bool) data_get(static::$cart?->meta, 'vat_reverse_charge', false);
         static::$vatReverseChargeInitialized = true;
+        static::$vatCountry = data_get(static::$cart?->meta, 'vat_country');
+        static::$vatCountryInitialized = true;
 
         // Alles opnieuw berekenen, geforceerd
         $this->setCartItems(true);
@@ -203,10 +214,10 @@ class CartHelper
         $product = $cartItem->model ?? $this->getProductForCartItem($cartItem);
 
         if ($product) {
-            return (float) ($product->options['vat_rate'] ?? $product->vat_rate ?? 0);
+            return $this->vatRateFor((float) ($product->options['vat_rate'] ?? $product->vat_rate ?? 0));
         }
 
-        return (float) ($cartItem->options['vat_rate'] ?? 0);
+        return $this->vatRateFor((float) ($cartItem->options['vat_rate'] ?? 0));
     }
 
     protected function convertGrossToNet(float $price, float $vatRate): float
@@ -218,18 +229,14 @@ class CartHelper
         return $price / (100 + $vatRate) * 100;
     }
 
-    protected function getRawShippingVat(?int $vatRate = null): float
+    protected function getRawShippingVat(?float $vatRate = null): float
     {
         if (! static::$shippingMethod) {
             return 0.0;
         }
 
         if (! $vatRate) {
-            if (static::$vatRatesCount) {
-                $vatRate = (int) round(static::$vatRates / static::$vatRatesCount, 2);
-            } else {
-                $vatRate = 0;
-            }
+            $vatRate = $this->averageVatRate();
         }
 
         $shippingMethod = ShippingMethod::find(static::$shippingMethod);
@@ -256,10 +263,11 @@ class CartHelper
         if (static::$paymentMethod) {
             foreach ($this->getAllPaymentMethods() as $paymentMethod) {
                 if ($paymentMethod['id'] == static::$paymentMethod && ($paymentMethod['extra_costs'] ?? 0) > 0) {
+                    $paymentVatRate = $this->vatRateFor(21.0);
                     if (static::$calculateInclusiveTax) {
-                        $tax += ($paymentMethod['extra_costs'] / 121 * 21);
+                        $tax += ($paymentMethod['extra_costs'] / (100 + $paymentVatRate) * $paymentVatRate);
                     } else {
-                        $tax += ($paymentMethod['extra_costs'] / 100 * 21);
+                        $tax += ($paymentMethod['extra_costs'] / 100 * $paymentVatRate);
                     }
                 }
             }
@@ -748,7 +756,7 @@ class CartHelper
 
                     $totalPriceForProducts += $price;
 
-                    $vatRate = $cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate;
+                    $vatRate = $this->vatRateFor((float) ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate ?? 0));
 
                     if (static::$calculateInclusiveTax) {
                         $price = $price / (100 + $vatRate) * $vatRate;
@@ -762,7 +770,7 @@ class CartHelper
                     $taxWithoutDiscount += $priceWithoutDiscount;
 
                     if ($vatRate > 0) {
-                        $index = number_format($vatRate, 0);
+                        $index = OssVat::rateKey($vatRate);
 
                         if (! isset($totalAmountForVats[$index])) {
                             $totalAmountForVats[$index] = 0;
@@ -795,7 +803,7 @@ class CartHelper
         $totalVatPerPercentage = [];
 
         foreach ($totalAmountForVats as $percentage => $totalAmountForVat) {
-            $percentageKey = number_format($percentage, 0);
+            $percentageKey = OssVat::rateKey((float) $percentage);
 
             if (! isset($vatPercentageOfTotals[$percentageKey])) {
                 $vatPercentageOfTotals[$percentageKey] = 0;
@@ -824,20 +832,36 @@ class CartHelper
         static::$vatBaseInitialized = true;
     }
 
-    public function getVatRateForShippingMethod(): int
+    public function getVatRateForShippingMethod(): float
     {
         if ($this->getVatReverseCharge()) {
-            return 0;
+            return 0.0;
         }
 
         if (static::$shippingMethod && static::$vatRatesCount) {
-            return (int) round(static::$vatRates / static::$vatRatesCount, 2);
+            return $this->averageVatRate();
         }
 
-        return 0;
+        return 0.0;
     }
 
-    public function getVatForShippingMethod(?int $vatRate = null): float
+    /**
+     * Het gewogen gemiddelde btw-tarief van de producten, voor de verzendkosten.
+     * Zonder OSS afgekapt op een heel getal zoals altijd; bij OSS op twee
+     * decimalen, zodat bijvoorbeeld Finland (25,5%) niet naar 25% zakt.
+     */
+    protected function averageVatRate(): float
+    {
+        if (! static::$vatRatesCount) {
+            return 0.0;
+        }
+
+        $rate = round(static::$vatRates / static::$vatRatesCount, 2);
+
+        return $this->ossCountryCode() ? $rate : (float) (int) $rate;
+    }
+
+    public function getVatForShippingMethod(?float $vatRate = null): float
     {
         if ($this->getVatReverseCharge()) {
             return 0.0;
@@ -1107,6 +1131,8 @@ class CartHelper
             CartActivityLogger::shippingMethodChanged($cart, $shippingMethod, $methodName);
         }
 
+        // Ophalen of verzenden bepaalt of het landtarief (OSS) geldt.
+        static::$vatBaseInitialized = false;
         static::$shippingCostsInitialized = false;
         static::$taxInitialized = false;
         static::$taxPercentagesInitialized = false;
@@ -1264,14 +1290,15 @@ class CartHelper
 
         if (static::$shippingMethod) {
             foreach ($totalVatPerPercentage as $percentage => $value) {
-                $result = $this->getVatForShippingMethod((int) $percentage);
+                $result = $this->getVatForShippingMethod((float) $percentage);
                 $totalVatPerPercentage[$percentage] += $result;
             }
         }
 
         if (static::$paymentMethod) {
             $paymentVat = $this->getVatForPaymentMethod();
-            $totalVatPerPercentage[21] = ($totalVatPerPercentage[21] ?? 0) + $paymentVat;
+            $paymentRateKey = OssVat::rateKey($this->vatRateFor(21.0));
+            $totalVatPerPercentage[$paymentRateKey] = ($totalVatPerPercentage[$paymentRateKey] ?? 0) + $paymentVat;
         }
 
         foreach ($totalVatPerPercentage as $percentage => $value) {
@@ -1448,6 +1475,8 @@ class CartHelper
         $cart->meta = $meta;
         $cart->save();
 
+        // Verlegde btw schakelt het landtarief (OSS) uit.
+        static::$vatBaseInitialized = false;
         static::$taxInitialized = false;
         static::$taxPercentagesInitialized = false;
         static::$shippingCostsInitialized = false;
@@ -1467,6 +1496,95 @@ class CartHelper
         }
 
         return static::$vatReverseCharge;
+    }
+
+    /**
+     * Het afleverland van de wagen. Bepaalt of de btw van het bestemmingsland
+     * geldt (OSS); zonder land rekent de wagen met het eigen tarief.
+     */
+    public function setVatCountry(?string $country): void
+    {
+        $country = filled($country) ? (string) $country : null;
+
+        if ($this->getVatCountry() === $country) {
+            return;
+        }
+
+        static::$vatCountry = $country;
+        static::$vatCountryInitialized = true;
+
+        $cart = $this->getOrCreateCart();
+        $meta = $cart->meta ?? [];
+
+        if (! is_array($meta)) {
+            $meta = (array) $meta;
+        }
+
+        $meta['vat_country'] = $country;
+        $cart->meta = $meta;
+        $cart->save();
+
+        static::$vatBaseInitialized = false;
+        static::$taxInitialized = false;
+        static::$taxPercentagesInitialized = false;
+        static::$shippingCostsInitialized = false;
+        static::$paymentCostsInitialized = false;
+        static::$totalInitialized = false;
+        static::$subtotalInitialized = false;
+        static::$totalWithoutDiscountInitialized = false;
+        static::$discountInitialized = false;
+    }
+
+    public function getVatCountry(): ?string
+    {
+        if (! static::$vatCountryInitialized) {
+            $cart = $this->getOrCreateCart();
+            static::$vatCountry = data_get($cart->meta, 'vat_country');
+            static::$vatCountryInitialized = true;
+        }
+
+        return static::$vatCountry;
+    }
+
+    /**
+     * De ISO-code van het OSS-land van deze wagen, of null als de wagen met
+     * het eigen tarief rekent (eigen land, buiten de EU, verlegd, ophalen).
+     */
+    public function ossCountryCode(): ?string
+    {
+        // Zonder OSS niets uit de wagen lezen: dan blijft alles zoals het was.
+        if (! OssVat::enabled()) {
+            return null;
+        }
+
+        return OssVat::destination($this->getVatCountry(), $this->getVatReverseCharge(), $this->isShipped());
+    }
+
+    public function vatRateFor(float $rate): float
+    {
+        $countryCode = $this->ossCountryCode();
+
+        return $countryCode ? OssVat::rateFor($countryCode, $rate) : $rate;
+    }
+
+    /**
+     * Ophalen is geen verzending. Per verzendmethode-id onthouden: deze vraag
+     * komt per wagenregel langs. De sleutel is het id, dus een andere methode
+     * kiezen geeft nooit een oud antwoord; updateData() leegt de lijst.
+     */
+    protected function isShipped(): bool
+    {
+        $shippingMethodId = static::$shippingMethod;
+
+        if (! $shippingMethodId) {
+            return true;
+        }
+
+        if (! array_key_exists($shippingMethodId, static::$shippedByShippingMethod)) {
+            static::$shippedByShippingMethod[$shippingMethodId] = ShippingMethod::find($shippingMethodId)?->sort !== 'take_away';
+        }
+
+        return static::$shippedByShippingMethod[$shippingMethodId];
     }
 
     // -------------------------------------------------------------------------
@@ -1704,6 +1822,8 @@ class CartHelper
         static::$depositPaymentMethod = null;
         static::$vatReverseCharge = false;
         static::$vatReverseChargeInitialized = false;
+        static::$vatCountry = null;
+        static::$vatCountryInitialized = false;
 
         // Refresh cart pointer
         static::$cart = null;
@@ -2033,6 +2153,9 @@ class CartHelper
 
         // re-load cart pointer for this type
         static::$cart = null;
+
+        // Het land hoort bij de wagen: bij het herladen opnieuw uit de meta lezen.
+        static::$vatCountryInitialized = false;
     }
 
     public function getCartType(): string
