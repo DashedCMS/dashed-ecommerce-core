@@ -95,6 +95,11 @@ class OssVat
 
     public static function destinationFor(Order $order): ?string
     {
+        // Eerst de schakelaar: isShipped() kan de verzendmethode nalaadbaar maken (een query per aanroep).
+        if (! static::enabled($order->site_id)) {
+            return null;
+        }
+
         $country = filled($order->country) ? $order->country : $order->invoice_country;
 
         return static::destination(
@@ -172,10 +177,17 @@ class OssVat
             return;
         }
 
+        $lines = $order->orderProducts()->get();
+
+        // Een order zonder regels laten we met rust: de som zou de btw op 0 zetten.
+        if ($lines->isEmpty()) {
+            return;
+        }
+
         $btw = 0.0;
         $perRate = [];
 
-        foreach ($order->orderProducts()->get() as $line) {
+        foreach ($lines as $line) {
             $lineVat = (float) $line->btw;
             $btw += $lineVat;
 

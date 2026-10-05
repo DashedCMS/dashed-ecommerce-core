@@ -50,6 +50,12 @@ class Countries
         'luxemburg' => 'LU',
         'verenigde staten' => 'US',
         'amerika' => 'US',
+        // Eigen namen zoals de checkout ze aanbiedt (nativeName in countries.json).
+        'κύπρος' => 'CY',
+        'ελλάδα' => 'GR',
+        'magyarország' => 'HU',
+        'lietuva' => 'LT',
+        'slovensko' => 'SK',
     ];
 
     public static function getCountryIsoCode($countryName)

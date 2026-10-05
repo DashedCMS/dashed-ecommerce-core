@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\OssVat;
+use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 
@@ -138,4 +140,49 @@ it('laat order-btw met rust als de order geen OSS is', function () {
     OssVat::recalculateOrderVat($order);
 
     expect((float) $order->fresh()->btw)->toBe(21.0);
+});
+
+it('laat een order zonder regels ongemoeid bij herrekenen', function () {
+    $order = Order::create([
+        'status' => 'paid', 'country' => 'Duitsland', 'order_origin' => 'Bol',
+        'subtotal' => 119.00, 'btw' => 20.65, 'total' => 119.00, 'discount' => 0,
+        'vat_percentages' => ['21' => 20.65],
+    ]);
+
+    OssVat::recalculateOrderVat($order);
+
+    $order->refresh();
+    expect((float) $order->btw)->toBe(20.65);
+    expect($order->vat_percentages)->toEqual(['21' => 20.65]);
+});
+
+it('vraagt de verzendmethode niet op als OSS uit staat', function () {
+    Customsetting::set('oss_enabled', '0');
+
+    $zoneId = DB::table('dashed__shipping_zones')->insertGetId([
+        'site_id' => 'default', 'name' => json_encode(['en' => 'Zone']), 'zones' => json_encode(['Duitsland']),
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $method = new ShippingMethod();
+    $method->forceFill(['shipping_zone_id' => $zoneId, 'name' => ['en' => 'Verzenden'], 'sort' => 'static_amount', 'costs' => 0, 'minimum_order_value' => 0, 'maximum_order_value' => 100000, 'order' => 1])->saveQuietly();
+    $order = Order::create(['status' => 'paid', 'country' => 'Duitsland', 'shipping_method_id' => $method->id]);
+    $order = Order::find($order->id);
+
+    $queries = [];
+    DB::listen(function ($query) use (&$queries) {
+        $queries[] = $query->sql;
+    });
+
+    expect(OssVat::destinationFor($order))->toBeNull();
+
+    $table = (new ShippingMethod())->getTable();
+    expect(collect($queries)->filter(fn ($sql) => str_contains($sql, $table)))->toBeEmpty();
+});
+
+it('herkent alle 27 EU-landen aan de eigen naam uit countries.json', function () {
+    $byCode = collect(Countries::getCountries())->keyBy('alpha2Code');
+
+    foreach (array_keys(OssVat::STANDARD_RATES) as $code) {
+        expect(Countries::getCountryIsoCode($byCode[$code]['nativeName']))->toBe($code);
+    }
 });

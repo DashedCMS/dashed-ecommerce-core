@@ -101,7 +101,7 @@ class VATSettingsPage extends Page
             Customsetting::set('taxes_prices_include_taxes', $state["taxes_prices_include_taxes_{$site['id']}"], $site['id']);
             Customsetting::set('oss_enabled', ! empty($state["oss_enabled_{$site['id']}"]) ? '1' : '0', $site['id']);
             if (array_key_exists("oss_vat_rates_{$site['id']}", $state)) {
-                Customsetting::set('oss_vat_rates', json_encode(static::normalizeRates($state["oss_vat_rates_{$site['id']}"] ?? [])), $site['id']);
+                Customsetting::set('oss_vat_rates', json_encode(static::overridesOnly($state["oss_vat_rates_{$site['id']}"] ?? []), JSON_FORCE_OBJECT), $site['id']);
             }
         }
 
@@ -128,5 +128,21 @@ class VATSettingsPage extends Page
         }
 
         return $normalized;
+    }
+
+    /**
+     * Alleen de tarieven die afwijken van de standaardtabel: zo bereikt een
+     * nieuw standaardtarief in een release ook sites die al eens hebben
+     * opgeslagen. Een leeg resultaat wist eerdere afwijkingen.
+     *
+     * @return array<string, float>
+     */
+    public static function overridesOnly(array $rates): array
+    {
+        return array_filter(
+            static::normalizeRates($rates),
+            fn (float $rate, string $code) => abs($rate - (float) OssVat::STANDARD_RATES[$code]) > 0.00001,
+            ARRAY_FILTER_USE_BOTH,
+        );
     }
 }

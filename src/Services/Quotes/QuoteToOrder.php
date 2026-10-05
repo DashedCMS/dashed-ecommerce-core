@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Services\Quotes;
 
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Quote;
+use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\QuoteLine;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -80,6 +81,9 @@ class QuoteToOrder
         foreach ($quote->selectedLines() as $line) {
             self::createOrderProduct($order, $line);
         }
+
+        // OSS: order-btw en btw per tarief volgen de regels, die het bestemmingstarief hebben gekregen.
+        OssVat::recalculateOrderVat($order);
 
         OrderLog::createLog(orderId: $order->id, tag: 'order.created-from-quote', note: $quote->displayNumber());
 
