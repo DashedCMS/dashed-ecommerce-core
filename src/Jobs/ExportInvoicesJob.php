@@ -16,10 +16,10 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedCore\Notifications\AdminNotifier;
-use Dashed\DashedEcommerceCore\Classes\InvoiceExport\VatBreakdown;
 use Dashed\DashedEcommerceCore\Mail\FinanceExportMail;
 use Dashed\DashedCore\Jobs\Concerns\CreatesExportRecord;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
+use Dashed\DashedEcommerceCore\Classes\InvoiceExport\VatBreakdown;
 
 class ExportInvoicesJob implements ShouldQueue
 {

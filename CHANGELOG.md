@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.149.0 - 2026-10-05
+
+### Added
+- **OSS: btw van het bestemmingsland.** Nieuwe schakelaar "OSS toepassen" op BTW-instellingen (per site, standaard uit) met een tarieventabel per EU-land (alleen afwijkingen van de standaardtabel worden bewaard). Staat hij aan, dan krijgt een verzonden order van een particulier in een ander EU-land het standaardtarief van dat land op de orderregels (alleen het eigen standaardtarief wordt omgezet; 0% en verlaagde tarieven blijven staan); de prijs incl. btw verandert niet. Wagen, checkout, handmatige orders, de kassa, conceptorders, proforma's en offertes rekenen ermee; importen kunnen `OssVat::recalculateOrderVat()` gebruiken. De regels staan in `Classes\OssVat`. Ophalen, een kassaorder zonder verzendmethode, verlegde btw en landen buiten de EU vallen erbuiten. Werkt alleen als de prijzen inclusief belasting zijn ingesteld. Bekende beperking: een concept- of proforma-order mét korting naar een ander EU-land houdt de order-btw op het eigen tarief (de regels en de verzamelfactuur kloppen wel).
+
+### Changed
+- **Verzamelfactuur.** De tabel "OSS omzet" toont de omzet per land en tarief, met een totaalregel; "Omzet normale verzendzones" bevat alleen nog de overige omzet en de totalen tonen de buitenlandse btw op een eigen regel. Staat de schakelaar aan, dan geldt dat voor elke periode die je exporteert, ook voor orders die eerder met het eigen tarief zijn opgeslagen. De berekening staat in `Classes\InvoiceExport\VatBreakdown`. Ook zonder de schakelaar: de oude OSS-tabel per verzendzone (orders met een tarief anders dan 9 of 21) is vervallen, die omzet staat nu bij de normale zones; een creditorder wordt per regeltarief uitgesplitst in plaats van via de terugval op `vat_percentages`; een verschil van één cent tussen regels en ordertotaal wordt nu ook geschaald. De totalen bovenaan veranderen daardoor niet.
+- `CartHelper::getVatRateForShippingMethod()` geeft een `float` terug (was `int`); `setShippingMethod()` en `setVatReverseCharge()` laten de btw-basis opnieuw berekenen.
+
+### Fixed
+- `Countries::getCountryIsoCode()` herkent nu ook de eigen schrijfwijze van Cyprus, Griekenland, Hongarije, Litouwen en Slowakije.
+
 ## v4.148.0 - 2026-10-02
 
 ### Added
