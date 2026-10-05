@@ -32,8 +32,19 @@ class OssVat
         static::$countryNames = null;
     }
 
+    /**
+     * OSS geldt alleen bij prijzen inclusief btw: dan betaalt de klant overal
+     * hetzelfde bedrag en verschuift alleen de btw daarbinnen. Bij prijzen
+     * exclusief btw zou het totaal per land verschillen. Gelezen zonder
+     * standaardwaarde, net als CartHelper en TaxHelper: niet ingesteld rekent
+     * de wagen exclusief, dus dan ook geen OSS.
+     */
     public static function enabled(?string $siteId = null): bool
     {
+        if (! Customsetting::get('taxes_prices_include_taxes', $siteId)) {
+            return false;
+        }
+
         return (bool) Customsetting::get('oss_enabled', $siteId);
     }
 

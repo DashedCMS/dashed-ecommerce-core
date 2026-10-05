@@ -63,7 +63,7 @@ class VATSettingsPage extends Page
                     ->required(),
                 Toggle::make("oss_enabled_{$site['id']}")
                     ->label(__('OSS toepassen (btw van het bestemmingsland voor particulieren in andere EU-landen)'))
-                    ->helperText(__('Verplicht vanaf € 10.000 omzet per jaar aan particulieren in andere EU-landen, of na een vrijwillige keuze voor de OSS-regeling. Nieuwe bestellingen naar een ander EU-land krijgen het btw-tarief van dat land; de klant betaalt hetzelfde bedrag. De verzamelfactuur toont deze omzet per land onder "OSS omzet".'))
+                    ->helperText(__('Verplicht vanaf € 10.000 omzet per jaar aan particulieren in andere EU-landen, of na een vrijwillige keuze voor de OSS-regeling. Nieuwe bestellingen naar een ander EU-land krijgen het btw-tarief van dat land; de klant betaalt hetzelfde bedrag. De verzamelfactuur toont deze omzet per land onder "OSS omzet". Werkt alleen als de prijzen inclusief belasting zijn ingesteld.'))
                     ->live(),
                 KeyValue::make("oss_vat_rates_{$site['id']}")
                     ->label(__('OSS: standaardtarief per EU-land'))

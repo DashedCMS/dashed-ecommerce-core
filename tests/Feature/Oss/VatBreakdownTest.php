@@ -42,6 +42,8 @@ function breakdownOrder(string $country, array $lines, array $attributes = []): 
 beforeEach(function () {
     OssVat::flush();
     Customsetting::set('company_country', 'Nederland');
+    // OSS werkt alleen bij prijzen inclusief btw; de testdatabase staat op exclusief.
+    Customsetting::set('taxes_prices_include_taxes', 1);
     Customsetting::set('oss_enabled', '0');
 });
 

@@ -1131,6 +1131,8 @@ class CartHelper
             CartActivityLogger::shippingMethodChanged($cart, $shippingMethod, $methodName);
         }
 
+        // Ophalen of verzenden bepaalt of het landtarief (OSS) geldt.
+        static::$vatBaseInitialized = false;
         static::$shippingCostsInitialized = false;
         static::$taxInitialized = false;
         static::$taxPercentagesInitialized = false;
@@ -1473,6 +1475,8 @@ class CartHelper
         $cart->meta = $meta;
         $cart->save();
 
+        // Verlegde btw schakelt het landtarief (OSS) uit.
+        static::$vatBaseInitialized = false;
         static::$taxInitialized = false;
         static::$taxPercentagesInitialized = false;
         static::$shippingCostsInitialized = false;

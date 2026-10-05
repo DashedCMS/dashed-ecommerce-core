@@ -27,6 +27,8 @@ function ossOrder(array $attributes = [], ?string $shippingSort = null): Order
 beforeEach(function () {
     OssVat::flush();
     Customsetting::set('company_country', 'Nederland');
+    // OSS werkt alleen bij prijzen inclusief btw; de testdatabase staat op exclusief.
+    Customsetting::set('taxes_prices_include_taxes', 1);
     Customsetting::set('oss_enabled', '1');
 });
 
@@ -64,6 +66,19 @@ it('doet niets als de schakelaar uit staat', function () {
 
     expect(OssVat::destinationFor(ossOrder()))->toBeNull();
     expect(OssVat::rateForOrder(ossOrder(), 21))->toBe(21.0);
+});
+
+it('staat uit bij prijzen exclusief btw, ook met de schakelaar aan', function () {
+    Customsetting::set('taxes_prices_include_taxes', '0');
+    Customsetting::set('oss_enabled', '1');
+
+    expect(OssVat::enabled())->toBeFalse();
+    expect(OssVat::destinationFor(ossOrder()))->toBeNull();
+
+    Customsetting::set('taxes_prices_include_taxes', '1');
+
+    expect(OssVat::enabled())->toBeTrue();
+    expect(OssVat::destinationFor(ossOrder()))->toBe('DE');
 });
 
 it('zet alleen het eigen standaardtarief om', function () {
