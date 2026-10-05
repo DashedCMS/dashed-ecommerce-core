@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
@@ -1376,6 +1377,10 @@ class PointOfSaleApiController extends Controller
             $shippingLine->sku = 'shipping_costs';
             $shippingLine->save();
         }
+
+        // De kassa rekent de order-btw vooraf met het eigen tarief uit; bij een
+        // verzending naar een ander EU-land volgen de regels het landtarief.
+        OssVat::recalculateOrderVat($order);
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $order->id;
