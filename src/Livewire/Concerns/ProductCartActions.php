@@ -249,6 +249,28 @@ trait ProductCartActions
         $this->addToCart();
     }
 
+    /**
+     * Livewire laat een browser elke publieke property zetten via `updates`. De thema's
+     * binden hier alleen losse waarden (aantal, extras.N.value, filters.N.active, ...);
+     * een model, een collectie of de filterstructuur zelf vervangen doet geen enkel thema.
+     * Zulke updates komen van scanners en liepen verderop stuk (array offset on int in
+     * fillFilters, ->type op een int in de productview), dus hier afwijzen.
+     */
+    public function updatingProductCartActions($name, $value): void
+    {
+        $name = (string) $name;
+        $root = strstr($name, '.', true) ?: $name;
+        $current = $this->{$root} ?? null;
+
+        if ($current instanceof \Illuminate\Database\Eloquent\Model || $current instanceof SupportCollection) {
+            abort(400);
+        }
+
+        if ($root === 'filters' && (! preg_match('/^filters\.\d+\.active$/', $name) || is_array($value))) {
+            abort(400);
+        }
+    }
+
     public function updatedQuantity()
     {
         if (! $this->product) {

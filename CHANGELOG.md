@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Fixed
+- **Productpagina en add-to-cart: gemanipuleerde Livewire-updates gaven een 500.** Updates die een model, een collectie of de filterstructuur zelf vervangen worden met een 400 geweigerd (`ProductCartActions::updatingProductCartActions`); thema's binden alleen losse waarden zoals `filters.N.active` en `extras.N.value`.
+
 ## v4.146.1 - 2026-09-30
 
 ### Fixed
