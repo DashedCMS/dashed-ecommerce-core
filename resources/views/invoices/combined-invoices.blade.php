@@ -68,7 +68,8 @@
     <div class="order">
         <h2>{{ Translation::get('totals', 'invoice', 'Totalen') }}</h2>
 
-        @if(count($vatPercentages ?? []) > 1)
+        @php($hasForeignVat = abs($foreignVat ?? 0) >= 0.005)
+        @if(count($vatPercentages ?? []) + ($hasForeignVat ? 1 : 0) > 1)
             <table>
                 <tr>
                     <th colspan="2"></th>
@@ -80,11 +81,19 @@
                     <tr>
                         <td colspan="2"></td>
                         <td class="numeric">{{ Translation::get('btw-percentage', 'invoice', 'BTW :percentage:%', 'text', [
-                                    'percentage' => number_format($vatPercentage, 0),
+                                    'percentage' => str_replace('.', ',', (string) $vatPercentage),
                                 ]) }}</td>
                         <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($vatAmount, 'EUR', true) }}</td>
                     </tr>
                 @endforeach
+
+                @if($hasForeignVat)
+                    <tr>
+                        <td colspan="2"></td>
+                        <td class="numeric">Buitenlandse btw (OSS)</td>
+                        <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($foreignVat, 'EUR', true) }}</td>
+                    </tr>
+                @endif
             </table>
         @endif
 
@@ -94,7 +103,7 @@
 
         <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotaal ex BTW') . ': ' . CurrencyHelper::formatPriceForPDF($subTotal, 'EUR', true) }}</p>
 
-        <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($vatPercentages ?? []) == 1 ? ' ' . array_key_first($vatPercentages) . '%' : '') .  ': ' . CurrencyHelper::formatPriceForPDF($btw, 'EUR', true) }}</p>
+        <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($vatPercentages ?? []) == 1 && ! $hasForeignVat ? ' ' . array_key_first($vatPercentages) . '%' : '') .  ': ' . CurrencyHelper::formatPriceForPDF($btw, 'EUR', true) }}</p>
 
         <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPriceForPDF($total, 'EUR', true) }}</p>
     </div>
@@ -131,27 +140,38 @@
 
         <table>
             <tr>
-                <th colspan="4">OSS - buitenlandse btw particulieren</th>
+                <th colspan="5">OSS omzet</th>
             </tr>
             <tr>
-                <th>Verzendzone</th>
+                <th>Land</th>
+                <th class="numeric">Tarief</th>
                 <th class="numeric">Excl btw</th>
                 <th class="numeric">BTW</th>
                 <th class="numeric">Incl btw</th>
             </tr>
 
-            @forelse($ossTotals as $ossTotal)
+            @forelse($ossTotals as $ossRow)
                 <tr>
-                    <td>{{ $ossTotal['zone'] }}</td>
-                    <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossTotal['ex_vat'], 'EUR', true) }}</td>
-                    <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossTotal['vat'], 'EUR', true) }}</td>
-                    <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossTotal['incl_vat'], 'EUR', true) }}</td>
+                    <td>{{ $ossRow['country'] }}</td>
+                    <td class="numeric">{{ str_replace('.', ',', \Dashed\DashedEcommerceCore\Classes\OssVat::rateKey($ossRow['rate'])) }}%</td>
+                    <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossRow['ex_vat'], 'EUR', true) }}</td>
+                    <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossRow['vat'], 'EUR', true) }}</td>
+                    <td class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossRow['incl_vat'], 'EUR', true) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4">Geen OSS omzet in deze periode</td>
+                    <td colspan="5">Geen OSS omzet in deze periode</td>
                 </tr>
             @endforelse
+
+            @if(count($ossTotals) > 0)
+                <tr>
+                    <th colspan="2">Totaal OSS</th>
+                    <th class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossTotal['ex_vat'], 'EUR', true) }}</th>
+                    <th class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossTotal['vat'], 'EUR', true) }}</th>
+                    <th class="numeric">{{ CurrencyHelper::formatPriceForPDF($ossTotal['incl_vat'], 'EUR', true) }}</th>
+                </tr>
+            @endif
         </table>
 
         <br>
