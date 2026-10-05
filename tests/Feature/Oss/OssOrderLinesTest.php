@@ -6,6 +6,8 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Illuminate\Support\Facades\DB;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 
 function ossLineProduct(float $vatRate = 21): Product
 {
@@ -72,6 +74,7 @@ it('laat een verlaagd producttarief staan', function () {
     ]);
 
     expect((float) $line->vat_rate)->toBe(9.0);
+    expect(round((float) $line->btw, 2))->toBe(0.90);
 });
 
 it('zet verzendkosten zonder product om en herrekent de btw', function () {
@@ -96,7 +99,7 @@ it('laat een al omgezette regel zonder product met rust', function () {
     expect(round((float) $line->btw, 2))->toBe(1.43);
 });
 
-it('houdt 21% voor Nederland, voor ophalen en als de schakelaar uit staat', function () {
+it('houdt 21% voor Nederland en als de schakelaar uit staat', function () {
     $product = ossLineProduct();
 
     $nl = OrderProduct::create(['order_id' => ossLineOrder('Nederland')->id, 'product_id' => $product->id, 'name' => 'Vaas', 'quantity' => 1, 'price' => 121.00]);
@@ -111,10 +114,10 @@ it('houdt 0% bij verlegde btw naar het buitenland', function () {
     $order = ossLineOrder('Duitsland', ['vat_reverse_charge' => true]);
     $line = OrderProduct::create([
         'order_id' => $order->id, 'name' => 'Verzenden', 'sku' => 'shipping_costs',
-        'quantity' => 1, 'price' => 8.95, 'vat_rate' => 0, 'btw' => 0,
+        'quantity' => 1, 'price' => 8.95, 'vat_rate' => 21, 'btw' => 1.55,
     ]);
 
-    expect((float) $line->vat_rate)->toBe(0.0);
+    expect((float) $line->vat_rate)->toBe(21.0);
 });
 
 it('spiegelt op een creditorder het tarief van de oorspronkelijke regel', function () {
@@ -128,4 +131,48 @@ it('spiegelt op een creditorder het tarief van de oorspronkelijke regel', functi
 
     expect((float) $line->vat_rate)->toBe(21.0);
     expect(round((float) $line->btw, 2))->toBe(-20.65);
+});
+
+it('houdt 21% bij ophalen (take_away) naar het buitenland', function () {
+    $zoneId = DB::table('dashed__shipping_zones')->insertGetId([
+        'site_id' => 'default', 'name' => json_encode(['en' => 'Zone']), 'zones' => json_encode(['Duitsland']),
+        'created_at' => now(), 'updated_at' => now(),
+    ]);
+    $method = new ShippingMethod();
+    $method->forceFill(['shipping_zone_id' => $zoneId, 'name' => ['en' => 'Ophalen'], 'sort' => 'take_away', 'costs' => 0, 'minimum_order_value' => 0, 'maximum_order_value' => 100000, 'order' => 1])->saveQuietly();
+    $order = ossLineOrder('Duitsland', ['shipping_method_id' => $method->id]);
+
+    $line = OrderProduct::create([
+        'order_id' => $order->id, 'name' => 'Vaas', 'quantity' => 1, 'price' => 121.00, 'vat_rate' => 21, 'btw' => 21.00,
+    ]);
+
+    expect((float) $line->vat_rate)->toBe(21.0);
+});
+
+it('laat een product zonder tarief op een OSS-order op null met de 21-terugval', function () {
+    $order = ossLineOrder('Duitsland');
+    $product = ossLineProduct();
+    // De kolom is NOT NULL, dus het null-tarief zetten we alleen op de geladen relatie.
+    $product->vat_rate = null;
+
+    $line = new OrderProduct(['order_id' => $order->id, 'product_id' => $product->id, 'name' => 'Vaas', 'quantity' => 1, 'price' => 121.00]);
+    $line->setRelation('product', $product);
+    $line->save();
+
+    expect($line->vat_rate)->toBeNull();
+    expect(round((float) $line->btw, 2))->toBe(21.00);
+});
+
+it('laadt de order niet in de hook als OSS uit staat', function () {
+    $order = ossLineOrder('Duitsland');
+    $product = ossLineProduct();
+    Customsetting::set('oss_enabled', '0');
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    OrderProduct::create(['order_id' => $order->id, 'product_id' => $product->id, 'name' => 'Vaas', 'quantity' => 1, 'price' => 121.00]);
+    $queries = collect(DB::getQueryLog())->pluck('query')->filter(fn ($q) => str_starts_with($q, 'select') && (str_contains($q, 'dashed__orders') || str_contains($q, 'dashed__shipping_methods')));
+    DB::disableQueryLog();
+
+    expect($queries)->toBeEmpty();
 });

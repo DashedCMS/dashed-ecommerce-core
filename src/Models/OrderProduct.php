@@ -59,14 +59,16 @@ class OrderProduct extends Model
         static::creating(function ($orderProduct) {
             $orderProduct->skip_stock = $orderProduct->resolveSkipStock();
 
-            $order = $orderProduct->order;
+            // Zonder OSS op de actieve site blijft de order ongeladen: precies het oude pad.
+            $order = OssVat::enabled() ? $orderProduct->order : null;
             $ossCountry = $order ? OssVat::destinationFor($order) : null;
             // Op een creditorder spiegelt de regel het tarief van de oorspronkelijke regel.
             $keepsGivenRate = $ossCountry && filled($order->credit_for_order_id) && $orderProduct->vat_rate !== null;
 
             if ($orderProduct->product) {
                 if (! $keepsGivenRate) {
-                    $orderProduct->vat_rate = $ossCountry
+                    // Een product zonder tarief houdt null (btw via de 21-terugval), ook op een OSS-order.
+                    $orderProduct->vat_rate = $ossCountry && $orderProduct->product->vat_rate !== null
                         ? OssVat::rateFor($ossCountry, (float) $orderProduct->product->vat_rate, $order->site_id)
                         : $orderProduct->product->vat_rate;
                 }
