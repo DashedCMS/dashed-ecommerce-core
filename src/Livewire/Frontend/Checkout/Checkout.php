@@ -527,6 +527,7 @@ class Checkout extends Component
         cartHelper()->setShippingMethod($this->shippingMethod);
         cartHelper()->setShippingZone($shippingZone->id ?? null);
         cartHelper()->setPaymentMethod($this->paymentMethod);
+        cartHelper()->setVatCountry($this->country);
         cartHelper()->setVatReverseCharge($vatReverseCharge);
 
         $this->depositPaymentMethods = cartHelper()->getDepositPaymentMethods();
