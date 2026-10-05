@@ -145,6 +145,31 @@ it('toont geen OSS-omzet als de schakelaar uit staat', function () {
     expect(round(array_sum(array_column($result['normalZoneTotals'], 'incl_vat')), 2))->toBe(240.00);
 });
 
+it('laat een OSS-order zonder regels en btw in de normale zone vallen', function () {
+    $orders = [
+        breakdownOrder('Nederland', [[121.00, 21]]),
+        breakdownOrder('Duitsland', [], ['total' => 50.00, 'subtotal' => 50.00]),
+    ];
+
+    Customsetting::set('oss_enabled', '1');
+    $result = VatBreakdown::calculate($orders);
+
+    expect($result['ossTotals'])->toBe([]);
+    expect($result['btw'])->toBe(21.00);
+    expect($result['total'])->toBe(171.00);
+    expect(round(array_sum(array_column($result['normalZoneTotals'], 'incl_vat')), 2))->toBe(171.00);
+});
+
+it('houdt order->total aan bij een regelsom die een cent afwijkt', function () {
+    $orders = [breakdownOrder('Duitsland', [[10.01, 19]], ['total' => 10.00])];
+
+    Customsetting::set('oss_enabled', '1');
+    $result = VatBreakdown::calculate($orders);
+
+    expect($result['ossTotals'])->toHaveCount(1);
+    expect($result['ossTotals'][0]['incl_vat'])->toBe(10.00);
+});
+
 it('rendert de OSS-tabel en de regel buitenlandse btw', function () {
     // De facade-aliassen van een volledige app ontbreken in Testbench.
     foreach ([

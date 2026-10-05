@@ -12,7 +12,8 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
  * Alles wordt afgeleid uit de inclusieve bedragen per tarief:
  * btw = round(incl * tarief / (100 + tarief), 2), ex = incl - btw. Zo komt elke
  * rij exact op het tarief uit en blijft de inclusieve kolom gelijk aan de
- * ontvangen omzet. Volgorde per order: ICP, dan OSS, dan de normale zone.
+ * ontvangen omzet. Volgorde per order: ICP, dan OSS, dan de normale zone. Een order zonder
+ * bruikbare tarieven (geen regels, geen btw) valt altijd in de normale zone.
  */
 class VatBreakdown
 {
@@ -54,7 +55,7 @@ class VatBreakdown
             $inclPerRate = static::inclPerRate($order);
             $ossCountry = OssVat::destinationFor($order);
 
-            if ($ossCountry) {
+            if ($ossCountry && count($inclPerRate) > 0) {
                 foreach ($inclPerRate as $rate => $incl) {
                     $ossRate = OssVat::rateFor($ossCountry, (float) $rate, $order->site_id);
                     $rowKey = $ossCountry . '|' . OssVat::rateKey($ossRate);
@@ -190,7 +191,7 @@ class VatBreakdown
 
         // Schaal de regelbedragen naar het werkelijke ordertotaal; de rest gaat
         // naar het laatste tarief zodat de som exact gelijk blijft aan order->total.
-        if (abs($sumLines - $totalIncl) >= 0.01) {
+        if (abs($sumLines - $totalIncl) >= 0.005) {
             $factor = $totalIncl / $sumLines;
             $assigned = 0.0;
             $rateKeys = array_keys($perRate);
