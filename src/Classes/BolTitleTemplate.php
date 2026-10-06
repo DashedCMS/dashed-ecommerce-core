@@ -42,15 +42,17 @@ class BolTitleTemplate
     /**
      * Haalt onvulbare plaatshouders weg en ruimt op wat dan overblijft: dubbele
      * spaties, een spatie voor een komma, twee scheidingstekens na elkaar en
-     * een scheidingsteken aan het begin of eind.
+     * een scheidingsteken aan het begin of eind. Een en-dash (–) of em-dash (—)
+     * telt ook als scheidingsteken: een sjabloon als "Merk – :kleur: - …" gaf
+     * anders "Merk – - …" zodra de plaatshouder leeg bleef.
      */
     public static function tidy(string $title): string
     {
         $title = preg_replace(self::PLACEHOLDER_PATTERN, '', $title);
         $title = preg_replace('/\s+/u', ' ', $title);
         $title = preg_replace('/\s+,/u', ',', $title);
-        $title = preg_replace('/([-,\/])(\s*[-,\/])+/u', '$1', $title);
-        $title = preg_replace('/^[\s,\/-]+|[\s,\/-]+$/u', '', $title);
+        $title = preg_replace('/([-–—,\/])(\s*[-–—,\/])+/u', '$1', $title);
+        $title = preg_replace('/^[\s,\/–—-]+|[\s,\/–—-]+$/u', '', $title);
 
         return trim($title);
     }

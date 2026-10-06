@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.149.2 - 2026-10-06
+
+Releasetak `release/4.149` op v4.149.0: master bevat sinds 5 oktober i18n-werk dat een nog niet
+gereleasede dashed-core (`Filament\Concerns\TranslatesPageLabels`) vereist. **v4.149.1 is dat
+master-werk en is niet installeerbaar naast dashed-core ≤ v4.79; gebruik v4.149.2.**
+
+### Fixed
+- **Bol-titel: en-dash als scheidingsteken.** `BolTitleTemplate::tidy()` veegde "- -" op maar kende het en-dash (–) en em-dash (—) niet, zodat een sjabloon als "Merk – :kleur: - …" bij een lege plaatshouder "Merk – - …" opleverde. Beide tellen nu mee, ook aan het begin en eind van de titel.
+
 ## v4.149.0 - 2026-10-05
 
 ### Added
