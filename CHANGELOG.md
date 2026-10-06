@@ -2,9 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.149.1 - 2026-10-06
 
 ### Fixed
+- **Bol-titel: en-dash als scheidingsteken.** `BolTitleTemplate::tidy()` veegde "- -" op maar kende het en-dash (–) en em-dash (—) niet, zodat een sjabloon als "Merk – :kleur: - …" bij een lege plaatshouder "Merk – - …" opleverde. Beide tellen nu mee, ook aan het begin en eind van de titel.
 - **Productpagina en add-to-cart: gemanipuleerde Livewire-updates gaven een 500.** Updates die een model, een collectie of de filterstructuur zelf vervangen worden met een 400 geweigerd (`ProductCartActions::updatingProductCartActions`); thema's binden alleen losse waarden zoals `filters.N.active` en `extras.N.value`.
 
 ## v4.149.0 - 2026-10-05
