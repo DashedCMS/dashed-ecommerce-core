@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Throwable;
 use RuntimeException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -25,7 +25,6 @@ class SendMetaPurchaseEventJob implements ShouldQueue
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
-    use SerializesModels;
 
     // Horizon staat standaard op één poging; deze job regelt het zelf.
     public int $tries = 5;
@@ -43,6 +42,8 @@ class SendMetaPurchaseEventJob implements ShouldQueue
     {
         $order = Order::with(['orderProducts', 'orderPayments', 'tracking'])->find($this->orderId);
         if (! $order) {
+            $this->skipPendingRowOfMissingOrder();
+
             return;
         }
 
@@ -64,7 +65,12 @@ class SendMetaPurchaseEventJob implements ShouldQueue
                 'event_name' => 'Purchase',
             ]);
 
-            if ($row->status === MetaCapiEvent::STATUS_SENT) {
+            $testEventCode = $settings->testEventCode();
+
+            // Verstuurd is klaar. Enige uitzondering: het event ging als test de
+            // deur uit en de test event code is intussen leeggemaakt; dan heeft
+            // Meta de aankoop nog niet echt gekregen.
+            if ($row->status === MetaCapiEvent::STATUS_SENT && ! ($row->sentAsTest() && $testEventCode === null)) {
                 return;
             }
 
@@ -80,7 +86,8 @@ class SendMetaPurchaseEventJob implements ShouldQueue
             $row->update([
                 'payload' => $event,
                 'attempts' => $row->attempts + 1,
-                'response' => ['status' => $result['status'], 'body' => $result['body']],
+                'response' => ['status' => $result['status'], 'body' => $result['body']]
+                    + ($testEventCode !== null ? ['test' => true] : []),
                 'status' => $result['ok'] ? MetaCapiEvent::STATUS_SENT : MetaCapiEvent::STATUS_FAILED,
                 'sent_at' => $result['ok'] ? Carbon::now() : null,
             ]);
@@ -93,6 +100,38 @@ class SendMetaPurchaseEventJob implements ShouldQueue
         if (! $result['ok'] && ($result['status'] === 0 || $result['status'] >= 500)) {
             throw new RuntimeException("Meta Conversions API: event {$eventId} mislukt met status {$result['status']}");
         }
+    }
+
+    /**
+     * Na de laatste poging, een time-out of een gecrashte worker: een rij die
+     * nog op pending staat zou anders nooit meer van status veranderen.
+     */
+    public function failed(?Throwable $e): void
+    {
+        try {
+            $row = MetaCapiEvent::where('event_id', ConversionsApi::eventIdForOrderId($this->orderId))
+                ->where('status', MetaCapiEvent::STATUS_PENDING)
+                ->first();
+
+            $row?->update([
+                'status' => MetaCapiEvent::STATUS_FAILED,
+                'response' => ['error' => ConversionsApi::clean((string) $e?->getMessage())],
+            ]);
+        } catch (Throwable $inner) {
+            report($inner);
+        }
+    }
+
+    /** De order is (soft) verwijderd: een rij die op hem wachtte komt nooit meer aan de beurt. */
+    protected function skipPendingRowOfMissingOrder(): void
+    {
+        MetaCapiEvent::where('order_id', $this->orderId)
+            ->where('status', MetaCapiEvent::STATUS_PENDING)
+            ->get()
+            ->each(fn (MetaCapiEvent $row) => $row->update([
+                'status' => MetaCapiEvent::STATUS_SKIPPED,
+                'response' => ['reason' => 'order bestaat niet meer'],
+            ]));
     }
 
     /** De reden waarom er voor deze order geen Purchase gaat, of null als hij mag. */
@@ -115,6 +154,7 @@ class SendMetaPurchaseEventJob implements ShouldQueue
             (bool) $order->credit_for_order_id => 'creditorder',
             $order->replacesOrder()->exists() => 'vervangt een eerdere order',
             (float) $order->total <= 0 => 'orderbedrag is niet positief',
+            ConversionsApi::paymentTooOld($order) => 'betaling is ouder dan zes dagen',
             default => null,
         };
     }

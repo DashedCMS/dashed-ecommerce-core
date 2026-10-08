@@ -12,6 +12,9 @@ use Dashed\DashedEcommerceCore\Classes\PhoneNormalizer;
  */
 class MetaHasher
 {
+    /** Landcode plus abonneenummer: korter is geen bruikbaar telefoonnummer. */
+    protected const MIN_PHONE_DIGITS = 8;
+
     public static function hash(?string $normalized): ?string
     {
         $normalized = trim((string) $normalized);
@@ -24,12 +27,21 @@ class MetaHasher
         return static::hash(mb_strtolower(trim((string) $email)));
     }
 
-    /** Alleen cijfers, met landcode, zonder voorloopnullen. */
+    /**
+     * Alleen cijfers, met landcode, zonder voorloopnullen. Zonder landcode
+     * (onbekend land en een nationaal nummer) of met minder dan acht cijfers
+     * geeft dit null: zo'n hash matcht bij Meta nooit.
+     */
     public static function phone(?string $phone, ?string $countryCode): ?string
     {
-        $digits = preg_replace('/\D/', '', PhoneNormalizer::toE164($phone, $countryCode));
+        $e164 = PhoneNormalizer::toE164($phone, $countryCode);
+        $digits = (string) preg_replace('/\D/', '', $e164);
 
-        return static::hash(ltrim((string) $digits, '0'));
+        if (! str_starts_with($e164, '+') || strlen($digits) < self::MIN_PHONE_DIGITS) {
+            return null;
+        }
+
+        return static::hash(ltrim($digits, '0'));
     }
 
     /** Voor- of achternaam: kleine letters, accenten naar ASCII, geen leestekens. */

@@ -64,13 +64,8 @@ class MetaCapiEventResource extends Resource
                     ->placeholder('-'),
                 TextColumn::make('site_id')->label(__('Site'))->toggleable(isToggledHiddenByDefault: count(Sites::getSites()) < 2),
                 TextColumn::make('status')->label(__('Status'))->badge()
-                    ->formatStateUsing(fn (string $state) => MetaCapiEvent::statusLabel($state))
-                    ->color(fn (string $state) => match ($state) {
-                        MetaCapiEvent::STATUS_SENT => 'success',
-                        MetaCapiEvent::STATUS_FAILED => 'danger',
-                        MetaCapiEvent::STATUS_SKIPPED => 'gray',
-                        default => 'warning',
-                    }),
+                    ->formatStateUsing(fn (MetaCapiEvent $record) => $record->displayStatusLabel())
+                    ->color(fn (MetaCapiEvent $record) => $record->displayStatusColor()),
                 TextColumn::make('attempts')->label(__('Pogingen')),
                 TextColumn::make('response')->label(__('Response'))
                     ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : (string) $state)

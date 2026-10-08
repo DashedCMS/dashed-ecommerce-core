@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Session\Store;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Session\ArraySessionHandler;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\DashedEcommerceCoreEventServiceProvider;
@@ -32,26 +35,70 @@ function checkoutRequest(array $server = []): Request
     return $request;
 }
 
+/** Zet de Conversions API aan of uit voor de actieve site. */
+function metaCapiAan(bool $aan = true): void
+{
+    Customsetting::set('meta_capi_enabled', $aan, Sites::getActive());
+}
+
+/** GET-verzoek met een sessie, zoals de frontend-middleware het krijgt. */
+function frontendRequest(string $url): Request
+{
+    $request = Request::create($url, 'GET');
+    $session = new Store('meta-mw', new ArraySessionHandler(120));
+    $session->start();
+    $request->setLaravelSession($session);
+
+    return $request;
+}
+
 afterEach(function () {
     MarketingConsent::resolveUsing(null);
     Carbon::setTestNow();
 });
 
 it('zet een fbclid uit de URL als fbc in de sessie', function () {
+    metaCapiAan();
     Carbon::setTestNow('2026-10-08 12:00:00');
-    $request = Request::create('https://shop.test/product?fbclid=AbC123', 'GET');
-    $session = new Store('meta-mw', new ArraySessionHandler(120));
-    $session->start();
-    $request->setLaravelSession($session);
+    $request = frontendRequest('https://shop.test/product?fbclid=AbC123');
 
     $response = (new CaptureMetaClickId())->handle($request, fn () => response('ok'));
 
     expect($response->getContent())->toBe('ok')
-        ->and($session->get(CaptureMetaClickId::SESSION_KEY))
+        ->and($request->session()->get(CaptureMetaClickId::SESSION_KEY))
         ->toBe('fb.1.' . Carbon::now()->getTimestampMs() . '.AbC123');
 });
 
+it('bewaart geen fbclid zolang de Conversions API uit staat', function () {
+    metaCapiAan(false);
+    $request = frontendRequest('https://shop.test/product?fbclid=AbC123');
+
+    $response = (new CaptureMetaClickId())->handle($request, fn () => response('ok'));
+
+    expect($response->getContent())->toBe('ok')
+        ->and($request->session()->has(CaptureMetaClickId::SESSION_KEY))->toBeFalse();
+});
+
+it('leest de instellingen alleen als er een fbclid in de URL staat', function () {
+    metaCapiAan();
+    Sites::getActive();
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    (new CaptureMetaClickId())->handle(frontendRequest('https://shop.test/product?kleur=mint'), fn () => response('ok'));
+    $zonderFbclid = count(DB::getQueryLog());
+
+    (new CaptureMetaClickId())->handle(frontendRequest('https://shop.test/product?fbclid=AbC123'), fn () => response('ok'));
+    $metFbclid = count(DB::getQueryLog());
+    DB::disableQueryLog();
+
+    // Een gewone paginaweergave betaalt niet voor de (ongecachete) instelling.
+    expect($zonderFbclid)->toBe(0)
+        ->and($metFbclid)->toBeGreaterThan(0);
+});
+
 it('doet niets bij een POST, zonder sessie of zonder fbclid', function () {
+    metaCapiAan();
     $post = Request::create('https://shop.test/checkout?fbclid=AbC123', 'POST');
     $session = new Store('meta-mw', new ArraySessionHandler(120));
     $session->start();
@@ -149,11 +196,22 @@ it('maakt geen tweede rij als de order al signalen heeft', function () {
 it('legt signalen vast zodra de checkout OrderCreatedEvent afvuurt', function () {
     // De package-testharness laadt de event-provider niet via package-discovery.
     app()->register(DashedEcommerceCoreEventServiceProvider::class);
+    metaCapiAan();
     $order = trackingOrder();
 
     OrderCreatedEvent::dispatch($order);
 
     expect($order->fresh()->tracking)->not->toBeNull();
+});
+
+it('legt bij OrderCreatedEvent niets vast zolang de Conversions API uit staat', function () {
+    app()->register(DashedEcommerceCoreEventServiceProvider::class);
+    metaCapiAan(false);
+    $order = trackingOrder();
+
+    OrderCreatedEvent::dispatch($order);
+
+    expect(OrderTracking::where('order_id', $order->id)->exists())->toBeFalse();
 });
 
 it('legt ook vast bij een user agent met ongeldige UTF-8 en bewaart de cookie', function () {

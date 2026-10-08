@@ -15,12 +15,39 @@ use Illuminate\Http\Client\ConnectionException;
  */
 class ConversionsApi
 {
-    /** Meta weigert events ouder dan zeven dagen; een dag marge. */
-    protected const MAX_EVENT_AGE_DAYS = 6;
+    /**
+     * Meta weigert events ouder dan zeven dagen; een dag marge. Dezelfde grens
+     * geldt voor de job (ouder = overslaan) en voor "Opnieuw versturen".
+     */
+    public const MAX_EVENT_AGE_DAYS = 6;
 
     public static function eventId(Order $order): string
     {
-        return 'purchase_' . $order->id;
+        return static::eventIdForOrderId($order->id);
+    }
+
+    public static function eventIdForOrderId(int|string $orderId): string
+    {
+        return 'purchase_' . $orderId;
+    }
+
+    /** Het betaalmoment: de laatste betaalde betaling. Null als de order er geen heeft. */
+    public static function paidAt(Order $order): ?Carbon
+    {
+        $paidAt = $order->orderPayments
+            ->where('status', 'paid')
+            ->sortByDesc('created_at')
+            ->first()?->created_at;
+
+        return $paidAt ? Carbon::instance($paidAt) : null;
+    }
+
+    /** Te oud om nog als aankoop van dat moment te melden; Meta kan hem dan niet ontdubbelen. */
+    public static function paymentTooOld(Order $order): bool
+    {
+        $paidAt = static::paidAt($order);
+
+        return $paidAt !== null && $paidAt->lt(Carbon::now()->subDays(self::MAX_EVENT_AGE_DAYS));
     }
 
     /** @return array<string,mixed> */
@@ -116,15 +143,15 @@ class ConversionsApi
                 ->acceptJson()
                 ->post("https://graph.facebook.com/{$settings->graphVersion()}/{$pixelId}/events", $body);
         } catch (Throwable $e) {
-            return ['ok' => false, 'status' => 0, 'body' => ['error' => $this->clean(str_replace($token, '***', $e->getMessage()))]];
+            return ['ok' => false, 'status' => 0, 'body' => ['error' => static::clean(str_replace($token, '***', $e->getMessage()))]];
         }
 
         $decoded = $response->json();
-        $body = is_array($decoded) ? $decoded : ['raw' => $this->clean((string) $response->body(), 500)];
+        $body = is_array($decoded) ? $decoded : ['raw' => static::clean((string) $response->body(), 500)];
 
         // Het resultaat gaat in een JSON-kolom: ongeldige UTF-8 uit Meta mag dat niet breken.
         if (json_encode($body) === false) {
-            $body = ['raw' => $this->clean((string) $response->body(), 500)];
+            $body = ['raw' => static::clean((string) $response->body(), 500)];
         }
 
         return [
@@ -134,19 +161,17 @@ class ConversionsApi
         ];
     }
 
-    /** Maakt tekst geldig UTF-8 en knipt op tekengrenzen af. */
-    protected function clean(string $text, int $maxBytes = 500): string
+    /** Maakt tekst geldig UTF-8 en knipt op tekengrenzen af, zodat hij in een JSON-kolom past. */
+    public static function clean(string $text, int $maxBytes = 500): string
     {
         return mb_strcut(mb_scrub($text, 'UTF-8'), 0, $maxBytes, 'UTF-8');
     }
 
     protected function eventTime(Order $order): int
     {
-        $paidAt = $order->orderPayments
-            ->where('status', 'paid')
-            ->sortByDesc('created_at')
-            ->first()?->created_at;
+        $paidAt = static::paidAt($order);
 
+        // De job slaat een te oude betaling al over; dit blijft het vangnet.
         $now = Carbon::now();
         if (! $paidAt || $paidAt->gt($now) || $paidAt->lt($now->copy()->subDays(self::MAX_EVENT_AGE_DAYS))) {
             return $now->timestamp;

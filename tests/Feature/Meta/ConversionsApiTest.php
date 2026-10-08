@@ -11,7 +11,6 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderTracking;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
-use Dashed\DashedEcommerceCore\Services\Meta\MetaHasher;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaPurchaseValue;
 
 /**
@@ -242,14 +241,15 @@ it('verstuurt niets zonder pixel-ID of token', function () {
     Http::assertNothingSent();
 });
 
-it('laat country weg en zet geen 31 voor het telefoonnummer bij een leeg of onbekend land', function (string $country) {
+it('laat country en een nationaal telefoonnummer weg bij een leeg of onbekend land', function (string $country) {
     $order = capiOrder(['country' => $country, 'phone_number' => '0612345678']);
 
     $userData = app(ConversionsApi::class)->buildUserData($order);
 
+    // Zonder land is de landcode niet te bepalen: liever geen ph dan een hash die nooit matcht.
     expect($userData)->not->toHaveKey('country')
-        ->and($userData['ph'])->not->toBe([hash('sha256', '31612345678')])
-        ->and($userData['ph'])->toBe([MetaHasher::phone('0612345678', null)]);
+        ->and($userData)->not->toHaveKey('ph')
+        ->and($userData)->toHaveKey('em');
 })->with(['', 'Atlantis']);
 
 it('hasht een internationaal nummer met zijn eigen landcode bij een onbekend land', function () {

@@ -1,11 +1,13 @@
 <?php
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Http;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\MetaCapiEvent;
 use Dashed\DashedEcommerceCore\Models\OrderTracking;
@@ -37,6 +39,23 @@ function zetStatus(Order $order, string $status): void
     $order->status = $status;
     $order->save();
 }
+
+/** Betaalde betaling bij de order, een aantal dagen geleden. */
+function betaaldDagenGeleden(Order $order, int $dagen, string $status = 'paid'): OrderPayment
+{
+    $payment = OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => $status, 'psp' => 'paynl', 'payment_method' => 'iDEAL']);
+    $payment->forceFill(['created_at' => Carbon::now()->subDays($dagen)])->saveQuietly();
+
+    return $payment;
+}
+
+/** Eventrij van de order zoals de job hem zelf aanmaakt, met een eigen status. */
+function eventRij(Order $order, string $status, ?array $response = null): MetaCapiEvent
+{
+    return MetaCapiEvent::create(['site_id' => $order->site_id, 'order_id' => $order->id, 'event_name' => 'Purchase', 'event_id' => 'purchase_' . $order->id, 'status' => $status, 'response' => $response]);
+}
+
+afterEach(fn () => Carbon::setTestNow());
 
 beforeEach(function () {
     Http::preventStrayRequests();
@@ -226,4 +245,146 @@ it('doet niets als de order niet meer bestaat', function () {
 
     Http::assertNothingSent();
     expect(MetaCapiEvent::count())->toBe(0);
+});
+
+it('slaat een order over waarvan de laatste betaling ouder is dan zes dagen', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    Http::fake();
+    $order = betaalbareOrder(['status' => 'paid']);
+    betaaldDagenGeleden($order, 20);
+    betaaldDagenGeleden($order, 7);
+    // Een niet-betaalde poging van vandaag telt niet als betaalmoment.
+    betaaldDagenGeleden($order, 0, 'pending');
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertNothingSent();
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+    expect($event->status)->toBe(MetaCapiEvent::STATUS_SKIPPED)
+        ->and($event->response)->toBe(['reason' => 'betaling is ouder dan zes dagen']);
+});
+
+it('verstuurt een order waarvan de laatste betaling vijf dagen oud is', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+    betaaldDagenGeleden($order, 20);
+    betaaldDagenGeleden($order, 5);
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => $request['data'][0]['event_time'] === Carbon::now()->subDays(5)->timestamp);
+    expect(MetaCapiEvent::where('order_id', $order->id)->sole()->status)->toBe(MetaCapiEvent::STATUS_SENT);
+});
+
+it('houdt de vaste volgorde van redenen aan: de betaalleeftijd komt als laatste', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    $order = betaalbareOrder(['status' => 'paid', 'total' => 0]);
+    betaaldDagenGeleden($order, 7);
+
+    expect(SendMetaPurchaseEventJob::orderSkipReason($order->fresh()))->toBe('orderbedrag is niet positief');
+});
+
+it('zet een rij die op pending bleef staan op failed als de job definitief mislukt', function () {
+    $order = betaalbareOrder(['status' => 'paid']);
+    eventRij($order, MetaCapiEvent::STATUS_PENDING);
+
+    (new SendMetaPurchaseEventJob($order->id))->failed(new RuntimeException("worker weg \xC3\x28 \xFF " . str_repeat('é', 600)));
+
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+    expect($event->status)->toBe(MetaCapiEvent::STATUS_FAILED)
+        ->and($event->response['error'])->toBeString()->toContain('worker weg')
+        ->and(strlen($event->response['error']))->toBeLessThanOrEqual(500)
+        ->and(json_encode($event->response))->not->toBeFalse();
+});
+
+it('laat een verstuurde rij met rust als de job daarna nog mislukt', function () {
+    $order = betaalbareOrder(['status' => 'paid']);
+    eventRij($order, MetaCapiEvent::STATUS_SENT, ['status' => 200, 'body' => ['events_received' => 1]]);
+
+    (new SendMetaPurchaseEventJob($order->id))->failed(new RuntimeException('te laat'));
+    (new SendMetaPurchaseEventJob(999999))->failed(new RuntimeException('geen rij'));
+
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+    expect($event->status)->toBe(MetaCapiEvent::STATUS_SENT)
+        ->and($event->response)->toEqual(['status' => 200, 'body' => ['events_received' => 1]]);
+});
+
+it('zet een wachtende rij op overgeslagen als de order intussen verwijderd is', function () {
+    Http::fake();
+    $order = betaalbareOrder(['status' => 'paid']);
+    eventRij($order, MetaCapiEvent::STATUS_PENDING);
+    $order->forceFill(['deleted_at' => Carbon::now()])->saveQuietly();
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertNothingSent();
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+    expect($event->status)->toBe(MetaCapiEvent::STATUS_SKIPPED)
+        ->and($event->response)->toBe(['reason' => 'order bestaat niet meer']);
+});
+
+it('markeert een verzending met een test event code en stuurt hem niet nog eens zolang de code er staat', function () {
+    Customsetting::set('meta_capi_test_event_code', 'TEST123', $this->site);
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertSentCount(1);
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+    expect($event->status)->toBe(MetaCapiEvent::STATUS_SENT)
+        ->and($event->response)->toEqual(['status' => 200, 'body' => ['events_received' => 1], 'test' => true])
+        ->and($event->attempts)->toBe(1);
+});
+
+it('verstuurt een als test verstuurde aankoop alsnog echt nadat de test event code is leeggemaakt', function () {
+    Customsetting::set('meta_capi_test_event_code', 'TEST123', $this->site);
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Customsetting::set('meta_capi_test_event_code', '', $this->site);
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+
+    expect($event->canResend())->toBeTrue()
+        ->and($event->resend())->toBeTrue();
+
+    Http::assertSentCount(2);
+    $event = $event->fresh();
+    expect($event->status)->toBe(MetaCapiEvent::STATUS_SENT)
+        ->and($event->response)->not->toHaveKey('test')
+        ->and($event->attempts)->toBe(2)
+        ->and($event->canResend())->toBeFalse();
+
+    // Nu echt verstuurd: een volgende job doet niets meer.
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+    Http::assertSentCount(2);
+});
+
+it('stuurt een als test verstuurde aankoop ook zonder de knop alsnog echt zodra de code leeg is', function () {
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+    eventRij($order, MetaCapiEvent::STATUS_SENT, ['status' => 200, 'body' => [], 'test' => true]);
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => ! array_key_exists('test_event_code', $request->data()));
+    expect(MetaCapiEvent::where('order_id', $order->id)->sole()->response)->not->toHaveKey('test');
+});
+
+it('kan een gewoon verstuurde aankoop niet opnieuw versturen', function () {
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    $event = MetaCapiEvent::where('order_id', $order->id)->sole();
+
+    expect($event->response)->not->toHaveKey('test')
+        ->and($event->canResend())->toBeFalse()
+        ->and($event->resend())->toBeFalse();
+    Http::assertSentCount(1);
 });

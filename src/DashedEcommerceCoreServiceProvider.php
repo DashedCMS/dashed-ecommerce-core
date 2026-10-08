@@ -2410,6 +2410,18 @@ MARKDOWN,
         );
 
         cms()->registerRetention(
+            Retention::make('order_tracking')
+                ->label(__('Klantsignalen bij bestellingen'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__order_tracking')
+                ->termijn(
+                    Termijn::make('order_tracking', 90, 'created_at')
+                        ->label(__('Klantsignalen bij bestellingen bewaren (dagen)'))
+                        ->uitleg(__('Cookies, browser en toestemming van het moment van bestellen, nodig voor de Meta Conversions API. Standaard: 90 dagen.'))
+                )
+        );
+
+        cms()->registerRetention(
             Retention::make('ecommerce_action_logs')
                 ->label(__('Handelingenlogboek webshop'))
                 ->pakket('dashed-ecommerce-core', __('Webshop'))

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Http;
@@ -7,6 +8,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Retention\RetentionRegistry;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderTracking;
 use Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource;
@@ -28,6 +30,17 @@ function beheerOrder(): Order
 
     return $order->fresh();
 }
+
+/** Eventrij voor een order, met een eigen leeftijd in dagen. */
+function beheerEvent(Order $order, string $status, ?array $response = null, int $dagenOud = 0): MetaCapiEvent
+{
+    $event = MetaCapiEvent::create(['site_id' => $order->site_id, 'order_id' => $order->id, 'event_name' => 'Purchase', 'event_id' => 'purchase_' . $order->id, 'status' => $status, 'response' => $response]);
+    $event->forceFill(['created_at' => Carbon::now()->subDays($dagenOud)])->saveQuietly();
+
+    return $event->fresh();
+}
+
+afterEach(fn () => Carbon::setTestNow());
 
 beforeEach(function () {
     Http::preventStrayRequests();
@@ -103,6 +116,67 @@ it('meldt het eventlog aan bij de bewaartermijnen', function () {
     DashedEcommerceCoreServiceProvider::registreerBewaartermijnen();
 
     expect(app(RetentionRegistry::class)->vind('meta_capi_events'))->not->toBeNull();
+});
+
+it('meldt de klantsignalen aan bij de bewaartermijnen', function () {
+    app(RetentionRegistry::class)->flush();
+    DashedEcommerceCoreServiceProvider::registreerBewaartermijnen();
+
+    expect(app(RetentionRegistry::class)->vind('order_tracking'))->not->toBeNull();
+});
+
+it('laat opnieuw versturen alleen toe binnen zes dagen na het event', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    Bus::fake([SendMetaPurchaseEventJob::class]);
+
+    $oud = beheerEvent(beheerOrder(), 'failed', dagenOud: 7);
+    $recent = beheerEvent(beheerOrder(), 'failed', dagenOud: 5);
+
+    expect($oud->canResend())->toBeFalse()
+        ->and($oud->resend())->toBeFalse()
+        ->and($recent->canResend())->toBeTrue();
+    Bus::assertNotDispatched(SendMetaPurchaseEventJob::class);
+});
+
+it('laat een als test verstuurd event opnieuw versturen, een gewoon verstuurd event niet', function () {
+    $alsTest = beheerEvent(beheerOrder(), 'sent', ['status' => 200, 'body' => ['events_received' => 1], 'test' => true]);
+    $echt = beheerEvent(beheerOrder(), 'sent', ['status' => 200, 'body' => ['events_received' => 1]]);
+    $oudeTest = beheerEvent(beheerOrder(), 'sent', ['status' => 200, 'body' => [], 'test' => true], dagenOud: 7);
+
+    expect($alsTest->canResend())->toBeTrue()
+        ->and($echt->canResend())->toBeFalse()
+        ->and($oudeTest->canResend())->toBeFalse();
+});
+
+it('toont een als test verstuurd event als zodanig in het log', function () {
+    $alsTest = beheerEvent(beheerOrder(), 'sent', ['status' => 200, 'body' => [], 'test' => true]);
+    $echt = beheerEvent(beheerOrder(), 'sent', ['status' => 200, 'body' => []]);
+    $mislukteTest = beheerEvent(beheerOrder(), 'failed', ['status' => 400, 'body' => [], 'test' => true]);
+
+    expect($alsTest->sentAsTest())->toBeTrue()
+        ->and($alsTest->displayStatusLabel())->toBe('Verstuurd als test')
+        ->and($alsTest->displayStatusColor())->toBe('warning')
+        ->and($echt->sentAsTest())->toBeFalse()
+        ->and($echt->displayStatusLabel())->toBe('Verstuurd')
+        ->and($echt->displayStatusColor())->toBe('success')
+        ->and($mislukteTest->sentAsTest())->toBeFalse()
+        ->and($mislukteTest->displayStatusLabel())->toBe('Mislukt')
+        ->and($mislukteTest->displayStatusColor())->toBe('danger');
+});
+
+it('weigert het testcommando voor een order waarvan de betaling ouder is dan zes dagen', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    Customsetting::set('meta_capi_test_event_code', 'TEST123', $this->site);
+    Http::fake();
+    $order = beheerOrder();
+    OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => 'paid', 'psp' => 'paynl', 'payment_method' => 'iDEAL'])
+        ->forceFill(['created_at' => Carbon::now()->subDays(7)])->saveQuietly();
+
+    $this->artisan('meta:capi-test', ['order' => $order->id])
+        ->expectsOutputToContain('betaling is ouder dan zes dagen')
+        ->assertExitCode(1);
+
+    Http::assertNothingSent();
 });
 
 it('weigert het testcommando voor een order zonder klantsignalen', function () {
