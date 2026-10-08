@@ -23,6 +23,9 @@ class PhoneNormalizer
 
         // Al in E.164: alleen cijfers achter de + behouden.
         if (str_starts_with($phone, '+')) {
+            // Een als (0) geschreven nul direct na de landcode is de nationale nul: weglaten.
+            $phone = preg_replace('/^(\+[\d\s.\-]{1,6}?)\s*\(0\)/', '$1', $phone);
+
             return '+' . preg_replace('/\D/', '', substr($phone, 1));
         }
 

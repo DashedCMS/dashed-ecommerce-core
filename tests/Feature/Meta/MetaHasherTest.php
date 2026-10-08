@@ -51,3 +51,14 @@ it('laat een nummer uit een onbekend land ongemoeid op de cijfers na', function 
     expect(PhoneNormalizer::toE164('0911 123456', 'XX'))->toBe('0911123456')
         ->and(MetaHasher::phone('0911 123456', 'XX'))->toBe(hash('sha256', '911123456'));
 });
+
+it('laat de nul tussen haakjes na de landcode vallen', function (string $invoer, string $land, string $verwacht) {
+    expect(PhoneNormalizer::toE164($invoer, $land))->toBe($verwacht)
+        ->and(MetaHasher::phone($invoer, $land))->toBe(hash('sha256', ltrim($verwacht, '+')));
+})->with([
+    ['+31 (0)6 12345678', 'NL', '+31612345678'],
+    ['+31(0)612345678', 'NL', '+31612345678'],
+    ['0031 (0)6 12345678', 'NL', '+31612345678'],
+    ['+32 (0)470 12 34 56', 'BE', '+32470123456'],
+    ['06 12345678', 'NL', '+31612345678'],
+]);
