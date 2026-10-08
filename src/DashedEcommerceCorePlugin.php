@@ -112,6 +112,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 DefaultEcommerceSettingsPage::class,
                 OrderCancelSettingsPage::class,
                 ReturnSettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage::class,
                 CustomerMatchSettingsPage::class,
                 Gs1SettingsPage::class,
                 PrintQueueSettingsPage::class,

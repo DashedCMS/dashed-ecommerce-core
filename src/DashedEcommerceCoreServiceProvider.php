@@ -2675,6 +2675,7 @@ MARKDOWN,
         cms()->registerSettingsPage(VATSettingsPage::class, 'BTW instellingen', 'receipt-percent', 'Beheren hoe je winkel belastingen in rekening brengt');
         cms()->registerSettingsPage(OrderCancelSettingsPage::class, 'Annuleer bestelling instellingen', 'arrow-uturn-left', 'Beheer instellingen voor het annuleren van bestellingen');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\ReturnSettingsPage::class, 'Retour-instellingen', 'arrow-uturn-left', 'Beheer regels voor het automatisch goedkeuren van retouren');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage::class, 'Meta Conversions API', 'signal', 'Stuur aankopen ook vanaf de server naar Meta');
         cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');
         cms()->registerSettingsPage(CheckoutSettingsPage::class, 'Afreken instellingen', 'shopping-cart', 'Je online betaalprocess aanpassen');
         cms()->registerSettingsPage(ShippingClassResource::class, 'Verzendklasses', 'truck', 'Is een product breekbaar of veel groter? Reken een meerprijs');
