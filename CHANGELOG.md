@@ -2,6 +2,21 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.150.0 - 2026-10-08
+
+### Added
+- **Meta Conversions API.** Een betaalde webshop-order stuurt ook vanaf de server een Purchase naar Meta, zodat aankopen meetellen als de klant na het betalen niet terugkomt op de bedankpagina. Instellen per site onder Instellingen → Meta Conversions API (standaard uit); het toegangstoken wordt versleuteld opgeslagen. Het pixel-ID komt uit de bestaande Facebook-instellingen.
+- **Ontdubbeling met de browserpixel.** De pixel geeft bij Purchase hetzelfde event-ID (`purchase_{order-id}`) mee als de server; dat geldt ook voor het opnieuw laden van de bedankpagina. Met de Conversions API uit verandert er verder niets aan wat de pixel stuurt.
+- **Klantsignalen van het moment van bestellen** (`_fbp`, `_fbc`, user agent, checkout-URL, toestemming) in de nieuwe tabel `dashed__order_tracking`, alleen voor checkout-orders en alleen als de Conversions API aan staat; bewaartermijn 90 dagen. Een `fbclid` uit de URL dient als terugval voor `_fbc`.
+- **Logboek "Meta CAPI log"** (knop op de instellingenpagina, achter dezelfde permissie) met de actie "Opnieuw versturen" voor mislukte, overgeslagen en als test verstuurde events van de laatste zes dagen; bewaartermijn 90 dagen.
+- **Commando `meta:capi-test {order}`**: stuurt de Purchase van één betaalde checkout-order als testevent en toont de response. Weigert zonder test event code en voor orders die niet verstuurd mogen worden.
+
+### Changed
+- `ViewOrder::normalizePhoneToE164()` is verhuisd naar `Classes\PhoneNormalizer::toE164()`; een nul tussen haakjes na de landcode (`+31 (0)6 …`) valt nu weg.
+
+### Migration
+- Nieuwe tabellen `dashed__order_tracking` en `dashed__meta_capi_events`.
+
 ## v4.149.1 - 2026-10-06
 
 ### Fixed
