@@ -98,8 +98,17 @@ class SendMetaPurchaseEventJob implements ShouldQueue
     /** De reden waarom er voor deze order geen Purchase gaat, of null als hij mag. */
     public static function skipReason(Order $order, MetaCapiSettings $settings): ?string
     {
+        if (! $settings->ready()) {
+            return 'Conversions API staat uit of pixel-ID/token ontbreekt';
+        }
+
+        return static::orderSkipReason($order);
+    }
+
+    /** Alleen de regels die over de order gaan, los van de instellingen. */
+    public static function orderSkipReason(Order $order): ?string
+    {
         return match (true) {
-            ! $settings->ready() => 'Conversions API staat uit of pixel-ID/token ontbreekt',
             $order->status !== 'paid' => 'order is niet betaald',
             ! $order->tracking => 'geen klantsignalen: order komt niet uit de webshop-checkout',
             ! $order->tracking->marketing_consent => 'geen marketingtoestemming',

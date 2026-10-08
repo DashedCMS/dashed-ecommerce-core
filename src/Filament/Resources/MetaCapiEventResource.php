@@ -10,6 +10,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Notifications\Notification;
 use Filament\Tables\Filters\SelectFilter;
 use Dashed\DashedEcommerceCore\Models\MetaCapiEvent;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource\Pages\ListMetaCapiEvents;
 
 /**
@@ -32,6 +33,17 @@ class MetaCapiEventResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return __('Meta CAPI log');
+    }
+
+    /** Het log is precies zo toegankelijk als de instellingenpagina (zelfde instellingenpermissie). */
+    public static function canAccess(): bool
+    {
+        return MetaCapiSettingsPage::canAccess();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return MetaCapiSettingsPage::canAccess();
     }
 
     public static function canCreate(): bool

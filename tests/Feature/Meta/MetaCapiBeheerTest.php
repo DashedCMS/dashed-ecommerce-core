@@ -8,6 +8,9 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Retention\RetentionRegistry;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Models\OrderTracking;
+use Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage;
 use Dashed\DashedEcommerceCore\Models\MetaCapiEvent;
 use Dashed\DashedEcommerceCore\Jobs\SendMetaPurchaseEventJob;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
@@ -20,6 +23,8 @@ function beheerOrder(): Order
     Schema::disableForeignKeyConstraints();
     OrderProduct::create(['order_id' => $order->id, 'product_id' => 501, 'name' => 'Vaas', 'quantity' => 1, 'price' => 35.03, 'btw' => 6.08]);
     Schema::enableForeignKeyConstraints();
+
+    OrderTracking::create(['order_id' => $order->id, 'event_source_url' => 'https://shop.test/checkout', 'marketing_consent' => true]);
 
     return $order->fresh();
 }
@@ -98,4 +103,49 @@ it('meldt het eventlog aan bij de bewaartermijnen', function () {
     DashedEcommerceCoreServiceProvider::registreerBewaartermijnen();
 
     expect(app(RetentionRegistry::class)->vind('meta_capi_events'))->not->toBeNull();
+});
+
+it('weigert het testcommando voor een order zonder klantsignalen', function () {
+    Customsetting::set('meta_capi_test_event_code', 'TEST123', $this->site);
+    Http::fake();
+    $order = beheerOrder();
+    OrderTracking::where('order_id', $order->id)->delete();
+
+    $this->artisan('meta:capi-test', ['order' => $order->id])
+        ->expectsOutputToContain('geen klantsignalen')
+        ->assertExitCode(1);
+
+    Http::assertNothingSent();
+});
+
+it('weigert het testcommando voor een order zonder marketingtoestemming', function () {
+    Customsetting::set('meta_capi_test_event_code', 'TEST123', $this->site);
+    Http::fake();
+    $order = beheerOrder();
+    OrderTracking::where('order_id', $order->id)->update(['marketing_consent' => false]);
+
+    $this->artisan('meta:capi-test', ['order' => $order->id])
+        ->expectsOutputToContain('geen marketingtoestemming')
+        ->assertExitCode(1);
+
+    Http::assertNothingSent();
+});
+
+it('weigert het testcommando voor een niet betaalde order', function () {
+    Customsetting::set('meta_capi_test_event_code', 'TEST123', $this->site);
+    Http::fake();
+    $order = beheerOrder();
+    $order->forceFill(['status' => 'pending'])->saveQuietly();
+
+    $this->artisan('meta:capi-test', ['order' => $order->id])
+        ->expectsOutputToContain('niet betaald')
+        ->assertExitCode(1);
+
+    Http::assertNothingSent();
+});
+
+it('geeft het log dezelfde toegang als de instellingenpagina', function () {
+    expect(MetaCapiEventResource::canAccess())->toBeFalse()
+        ->and(MetaCapiEventResource::canAccess())->toBe(MetaCapiSettingsPage::canAccess())
+        ->and(MetaCapiEventResource::canViewAny())->toBe(MetaCapiSettingsPage::canAccess());
 });

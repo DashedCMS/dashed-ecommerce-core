@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Jobs\SendMetaPurchaseEventJob;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
 
@@ -32,6 +33,13 @@ class MetaCapiTestCommand extends Command
 
         if ($settings->pixelId() === null || ! $settings->hasAccessToken()) {
             $this->error('Pixel-ID of toegangstoken ontbreekt voor deze site.');
+
+            return self::FAILURE;
+        }
+
+        // Dezelfde orderregels als de job; alleen de schakelaar hoeft voor een test niet aan.
+        if ($reason = SendMetaPurchaseEventJob::orderSkipReason($order)) {
+            $this->error("Order {$order->id} wordt niet naar Meta gestuurd: {$reason}.");
 
             return self::FAILURE;
         }
