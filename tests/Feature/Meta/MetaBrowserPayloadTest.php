@@ -1,12 +1,14 @@
 <?php
 
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Exceptions;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserPayload;
+use Dashed\DashedEcommerceCore\Services\Meta\MetaPurchaseValue;
 
 function browserOrder(): Order
 {
@@ -42,9 +44,35 @@ it('volgt de value mode zodra de Conversions API aan staat', function () {
     expect(MetaBrowserPayload::forOrder(browserOrder())['metaValue'])->toBe('22.38');
 });
 
-it('geeft dezelfde contents als de server', function () {
-    expect(MetaBrowserPayload::forOrder(browserOrder())['metaContents'])
+it('geeft dezelfde contents als de server zodra de Conversions API aan staat', function () {
+    Customsetting::set('meta_capi_enabled', true, Sites::getActive());
+    $order = browserOrder();
+
+    expect(MetaBrowserPayload::forOrder($order)['metaContents'])
+        ->toBe(MetaPurchaseValue::contents($order))
         ->toBe([['id' => '501', 'quantity' => 1, 'item_price' => 27.08]]);
+});
+
+it('laat metaContents weg zolang de Conversions API uit staat', function () {
+    $payload = MetaBrowserPayload::forOrder(browserOrder());
+
+    expect($payload)->toHaveKeys(['metaEventId', 'metaValue'])
+        ->and($payload)->not->toHaveKey('metaContents');
+});
+
+it('valt zonder opgeslagen instellingen terug op het ordertotaal met twee decimalen', function () {
+    expect(MetaBrowserPayload::forOrder(browserOrder())['metaValue'])->toBe('35.03');
+});
+
+it('geeft een lege payload en meldt de fout als er iets misgaat', function () {
+    Exceptions::fake();
+    Customsetting::set('meta_capi_enabled', true, Sites::getActive());
+    $order = browserOrder();
+    $order->setRelation('orderProducts', null);
+
+    expect(MetaBrowserPayload::forOrder($order))->toBe([]);
+
+    Exceptions::assertReported(ErrorException::class);
 });
 
 it('geeft het event-ID door aan fbq in de Purchase-listener', function () {
