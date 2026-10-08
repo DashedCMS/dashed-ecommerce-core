@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Services\Meta;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderTracking;
 use Dashed\DashedEcommerceCore\Http\Middleware\CaptureMetaClickId;
@@ -30,7 +31,7 @@ class OrderTrackingRecorder
                 'meta_fbp' => $this->metaCookie($cookies['_fbp'] ?? null, 255),
                 'meta_fbc' => $this->metaCookie($cookies['_fbc'] ?? null, 1000) ?? $this->fallbackFbc($order, $request),
                 'client_user_agent' => $this->truncate($request->userAgent(), 1000),
-                'event_source_url' => $this->truncate($request->headers->get('referer') ?: $request->fullUrl(), 2048),
+                'event_source_url' => $this->truncate($request->headers->get('referer'), 2048) ?? $this->checkoutUrl(),
                 'marketing_consent' => MarketingConsent::granted($request, $order->site_id),
             ]);
         } catch (Throwable $e) {
@@ -74,8 +75,29 @@ class OrderTrackingRecorder
 
     protected function truncate(?string $value, int $length): ?string
     {
-        $value = trim((string) $value);
+        // Ongeldige bytes eruit (mb_scrub), en nooit midden in een teken knippen (mb_strcut).
+        $value = trim(mb_scrub((string) $value, 'UTF-8'));
 
-        return $value === '' ? null : substr($value, 0, $length);
+        return $value === '' ? null : mb_strcut($value, 0, $length, 'UTF-8');
+    }
+
+    /** Terugval zonder Referer: de checkoutpagina, nooit het Livewire-endpoint. */
+    protected function checkoutUrl(): ?string
+    {
+        try {
+            $url = ShoppingCart::getCheckoutUrl();
+
+            if (! is_string($url) || $url === '' || $url === '#') {
+                return null;
+            }
+
+            if (str_starts_with($url, '/')) {
+                $url = url($url);
+            }
+
+            return str_starts_with($url, 'http') ? $this->truncate($url, 2048) : null;
+        } catch (Throwable $e) {
+            return null;
+        }
     }
 }

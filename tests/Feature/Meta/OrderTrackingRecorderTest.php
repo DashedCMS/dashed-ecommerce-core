@@ -155,3 +155,36 @@ it('legt signalen vast zodra de checkout OrderCreatedEvent afvuurt', function ()
 
     expect($order->fresh()->tracking)->not->toBeNull();
 });
+
+it('legt ook vast bij een user agent met ongeldige UTF-8 en bewaart de cookie', function () {
+    $request = checkoutRequest(['HTTP_USER_AGENT' => "Bot\xC3\x28 crawler"]);
+
+    $tracking = app(OrderTrackingRecorder::class)->record(trackingOrder(), $request, ['_fbp' => 'fb.1.1700000000000.555']);
+
+    expect($tracking)->not->toBeNull()
+        ->and($tracking->client_user_agent)->not->toBeNull()
+        ->and(mb_check_encoding($tracking->client_user_agent, 'UTF-8'))->toBeTrue()
+        ->and($tracking->meta_fbp)->toBe('fb.1.1700000000000.555');
+});
+
+it('knipt een user agent nooit midden in een multibyte-teken af', function () {
+    $request = checkoutRequest(['HTTP_USER_AGENT' => str_repeat('a', 999) . 'ééé']);
+
+    $tracking = app(OrderTrackingRecorder::class)->record(trackingOrder(), $request, []);
+
+    expect($tracking)->not->toBeNull()
+        ->and(mb_check_encoding($tracking->client_user_agent, 'UTF-8'))->toBeTrue()
+        ->and(strlen($tracking->client_user_agent))->toBeLessThanOrEqual(1000);
+});
+
+it('slaat zonder referer nooit het livewire-endpoint op', function () {
+    $request = checkoutRequest();
+    $request->headers->remove('referer');
+
+    $tracking = app(OrderTrackingRecorder::class)->record(trackingOrder(), $request, []);
+
+    expect($tracking)->not->toBeNull();
+    if ($tracking->event_source_url !== null) {
+        expect($tracking->event_source_url)->not->toContain('livewire');
+    }
+});
