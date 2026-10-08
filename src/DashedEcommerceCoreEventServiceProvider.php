@@ -46,6 +46,7 @@ class DashedEcommerceCoreEventServiceProvider extends ServiceProvider
         ],
         OrderCreatedEvent::class => [
           UpdateOrderReservedStock::class,
+          \Dashed\DashedEcommerceCore\Listeners\RecordOrderTracking::class,
         ],
         OrderCancelledEvent::class => [
             QueueAbandonedCartEmailsForOrderListener::class,

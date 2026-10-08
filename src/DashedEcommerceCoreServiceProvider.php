@@ -2605,6 +2605,7 @@ MARKDOWN,
             [
                 EcommerceFrontendMiddleware::class,
                 CaptureAttributionMiddleware::class,
+                \Dashed\DashedEcommerceCore\Http\Middleware\CaptureMetaClickId::class,
             ]
         );
 
