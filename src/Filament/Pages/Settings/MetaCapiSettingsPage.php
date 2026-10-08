@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 
 use Filament\Pages\Page;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Schemas\Components\Tabs;
@@ -17,6 +18,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
+use Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource;
 
 class MetaCapiSettingsPage extends Page implements HasSchemas
 {
@@ -45,6 +47,17 @@ class MetaCapiSettingsPage extends Page implements HasSchemas
         }
 
         $this->form->fill($formData);
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('log')
+                ->label(__('Bekijk log'))
+                ->icon('heroicon-o-queue-list')
+                ->color('gray')
+                ->url(MetaCapiEventResource::getUrl()),
+        ];
     }
 
     public function form(Schema $schema): Schema

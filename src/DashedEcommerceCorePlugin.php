@@ -142,6 +142,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 \Dashed\DashedEcommerceCore\Filament\Widgets\Dashboard\MostWishedProducts::class,
             ])
             ->resources([
+                \Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource::class,
                 PaymentMethodResource::class,
                 OrderLogTemplateResource::class,
                 ShippingClassResource::class,

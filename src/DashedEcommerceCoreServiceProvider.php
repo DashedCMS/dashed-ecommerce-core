@@ -2398,6 +2398,18 @@ MARKDOWN,
         );
 
         cms()->registerRetention(
+            Retention::make('meta_capi_events')
+                ->label(__('Logboek Meta Conversions API'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__meta_capi_events')
+                ->termijn(
+                    Termijn::make('meta_capi_events', 90, 'created_at')
+                        ->label(__('Logboek Meta Conversions API bewaren (dagen)'))
+                        ->uitleg(__('Elk aankoop-event dat naar Meta is gestuurd, met de response. Standaard: 90 dagen.'))
+                )
+        );
+
+        cms()->registerRetention(
             Retention::make('ecommerce_action_logs')
                 ->label(__('Handelingenlogboek webshop'))
                 ->pakket('dashed-ecommerce-core', __('Webshop'))
@@ -2712,6 +2724,7 @@ MARKDOWN,
             ->hasViews()
             ->hasCommands([
                 \Dashed\DashedEcommerceCore\Commands\DisableOwnPaymentMethodsCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\MetaCapiTestCommand::class,
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrivatizeInvoicesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::class,
