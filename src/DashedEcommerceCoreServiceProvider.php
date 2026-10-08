@@ -238,6 +238,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Listeners\SendLatePaidAdminNotification::class
         );
 
+        \Dashed\DashedEcommerceCore\Models\Order::observe(
+            \Dashed\DashedEcommerceCore\Observers\MetaPurchaseObserver::class
+        );
+
         $this->registerPopupTemplates();
 
         cms()
