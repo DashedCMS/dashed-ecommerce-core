@@ -122,11 +122,17 @@ class SendMetaPurchaseEventJob implements ShouldQueue
         }
     }
 
-    /** De order is (soft) verwijderd: een rij die op hem wachtte komt nooit meer aan de beurt. */
+    /**
+     * De order is verwijderd: een rij die op hem wachtte komt nooit meer aan de
+     * beurt. Ook op event-ID zoeken: bij een definitief verwijderde order zet
+     * de foreign key order_id op null.
+     */
     protected function skipPendingRowOfMissingOrder(): void
     {
-        MetaCapiEvent::where('order_id', $this->orderId)
-            ->where('status', MetaCapiEvent::STATUS_PENDING)
+        MetaCapiEvent::where('status', MetaCapiEvent::STATUS_PENDING)
+            ->where(fn ($query) => $query
+                ->where('order_id', $this->orderId)
+                ->orWhere('event_id', ConversionsApi::eventIdForOrderId($this->orderId)))
             ->get()
             ->each(fn (MetaCapiEvent $row) => $row->update([
                 'status' => MetaCapiEvent::STATUS_SKIPPED,

@@ -170,7 +170,7 @@ it('weigert het testcommando voor een order waarvan de betaling ouder is dan zes
     Http::fake();
     $order = beheerOrder();
     OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => 'paid', 'psp' => 'paynl', 'payment_method' => 'iDEAL'])
-        ->forceFill(['created_at' => Carbon::now()->subDays(7)])->saveQuietly();
+        ->forceFill(['created_at' => Carbon::now()->subDays(7), 'updated_at' => Carbon::now()->subDays(7)])->saveQuietly();
 
     $this->artisan('meta:capi-test', ['order' => $order->id])
         ->expectsOutputToContain('betaling is ouder dan zes dagen')

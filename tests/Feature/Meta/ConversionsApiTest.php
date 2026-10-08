@@ -147,7 +147,8 @@ it('bouwt een Purchase-event met het betaalmoment en het vaste event-ID', functi
     $order = capiOrder();
     OrderTracking::create(['order_id' => $order->id, 'event_source_url' => 'https://shop.test/checkout', 'marketing_consent' => true]);
     $payment = OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => 'paid', 'psp' => 'paynl', 'payment_method' => 'iDEAL']);
-    $payment->forceFill(['created_at' => '2026-10-08 10:15:00'])->saveQuietly();
+    // Gestart om 10:00, op betaald gekomen om 10:15: dat laatste is het betaalmoment.
+    $payment->forceFill(['created_at' => '2026-10-08 10:00:00', 'updated_at' => '2026-10-08 10:15:00'])->saveQuietly();
     Carbon::setTestNow('2026-10-08 10:20:00');
 
     $event = app(ConversionsApi::class)->purchaseEvent($order->fresh());
@@ -165,7 +166,7 @@ it('gebruikt nu als event_time wanneer de betaling ouder is dan zes dagen', func
     capiKlaar();
     $order = capiOrder();
     $payment = OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => 'paid', 'psp' => 'paynl', 'payment_method' => 'iDEAL']);
-    $payment->forceFill(['created_at' => '2026-09-20 10:00:00'])->saveQuietly();
+    $payment->forceFill(['created_at' => '2026-09-20 10:00:00', 'updated_at' => '2026-09-20 10:00:00'])->saveQuietly();
     Carbon::setTestNow('2026-10-08 10:20:00');
 
     expect(app(ConversionsApi::class)->purchaseEvent($order->fresh())['event_time'])->toBe(Carbon::now()->timestamp);

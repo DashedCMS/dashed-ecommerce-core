@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Http;
@@ -40,11 +41,17 @@ function zetStatus(Order $order, string $status): void
     $order->save();
 }
 
-/** Betaalde betaling bij de order, een aantal dagen geleden. */
-function betaaldDagenGeleden(Order $order, int $dagen, string $status = 'paid'): OrderPayment
+/**
+ * Betaling bij de order die een aantal dagen geleden op haar status kwam
+ * (updated_at). Zonder $gestartDagenGeleden is ze toen ook gestart (created_at).
+ */
+function betaaldDagenGeleden(Order $order, int $dagen, string $status = 'paid', ?int $gestartDagenGeleden = null): OrderPayment
 {
     $payment = OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => $status, 'psp' => 'paynl', 'payment_method' => 'iDEAL']);
-    $payment->forceFill(['created_at' => Carbon::now()->subDays($dagen)])->saveQuietly();
+    $payment->forceFill([
+        'created_at' => Carbon::now()->subDays($gestartDagenGeleden ?? $dagen),
+        'updated_at' => Carbon::now()->subDays($dagen),
+    ])->saveQuietly();
 
     return $payment;
 }
@@ -247,7 +254,7 @@ it('doet niets als de order niet meer bestaat', function () {
     expect(MetaCapiEvent::count())->toBe(0);
 });
 
-it('slaat een order over waarvan de laatste betaling ouder is dan zes dagen', function () {
+it('slaat een order over waarvan de laatste betaling zeven dagen geleden gestart én betaald is', function () {
     Carbon::setTestNow('2026-10-08 12:00:00');
     Http::fake();
     $order = betaalbareOrder(['status' => 'paid']);
@@ -387,4 +394,67 @@ it('kan een gewoon verstuurde aankoop niet opnieuw versturen', function () {
         ->and($event->canResend())->toBeFalse()
         ->and($event->resend())->toBeFalse();
     Http::assertSentCount(1);
+});
+
+it('verstuurt een overboeking die tien dagen geleden gestart en vandaag betaald is, met het betaalmoment van vandaag', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+    $payment = betaaldDagenGeleden($order, 0, gestartDagenGeleden: 10);
+    // Een half uur voor "nu": zo is het betaalmoment te onderscheiden van de terugval op nu.
+    $payment->forceFill(['updated_at' => '2026-10-08 11:30:00'])->saveQuietly();
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => $request['data'][0]['event_time'] === Carbon::parse('2026-10-08 11:30:00')->timestamp);
+    expect(MetaCapiEvent::where('order_id', $order->id)->sole()->status)->toBe(MetaCapiEvent::STATUS_SENT);
+});
+
+it('bepaalt het betaalmoment met een echte statuswijziging van de betaling', function () {
+    Carbon::setTestNow('2026-09-28 09:00:00');
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    $order = betaalbareOrder(['status' => 'paid']);
+    $payment = OrderPayment::create(['order_id' => $order->id, 'amount' => 35.03, 'status' => 'pending', 'psp' => 'paynl', 'payment_method' => 'Overboeking']);
+
+    Carbon::setTestNow('2026-10-08 11:30:00');
+    $payment->changeStatus('paid');
+    Carbon::setTestNow('2026-10-08 12:00:00');
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => $request['data'][0]['event_time'] === Carbon::parse('2026-10-08 11:30:00')->timestamp);
+});
+
+it('slaat een order zonder betaalde betaling niet over op de betaalleeftijd', function () {
+    Carbon::setTestNow('2026-10-08 12:00:00');
+    Http::fake(['graph.facebook.com/*' => Http::response(['events_received' => 1], 200)]);
+    // Handmatig op betaald gezet: geen betaalde betaalrij, alleen een oude afgebroken poging.
+    $order = betaalbareOrder(['status' => 'paid']);
+    betaaldDagenGeleden($order, 10, 'cancelled');
+
+    expect(SendMetaPurchaseEventJob::orderSkipReason($order->fresh()))->toBeNull();
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertSentCount(1);
+    Http::assertSent(fn ($request) => $request['data'][0]['event_time'] === Carbon::now()->timestamp);
+});
+
+it('zet een wachtende rij op overgeslagen als de order definitief verwijderd is', function () {
+    Http::fake();
+    $order = betaalbareOrder(['status' => 'paid']);
+    eventRij($order, MetaCapiEvent::STATUS_PENDING);
+    // Definitief verwijderd: de foreign key zet order_id van de eventrij op null.
+    DB::table('dashed__order_products')->where('order_id', $order->id)->delete();
+    DB::table('dashed__orders')->where('id', $order->id)->delete();
+
+    SendMetaPurchaseEventJob::dispatchSync($order->id);
+
+    Http::assertNothingSent();
+    $event = MetaCapiEvent::where('event_id', 'purchase_' . $order->id)->sole();
+    expect($event->order_id)->toBeNull()
+        ->and($event->status)->toBe(MetaCapiEvent::STATUS_SKIPPED)
+        ->and($event->response)->toBe(['reason' => 'order bestaat niet meer']);
 });

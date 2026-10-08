@@ -31,13 +31,20 @@ class ConversionsApi
         return 'purchase_' . $orderId;
     }
 
-    /** Het betaalmoment: de laatste betaalde betaling. Null als de order er geen heeft. */
+    /**
+     * Het betaalmoment: het laatste moment waarop een betaling op betaald kwam.
+     * Er is geen paid_at-kolom; OrderPayment::changeStatus('paid') slaat de rij
+     * op, dus updated_at is dat moment. created_at is wanneer de betaling
+     * gestart werd, en dat kan bij een overboeking dagen eerder zijn. Null als
+     * de order geen betaalde betaling heeft.
+     */
     public static function paidAt(Order $order): ?Carbon
     {
         $paidAt = $order->orderPayments
             ->where('status', 'paid')
-            ->sortByDesc('created_at')
-            ->first()?->created_at;
+            ->map(fn ($payment) => $payment->updated_at ?? $payment->created_at)
+            ->filter()
+            ->max();
 
         return $paidAt ? Carbon::instance($paidAt) : null;
     }
