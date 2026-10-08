@@ -298,6 +298,11 @@ class Order extends Model
         return $this->hasMany(OrderPayment::class);
     }
 
+    public function tracking(): HasOne
+    {
+        return $this->hasOne(OrderTracking::class);
+    }
+
     public function paymentReminders(): HasMany
     {
         return $this->hasMany(OrderPaymentReminder::class)->orderBy('stage');
