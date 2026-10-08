@@ -13,6 +13,7 @@ use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Classes\PhoneNormalizer;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserPayload;
 use Dashed\DashedEcommerceCore\Services\Payments\PspStatusResolver;
 
 class ViewOrder extends Component
@@ -139,7 +140,7 @@ class ViewOrder extends Component
                 ],
             ];
 
-            $this->dispatch('orderPaid', [
+            $this->dispatch('orderPaid', array_merge(MetaBrowserPayload::forOrder($this->order), [
                 'orderId' => $this->order->id,
                 'total' => number_format($this->order->total, 2, '.', ''),
                 'discountCode' => $this->order->discountCode ? $this->order->discountCode->code : '',
@@ -153,7 +154,7 @@ class ViewOrder extends Component
                 'userData' => $userData,
                 'estimatedDeliveryDate' => $this->order->created_at->addDays(1)->format('Y-m-d'),
                 'tiktokItems' => Customsetting::get('trigger_tiktok_events') ? TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number) : [],
-            ]);
+            ]));
         }
     }
 

@@ -264,19 +264,24 @@
             setTimeout(() => {
                 if (tracking.facebook && typeof fbq !== 'undefined') {
                     const items = Array.isArray(payload.items) ? payload.items : [];
-                    const fbContents = items.map(i => ({
-                        id: String(i.item_id ?? i.id ?? ''),
-                        quantity: parseInt(i.quantity) || 1,
-                        item_price: parseFloat(i.price) || 0,
-                    })).filter(i => i.id);
+                    // Dezelfde inhoud, waarde en event-ID als het server-side event
+                    // (Conversions API), zodat Meta de twee ontdubbelt.
+                    const fbContents = Array.isArray(payload.metaContents)
+                        ? payload.metaContents
+                        : items.map(i => ({
+                            id: String(i.item_id ?? i.id ?? ''),
+                            quantity: parseInt(i.quantity) || 1,
+                            item_price: parseFloat(i.price) || 0,
+                        })).filter(i => i.id);
+                    const fbOptions = payload.metaEventId ? {eventID: payload.metaEventId} : undefined;
                     fbq('track', 'Purchase', {
                         content_type: 'product',
                         content_ids: fbContents.map(i => i.id),
                         contents: fbContents,
                         num_items: fbContents.reduce((n, i) => n + i.quantity, 0),
-                        value: parseFloat(payload.total) || 0,
+                        value: parseFloat(payload.metaValue ?? payload.total) || 0,
                         currency: 'EUR',
-                    });
+                    }, fbOptions);
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
