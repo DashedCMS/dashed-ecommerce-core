@@ -43,7 +43,8 @@ class ConversionsApi
     public function buildUserData(Order $order): array
     {
         $tracking = $order->tracking;
-        $countryCode = $order->countryCode;
+        // Onbekend land = null: nooit stilzwijgend als NL versturen.
+        $countryCode = $order->countryIsoCode ?: null;
 
         $hashed = array_filter([
             'em' => MetaHasher::email($order->email),
@@ -115,16 +116,28 @@ class ConversionsApi
                 ->acceptJson()
                 ->post("https://graph.facebook.com/{$settings->graphVersion()}/{$pixelId}/events", $body);
         } catch (Throwable $e) {
-            return ['ok' => false, 'status' => 0, 'body' => ['error' => str_replace($token, '***', $e->getMessage())]];
+            return ['ok' => false, 'status' => 0, 'body' => ['error' => $this->clean(str_replace($token, '***', $e->getMessage()))]];
         }
 
         $decoded = $response->json();
+        $body = is_array($decoded) ? $decoded : ['raw' => $this->clean((string) $response->body(), 500)];
+
+        // Het resultaat gaat in een JSON-kolom: ongeldige UTF-8 uit Meta mag dat niet breken.
+        if (json_encode($body) === false) {
+            $body = ['raw' => $this->clean((string) $response->body(), 500)];
+        }
 
         return [
             'ok' => $response->successful(),
             'status' => $response->status(),
-            'body' => is_array($decoded) ? $decoded : ['raw' => substr((string) $response->body(), 0, 500)],
+            'body' => $body,
         ];
+    }
+
+    /** Maakt tekst geldig UTF-8 en knipt op tekengrenzen af. */
+    protected function clean(string $text, int $maxBytes = 500): string
+    {
+        return mb_strcut(mb_scrub($text, 'UTF-8'), 0, $maxBytes, 'UTF-8');
     }
 
     protected function eventTime(Order $order): int

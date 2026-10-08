@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\OrderTracking;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
+use Dashed\DashedEcommerceCore\Services\Meta\MetaHasher;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaPurchaseValue;
 
 /**
@@ -239,4 +240,53 @@ it('verstuurt niets zonder pixel-ID of token', function () {
 
     expect($result)->toBe(['ok' => false, 'status' => 0, 'body' => ['error' => 'Pixel-ID of toegangstoken ontbreekt']]);
     Http::assertNothingSent();
+});
+
+it('laat country weg en zet geen 31 voor het telefoonnummer bij een leeg of onbekend land', function (string $country) {
+    $order = capiOrder(['country' => $country, 'phone_number' => '0612345678']);
+
+    $userData = app(ConversionsApi::class)->buildUserData($order);
+
+    expect($userData)->not->toHaveKey('country')
+        ->and($userData['ph'])->not->toBe([hash('sha256', '31612345678')])
+        ->and($userData['ph'])->toBe([MetaHasher::phone('0612345678', null)]);
+})->with(['', 'Atlantis']);
+
+it('hasht een internationaal nummer met zijn eigen landcode bij een onbekend land', function () {
+    $order = capiOrder(['country' => 'Atlantis', 'phone_number' => '+49 171 1234567']);
+
+    expect(app(ConversionsApi::class)->buildUserData($order)['ph'])->toBe([hash('sha256', '491711234567')]);
+});
+
+it('laat ph weg als het telefoonnummer alleen letters bevat', function () {
+    $order = capiOrder(['phone_number' => 'geen nummer']);
+
+    expect(app(ConversionsApi::class)->buildUserData($order))->not->toHaveKey('ph');
+});
+
+it('heeft user_data in het Purchase-event van een gewone order', function () {
+    capiKlaar();
+
+    expect(app(ConversionsApi::class)->purchaseEvent(capiOrder()))->toHaveKey('user_data')
+        ->and(app(ConversionsApi::class)->purchaseEvent(capiOrder())['user_data'])->not->toBeEmpty();
+});
+
+it('geeft bij een foutpagina met ongeldige UTF-8 een json-encodeerbaar resultaat', function () {
+    $site = capiKlaar();
+    Http::fake(['graph.facebook.com/*' => Http::response(str_repeat('a', 499) . 'é' . "\xC3\x28", 502)]);
+
+    $result = app(ConversionsApi::class)->sendEvent($site, ['event_name' => 'Purchase']);
+
+    expect(json_encode($result))->not->toBeFalse()
+        ->and($result['status'])->toBe(502)
+        ->and($result['body'])->toHaveKey('raw');
+});
+
+it('geeft bij een verbindingsfout met ongeldige UTF-8 een json-encodeerbaar resultaat', function () {
+    $site = capiKlaar();
+    Http::fake(['graph.facebook.com/*' => fn () => throw new \Illuminate\Http\Client\ConnectionException("timeout \xC3\x28 \xFF")]);
+
+    $result = app(ConversionsApi::class)->sendEvent($site, ['event_name' => 'Purchase']);
+
+    expect(json_encode($result))->not->toBeFalse()->and($result['status'])->toBe(0);
 });
