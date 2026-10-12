@@ -1624,8 +1624,10 @@ class Order extends Model
      * hoeft dan geen annuleringsmail te krijgen, en de cadeaubon mag niet
      * teruggestort worden omdat de vervangende order dezelfde kortingscode
      * erft en het bedrag dus verbruikt blijft.
+     * $freeShippingReversalAmount (incl. btw) zet een positieve verzendregel op de creditorder,
+     * voor een deelretour waarbij de rest onder de gratis-verzendingdrempel zakt.
      */
-    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true)
+    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true, $freeShippingReversalAmount = null)
     {
         $newOrder = $this->replicate();
         $newOrder->invoice_id = 'RETURN';
@@ -1738,6 +1740,38 @@ class Order extends Model
                 $vatPercentagesCount[$vatRate] = 0;
             }
             $vatPercentagesCount[$vatRate] += 1;
+        }
+
+        if ($freeShippingReversalAmount !== null && round((float) $freeShippingReversalAmount, 2) > 0) {
+            // Positieve regel op een negatieve order: het creditbedrag daalt
+            // met de verzendkosten die de klant alsnog verschuldigd is.
+            $orderProduct = new OrderProduct();
+            $orderProduct->quantity = 1;
+            $orderProduct->product_id = null;
+            $orderProduct->name = Translation::get('free-shipping-reversal-line', 'returns', 'Verzendkosten (bestelling onder gratis verzending)');
+            $orderProduct->price = round((float) $freeShippingReversalAmount, 2);
+            $orderProduct->discount = 0;
+            $orderProduct->order_id = $newOrder->id;
+            $orderProduct->sku = \Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::SKU;
+            $orderProduct->vat_rate = 21;
+            $orderProduct->save();
+
+            // Na save(): onder OSS zet de OrderProduct-hook 21% om naar het
+            // tarief van het bestemmingsland.
+            $reversalVatRate = (float) $orderProduct->vat_rate;
+            $price = $orderProduct->price;
+
+            $newOrder->total += $price;
+
+            $taxPrice = $calculateInclusiveTax
+                ? $price / (100 + $reversalVatRate) * $reversalVatRate
+                : $price / 100 * $reversalVatRate;
+
+            $newOrder->btw += $taxPrice;
+
+            $vatRate = number_format($reversalVatRate, 0);
+            $vatPercentagesForOrder[$vatRate] = ($vatPercentagesForOrder[$vatRate] ?? 0) + number_format($taxPrice, 2);
+            $vatPercentagesCount[$vatRate] = $vatPercentagesCount[$vatRate] ?? 0;
         }
 
         $newOrder->subtotal = $newOrder->total;
