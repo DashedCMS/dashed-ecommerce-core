@@ -401,7 +401,9 @@ class CartHelper
         }
 
         $token = $this->getOrCreateToken();
-        $userId = auth()->id();
+        // auth()->id() geeft het id uit de sessie terug als de gebruiker zelf niet meer bestaat;
+        // dat breekt op de foreign key van dashed__carts.user_id.
+        $userId = auth()->user()?->getAuthIdentifier();
         $cartType = static::$cartType ?? 'default';
 
         $query = CartModel::query()->where('type', $cartType);

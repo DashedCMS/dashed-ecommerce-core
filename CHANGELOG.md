@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.151.1 - 2026-10-12
+
+### Fixed
+- **Shoppagina's gaven een 500 voor een ingelogde sessie waarvan het account verwijderd is.** De winkelwagen werd gekoppeld aan `auth()->id()`, dat het id uit de sessie teruggeeft als de gebruiker zelf niet meer bestaat; de update van `dashed__carts.user_id` liep dan stuk op de foreign key. `CartHelper` en `DatabaseCart` gebruiken nu het id van de daadwerkelijk geladen gebruiker, zodat zo'n sessie als gast een wagen krijgt.
+
 ## v4.151.0 - 2026-10-12
 
 ### Added

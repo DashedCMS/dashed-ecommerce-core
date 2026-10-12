@@ -202,7 +202,9 @@ class DatabaseCart
 
     protected function getOrCreateCart(bool $lockForUpdate = false): Cart
     {
-        $userId = auth()->id();
+        // auth()->id() geeft het id uit de sessie terug als de gebruiker zelf niet meer bestaat;
+        // dat breekt op de foreign key van dashed__carts.user_id.
+        $userId = auth()->user()?->getAuthIdentifier();
         $token = $this->getOrCreateToken();
 
         $query = Cart::query();
