@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.151.0 - 2026-10-12
 
 ### Added
 - **Verzendkosten bij deelretour onder de gratis-verzendingdrempel.** Nieuwe instelling "Verzendkosten voorstellen als de bestelling onder de drempel zakt" met een ingangsdatum (Retour-instellingen, sectie Gratis verzending); standaard uit.
