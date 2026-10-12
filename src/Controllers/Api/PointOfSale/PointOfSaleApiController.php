@@ -1874,6 +1874,15 @@ class PointOfSaleApiController extends Controller
                 ]);
             }
 
+            // Server rekent het voorstel zelf; de kassa kan het alleen uitzetten.
+            $quantities = [];
+            foreach ($orderProducts as $orderProduct) {
+                $quantities[(int) $orderProduct['id']] = (int) ($orderProduct['refundQuantity'] ?? 0);
+            }
+            $reversal = ($cancelData['chargeShipping'] ?? $data['charge_shipping'] ?? true)
+                ? app(\Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::class)->propose($order, $quantities)?->amount
+                : null;
+
             $order->markAsCancelledWithCredit(
                 $sendCustomerEmail,
                 $productsMustBeReturned,
@@ -1883,7 +1892,8 @@ class PointOfSaleApiController extends Controller
                 $extraOrderLinePrice,
                 collect($orderProducts),
                 $cancelData['fulfillmentStatus'],
-                $cancelData['paymentMethodId']
+                $cancelData['paymentMethodId'],
+                freeShippingReversalAmount: $reversal
             );
 
             if (Customsetting::get('pos_auto_print_receipt', null, true)) {

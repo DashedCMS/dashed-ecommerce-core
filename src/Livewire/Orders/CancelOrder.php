@@ -20,7 +20,9 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\CancellationReturnSettler;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversalProposal;
 
 class CancelOrder extends Component implements HasSchemas, HasActions
 {
@@ -73,6 +75,8 @@ class CancelOrder extends Component implements HasSchemas, HasActions
             'payment_method_id' => static::defaultRefundPaymentMethodId($this->order),
         ];
 
+        $fillForm['charge_shipping'] = true;
+
         foreach ($this->order->orderProducts as $orderProduct) {
             $fillForm["order_product_$orderProduct->id"] = 0;
         }
@@ -92,6 +96,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                         ->numeric()
                         ->minValue(0)
                         ->default(0)
+                        ->reactive()
                         ->maxValue($orderProduct->quantity)
                         ->helperText(__(':aantal x besteld voor :prijs', ['aantal' => $orderProduct->quantity, 'prijs' => CurrencyHelper::formatPrice($orderProduct->price)]));
                 }
@@ -155,6 +160,28 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                                 ->label(__('Moet de voorraad weer terug geboekt worden?')),
                             Toggle::make('refund_discount_costs')
                                 ->label(__('Korting terugvorderen? (:bedrag) (Dit geldt alleen voor vaste korting, ex. €40,-, procentuele korting is op product niveau en wordt altijd terug gevorderd)', ['bedrag' => CurrencyHelper::formatPrice($this->order->discount)])),
+                            Toggle::make('charge_shipping')
+                                ->label(__('Verzendkosten inhouden'))
+                                ->helperText(function ($get) {
+                                    $proposal = $this->reversalProposal($this->quantityState($get));
+
+                                    return $proposal ? __('De bestelling zakt van :voor naar :na en komt onder gratis verzending vanaf :drempel. Voorstel: :bedrag (:methode) inhouden op de terugbetaling.', [
+                                        'voor' => CurrencyHelper::formatPrice($proposal->valueBefore),
+                                        'na' => CurrencyHelper::formatPrice($proposal->valueAfter),
+                                        'drempel' => CurrencyHelper::formatPrice($proposal->threshold),
+                                        'bedrag' => CurrencyHelper::formatPrice($proposal->amount),
+                                        'methode' => $proposal->methodName,
+                                    ]) : null;
+                                })
+                                ->visible(fn ($get) => $this->reversalProposal($this->quantityState($get)) !== null)
+                                ->default(true)
+                                ->reactive(),
+                            TextInput::make('charge_shipping_amount')
+                                ->label(__('Afwijkend bedrag (optioneel)'))
+                                ->helperText(__('Leeg laten houdt het voorgestelde bedrag in. Een hoger bedrag wordt genegeerd.'))
+                                ->numeric()
+                                ->minValue(0.01)
+                                ->visible(fn ($get) => $get('charge_shipping') && $this->reversalProposal($this->quantityState($get)) !== null),
                             Toggle::make('extra_order_line')
                                 ->label(__('Extra regel voor de factuur (Gebruik voor bijv. apart gekochte producten, of een
                                     aparte teruggave van een bedrag. Wil je alleen deze regel, zet de retour producten
@@ -210,7 +237,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                     //                            return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
                     //                        }
                     //                    } else {
-                    $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id']);
+                    $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id'], freeShippingReversalAmount: $this->reversalAmountFor($data));
 
                     // Een open retour op deze bestelling is met deze annulering
                     // feitelijk verwerkt: koppel hem aan de creditorder.
@@ -238,6 +265,50 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                     return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
                 }
             });
+    }
+
+    /**
+     * Verzendkosten die bij deze annulering worden ingehouden, of null. De
+     * server rekent altijd zelf; het formulier kan het bedrag alleen verlagen.
+     *
+     * @param  array<string, mixed>  $data  formulierstatus met order_product_{id}-aantallen
+     */
+    public function reversalAmountFor(array $data): ?float
+    {
+        if (! ($data['charge_shipping'] ?? true)) {
+            return null;
+        }
+
+        $proposal = $this->reversalProposal($data);
+        if (! $proposal) {
+            return null;
+        }
+
+        $requested = (float) ($data['charge_shipping_amount'] ?? 0);
+
+        return $requested > 0 ? min($proposal->amount, round($requested, 2)) : $proposal->amount;
+    }
+
+    /** @param  array<string, mixed>  $data */
+    protected function reversalProposal(array $data): ?FreeShippingReversalProposal
+    {
+        $quantities = [];
+        foreach ($this->order->orderProducts as $orderProduct) {
+            $quantities[$orderProduct->id] = (int) ($data["order_product_$orderProduct->id"] ?? 0);
+        }
+
+        return app(FreeShippingReversal::class)->propose($this->order, $quantities);
+    }
+
+    /** @return array<string, int> */
+    protected function quantityState($get): array
+    {
+        $state = [];
+        foreach ($this->order->orderProducts as $orderProduct) {
+            $state["order_product_$orderProduct->id"] = (int) $get("order_product_$orderProduct->id");
+        }
+
+        return $state;
     }
 
     public function render()

@@ -95,6 +95,7 @@ class OrderReturnController extends Controller
             'refund' => ['sometimes', 'boolean'], // geaccepteerd voor oude app-versies, genegeerd: terugbetalen is een aparte stap
             'note' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'confirm_existing_credit' => ['sometimes', 'boolean'],
+            'charge_shipping' => ['sometimes', 'boolean'],
             'lines' => ['sometimes', 'array'],
             'lines.*.order_return_line_id' => ['required_with:lines', 'integer'],
             'lines.*.quantity' => ['required_with:lines', 'integer', 'min:0'],
@@ -107,6 +108,7 @@ class OrderReturnController extends Controller
         try {
             app(ReturnProcessor::class)->process($return, $lines, [
                 'restock' => (bool) ($data['restock'] ?? true),
+                'charge_shipping' => (bool) ($data['charge_shipping'] ?? true),
                 'note' => $data['note'] ?? null,
                 'confirm_existing_credit' => (bool) ($data['confirm_existing_credit'] ?? false),
             ]);
