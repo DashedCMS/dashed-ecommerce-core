@@ -115,6 +115,13 @@ class ReturnProcessor
             // niet allebei verzendkosten inhouden.
             $reversalAmount = null;
             if ($chargeShipping) {
+                // De lock hierboven zit op de retour; twee retouren van dezelfde
+                // bestelling kunnen dus tegelijk verwerkt worden. Lock daarom ook
+                // de bestelling vóór propose()/alreadyCharged(), zodat de tweede
+                // verwerking de inhouding van de eerste ziet en er hoogstens één
+                // inhouding per bestelling is.
+                Order::query()->whereKey($order->id)->lockForUpdate()->first();
+
                 $proposal = app(FreeShippingReversal::class)->propose($order, $perOrderProduct);
                 if ($proposal) {
                     $reversalAmount = $chargeShippingAmount !== null && $chargeShippingAmount > 0

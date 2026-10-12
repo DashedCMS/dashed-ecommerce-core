@@ -73,6 +73,19 @@ it('noemt de inhouding in de gecrediteerde regels van de mail', function () {
     $ref = new ReflectionMethod($mail, 'replaceReturnVariables');
     $ref->setAccessible(true);
 
-    expect($ref->invoke($mail, ':creditedLines:', true))->toContain('Verzendkosten (bestelling onder gratis verzending)')
+    expect($ref->invoke($mail, ':creditedLines:', true))->toContain('Verzendkosten (bestelling onder gratis verzending): -')
         ->and($ref->invoke($mail, ':creditedLines:', false))->toContain('1x Shirt');
+});
+
+it('houdt bij een tweede retour van dezelfde bestelling niet nogmaals in', function () {
+    $f = reversalReturn();
+    $first = app(ReturnProcessor::class)->process($f['return'], $f['lines'], ['restock' => false]);
+    expect(reversalLine($first))->not->toBeNull();
+
+    $second = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now()]);
+    $line = OrderReturnLine::create(['order_return_id' => $second->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
+
+    $credit = app(ReturnProcessor::class)->process($second->fresh(), [['order_return_line_id' => $line->id, 'quantity' => 1]], ['restock' => false, 'confirm_existing_credit' => true]);
+
+    expect(reversalLine($credit))->toBeNull();
 });

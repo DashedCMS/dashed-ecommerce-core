@@ -13,7 +13,6 @@ use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
-use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 
 /**
  * Basis voor de retour-lifecycle mailables. Elke concrete subklasse stelt
@@ -217,9 +216,9 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
 
         // De inhouding van verzendkosten is geen retourregel maar staat wel
         // op de creditorder; zonder deze regel klopt de optelsom voor de klant niet.
-        $reversalLine = $creditOrder?->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+        $reversalLine = $this->orderReturn->shippingReversalLine();
         if ($reversalLine) {
-            $part = $reversalLine->name . ': ' . CurrencyHelper::formatPrice((float) $reversalLine->price);
+            $part = $reversalLine->name . ': -' . CurrencyHelper::formatPrice((float) $reversalLine->price);
             $creditedParts->push($escapeHtml ? e($part) : $part);
         }
 

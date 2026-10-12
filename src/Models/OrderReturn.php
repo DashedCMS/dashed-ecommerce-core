@@ -63,6 +63,15 @@ class OrderReturn extends Model
      * De creditorder die bij het verwerken is ontstaan. Eén retour, hooguit één
      * creditorder; de kolom is nullable zolang er niets verwerkt is.
      */
+    /** De regel op de creditorder die verzendkosten inhoudt, als die er is. */
+    public function shippingReversalLine(): ?\Dashed\DashedEcommerceCore\Models\OrderProduct
+    {
+        return $this->creditOrder
+            ?->orderProducts()
+            ->where('sku', \Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::SKU)
+            ->first();
+    }
+
     public function creditOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'credit_order_id');

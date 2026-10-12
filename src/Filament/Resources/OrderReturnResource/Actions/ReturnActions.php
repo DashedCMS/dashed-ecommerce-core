@@ -113,8 +113,12 @@ class ReturnActions
                         ->default(false),
                     Toggle::make('charge_shipping')
                         ->label(__('Verzendkosten inhouden'))
-                        ->helperText(fn (OrderReturn $record, Get $get) => self::reversalHelperText($record, (array) $get('lines')))
-                        ->visible(fn (OrderReturn $record, Get $get) => self::reversalProposal($record, (array) $get('lines')) !== null)
+                        ->helperText(function (Get $get) use ($record) {
+                            return self::reversalHelperText($record, (array) $get('lines'));
+                        })
+                        ->visible(function (Get $get) use ($record) {
+                            return self::reversalProposal($record, (array) $get('lines')) !== null;
+                        })
                         ->default(true)
                         ->live(),
                     TextInput::make('charge_shipping_amount')
@@ -122,7 +126,9 @@ class ReturnActions
                         ->helperText(__('Leeg laten houdt het voorgestelde bedrag in. Een hoger bedrag wordt genegeerd.'))
                         ->numeric()
                         ->minValue(0.01)
-                        ->visible(fn (OrderReturn $record, Get $get) => $get('charge_shipping') && self::reversalProposal($record, (array) $get('lines')) !== null),
+                        ->visible(function (Get $get) use ($record) {
+                            return $get('charge_shipping') && self::reversalProposal($record, (array) $get('lines')) !== null;
+                        }),
                     Textarea::make('note')->label(__('Notitie (optioneel)')),
                 ];
             })
