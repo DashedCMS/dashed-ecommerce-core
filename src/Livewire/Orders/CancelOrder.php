@@ -40,12 +40,37 @@ class CancelOrder extends Component implements HasSchemas, HasActions
         $this->isPos = $isPos;
     }
 
+    /**
+     * Voorselectie van "Betaalmethode voor terugbetaling": de methode waarmee
+     * de bestelling het laatst betaald is, want daarlangs gaat het geld in de
+     * regel ook terug. Stond hier altijd de contante methode voor, dan kwam
+     * een terugbetaling via de betaalprovider als "Contant" op de creditorder
+     * als niemand de keuze aanpaste. Zonder bruikbare betaling blijft de
+     * contante methode de terugval.
+     */
+    public static function defaultRefundPaymentMethodId(Order $order): ?int
+    {
+        $paidWith = $order->orderPayments()
+            ->where('status', 'paid')
+            ->where('amount', '>', 0)
+            ->whereNotNull('payment_method_id')
+            ->orderByDesc('id')
+            ->value('payment_method_id');
+
+        $methods = PaymentMethod::whereIn('type', ['pos', 'online']);
+
+        if ($paidWith && (clone $methods)->whereKey($paidWith)->exists()) {
+            return (int) $paidWith;
+        }
+
+        return $methods->where('is_cash_payment', 1)->first()->id ?? null;
+    }
+
     public function action(): Action
     {
         $fillForm = [
             'fulfillment_status' => Customsetting::get('order_cancel_default_fulfillment_status', null),
-            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('is_cash_payment', 1)->first()->id ?? null,
-//            'payment_method_id' => PaymentMethod::whereIn('type', ['pos', 'online'])->where('psp', 'own')->where('is_cash_payment', 1)->first()->id ?? null,
+            'payment_method_id' => static::defaultRefundPaymentMethodId($this->order),
         ];
 
         foreach ($this->order->orderProducts as $orderProduct) {

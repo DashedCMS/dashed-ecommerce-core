@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.150.1 - 2026-10-12
+
+### Fixed
+- **Annuleren zette de terugbetaling standaard op "Contant".** In "Bestelling annuleren" stond bij "Betaalmethode voor terugbetaling" altijd de contante methode voor, ook bij een bestelling die online betaald was; wie de keuze liet staan, kreeg een creditorder met een contante terugbetaling terwijl het geld via de betaalprovider terugging. De voorselectie is nu de methode waarmee de bestelling het laatst betaald is (`CancelOrder::defaultRefundPaymentMethodId()`); zonder bruikbare betaling blijft het de contante methode.
+
 ## v4.150.0 - 2026-10-08
 
 ### Added
