@@ -13,6 +13,7 @@ use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\OrderVariableReplacer;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 
 /**
  * Basis voor de retour-lifecycle mailables. Elke concrete subklasse stelt
@@ -205,14 +206,24 @@ abstract class OrderReturnBaseMail extends Mailable implements RegistersEmailTem
             ->implode($escapeHtml ? '<br>' : ', ');
 
         $creditOrder = $this->orderReturn->creditOrder;
-        $creditedLines = $this->orderReturn->lines
+        $creditedParts = $this->orderReturn->lines
             ->filter(fn ($line) => (int) $line->processed_quantity > 0)
             ->map(function ($line) use ($escapeHtml) {
                 $part = $line->processed_quantity . 'x ' . ($line->orderProduct?->name ?? '');
 
                 return $escapeHtml ? e($part) : $part;
             })
-            ->implode($escapeHtml ? '<br>' : ', ');
+            ->values();
+
+        // De inhouding van verzendkosten is geen retourregel maar staat wel
+        // op de creditorder; zonder deze regel klopt de optelsom voor de klant niet.
+        $reversalLine = $creditOrder?->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+        if ($reversalLine) {
+            $part = $reversalLine->name . ': ' . CurrencyHelper::formatPrice((float) $reversalLine->price);
+            $creditedParts->push($escapeHtml ? e($part) : $part);
+        }
+
+        $creditedLines = $creditedParts->implode($escapeHtml ? '<br>' : ', ');
         $creditAmount = $creditOrder ? CurrencyHelper::formatPrice(abs((float) $creditOrder->total)) : '';
         $refundDays = (string) (int) Customsetting::get('returns_refund_days', $this->orderReturn->order?->site_id, 14);
         $refundPayment = $this->orderReturn->refundPayment();

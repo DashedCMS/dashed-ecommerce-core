@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Acti
 use Filament\Actions\Action;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -20,6 +21,8 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversalProposal;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 /**
@@ -95,6 +98,7 @@ class ReturnActions
                         ->integer()
                         ->minValue(0)
                         ->maxValue($remaining)
+                        ->live(onBlur: true)
                         ->default(min((int) $line->quantity, $remaining))
                         ->required();
                 }
@@ -107,6 +111,18 @@ class ReturnActions
                         ->label(__('Korting verrekenen'))
                         ->helperText(__('Alleen bij een volledige retour: de vaste korting van de bestelling wordt dan van het creditbedrag afgetrokken, want de klant heeft die korting niet betaald. Bij een deelretour wordt dit geweigerd.'))
                         ->default(false),
+                    Toggle::make('charge_shipping')
+                        ->label(__('Verzendkosten inhouden'))
+                        ->helperText(fn (OrderReturn $record, Get $get) => self::reversalHelperText($record, (array) $get('lines')))
+                        ->visible(fn (OrderReturn $record, Get $get) => self::reversalProposal($record, (array) $get('lines')) !== null)
+                        ->default(true)
+                        ->live(),
+                    TextInput::make('charge_shipping_amount')
+                        ->label(__('Afwijkend bedrag (optioneel)'))
+                        ->helperText(__('Leeg laten houdt het voorgestelde bedrag in. Een hoger bedrag wordt genegeerd.'))
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->visible(fn (OrderReturn $record, Get $get) => $get('charge_shipping') && self::reversalProposal($record, (array) $get('lines')) !== null),
                     Textarea::make('note')->label(__('Notitie (optioneel)')),
                 ];
             })
@@ -120,6 +136,8 @@ class ReturnActions
                     $credit = app(ReturnProcessor::class)->process($record, $lines, [
                         'restock' => (bool) ($data['restock'] ?? true),
                         'refund_discount' => (bool) ($data['refund_discount'] ?? false),
+                        'charge_shipping' => (bool) ($data['charge_shipping'] ?? true),
+                        'charge_shipping_amount' => $data['charge_shipping_amount'] ?? null,
                         'note' => $data['note'] ?? null,
                         'confirm_existing_credit' => (bool) ($data['confirm_existing_credit'] ?? false),
                     ]);
@@ -138,6 +156,36 @@ class ReturnActions
                     ])
                     ->send();
             });
+    }
+
+    /** @param  array<int|string, mixed>  $lineQuantities  order_return_line_id => aantal */
+    protected static function reversalProposal(OrderReturn $record, array $lineQuantities): ?FreeShippingReversalProposal
+    {
+        if (! $record->order) {
+            return null;
+        }
+
+        $perOrderProduct = [];
+        foreach ($record->lines as $line) {
+            $quantity = (int) ($lineQuantities[$line->id] ?? 0);
+            $perOrderProduct[(int) $line->order_product_id] = ($perOrderProduct[(int) $line->order_product_id] ?? 0) + $quantity;
+        }
+
+        return app(FreeShippingReversal::class)->propose($record->order, $perOrderProduct);
+    }
+
+    /** @param  array<int|string, mixed>  $lineQuantities */
+    protected static function reversalHelperText(OrderReturn $record, array $lineQuantities): ?string
+    {
+        $proposal = self::reversalProposal($record, $lineQuantities);
+
+        return $proposal ? __('De bestelling zakt van :voor naar :na en komt onder gratis verzending vanaf :drempel. Voorstel: :bedrag (:methode) inhouden op de terugbetaling.', [
+            'voor' => CurrencyHelper::formatPrice($proposal->valueBefore),
+            'na' => CurrencyHelper::formatPrice($proposal->valueAfter),
+            'drempel' => CurrencyHelper::formatPrice($proposal->threshold),
+            'bedrag' => CurrencyHelper::formatPrice($proposal->amount),
+            'methode' => $proposal->methodName,
+        ]) : null;
     }
 
     /**

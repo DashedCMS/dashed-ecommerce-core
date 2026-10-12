@@ -28,6 +28,10 @@
                     ({{ Translation::get('return-status-credited', 'returns', 'gecrediteerd') }}: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderReturn->creditedAmount()) }})
                 @endif
             </li>
+            @php($reversalLine = $orderReturn->creditOrder?->orderProducts()->where('sku', \Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::SKU)->first())
+            @if ($reversalLine)
+                <li>{{ $reversalLine->name }}: {{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice((float) $reversalLine->price) }}</li>
+            @endif
         @endif
         @php($refund = $orderReturn->refundPayment())
         @if ($refund)

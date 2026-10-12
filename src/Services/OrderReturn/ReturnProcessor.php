@@ -23,7 +23,7 @@ class ReturnProcessor
 {
     /**
      * @param  array<int, array{order_return_line_id: int, quantity: int}>  $lines  aantal 0 = niet crediteren
-     * @param  array{restock?: bool, refund_discount?: bool, note?: string|null, confirm_existing_credit?: bool}  $options
+     * @param  array{restock?: bool, refund_discount?: bool, note?: string|null, confirm_existing_credit?: bool, charge_shipping?: bool, charge_shipping_amount?: float|int|string|null}  $options
      *
      * @throws ExistingCreditOrderException als de bestelling al een creditorder heeft en confirm_existing_credit niet aan staat
      */
@@ -34,7 +34,12 @@ class ReturnProcessor
         $note = trim((string) ($options['note'] ?? ''));
         $confirmExistingCredit = (bool) ($options['confirm_existing_credit'] ?? false);
 
-        $creditOrder = DB::transaction(function () use ($return, $lines, $restock, $refundDiscount, $note, $confirmExistingCredit) {
+        $chargeShipping = (bool) ($options['charge_shipping'] ?? true);
+        $chargeShippingAmount = isset($options['charge_shipping_amount']) && $options['charge_shipping_amount'] !== ''
+            ? (float) $options['charge_shipping_amount']
+            : null;
+
+        $creditOrder = DB::transaction(function () use ($return, $lines, $restock, $refundDiscount, $note, $confirmExistingCredit, $chargeShipping, $chargeShippingAmount) {
             // Lock op de retourregel en statuscheck binnen de lock: twee
             // beheerders die tegelijk verwerken leveren nooit twee creditorders op.
             $locked = OrderReturn::query()->whereKey($return->id)->lockForUpdate()->first();
@@ -106,6 +111,18 @@ class ReturnProcessor
                 $chosen[] = $orderProduct;
             }
 
+            // Binnen de lock uitgerekend, zodat twee verwerkingen tegelijk
+            // niet allebei verzendkosten inhouden.
+            $reversalAmount = null;
+            if ($chargeShipping) {
+                $proposal = app(FreeShippingReversal::class)->propose($order, $perOrderProduct);
+                if ($proposal) {
+                    $reversalAmount = $chargeShippingAmount !== null && $chargeShippingAmount > 0
+                        ? min($proposal->amount, round($chargeShippingAmount, 2))
+                        : $proposal->amount;
+                }
+            }
+
             $creditOrder = $order->markAsCancelledWithCredit(
                 sendCustomerEmail: false,
                 productsMustBeReturned: false,
@@ -124,6 +141,7 @@ class ReturnProcessor
                 // tweede retour zou de klant het volle bedrag opnieuw krijgen.
                 // De beheerder stort met de hand terug als dat aan de orde is.
                 refillGiftcard: false,
+                freeShippingReversalAmount: $reversalAmount,
             );
 
             foreach ($quantities as $lineId => $quantity) {
