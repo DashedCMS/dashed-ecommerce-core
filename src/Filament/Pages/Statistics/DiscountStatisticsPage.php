@@ -16,6 +16,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountChart;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\DiscountTable;
@@ -148,7 +149,7 @@ class DiscountStatisticsPage extends Page implements HasSchemas
 
         $productsSold = DB::table('dashed__order_products')
             ->whereIn('order_id', $filteredOrderIds)
-            ->whereNotIn('sku', ['product_costs', 'shipping_costs', 'payment_costs'])
+            ->whereNotIn('sku', array_merge(OrderStatistics::NON_PRODUCT_SKUS, ['payment_costs']))
             ->sum('quantity');
 
         $graphRows = (clone $filteredOrdersQuery)

@@ -6,6 +6,7 @@ use Filament\Widgets\StatsOverviewWidget;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 
 class DailyRevenueStats extends StatsOverviewWidget
 {
@@ -19,7 +20,7 @@ class DailyRevenueStats extends StatsOverviewWidget
         $todayOrders = Order::where('created_at', '>=', now()->startOfDay())->isPaid()->get();
         $statistics['day'] = [
             'orders' => $todayOrders->count(),
-            'products' => OrderProduct::whereIn('order_id', $todayOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+            'products' => OrderProduct::whereIn('order_id', $todayOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
             'orderAmount' => $todayOrders->sum('total'),
         ];
         $statistics['day']['averageOrderAmount'] = $todayOrders->count() ? CurrencyHelper::formatPrice($statistics['day']['orderAmount'] / $statistics['day']['orders']) : CurrencyHelper::formatPrice(0);
@@ -28,7 +29,7 @@ class DailyRevenueStats extends StatsOverviewWidget
         $todayReturnOrders = Order::where('created_at', '>=', now()->startOfDay())->isReturn()->get();
         $statistics['dayReturn'] = [
             'orders' => $todayReturnOrders->count(),
-            'products' => OrderProduct::whereIn('order_id', $todayReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+            'products' => OrderProduct::whereIn('order_id', $todayReturnOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
             'orderAmount' => $todayReturnOrders->sum('total'),
         ];
         $statistics['dayReturn']['averageOrderAmount'] = $todayReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['dayReturn']['orderAmount'] / $statistics['dayReturn']['orders']) : CurrencyHelper::formatPrice(0);

@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
@@ -368,12 +369,15 @@ class RevenueStatisticsPage extends Page implements HasSchemas
 
         $filteredOrderIds = (clone $filteredOrdersQuery)->select('id');
 
+        // Regels die geen product zijn (verzend-, betaal- en verzendinhoudingsregel) tellen niet als verkocht.
+        $nonProductSkus = implode(', ', array_map(fn (string $sku) => "'".$sku."'", array_merge(OrderStatistics::NON_PRODUCT_SKUS, ['payment_costs'])));
+
         $orderProductStats = DB::table('dashed__order_products')
             ->whereIn('order_id', $filteredOrderIds)
             ->selectRaw("
                 COALESCE(SUM(CASE WHEN sku = 'shipping_costs' THEN price ELSE 0 END), 0) as shipping_costs,
                 COALESCE(SUM(CASE WHEN sku = 'payment_costs' THEN price ELSE 0 END), 0) as payment_costs,
-                COALESCE(SUM(CASE WHEN sku NOT IN ('product_costs', 'shipping_costs', 'payment_costs') THEN quantity ELSE 0 END), 0) as products_sold
+                COALESCE(SUM(CASE WHEN sku NOT IN ({$nonProductSkus}) THEN quantity ELSE 0 END), 0) as products_sold
             ")
             ->first();
 

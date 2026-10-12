@@ -7,6 +7,7 @@ use Filament\Widgets\StatsOverviewWidget;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 
 class MonthlyRevenueStats extends StatsOverviewWidget
 {
@@ -20,7 +21,7 @@ class MonthlyRevenueStats extends StatsOverviewWidget
             $monthOrders = Order::where('created_at', '>=', now()->startOfMonth())->isPaid()->get();
             $statistics['month'] = [
                 'orders' => $monthOrders->count(),
-                'products' => OrderProduct::whereIn('order_id', $monthOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+                'products' => OrderProduct::whereIn('order_id', $monthOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
                 'orderAmount' => $monthOrders->sum('total'),
             ];
             $statistics['month']['averageOrderAmount'] = $monthOrders->count() ? CurrencyHelper::formatPrice($statistics['month']['orderAmount'] / $statistics['month']['orders']) : CurrencyHelper::formatPrice(0);
@@ -29,7 +30,7 @@ class MonthlyRevenueStats extends StatsOverviewWidget
             $monthReturnOrders = Order::where('created_at', '>=', now()->startOfMonth())->isReturn()->get();
             $statistics['monthReturn'] = [
                 'orders' => $monthReturnOrders->count(),
-                'products' => OrderProduct::whereIn('order_id', $monthReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+                'products' => OrderProduct::whereIn('order_id', $monthReturnOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
                 'orderAmount' => $monthReturnOrders->sum('total'),
             ];
             $statistics['monthReturn']['averageOrderAmount'] = $monthReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['monthReturn']['orderAmount'] / $statistics['monthReturn']['orders']) : CurrencyHelper::formatPrice(0);

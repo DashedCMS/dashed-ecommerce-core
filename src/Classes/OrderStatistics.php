@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 /**
@@ -20,7 +21,7 @@ use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 class OrderStatistics
 {
     /** Regels die geen product zijn en dus niet meetellen als verkocht product. */
-    public const NON_PRODUCT_SKUS = ['product_costs', 'shipping_costs'];
+    public const NON_PRODUCT_SKUS = ['product_costs', 'shipping_costs', FreeShippingReversal::SKU];
 
     /**
      * Aantal orders, totaalbedrag en aantal verkochte producten van een orderquery.

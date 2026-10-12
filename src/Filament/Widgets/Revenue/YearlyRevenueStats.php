@@ -7,6 +7,7 @@ use Filament\Widgets\StatsOverviewWidget;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 
 class YearlyRevenueStats extends StatsOverviewWidget
 {
@@ -20,7 +21,7 @@ class YearlyRevenueStats extends StatsOverviewWidget
             $yearOrders = Order::where('created_at', '>=', now()->startOfYear())->isPaid()->get();
             $statistics['year'] = [
                 'orders' => $yearOrders->count(),
-                'products' => OrderProduct::whereIn('order_id', $yearOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+                'products' => OrderProduct::whereIn('order_id', $yearOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
                 'orderAmount' => $yearOrders->sum('total'),
             ];
             $statistics['year']['averageOrderAmount'] = $yearOrders->count() ? CurrencyHelper::formatPrice($statistics['year']['orderAmount'] / $statistics['year']['orders']) : CurrencyHelper::formatPrice(0);
@@ -29,7 +30,7 @@ class YearlyRevenueStats extends StatsOverviewWidget
             $yearReturnOrders = Order::where('created_at', '>=', now()->startOfYear())->isReturn()->get();
             $statistics['yearReturn'] = [
                 'orders' => $yearReturnOrders->count(),
-                'products' => OrderProduct::whereIn('order_id', $yearReturnOrders->pluck('id'))->whereNotIn('sku', ['product_costs', 'shipping_costs'])->sum('quantity'),
+                'products' => OrderProduct::whereIn('order_id', $yearReturnOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
                 'orderAmount' => $yearReturnOrders->sum('total'),
             ];
             $statistics['yearReturn']['averageOrderAmount'] = $yearReturnOrders->count() ? CurrencyHelper::formatPrice($statistics['yearReturn']['orderAmount'] / $statistics['yearReturn']['orders']) : CurrencyHelper::formatPrice(0);
