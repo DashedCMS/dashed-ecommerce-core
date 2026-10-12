@@ -1753,12 +1753,13 @@ class Order extends Model
             $orderProduct->discount = 0;
             $orderProduct->order_id = $newOrder->id;
             $orderProduct->sku = \Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::SKU;
-            $orderProduct->vat_rate = 21;
+            // Het tarief volgt de gecrediteerde regels (gewogen gemiddelde, zoals
+            // bij 'korting terugvorderen'), zodat OSS en verlegde btw kloppen.
+            // Een creditorderregel houdt een meegegeven tarief in de hook.
+            $reversalVatRate = $vatPercentageCount > 0 ? round($vatPercentages / $vatPercentageCount, 2) : 21;
+            $orderProduct->vat_rate = $reversalVatRate;
             $orderProduct->save();
 
-            // Na save(): onder OSS zet de OrderProduct-hook 21% om naar het
-            // tarief van het bestemmingsland.
-            $reversalVatRate = (float) $orderProduct->vat_rate;
             $price = $orderProduct->price;
 
             $newOrder->total += $price;
