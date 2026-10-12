@@ -75,7 +75,7 @@
                                 <div>
                                     <label class="block text-sm">{{ Translation::get('return-quantity', 'returns', 'Aantal') }}</label>
                                     <input type="number" min="1" max="{{ $product->quantity }}"
-                                           wire:model="selectedLines.{{ $product->id }}.quantity"
+                                           wire:model.live="selectedLines.{{ $product->id }}.quantity"
                                            class="mt-1 w-full rounded border-gray-300" />
                                 </div>
                                 <div>
@@ -108,6 +108,12 @@
                         </p>
                     @endif
                 @enderror
+
+                @if ($this->shippingReversalNotice)
+                    <p class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                        {{ $this->shippingReversalNotice }}
+                    </p>
+                @endif
 
                 <button type="submit" wire:loading.attr="disabled" wire:target="confirm" class="button button--primary">
                     {{ Translation::get('return-submit', 'returns', 'Geselecteerde producten retourneren') }}

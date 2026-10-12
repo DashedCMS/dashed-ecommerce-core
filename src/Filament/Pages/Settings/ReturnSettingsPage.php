@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
@@ -46,6 +47,8 @@ class ReturnSettingsPage extends Page
             'returns_auto_accept_excluded_order_origins' => (array) (Customsetting::get('returns_auto_accept_excluded_order_origins') ?: []),
             'returns_auto_accept_max_amount' => ($maxAmount === '' ? null : $maxAmount),
             'returns_refund_days' => (int) Customsetting::get('returns_refund_days', null, 14),
+            'returns_charge_shipping_below_threshold' => (bool) Customsetting::get('returns_charge_shipping_below_threshold', null, false),
+            'returns_charge_shipping_from' => Customsetting::get('returns_charge_shipping_from'),
         ]);
     }
 
@@ -97,6 +100,19 @@ class ReturnSettingsPage extends Page
                             ->suffix(__('dagen')),
                     ])
                     ->columns(2),
+
+                Section::make(__('Gratis verzending'))
+                    ->description(__('Zakt een gratis verzonden bestelling door een deelretour of deelannulering onder de drempel, dan stelt het systeem voor het normale verzendtarief in te houden op de terugbetaling. Zet dit alleen aan als het in je voorwaarden en bij je verzendinformatie staat.'))
+                    ->schema([
+                        Toggle::make('returns_charge_shipping_below_threshold')
+                            ->label(__('Verzendkosten voorstellen als de bestelling onder de drempel zakt'))
+                            ->live(),
+                        DatePicker::make('returns_charge_shipping_from')
+                            ->label(__('Geldt voor bestellingen vanaf'))
+                            ->helperText(__('De dag waarop de voorwaarde op de site kwam. Oudere bestellingen blijven erbuiten.'))
+                            ->required(fn ($get) => (bool) $get('returns_charge_shipping_below_threshold'))
+                            ->visible(fn ($get) => (bool) $get('returns_charge_shipping_below_threshold')),
+                    ]),
 
                 Section::make(__('Uitsluitingen'))
                     ->schema([
@@ -150,6 +166,11 @@ class ReturnSettingsPage extends Page
         Customsetting::set('returns_auto_accept_max_amount', ($maxAmount === '' || $maxAmount === null) ? '' : $maxAmount);
 
         Customsetting::set('returns_refund_days', (int) ($data['returns_refund_days'] ?: 14));
+
+        Customsetting::set('returns_charge_shipping_below_threshold', ! empty($data['returns_charge_shipping_below_threshold']) ? '1' : '0');
+        if (! empty($data['returns_charge_shipping_from'])) {
+            Customsetting::set('returns_charge_shipping_from', \Illuminate\Support\Carbon::parse($data['returns_charge_shipping_from'])->toDateString());
+        }
 
         Notification::make()->title(__('Instellingen opgeslagen'))->success()->send();
     }

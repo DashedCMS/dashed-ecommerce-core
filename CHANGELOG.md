@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Added
+- **Verzendkosten bij deelretour onder de gratis-verzendingdrempel.** Nieuwe instelling "Verzendkosten voorstellen als de bestelling onder de drempel zakt" met een ingangsdatum (Retour-instellingen, sectie Gratis verzending); standaard uit.
+- Nieuwe kolom `free_shipping_threshold` op de order en creditregel met sku `shipping_costs_reversal` voor de ingehouden verzendkosten.
+- Beheerformulieren (retour verwerken, annuleerknop) stellen de verzendkosten voor en laten de beheerder ze uitzetten.
+- API-parameter `charge_shipping` voor kassa (POS) en mobiele app.
+- Klantmelding in het retourformulier voordat de retour wordt ingediend.
+- Regel over de verrekende verzendkosten in de retourmail en op de statuspagina.
+
 ## v4.150.1 - 2026-10-12
 
 ### Fixed

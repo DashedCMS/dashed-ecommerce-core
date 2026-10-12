@@ -10,6 +10,7 @@ use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Dashed\DashedEcommerceCore\Classes\SKUs;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedTranslations\Models\Translation;
@@ -20,6 +21,7 @@ use Dashed\DashedEcommerceCore\Models\OrderReturnLine;
 use Dashed\DashedEcommerceCore\Support\ReturnNotifier;
 use Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRequestedEvent;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\OrderLookupService;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRequestedMail;
@@ -282,6 +284,33 @@ class OrderWithdrawal extends Component
         $this->completedAt = optional($resolvedReturn?->requested_at)->format('d-m-Y H:i');
         $this->completedOrderLabel = $order->invoice_id ?: (string) $order->id;
         $this->completed = true;
+    }
+
+    /** Melding voor de klant als deze retour de bestelling onder gratis verzending brengt. */
+    public function getShippingReversalNoticeProperty(): ?string
+    {
+        $order = $this->getOrderProperty();
+        if (! $order) {
+            return null;
+        }
+
+        $quantities = [];
+        foreach ($this->selectedLines as $productId => $line) {
+            if (! empty($line['selected'])) {
+                $quantities[(int) $productId] = (int) ($line['quantity'] ?? 0);
+            }
+        }
+
+        $proposal = app(FreeShippingReversal::class)->propose($order, $quantities);
+
+        if (! $proposal) {
+            return null;
+        }
+
+        return Translation::get('return-shipping-reversal-notice', 'returns', 'Na deze retour komt je bestelling onder :threshold:. We verrekenen dan :amount: verzendkosten met je terugbetaling.', 'text', [
+            'threshold' => CurrencyHelper::formatPrice($proposal->threshold),
+            'amount' => CurrencyHelper::formatPrice($proposal->amount),
+        ]);
     }
 
     public function getOrderProperty(): ?Order
