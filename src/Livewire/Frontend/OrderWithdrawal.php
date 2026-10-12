@@ -289,16 +289,21 @@ class OrderWithdrawal extends Component
     /** Melding voor de klant als deze retour de bestelling onder gratis verzending brengt. */
     public function getShippingReversalNoticeProperty(): ?string
     {
-        $order = $this->getOrderProperty();
-        if (! $order) {
-            return null;
-        }
-
         $quantities = [];
         foreach ($this->selectedLines as $productId => $line) {
             if (! empty($line['selected'])) {
                 $quantities[(int) $productId] = (int) ($line['quantity'] ?? 0);
             }
+        }
+
+        // Niets geselecteerd: de bestelling hoeft dan niet eens geladen te worden.
+        if (! $quantities) {
+            return null;
+        }
+
+        $order = $this->getOrderProperty();
+        if (! $order) {
+            return null;
         }
 
         $proposal = app(FreeShippingReversal::class)->propose($order, $quantities);

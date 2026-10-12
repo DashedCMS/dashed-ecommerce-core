@@ -57,4 +57,9 @@ it('meldt niets zonder geselecteerde regels', function () {
     $f = reversalFixture();
 
     expect(withdrawalComponent($f, [])->getShippingReversalNoticeProperty())->toBeNull();
+
+    // Zonder selectie wordt de bestelling niet eens geladen.
+    $component = withdrawalComponent($f, []);
+    $component->foundOrderId = null;
+    expect($component->getShippingReversalNoticeProperty())->toBeNull();
 });

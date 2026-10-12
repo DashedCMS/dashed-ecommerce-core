@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages\Settings;
 use UnitEnum;
 use BackedEnum;
 use Filament\Pages\Page;
+use Illuminate\Support\Carbon;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -169,7 +170,7 @@ class ReturnSettingsPage extends Page
 
         Customsetting::set('returns_charge_shipping_below_threshold', ! empty($data['returns_charge_shipping_below_threshold']) ? '1' : '0');
         if (! empty($data['returns_charge_shipping_from'])) {
-            Customsetting::set('returns_charge_shipping_from', \Illuminate\Support\Carbon::parse($data['returns_charge_shipping_from'])->toDateString());
+            Customsetting::set('returns_charge_shipping_from', Carbon::parse($data['returns_charge_shipping_from'])->toDateString());
         }
 
         Notification::make()->title(__('Instellingen opgeslagen'))->success()->send();
