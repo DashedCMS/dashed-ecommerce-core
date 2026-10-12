@@ -6,7 +6,7 @@ class SKUs
 {
     public static function hideOnPackingSlip()
     {
-        return ['payment_costs', 'shipping_costs'];
+        return ['payment_costs', 'shipping_costs', 'shipping_costs_reversal'];
     }
 
     public static function hideOnConfirmationEmail()
@@ -16,6 +16,6 @@ class SKUs
 
     public static function nonReturnable(): array
     {
-        return ['payment_costs', 'shipping_costs'];
+        return ['payment_costs', 'shipping_costs', 'shipping_costs_reversal'];
     }
 }

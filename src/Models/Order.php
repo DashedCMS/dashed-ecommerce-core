@@ -100,6 +100,7 @@ class Order extends Model
         'applied_discount_codes' => 'array',
         'applied_gift_cards' => 'array',
         'packed_at' => 'datetime',
+        'free_shipping_threshold' => 'decimal:2',
         'fulfillment_reopened_at' => 'datetime',
         'is_proforma' => 'boolean',
         'proforma_allow_shipping' => 'boolean',

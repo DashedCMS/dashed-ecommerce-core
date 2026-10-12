@@ -999,6 +999,12 @@ class Checkout extends Component
         }
 
         $order->shipping_method_id = $shippingMethod['id'];
+
+        // Bewaard voor een latere deelretour: zakt de order dan onder deze
+        // drempel, dan mogen de verzendkosten alsnog verrekend worden.
+        $order->free_shipping_threshold = ($shippingMethod['sort'] ?? null) === 'free_delivery'
+            ? (float) ($shippingMethod['minimum_order_value'] ?? 0)
+            : null;
         $order->payment_method_id = $paymentMethod['id'];
 
         if (auth()->check()) {

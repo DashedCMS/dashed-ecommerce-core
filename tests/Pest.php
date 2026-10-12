@@ -13,3 +13,6 @@ require_once __DIR__ . '/Stubs/AppUserStub.php';
 require_once __DIR__ . '/Stubs/MediaHelperStub.php';
 
 uses(\Dashed\DashedEcommerceCore\Tests\TestCase::class, RefreshDatabase::class)->in(__DIR__);
+
+// Gedeelde fixture voor de OrderReturn-tests (Shirt + Broek, EUR 100).
+require_once __DIR__ . '/Support/SpilOrder.php';
