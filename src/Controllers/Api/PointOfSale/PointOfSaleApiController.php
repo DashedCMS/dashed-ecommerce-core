@@ -34,6 +34,7 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
 
 class PointOfSaleApiController extends Controller
@@ -1879,8 +1880,13 @@ class PointOfSaleApiController extends Controller
             foreach ($orderProducts as $orderProduct) {
                 $quantities[(int) $orderProduct['id']] = (int) ($orderProduct['refundQuantity'] ?? 0);
             }
-            $reversal = ($cancelData['chargeShipping'] ?? $data['charge_shipping'] ?? true)
-                ? app(\Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::class)->propose($order, $quantities)?->amount
+            $chargeShipping = filter_var(
+                $cancelData['chargeShipping'] ?? $cancelData['charge_shipping'] ?? $data['charge_shipping'] ?? true,
+                FILTER_VALIDATE_BOOLEAN,
+                FILTER_NULL_ON_FAILURE
+            ) ?? true;
+            $reversal = $chargeShipping
+                ? app(FreeShippingReversal::class)->propose($order, $quantities)?->amount
                 : null;
 
             $order->markAsCancelledWithCredit(
