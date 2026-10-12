@@ -153,10 +153,18 @@ class ReturnActions
                     return;
                 }
 
+                // De schakelaar kan verborgen zijn geweest (standaard aan): meld het
+                // ingehouden bedrag zodat de beheerder het altijd ziet.
+                $reversalLine = $credit->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+                $body = __('Creditorder :nummer aangemaakt.', ['nummer' => $credit->invoice_id]);
+                if ($reversalLine) {
+                    $body .= ' '.__('Verzendkosten ingehouden: :bedrag', ['bedrag' => CurrencyHelper::formatPrice($reversalLine->price)]);
+                }
+
                 Notification::make()
                     ->success()
                     ->title(__('Retour verwerkt'))
-                    ->body(__('Creditorder :nummer aangemaakt.', ['nummer' => $credit->invoice_id]))
+                    ->body($body)
                     ->actions([
                         Action::make('open')->label(__('Open creditorder'))->url(OrderResource::getUrl('view', ['record' => $credit->id])),
                     ])

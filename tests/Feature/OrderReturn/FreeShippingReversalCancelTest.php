@@ -5,12 +5,14 @@ require_once __DIR__ . '/../../Support/FreeShippingReversalFixtures.php';
 
 use Dashed\DashedEcommerceCore\Livewire\Orders\CancelOrder;
 
-function cancelComponent(array $f): CancelOrder
-{
-    $component = new CancelOrder();
-    $component->order = $f['order']->fresh();
+if (! function_exists('cancelComponent')) {
+    function cancelComponent(array $f): CancelOrder
+    {
+        $component = new CancelOrder();
+        $component->order = $f['order']->fresh();
 
-    return $component;
+        return $component;
+    }
 }
 
 it('rekent de inhouding uit voor de gekozen aantallen', function () {

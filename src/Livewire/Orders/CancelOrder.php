@@ -96,7 +96,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                         ->numeric()
                         ->minValue(0)
                         ->default(0)
-                        ->reactive()
+                        ->live(onBlur: true)
                         ->maxValue($orderProduct->quantity)
                         ->helperText(__(':aantal x besteld voor :prijs', ['aantal' => $orderProduct->quantity, 'prijs' => CurrencyHelper::formatPrice($orderProduct->price)]));
                 }
@@ -237,7 +237,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                     //                            return redirect(route('filament.dashed.resources.orders.view', [$this->order]));
                     //                        }
                     //                    } else {
-                    $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id'], freeShippingReversalAmount: $this->reversalAmountFor($data));
+                    $newOrder = $this->order->markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $orderProducts, $data['fulfillment_status'], $data['payment_method_id'], freeShippingReversalAmount: $reversalAmount = $this->reversalAmountFor($data));
 
                     // Een open retour op deze bestelling is met deze annulering
                     // feitelijk verwerkt: koppel hem aan de creditorder.
@@ -249,6 +249,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
 
                     Notification::make()
                         ->title(__('Bestelling gemarkeerd als geannuleerd'))
+                        ->body($reversalAmount ? __('Verzendkosten ingehouden: :bedrag', ['bedrag' => CurrencyHelper::formatPrice($reversalAmount)]) : null)
                         ->success()
                         ->send();
 

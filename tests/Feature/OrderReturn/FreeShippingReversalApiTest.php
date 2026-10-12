@@ -23,36 +23,40 @@ beforeEach(function () {
 });
 
 /** Roept PointOfSaleApiController::cancelOrder aan met de aantallen per orderregel. */
-function posCancel(array $f, int $shirt, int $broek, array $extra = [], array $cancelExtra = []): ?Order
-{
-    $f['order']->forceFill(['order_origin' => 'pos'])->save();
+if (! function_exists('posCancel')) {
+    function posCancel(array $f, int $shirt, int $broek, array $extra = [], array $cancelExtra = []): ?Order
+    {
+        $f['order']->forceFill(['order_origin' => 'pos'])->save();
 
-    $orderProducts = $f['order']->fresh()->orderProducts->map(function ($op) use ($f, $shirt, $broek) {
-        return $op->toArray() + ['refundQuantity' => $op->id === $f['shirt']->id ? $shirt : $broek];
-    })->all();
+        $orderProducts = $f['order']->fresh()->orderProducts->map(function ($op) use ($f, $shirt, $broek) {
+            return $op->toArray() + ['refundQuantity' => $op->id === $f['shirt']->id ? $shirt : $broek];
+        })->all();
 
-    $request = Request::create('/pos/cancel', 'POST', $extra + ['order' => [
-        'id' => $f['order']->id,
-        'cancelData' => $cancelExtra + [
-            'sendCustomerEmail' => false,
-            'productsMustBeReturned' => false,
-            'restock' => false,
-            'refundDiscountCosts' => false,
-            'orderProducts' => $orderProducts,
-            'extraOrderLine' => false,
-            'fulfillmentStatus' => 'unhandled',
-            'paymentMethodId' => null,
-        ],
-    ]]);
+        $request = Request::create('/pos/cancel', 'POST', $extra + ['order' => [
+            'id' => $f['order']->id,
+            'cancelData' => $cancelExtra + [
+                'sendCustomerEmail' => false,
+                'productsMustBeReturned' => false,
+                'restock' => false,
+                'refundDiscountCosts' => false,
+                'orderProducts' => $orderProducts,
+                'extraOrderLine' => false,
+                'fulfillmentStatus' => 'unhandled',
+                'paymentMethodId' => null,
+            ],
+        ]]);
 
-    app(PointOfSaleApiController::class)->cancelOrder($request);
+        app(PointOfSaleApiController::class)->cancelOrder($request);
 
-    return Order::where('credit_for_order_id', $f['order']->id)->first();
+        return Order::where('credit_for_order_id', $f['order']->id)->first();
+    }
 }
 
-function creditChargeLine(?Order $credit)
-{
-    return $credit?->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+if (! function_exists('creditChargeLine')) {
+    function creditChargeLine(?Order $credit)
+    {
+        return $credit?->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+    }
 }
 
 it('POS: houdt standaard verzendkosten in bij een deelannulering', function () {
@@ -79,17 +83,19 @@ it('POS: houdt niets in bij een volledige annulering', function () {
 });
 
 /** Roept OrderReturnController::handle aan voor een goedgekeurde retour van shirt en broek. */
-function handleReturn(array $body): ?Order
-{
-    $f = reversalFixture();
-    $return = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now(), 'site_id' => $f['order']->site_id]);
-    OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
-    OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['broek']->id, 'quantity' => 1]);
+if (! function_exists('handleReturn')) {
+    function handleReturn(array $body): ?Order
+    {
+        $f = reversalFixture();
+        $return = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now(), 'site_id' => $f['order']->site_id]);
+        OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
+        OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['broek']->id, 'quantity' => 1]);
 
-    $request = Request::create("/api/v1/returns/{$return->id}/handle", 'POST', $body + ['restock' => false]);
-    app(OrderReturnController::class)->handle($request, $return->id);
+        $request = Request::create("/api/v1/returns/{$return->id}/handle", 'POST', $body + ['restock' => false]);
+        app(OrderReturnController::class)->handle($request, $return->id);
 
-    return Order::where('credit_for_order_id', $f['order']->id)->first();
+        return Order::where('credit_for_order_id', $f['order']->id)->first();
+    }
 }
 
 it('mobiele API: houdt standaard verzendkosten in zonder parameter', function () {

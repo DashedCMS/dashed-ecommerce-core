@@ -13,20 +13,22 @@ beforeEach(function () {
 });
 
 /** Livewire::test() draait niet in dit pakketharnas, dus het component wordt direct opgebouwd. */
-function withdrawalComponent(array $f, array $selected): OrderWithdrawal
-{
-    $component = new OrderWithdrawal();
-    $component->foundOrderId = $f['order']->id;
-    foreach ([$f['shirt'], $f['broek']] as $line) {
-        $component->selectedLines[$line->id] = [
-            'selected' => isset($selected[$line->id]),
-            'quantity' => $selected[$line->id] ?? $line->quantity,
-            'reason_id' => null,
-            'note' => '',
-        ];
-    }
+if (! function_exists('withdrawalComponent')) {
+    function withdrawalComponent(array $f, array $selected): OrderWithdrawal
+    {
+        $component = new OrderWithdrawal();
+        $component->foundOrderId = $f['order']->id;
+        foreach ([$f['shirt'], $f['broek']] as $line) {
+            $component->selectedLines[$line->id] = [
+                'selected' => isset($selected[$line->id]),
+                'quantity' => $selected[$line->id] ?? $line->quantity,
+                'reason_id' => null,
+                'note' => '',
+            ];
+        }
 
-    return $component;
+        return $component;
+    }
 }
 
 it('meldt de klant vooraf dat verzendkosten verrekend worden', function () {

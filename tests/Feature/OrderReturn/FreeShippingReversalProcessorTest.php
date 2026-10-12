@@ -19,22 +19,26 @@ beforeEach(function () {
 });
 
 /** Goedgekeurde retour: 1 shirt en de broek, rest 40 (onder de drempel van 60). */
-function reversalReturn(): array
-{
-    $f = reversalFixture();
-    $return = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now()]);
-    $shirtLine = OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
-    $broekLine = OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['broek']->id, 'quantity' => 1]);
+if (! function_exists('reversalReturn')) {
+    function reversalReturn(): array
+    {
+        $f = reversalFixture();
+        $return = OrderReturn::create(['order_id' => $f['order']->id, 'email' => 'klant@example.com', 'status' => OrderReturn::STATUS_APPROVED, 'approved_at' => now()]);
+        $shirtLine = OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['shirt']->id, 'quantity' => 1]);
+        $broekLine = OrderReturnLine::create(['order_return_id' => $return->id, 'order_product_id' => $f['broek']->id, 'quantity' => 1]);
 
-    return $f + ['return' => $return->fresh(), 'lines' => [
-        ['order_return_line_id' => $shirtLine->id, 'quantity' => 1],
-        ['order_return_line_id' => $broekLine->id, 'quantity' => 1],
-    ]];
+        return $f + ['return' => $return->fresh(), 'lines' => [
+            ['order_return_line_id' => $shirtLine->id, 'quantity' => 1],
+            ['order_return_line_id' => $broekLine->id, 'quantity' => 1],
+        ]];
+    }
 }
 
-function reversalLine($credit)
-{
-    return $credit->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+if (! function_exists('reversalLine')) {
+    function reversalLine($credit)
+    {
+        return $credit->orderProducts()->where('sku', FreeShippingReversal::SKU)->first();
+    }
 }
 
 it('houdt standaard de verzendkosten in', function () {

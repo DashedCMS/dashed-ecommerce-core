@@ -36,6 +36,11 @@ class FreeShippingReversal
         }
     }
 
+    /**
+     * Let op: het verwerken van een retour serialiseert op de order, maar de
+     * annuleerknop en de kassa niet; twee beheerders die dezelfde order in
+     * dezelfde seconden afhandelen kunnen dus allebei verzendkosten inhouden.
+     */
     public function alreadyCharged(Order $order): bool
     {
         return OrderProduct::query()

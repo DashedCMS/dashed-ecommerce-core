@@ -11,6 +11,13 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - API-parameter `charge_shipping` voor kassa (POS) en mobiele app.
 - Klantmelding in het retourformulier voordat de retour wordt ingediend.
 - Regel over de verrekende verzendkosten in de retourmail en op de statuspagina.
+- De succesmelding na het verwerken van een retour of annulering noemt het ingehouden bedrag.
+
+### Notes
+- Kassa (POS) en de mobiele API houden de verzendkosten standaard in zonder dat hun schermen dat tonen; opt-out met `charge_shipping=false`.
+- Bekende beperking: het verwerken van een retour serialiseert op de order, de annuleerknop en de kassa niet. Twee beheerders die dezelfde order in dezelfde seconden afhandelen kunnen allebei verzendkosten inhouden.
+- Het btw-tarief van de inhoudingsregel volgt de gecrediteerde regels (gewogen gemiddelde), dus ook onder OSS en bij verlegde btw.
+- Statistieken (omzetwidgets, omzet- en kortingspagina, `OrderStatistics`) tellen de inhoudingsregel niet als verkocht product.
 
 ## v4.150.1 - 2026-10-12
 
