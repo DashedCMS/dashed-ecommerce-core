@@ -3,9 +3,7 @@
 require_once __DIR__ . '/../../Support/SpilOrder.php';
 require_once __DIR__ . '/../../Support/FreeShippingReversalFixtures.php';
 
-use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
-use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 
@@ -126,4 +124,38 @@ it('gebruikt de bewaarde drempel, niet een later gewijzigde', function () {
     $f['free']->update(['minimum_order_value' => 30]);
 
     expect(proposeReversal($f, [$f['broek']->id => 1, $f['shirt']->id => 1])->threshold)->toBe(60.0);
+});
+
+it('laat een eerder via de annuleerknop gecrediteerd product niet meer meetellen bij de verzendmethode', function () {
+    $f = reversalFixture();
+    $group = \Dashed\DashedEcommerceCore\Models\ProductGroup::create(['name' => ['nl' => 'Groep'], 'slug' => ['nl' => 'groep'], 'site_ids' => ['default']]);
+    $product = \Dashed\DashedEcommerceCore\Models\Product::withoutEvents(fn () => \Dashed\DashedEcommerceCore\Models\Product::create([
+        'name' => ['nl' => 'Broek'], 'slug' => ['nl' => 'broek'], 'site_ids' => ['default'],
+        'product_group_id' => $group->id, 'price' => 40, 'current_price' => 40,
+    ]));
+    $f['broek']->update(['product_id' => $product->id]);
+
+    // "Klein" is goedkoper, maar niet toegestaan voor de broek.
+    $klein = \Dashed\DashedEcommerceCore\Models\ShippingMethod::create(['shipping_zone_id' => $f['zone']->id, 'name' => ['nl' => 'Klein'], 'sort' => 'static_amount', 'costs' => 4.25, 'minimum_order_value' => 0, 'maximum_order_value' => 59.99, 'order' => 4]);
+    $klein->disabledProducts()->attach($product->id);
+
+    // Broek eerder gecrediteerd, returned_quantity blijft 0.
+    $credit = $f['order']->replicate();
+    $credit->status = 'return';
+    $credit->credit_for_order_id = $f['order']->id;
+    $credit->invoice_id = 'CRED-'.uniqid();
+    $credit->save();
+    OrderProduct::create(['order_id' => $credit->id, 'product_id' => $product->id, 'name' => 'Broek', 'sku' => 'BROEK', 'quantity' => -1, 'price' => -40, 'vat_rate' => 21]);
+
+    // Eén shirt terug: rest 40, alleen shirts over, dus "Klein" is toegestaan.
+    expect(proposeReversal($f, [$f['shirt']->id => 1])->amount)->toBe(4.25);
+});
+
+it('negeert verwijderde orderregels', function () {
+    $f = reversalFixture();
+    $extra = OrderProduct::create(['order_id' => $f['order']->id, 'name' => 'Weg', 'sku' => 'WEG', 'quantity' => 1, 'price' => 30, 'vat_rate' => 21]);
+    $extra->delete();
+
+    expect(proposeReversal($f, [$f['broek']->id => 1, $f['shirt']->id => 3]))->toBeNull();
+    expect(proposeReversal($f, [$f['broek']->id => 1, $f['shirt']->id => 1])->valueBefore)->toBe(100.0);
 });

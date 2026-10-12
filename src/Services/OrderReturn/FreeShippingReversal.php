@@ -60,7 +60,9 @@ class FreeShippingReversal
             return null;
         }
 
-        $lines = $order->orderProducts()->with('product')->get();
+        // orderProducts() laadt ook verwijderde regels; die tellen niet mee.
+        $lines = $order->orderProducts()->with('product')->get()
+            ->reject(fn (OrderProduct $line) => $line->trashed());
         if ($lines->contains(fn (OrderProduct $line) => $line->sku === 'shipping_costs')) {
             return null;
         }
@@ -71,6 +73,8 @@ class FreeShippingReversal
 
         $productLines = $lines->filter(fn (OrderProduct $line) => ReturnableLines::isReturnable($line));
 
+        $credited = $this->creditedQuantities($order, $productLines);
+
         $orderValue = 0.0;
         $creditNow = 0.0;
         $remainingItems = [];
@@ -80,7 +84,10 @@ class FreeShippingReversal
                 continue;
             }
             $unit = (float) $line->price / $quantity;
-            $remaining = ReturnableLines::remaining($line);
+            // De annuleerknop hoogt returned_quantity niet op: tel de eerdere
+            // creditorders mee voor wat er nog over is.
+            $already = max((int) $line->returned_quantity, $credited[$line->id] ?? 0);
+            $remaining = max(0, $quantity - $already);
             $now = max(0, min((int) ($creditQuantities[$line->id] ?? 0), $remaining));
 
             $orderValue += (float) $line->price;
@@ -162,5 +169,49 @@ class FreeShippingReversal
             ->where(fn ($query) => $query->whereNotNull('product_id')->orWhereIn('sku', $productSkus))
             ->get()
             ->sum(fn (OrderProduct $line) => abs((float) $line->price));
+    }
+
+    /**
+     * Gecrediteerd aantal per originele regel volgens de creditorders.
+     * Koppelt op product_id + sku, anders sku, anders naam, en verdeelt over
+     * regels met dezelfde sleutel zonder het regelaantal te overschrijden.
+     *
+     * @param  \Illuminate\Support\Collection<int, OrderProduct>  $productLines
+     * @return array<int, int> order_product_id => aantal
+     */
+    protected function creditedQuantities(Order $order, $productLines): array
+    {
+        $excluded = array_merge(SKUs::nonReturnable(), [self::SKU]);
+
+        $key = fn (OrderProduct $line) => ($line->product_id ? $line->product_id . '|' : '')
+            . ($line->sku ?: 'name:' . $line->name);
+
+        $pool = [];
+        OrderProduct::query()
+            ->whereIn('order_id', $order->creditOrders()->select('id'))
+            ->where('price', '<', 0)
+            ->get()
+            ->reject(fn (OrderProduct $line) => in_array($line->sku, $excluded, true))
+            ->each(function (OrderProduct $line) use (&$pool, $key) {
+                $pool[$key($line)] = ($pool[$key($line)] ?? 0) + abs((int) $line->quantity);
+            });
+
+        $result = [];
+        foreach ($productLines as $line) {
+            $lineKey = $key($line);
+            $take = min((int) $line->quantity, $pool[$lineKey] ?? 0);
+            if (! $take && $line->product_id) {
+                // Creditregel zonder product_id: val terug op sku/naam.
+                $fallback = $line->sku ?: 'name:' . $line->name;
+                $take = min((int) $line->quantity, $pool[$fallback] ?? 0);
+                $lineKey = $fallback;
+            }
+            if ($take > 0) {
+                $pool[$lineKey] -= $take;
+                $result[$line->id] = $take;
+            }
+        }
+
+        return $result;
     }
 }
