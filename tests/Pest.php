@@ -16,3 +16,4 @@ uses(\Dashed\DashedEcommerceCore\Tests\TestCase::class, RefreshDatabase::class)-
 
 // Gedeelde fixture voor de OrderReturn-tests (Shirt + Broek, EUR 100).
 require_once __DIR__ . '/Support/SpilOrder.php';
+require_once __DIR__ . '/Support/FreeShippingReversalFixtures.php';

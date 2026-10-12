@@ -40,6 +40,21 @@ class ShoppingCart
         static::$shippingOrderValueResolver = $resolver;
     }
 
+    /**
+     * De orderwaarde waartegen verzendmethodes getoetst worden, met de
+     * app-resolver toegepast. Voor aanroepen buiten de wagen om (retour).
+     *
+     * @param  iterable<object>  $cartItems  objecten met `model` en `qty`
+     */
+    public static function shippingOrderValue(float $total, iterable $cartItems): float
+    {
+        $total = max(0.0, round($total, 2));
+
+        return static::$shippingOrderValueResolver
+            ? (float) (static::$shippingOrderValueResolver)($total, $cartItems)
+            : $total;
+    }
+
     public static function getApplyDiscountCodeUrl()
     {
         return url(route('dashed.frontend.cart.apply-discount-code'));
