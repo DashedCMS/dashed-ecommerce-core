@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnClosedEvent;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRejectedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
@@ -59,19 +60,19 @@ class OrderReturn extends Model
         return $this->belongsTo(Order::class);
     }
 
+    /** De regel op de creditorder die verzendkosten inhoudt, als die er is. */
+    public function shippingReversalLine(): ?OrderProduct
+    {
+        return $this->creditOrder
+            ?->orderProducts()
+            ->where('sku', FreeShippingReversal::SKU)
+            ->first();
+    }
+
     /**
      * De creditorder die bij het verwerken is ontstaan. Eén retour, hooguit één
      * creditorder; de kolom is nullable zolang er niets verwerkt is.
      */
-    /** De regel op de creditorder die verzendkosten inhoudt, als die er is. */
-    public function shippingReversalLine(): ?\Dashed\DashedEcommerceCore\Models\OrderProduct
-    {
-        return $this->creditOrder
-            ?->orderProducts()
-            ->where('sku', \Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::SKU)
-            ->first();
-    }
-
     public function creditOrder(): BelongsTo
     {
         return $this->belongsTo(Order::class, 'credit_order_id');
