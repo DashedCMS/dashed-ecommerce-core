@@ -29,10 +29,12 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
     use InteractsWithActions;
 
     public Order $order;
+    public string $color = 'primary';
 
-    public function mount(Order $order)
+    public function mount(Order $order, string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
     }
 
     public function action(): Action
@@ -72,7 +74,7 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
 
         return Action::make('action')
             ->label(__('Maak bestellings notitie'))
-            ->color('primary')
+            ->color($this->color)
             ->extraModalFooterActions($actions)
             ->fillForm(function ($record) {
                 return [

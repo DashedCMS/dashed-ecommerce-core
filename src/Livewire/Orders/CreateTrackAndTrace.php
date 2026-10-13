@@ -22,17 +22,19 @@ class CreateTrackAndTrace extends Component implements HasSchemas, HasActions
     use InteractsWithActions;
 
     public Order $order;
+    public string $color = 'primary';
 
-    public function mount(Order $order)
+    public function mount(Order $order, string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
     }
 
     public function action(): Action
     {
         return Action::make('action')
             ->label(__('Voeg track and trace toe'))
-            ->color('primary')
+            ->color($this->color)
             ->schema([
                 TextInput::make('delivery_company')
                     ->label(__('Vervoersbedrijf'))

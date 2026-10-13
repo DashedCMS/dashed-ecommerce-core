@@ -21,17 +21,19 @@ class ChangeOrderRetourStatus extends Component implements HasSchemas, HasAction
     use InteractsWithActions;
 
     public Order $order;
+    public string $color = 'primary';
 
-    public function mount(Order $order)
+    public function mount(Order $order, string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
     }
 
     public function action(): Action
     {
         return Action::make('action')
             ->label(__('Verander retour status'))
-            ->color('primary')
+            ->color($this->color)
             ->fillForm(function () {
                 return [
                     'retourStatus' => $this->order->retour_status,

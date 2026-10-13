@@ -33,10 +33,12 @@ class CancelOrder extends Component implements HasSchemas, HasActions
     public bool $isPos = false;
     public ?string $buttonText = '';
     public ?string $buttonClass = '';
+    public string $color = 'primary';
 
-    public function mount(Order $order, bool $isPos = false, ?string $buttonText = '', ?string $buttonClass = '')
+    public function mount(Order $order, bool $isPos = false, ?string $buttonText = '', ?string $buttonClass = '', string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
         $this->buttonText = $buttonText;
         $this->buttonClass = $buttonClass;
         $this->isPos = $isPos;
@@ -86,7 +88,7 @@ class CancelOrder extends Component implements HasSchemas, HasActions
             ->extraAttributes([
                 'class' => $this->buttonClass,
             ])
-            ->color('primary')
+            ->color($this->color)
             ->fillForm($fillForm)
             ->schema(function () {
                 $orderProductSchema = [];

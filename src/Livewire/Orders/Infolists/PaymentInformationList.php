@@ -3,13 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Fieldset;
+use Illuminate\Support\Carbon;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 
 class PaymentInformationList extends Component implements HasSchemas
@@ -27,119 +23,38 @@ class PaymentInformationList extends Component implements HasSchemas
         $this->order = $order;
     }
 
-    public function infolist(Schema $schema): Schema
+    /**
+     * @return array<string, string>
+     */
+    public function details(): array
     {
-        $customOrderFields = [];
+        $order = $this->order;
 
-        foreach ($this->order->customOrderFields() as $label => $value) {
-            // Unieke key per veld
-            $key = 'custom_' . md5($label);
-            $customOrderFields[] = TextEntry::make($key)
-                ->label($label)
-                ->state(fn () => $value);
+        $details = [
+            __('Factuur ID') => $order->invoice_id,
+            __('Bestellingsherkomst') => $order->order_origin,
+            __('Betaalmethode') => $order->mainPaymentMethod?->name,
+            __('PSP') => $order->psp,
+            __('PSP ID') => $order->psp ? $order->psp_id : null,
+            __('Verzendmethode') => $order->shippingMethod->name ?? null,
+            __('Marketing geaccepteerd') => $order->marketing ? __('Ja') : __('Nee'),
+            __('BTW verlegd') => $order->vat_reverse_charge ? __('Ja') : __('Nee'),
+            __('Te betalen voor') => $order->payment_due_at ? Carbon::parse($order->payment_due_at)->format('d-m-Y') : null,
+            __('Verstuurde herinneringen') => $order->paymentReminders->map(
+                fn ($reminder) => __('Stap :stage op :date', ['stage' => $reminder->stage, 'date' => $reminder->sent_at->format('d-m-Y')])
+            )->join(', '),
+            __('IP') => $order->ip,
+        ];
+
+        foreach ($order->customOrderFields() as $label => $value) {
+            $details[$label] = $value;
         }
 
-        return $schema
-            ->record($this->order)
-            ->components([
-                Fieldset::make(__('payment_info'))->columnSpanFull()
-                    ->label(__('Betaal informatie'))
-                    ->schema([
-                        TextEntry::make('order_origin')
-                            ->label(__('Bestellingsherkomst')),
-
-                        TextEntry::make('ip')
-                            ->label(__('IP')),
-
-                        TextEntry::make('note')
-                            ->label(__('Notitie'))
-                            ->state(fn (Order $record) => $record->note ?: 'Geen notitie'),
-
-                        IconEntry::make('marketing')
-                            ->label(__('Marketing geaccepteerd'))
-                            ->trueIcon('heroicon-o-check-circle')
-                            ->falseIcon('heroicon-o-x-circle'),
-
-                        TextEntry::make('invoice_id')
-                            ->label(__('Factuur ID')),
-
-                        TextEntry::make('payment_method_name')
-                            ->label(__('Betaalmethode'))
-                            ->state(fn (Order $record) => $record->mainPaymentMethod?->name ?? 'Niet gevonden'),
-
-                        TextEntry::make('psp')
-                            ->label(__('PSP'))
-                            ->visible(fn (Order $record) => (bool) $record->psp),
-
-                        TextEntry::make('psp_id')
-                            ->label(__('PSP ID'))
-                            ->visible(fn (Order $record) => (bool) $record->psp),
-
-                        TextEntry::make('shipping_method_name')
-                            ->label(__('Verzendmethode'))
-                            ->state(fn (Order $record) => $record->shippingMethod->name ?? 'Niet gevonden'),
-
-                        TextEntry::make('subtotal')
-                            ->label(__('Subtotaal'))
-                            ->money('EUR'),
-
-                        TextEntry::make('discount')
-                            ->label(__('Korting'))
-                            ->money('EUR'),
-
-                        TextEntry::make('discountCode.code')
-                            ->label(__('Kortingscode'))
-                            ->visible(fn (Order $record) => (bool) $record->discountCode),
-
-                        TextEntry::make('btw')
-                            ->label(__('BTW'))
-                            ->money('EUR'),
-
-                        KeyValueEntry::make('vat_percentages')
-                            ->label(__('BTW percentages'))
-                            ->keyLabel('Percentage')
-                            ->valueLabel('Bedrag')
-                            ->state(function (Order $record) {
-                                $vatPercentages = [];
-                                foreach ($record->vat_percentages ?: [] as $key => $amount) {
-                                    $vatPercentages[number_format((float) $key, 0) . '%'] = '€' . number_format((float) $amount, 2, ',', '.');
-                                }
-
-                                return $vatPercentages;
-                            }),
-
-                        TextEntry::make('vat_reverse_charge')
-                            ->label(__('BTW verlegd'))
-                        ->getStateUsing(fn ($record) => $record->vat_reverse_charge ? 'Ja' : 'Nee'),
-
-                        TextEntry::make('total')
-                            ->label(__('Totaal'))
-                            ->money('EUR'),
-
-                        TextEntry::make('payment_due_at')
-                            ->label(__('Te betalen voor'))
-                            ->date('d-m-Y')
-                            ->visible(fn (Order $record) => (bool) $record->payment_due_at),
-
-                        TextEntry::make('payment_reminders')
-                            ->label(__('Verstuurde herinneringen'))
-                            ->state(fn (Order $record) => $record->paymentReminders->map(
-                                fn ($reminder) => __('Stap :stage op :date', ['stage' => $reminder->stage, 'date' => $reminder->sent_at->format('d-m-Y')])
-                            )->join(', '))
-                            ->visible(fn (Order $record) => $record->paymentReminders->isNotEmpty()),
-                    ])
-                    ->columns(4),
-
-                Fieldset::make()->columnSpanFull()
-                    ->label(__('Extra informatie'))
-                    ->schema($customOrderFields)
-                    ->visible(count($customOrderFields) > 0)
-                    ->columns(4),
-            ]);
+        return array_filter($details, fn ($value): bool => filled($value));
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.infolists.plain-info-list');
+        return view('dashed-ecommerce-core::orders.components.order-details');
     }
 }

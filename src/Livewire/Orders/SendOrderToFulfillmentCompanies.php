@@ -29,6 +29,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
     public bool $isPos = false;
     public ?string $buttonText = '';
     public ?string $buttonClass = '';
+    public string $color = 'primary';
 
     /**
      * Initializes the component with the provided order and optional parameters.
@@ -40,9 +41,10 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
      *
      * @return void
      */
-    public function mount(Order $order, bool $isPos = false, ?string $buttonText = '', ?string $buttonClass = '')
+    public function mount(Order $order, bool $isPos = false, ?string $buttonText = '', ?string $buttonClass = '', string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
         $this->isPos = $isPos;
         $this->buttonText = $buttonText ?: 'Stuur naar fulfilment partijen';
         $this->buttonClass = $buttonClass;
@@ -61,7 +63,7 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
         return Action::make('action')
             ->label($this->buttonText)
             ->extraAttributes(['class' => $this->buttonClass])
-            ->color('primary')
+            ->color($this->color)
             ->visible($this->orderProducts->isNotEmpty())
             ->fillForm($this->getInitialFormData())
             ->schema($this->getFormSchema())

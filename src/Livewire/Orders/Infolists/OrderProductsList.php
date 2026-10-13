@@ -3,13 +3,11 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Schemas\Schema;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\HtmlString;
-use Filament\Schemas\Components\Fieldset;
+use Illuminate\Support\Facades\Storage;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
@@ -29,129 +27,110 @@ class OrderProductsList extends Component implements HasSchemas
         $this->order = $order;
     }
 
-    public function infolist(Schema $schema): Schema
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    public function lines(): array
     {
-        $productComponents = [];
+        $lines = [];
 
         foreach ($this->order->orderProducts as $orderProduct) {
-            $pid = $orderProduct->id ?? spl_object_id($orderProduct);
+            $image = null;
+            if ($orderProduct->custom_image) {
+                $image = $orderProduct->custom_image;
+            } elseif ($orderProduct->product && $orderProduct->product->firstImage) {
+                $image = mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? null;
+            }
+            if ($image && ! str($image)->startsWith(['http://', 'https://', '/'])) {
+                $image = Storage::disk('dashed')->url($image);
+            }
 
-            $productComponents[] = Fieldset::make('product_' . $pid)
-                ->label($orderProduct->name)
-                ->schema([
-                    ImageEntry::make('image_' . $pid)
-                        ->hiddenLabel()
-                        ->visible((bool)($orderProduct->product && $orderProduct->product->firstImage))
-                        ->state(fn () => $orderProduct->custom_image ?: (mediaHelper()->getSingleMedia($orderProduct->product->firstImage)->url ?? ''))
-                        ->disk('dashed')
-                        ->width('100%')
-                        ->height('auto'),
+            $badges = [];
+            if ($orderProduct->is_pre_order) {
+                // Voorkeur: snapshot op de order_product zelf. Voor orders van
+                // vóór de resolver, of als de waarde toch leeg blijkt,
+                // fallback op het live product (dat zowel
+                // expected_in_stock_date als expected_delivery_in_days
+                // afhandelt).
+                $raw = $orderProduct->pre_order_restocked_date
+                    ?: $orderProduct->product?->resolvePreOrderRestockedDate();
+                $date = $raw ? Carbon::parse($raw)->format('d-m-Y') : null;
+                $badges[] = ['label' => $date ? 'Pre-order ' . $date : 'Pre-order', 'color' => 'warning'];
+            }
+            if ($orderProduct->added_via) {
+                $badges[] = ['label' => 'Cross/up-sell', 'color' => 'info'];
+            }
+            if ($orderProduct->fulfillment_provider) {
+                $badges[] = [
+                    'label' => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider),
+                    'color' => $orderProduct->send_to_fulfiller ? 'success' : 'warning',
+                ];
+            }
 
-                    TextEntry::make('product_extras_' . $pid)
-                        ->hiddenLabel()
-                        ->visible(
-                            (is_array($orderProduct->product_extras) ? count($orderProduct->product_extras ?: []) > 0 : false)
-                            || count($orderProduct->hidden_options ?: []) > 0
-                        )
-                        ->state(function () use ($orderProduct) {
-                            $html = '';
+            $extras = '';
+            if (is_array($orderProduct->product_extras)) {
+                foreach ($orderProduct->product_extras as $productExtra) {
+                    if ($productExtra['path'] ?? false) {
+                        $extras .= e($productExtra['name']) . ': <a target="_blank" href="' .
+                            e(ProductExtraFile::adminUrl($productExtra['path'])) . '">' . e($productExtra['value']) . '</a><br/>';
+                    } else {
+                        $extras .= e($productExtra['name']) . ': ' . e($productExtra['value']) . '<br/>';
+                    }
+                }
+            }
+            if (is_array($orderProduct->hidden_options)) {
+                foreach ($orderProduct->hidden_options as $key => $value) {
+                    if (! str($value)->contains('base64')) {
+                        $extras .= e($key) . ': ' . e($value) . '<br/>';
+                    }
+                }
+            }
 
-                            if (is_array($orderProduct->product_extras ?: [])) {
-                                foreach ($orderProduct->product_extras as $productExtra) {
-                                    if ($productExtra['path'] ?? false) {
-                                        $html .= e($productExtra['name']) . ': <a class="hover:text-primary-500" target="_blank" href="' .
-                                            e(ProductExtraFile::adminUrl($productExtra['path'])) . '">' . e($productExtra['value']) . '</a> <br/>';
-                                    } else {
-                                        $html .= e($productExtra['name']) . ': ' . e($productExtra['value']) . ' <br/>';
-                                    }
-                                }
-                            }
-
-                            if (is_array($orderProduct->hidden_options ?: [])) {
-                                foreach ($orderProduct->hidden_options ?: [] as $key => $value) {
-                                    if (! str($value)->contains('base64')) {
-                                        $html .= e($key) . ': ' . e($value) . ' <br/>';
-                                    }
-                                }
-                            }
-
-                            return new HtmlString($html);
-                        })
-                        ->size('xs'),
-                    TextEntry::make('quantity')
-                        ->hiddenLabel()
-                        ->badge()
-                        ->color('primary')
-                        ->weight('bold')
-                        ->getStateUsing(fn () => $orderProduct->quantity)
-                        ->suffix(__('x')),
-                    TextEntry::make('preOrder')
-                        ->hiddenLabel()
-                        ->badge()
-                        ->color('warning')
-                        ->weight('bold')
-                        ->getStateUsing(function () use ($orderProduct) {
-                            // Voorkeur: snapshot op de order_product zelf. Voor
-                            // orders van vóór de resolver, of als de waarde
-                            // toch leeg blijkt, fallback op het live product
-                            // (dat zowel expected_in_stock_date als
-                            // expected_delivery_in_days afhandelt).
-                            $raw = $orderProduct->pre_order_restocked_date
-                                ?: $orderProduct->product?->resolvePreOrderRestockedDate();
-
-                            $date = $raw
-                                ? \Illuminate\Support\Carbon::parse($raw)->format('d-m-Y')
-                                : null;
-
-                            return $date
-                                ? 'Pre-order ' . $date
-                                : 'Pre-order';
-                        })
-                        ->visible($orderProduct->is_pre_order),
-                    TextEntry::make('addedVia_' . $pid)
-                        ->hiddenLabel()
-                        ->badge()
-                        ->color('info')
-                        ->weight('bold')
-                        ->getStateUsing(fn () => 'Cross/up-sell')
-                        ->visible((bool) $orderProduct->added_via),
-                    TextEntry::make('price')
-                        ->hiddenLabel()
-                        ->getStateUsing(fn () => $orderProduct->price)
-                        ->helperText(fn () => $orderProduct->discount > 0 ? __('Origineel :bedrag', ['bedrag' => CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount)]) : null)
-                        ->money('EUR'),
-                    TextEntry::make('fulfiller')
-                        ->hiddenLabel()
-                        ->visible((bool)$orderProduct->fulfillment_provider)
-                        ->getStateUsing(fn () => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider))
-                        ->badge()
-                        ->columnSpanFull()
-                        ->color(fn () => $orderProduct->send_to_fulfiller ? 'success' : 'warning'),
-                    TextEntry::make('name')
-                        ->hiddenLabel()
-                        ->state(fn () => $orderProduct->name)
-                        ->visible(fn () => $orderProduct->product)
-                        ->getStateUsing(fn () => '<a class="hover:text-primary-500" target="_blank" href="' . ($orderProduct->product ? route('filament.dashed.resources.products.edit', $orderProduct->product) : '#') . '">' . 'Bekijk product' . '</a>')
-                        ->size('sm')
-                        ->columnSpanFull()
-                        ->html(),
-                ])
-                ->columns(5)
-                ->columnSpanFull();
+            $lines[] = [
+                'name' => $orderProduct->name,
+                'url' => $orderProduct->product ? route('filament.dashed.resources.products.edit', $orderProduct->product) : null,
+                'image' => $image,
+                'badges' => $badges,
+                'extras' => $extras ? new HtmlString($extras) : null,
+                'quantity' => $orderProduct->quantity,
+                'price' => CurrencyHelper::formatPrice($orderProduct->price),
+                'original' => $orderProduct->discount > 0 ? CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null,
+            ];
         }
 
-        return $schema
-            ->record($this->order)
-            ->components([
-                Fieldset::make(__('ordered_products'))
-                    ->label(__('Bestelde producten'))
-                    ->schema($productComponents)
-                    ->columnSpanFull(),
-            ]);
+        return $lines;
+    }
+
+    /**
+     * @return array<int, array{label: string, value: string, hint: ?string, total: bool}>
+     */
+    public function totals(): array
+    {
+        $order = $this->order;
+        $rows = [
+            ['label' => __('Subtotaal'), 'value' => CurrencyHelper::formatPrice($order->subtotal), 'hint' => null, 'total' => false],
+        ];
+
+        if ((float) $order->discount != 0.0) {
+            $rows[] = ['label' => __('Korting'), 'value' => '- ' . CurrencyHelper::formatPrice($order->discount), 'hint' => $order->discountCode?->code, 'total' => false];
+        }
+
+        $vatPercentages = array_filter((array) ($order->vat_percentages ?: []));
+        if ($vatPercentages) {
+            foreach ($vatPercentages as $percentage => $amount) {
+                $rows[] = ['label' => __('Waarvan btw (:percentage%)', ['percentage' => number_format((float) $percentage, 0)]), 'value' => CurrencyHelper::formatPrice((float) $amount), 'hint' => null, 'total' => false];
+            }
+        } else {
+            $rows[] = ['label' => __('BTW'), 'value' => CurrencyHelper::formatPrice($order->btw), 'hint' => null, 'total' => false];
+        }
+
+        $rows[] = ['label' => __('Totaal'), 'value' => CurrencyHelper::formatPrice($order->total), 'hint' => $order->vat_reverse_charge ? __('BTW verlegd') : null, 'total' => true];
+
+        return $rows;
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.infolists.plain-info-list');
+        return view('dashed-ecommerce-core::orders.components.order-products');
     }
 }

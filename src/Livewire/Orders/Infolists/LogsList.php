@@ -3,11 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 
 class LogsList extends Component implements HasSchemas
@@ -25,27 +22,22 @@ class LogsList extends Component implements HasSchemas
         $this->order = $order;
     }
 
-    public function infolist(Schema $schema): Schema
+    /**
+     * De soort van een logregel, voor het filter boven de tijdlijn.
+     */
+    public static function typeFor(string $tag): string
     {
-        return $schema
-            ->record($this->order)
-            ->components([
-                Fieldset::make(__('logs_root'))
-                    ->label(__('Logs & notities'))
-                    ->schema([
-                        ViewEntry::make('logs_view')
-                            ->view('dashed-ecommerce-core::orders.components.infolists.logs-list-items')
-                            ->viewData([
-                                'order' => $this->order,
-                            ]),
-                    ])
-                    ->columns(1)
-                    ->columnSpanFull(),
-            ]);
+        if (str_contains($tag, 'mail') || $tag === 'order.t&t.send') {
+            return 'mail';
+        }
+
+        return str_contains($tag, 'note') ? 'note' : 'status';
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.infolists.plain-info-list');
+        return view('dashed-ecommerce-core::orders.components.order-timeline', [
+            'logs' => $this->order->logs()->where('is_debug_log', 0)->with('user')->orderByDesc('created_at')->orderByDesc('id')->get(),
+        ]);
     }
 }

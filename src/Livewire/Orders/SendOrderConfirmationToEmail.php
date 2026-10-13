@@ -19,17 +19,19 @@ class SendOrderConfirmationToEmail extends Component implements HasSchemas, HasA
     use InteractsWithActions;
 
     public Order $order;
+    public string $color = 'primary';
 
-    public function mount(Order $order)
+    public function mount(Order $order, string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
     }
 
     public function action(): Action
     {
         return Action::make('action')
             ->label(__('Stuur email bevestiging'))
-            ->color('primary')
+            ->color($this->color)
             ->fillForm(function () {
                 return [
                     'email' => $this->order->email,

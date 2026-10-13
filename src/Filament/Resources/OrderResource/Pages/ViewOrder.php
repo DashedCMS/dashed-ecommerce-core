@@ -16,6 +16,8 @@ use Dashed\DashedEcommerceCore\Models\PrintJob;
 use Dashed\DashedEcommerceCore\Enums\PrinterType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
+use Dashed\DashedEcommerceCore\Classes\OrderProgress;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterRefundAction;
@@ -35,7 +37,10 @@ class ViewOrder extends ViewRecord
     protected $listeners = [
         'refreshPage' => 'renderPage',
         'notify' => 'message',
+        'refreshData' => 'refreshOrder',
     ];
+
+    protected ?ActionGroup $paymentActionGroup = null;
 
     public function getTitle(): string
     {
@@ -118,7 +123,7 @@ class ViewOrder extends ViewRecord
             ->isPaid()
             ->first() : '';
 
-        return array_merge([
+        $actions = [
             Action::make('togglePriority')
                 ->iconButton()
                 ->label(fn () => $this->record->is_priority ? __('Prioriteit uitzetten') : __('Markeer als prioriteit'))
@@ -141,8 +146,8 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => $nextOrder ? route('filament.dashed.resources.orders.view', ['record' => $nextOrder->id]) : '')
                 ->visible((bool)$nextOrder)
                 ->tooltip(__('Bekijk de volgende onverwerkte bestelling')),
-            Action::make('viewInWebsite')
-                ->hiddenLabel()
+            'viewInWebsite' => Action::make('viewInWebsite')
+                ->label(__('Bekijk in de webshop'))
                 ->icon('heroicon-s-globe-alt')
                 ->url($this->record->getUrl())
                 ->tooltip(__('Bekijk bestelling in de webshop'))
@@ -155,7 +160,7 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
-            RegisterReturnAction::forOrder($this->record),
+            'registerReturn' => RegisterReturnAction::forOrder($this->record),
             ActionGroup::make([
                 Action::make('edit')
                     ->label(__('Gegevens wijzigen'))
@@ -268,7 +273,7 @@ class ViewOrder extends ViewRecord
                 ->label(__('Documenten'))
                 ->icon('heroicon-o-document-text')
                 ->button(),
-            Action::make('syncLabelStatuses')
+            'sync' => Action::make('syncLabelStatuses')
                 ->label(__('Labelstatussen bijwerken'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
@@ -287,7 +292,7 @@ class ViewOrder extends ViewRecord
                         ->success()
                         ->send();
                 }),
-            ActionGroup::make([
+            'payment' => ActionGroup::make([
                 Action::make('markCancelledAsPaid')
                     ->label(__('Markeer als betaald'))
                     ->icon('heroicon-o-check-circle')
@@ -336,9 +341,9 @@ class ViewOrder extends ViewRecord
             ])
                 ->label(__('Betaling'))
                 ->icon('heroicon-o-banknotes')
-                ->color('primary')
+                ->color('gray')
                 ->button(),
-            ActionGroup::make([
+            'pos' => ActionGroup::make([
                 Action::make('editConceptInPos')
                     ->label(__('Bewerken in kassa'))
                     ->icon('heroicon-o-pencil-square')
@@ -400,7 +405,7 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-computer-desktop')
                 ->color('gray')
                 ->button(),
-            Action::make('deleteDraft')
+            'delete' => Action::make('deleteDraft')
                 ->label(__('Verwijderen'))
                 ->icon('heroicon-o-trash')
                 ->color('danger')
@@ -415,7 +420,81 @@ class ViewOrder extends ViewRecord
 
                     $this->redirect(route('filament.dashed.resources.orders.index'));
                 }),
-        ], ecommerce()->buttonActions('order'));
+        ];
+
+        // De groep Betaling staat op de betaalkaart en niet in de kop. Hij
+        // blijft wel een koptekstactie, zodat Filament de acties erin kent
+        // en kan openen; getCachedHeaderActions() laat hem uit de kop weg.
+        $this->paymentActionGroup = $actions['payment'];
+
+        $more = ActionGroup::make([
+            $actions['viewInWebsite'],
+            $actions['sync'],
+            ...$actions['pos']->getActions(),
+            $actions['delete'],
+        ])
+            ->label(__('Meer acties'))
+            ->icon('heroicon-o-ellipsis-horizontal')
+            ->color('gray')
+            ->button();
+
+        $header = array_values(array_diff_key($actions, array_flip(['viewInWebsite', 'registerReturn', 'sync', 'payment', 'pos', 'delete'])));
+
+        return array_merge(
+            $header,
+            [$more, $actions['registerReturn'], $actions['payment']],
+            ecommerce()->buttonActions('order'),
+        );
+    }
+
+    public function getCachedHeaderActions(): array
+    {
+        return array_values(array_filter(
+            $this->cachedHeaderActions,
+            fn ($action): bool => $action !== $this->paymentActionGroup,
+        ));
+    }
+
+    public function getPaymentActionGroup(): ?ActionGroup
+    {
+        return $this->paymentActionGroup?->isVisible() ? $this->paymentActionGroup : null;
+    }
+
+    public function getHeading(): string
+    {
+        return $this->record->credit_for_order_id
+            ? __('Creditorder :nummer', ['nummer' => $this->record->invoice_id])
+            : __('Bestelling :nummer', ['nummer' => $this->record->invoice_id]);
+    }
+
+    public function getSubheading(): ?string
+    {
+        $method = $this->record->mainPaymentMethod?->name;
+        $total = CurrencyHelper::formatPrice($this->record->total);
+
+        return implode(' · ', array_filter([
+            $this->record->name,
+            $this->record->created_at?->format('d-m-Y H:i'),
+            $this->record->order_origin,
+            $method ? __(':bedrag via :methode', ['bedrag' => $total, 'methode' => $method]) : $total,
+        ]));
+    }
+
+    protected function getViewData(): array
+    {
+        return [
+            'steps' => $this->record->credit_for_order_id ? [] : OrderProgress::for($this->record),
+            'openReturns' => $this->record->orderReturns()->open()->orderByDesc('id')->get(),
+            'sidebarWidgets' => array_values(array_filter(
+                ecommerce()->widgets('orders'),
+                fn ($widget): bool => ($widget['width'] ?? null) == 'sidebar',
+            )),
+        ];
+    }
+
+    public function refreshOrder(): void
+    {
+        $this->record->refresh();
     }
 
     protected function activePosCart(): POSCart

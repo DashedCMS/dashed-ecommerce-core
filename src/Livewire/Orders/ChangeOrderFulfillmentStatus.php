@@ -19,17 +19,19 @@ class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasA
     use InteractsWithActions;
 
     public Order $order;
+    public string $color = 'primary';
 
-    public function mount(Order $order)
+    public function mount(Order $order, string $color = 'primary')
     {
         $this->order = $order;
+        $this->color = $color;
     }
 
     public function action(): Action
     {
         return Action::make('action')
             ->label(__('Verander fulfilment status'))
-            ->color('primary')
+            ->color($this->color)
             ->fillForm(function () {
                 return [
                     'fulfillmentStatus' => $this->order->fulfillment_status,
