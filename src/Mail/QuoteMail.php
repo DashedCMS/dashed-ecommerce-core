@@ -35,7 +35,7 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
 
     public static function emailTemplateDescription(): ?string
     {
-        return 'Verzonden naar de klant met de link naar de online offerte, waar hij kiest, tekent en akkoord geeft. De PDF gaat alleen mee als dat bij de offerte-instellingen aanstaat.';
+        return 'Verzonden naar de klant met de link naar de online offerte, waar hij kiest, tekent en akkoord geeft, en de offerte als PDF-bijlage (uit te zetten bij de offerte-instellingen).';
     }
 
     public static function availableVariables(): array
@@ -56,7 +56,7 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
             ['type' => 'text', 'data' => ['body' => '<p>:bericht:</p>']],
             ['type' => 'button', 'data' => ['label' => 'Offerte bekijken', 'url' => ':offerteUrl:', 'background' => ':primaryColor:', 'color' => '#ffffff']],
             ['type' => 'divider', 'data' => []],
-            ['type' => 'text', 'data' => ['body' => '<p>Op de offertepagina kunt u eventuele keuzes aanvinken, uw handtekening zetten en de offerte accepteren of afwijzen.</p><p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
+            ['type' => 'text', 'data' => ['body' => '<p>Op de offertepagina kunt u eventuele keuzes aanvinken, uw handtekening zetten en de offerte accepteren of afwijzen. Ter informatie zit de offerte ook als PDF bij deze mail.</p><p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
     }
 
@@ -123,8 +123,8 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
 
         $this->html($templateHtml)->from($fromEmail, $fromName)->subject($subject);
 
-        // De online pagina is het document; de PDF is een extra die een site
-        // bewust aanzet (QuoteSettingsPage).
+        // De online pagina is het document; de PDF gaat daarnaast mee als
+        // bijlage, tenzij een site dat uitzet (QuoteSettingsPage).
         return QuoteDefaults::attachPdf($this->quote->site_id) ? $this->attachQuotePdf() : $this;
     }
 

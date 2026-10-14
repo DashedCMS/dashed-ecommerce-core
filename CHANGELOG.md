@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.153.1 - 2026-10-14
+
+### Changed
+- **De offertemail stuurt de PDF weer standaard mee, naast de link.** De schakelaar "PDF als bijlage meesturen in de offertemail" (Instellingen, Offertes, per site) staat nu standaard aan; v4.153.0 had hem standaard uit. De standaardtekst noemt de bijlage weer.
+
 ## v4.153.0 - 2026-10-14
 
 ### Changed

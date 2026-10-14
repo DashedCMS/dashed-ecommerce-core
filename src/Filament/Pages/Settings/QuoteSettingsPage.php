@@ -78,7 +78,7 @@ class QuoteSettingsPage extends Page
                     ->helperText(__('Leeg laten om het algemene afzenderadres van de site te gebruiken')),
                 Toggle::make("quote_mail_attach_pdf_{$site['id']}")
                     ->label(__('PDF als bijlage meesturen in de offertemail'))
-                    ->helperText(__('De klant krijgt altijd een link naar de online offerte, waar hij kiest en tekent. De PDF is daar een extra naast.')),
+                    ->helperText(__('De klant krijgt altijd een link naar de online offerte, waar hij kiest en tekent. De PDF gaat daarnaast mee als bijlage.')),
                 Toggle::make("quote_reminder_enabled_{$site['id']}")
                     ->label(__('Herinnering sturen voordat een offerte verloopt'))
                     ->reactive(),

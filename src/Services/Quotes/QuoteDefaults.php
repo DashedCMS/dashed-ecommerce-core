@@ -42,12 +42,13 @@ class QuoteDefaults
     }
 
     /**
-     * De klant krijgt altijd de link naar de online offerte; de PDF gaat alleen
-     * mee als bijlage als een site daar bewust voor kiest.
+     * De klant krijgt altijd de link naar de online offerte, waar hij kiest en
+     * tekent; de PDF gaat daarnaast standaard mee als bijlage, uit te zetten
+     * per site.
      */
     public static function attachPdf(?string $siteId = null): bool
     {
-        return (bool) Customsetting::get('quote_mail_attach_pdf', $siteId ?: Sites::getActive(), false);
+        return (bool) Customsetting::get('quote_mail_attach_pdf', $siteId ?: Sites::getActive(), true);
     }
 
     public static function fromEmail(?string $siteId = null): ?string

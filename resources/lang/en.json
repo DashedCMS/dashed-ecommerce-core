@@ -473,7 +473,7 @@
     "Datum + tijd": "Date + time",
     "Day": "Day",
     "De absolute datum waarop het product weer op voorraad is (expected_in_stock_date).": "The absolute date on which the product is back in stock (expected_in_stock_date).",
-    "De klant krijgt altijd een link naar de online offerte, waar hij kiest en tekent. De PDF is daar een extra naast.": "The customer always receives a link to the online quote, where they choose and sign. The PDF is an extra alongside it.",
+    "De klant krijgt altijd een link naar de online offerte, waar hij kiest en tekent. De PDF gaat daarnaast mee als bijlage.": "The customer always receives a link to the online quote, where they choose and sign. The PDF is attached alongside it.",
     "Deactiveer betalingsmethodes voor deze verzendzone": "Deactivate payment methods for this shipping zone",
     "Deactiveer deze verzendmethode voor deze producten": "Deactivate this shipping method for these products",
     "Deactiveer deze verzendmethode voor deze producten groepen": "Deactivate this shipping method for these product groups",
