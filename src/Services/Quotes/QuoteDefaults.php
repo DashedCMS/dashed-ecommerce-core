@@ -41,6 +41,15 @@ class QuoteDefaults
         return max(1, (int) Customsetting::get('quote_reminder_days_before', $siteId ?: Sites::getActive(), 3));
     }
 
+    /**
+     * De klant krijgt altijd de link naar de online offerte; de PDF gaat alleen
+     * mee als bijlage als een site daar bewust voor kiest.
+     */
+    public static function attachPdf(?string $siteId = null): bool
+    {
+        return (bool) Customsetting::get('quote_mail_attach_pdf', $siteId ?: Sites::getActive(), false);
+    }
+
     public static function fromEmail(?string $siteId = null): ?string
     {
         $value = (string) Customsetting::get('quote_from_email', $siteId ?: Sites::getActive(), '');

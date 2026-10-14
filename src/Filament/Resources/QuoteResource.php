@@ -5,29 +5,30 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 use UnitEnum;
 use BackedEnum;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
+use Dashed\DashedCore\Models\User;
 use Filament\Actions\DeleteAction;
+use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\DatePicker;
-use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\SelectFilter;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedCore\Classes\QueryHelpers\SearchQuery;
 use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
-use Dashed\DashedEcommerceCore\Classes\VatDisplay;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteDefaults;
 use Dashed\DashedCore\Classes\QueryHelpers\RelationshipSearchQuery;
 use Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Pages\EditQuote;
@@ -365,6 +366,11 @@ class QuoteResource extends Resource
             ])
             ->recordActions([
                 EditAction::make()->button(),
+                Action::make('viewOnline')
+                    ->label(__('Bekijk'))
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Quote $record) => $record->previewUrl())
+                    ->openUrlInNewTab(),
                 DeleteAction::make(),
             ]);
     }

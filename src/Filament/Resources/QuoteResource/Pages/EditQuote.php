@@ -23,17 +23,24 @@ class EditQuote extends EditRecord
     {
         return [
             SendQuoteAction::make($this->record),
-            Action::make('preview')
-                ->label(__('Voorbeeld'))
+            // De offerte is een online document: de beheerder bekijkt precies de
+            // pagina die de klant krijgt, ook als concept, via de ondertekende
+            // voorbeeldlink. Die weergave stempelt niets en kent geen akkoordknop.
+            Action::make('viewOnline')
+                ->label(__('Bekijk online'))
                 ->icon('heroicon-o-eye')
                 ->color('gray')
-                ->action(function () {
-                    // Naar het voorbeeldpad, nooit naar het verstuurde document:
-                    // een offerte die de deur uit is moet blijven kloppen met de
-                    // PDF die de klant in zijn mail heeft.
-                    QuotePdf::storePreview($this->record->fresh());
-                    $this->redirect(QuotePdf::previewDownloadUrl($this->record->fresh()), navigate: false);
-                }),
+                ->url(fn () => $this->record->previewUrl())
+                ->openUrlInNewTab(),
+            Action::make('copyLink')
+                ->label(__('Klantlink kopiëren'))
+                ->icon('heroicon-o-link')
+                ->color('gray')
+                ->visible(fn () => $this->record->sent_at !== null)
+                ->alpineClickHandler(
+                    'window.navigator.clipboard.writeText('.json_encode($this->record->publicUrl()).'); '
+                    .'$tooltip('.json_encode(__('Link gekopieerd')).', { timeout: 2000 })'
+                ),
             Action::make('acceptedPdf')
                 ->label(__('Akkoord-PDF'))
                 ->icon('heroicon-o-document-check')

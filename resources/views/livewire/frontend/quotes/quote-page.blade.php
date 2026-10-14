@@ -16,6 +16,16 @@
     </style>
 
     <div class="dq-wrap">
+        @if ($preview)
+            <div class="dq-preview">
+                @if ($quote->sent_at)
+                    {{ Translation::get('preview-sent', 'quote', 'Je bekijkt deze offerte als beheerder. Akkoord geven kan alleen de klant, via de link in zijn mail.') }}
+                @else
+                    {{ Translation::get('preview-concept', 'quote', 'Voorbeeld: deze offerte is nog niet verstuurd. De klant ziet deze pagina pas na het versturen.') }}
+                @endif
+            </div>
+        @endif
+
         <div class="dq-card">
             <div class="dq-head">
                 <div>
@@ -192,6 +202,9 @@
                     </div>
                 @endif
 
+                @if ($preview)
+                    <p class="dq-sub">{{ Translation::get('preview-agreement', 'quote', 'Hier vult de klant zijn naam in, zet hij zijn handtekening en geeft hij akkoord of wijst hij af.') }}</p>
+                @else
                 <div style="max-width: 520px">
                     <label class="dq-field">
                         <span>{{ Translation::get('your-name', 'quote', 'Uw naam') }}</span>
@@ -303,6 +316,7 @@
                         </div>
                     @endif
                 </div>
+                @endif
             </div>
         </div>
     </div>

@@ -12,26 +12,35 @@ use Dashed\DashedEcommerceCore\Services\Quotes\QuoteConverter;
 
 class QuoteController
 {
-    public function show(string $hash)
+    public function show(Request $request, string $hash)
     {
-        $quote = Quote::with('lines')->where('hash', $hash)->whereNotNull('sent_at')->firstOrFail();
+        $quote = Quote::with('lines')->where('hash', $hash)->firstOrFail();
+
+        // Het beheerdersvoorbeeld (Quote::previewUrl(), of ?preview=1 als
+        // ingelogde beheerder) toont dezelfde pagina als de klant, ook voor een
+        // concept. Zonder dat recht bestaat een onverstuurde offerte hier niet:
+        // 404, net als een onbekende hash, zodat de hash alleen niets verraadt.
+        $preview = $request->boolean('preview') && QuoteAccess::allowsPreview($request);
+
+        abort_if(! $quote->sent_at && ! $preview, 404);
 
         // De taal van de offerte, niet die van de bezoeker: de inhoud staat er
         // in een taal en de labels horen daarbij te passen.
         app()->setLocale($quote->locale);
 
         // Zacht signaal: ook een e-mailbeveiliger kan de pagina openen. Daarom
-        // heet dit in het CMS "geopend" en niet "gelezen".
-        if (! $quote->viewed_at) {
+        // heet dit in het CMS "geopend" en niet "gelezen". Een beheerder die
+        // zijn eigen offerte nakijkt is geen opening.
+        if (! $quote->viewed_at && ! $preview) {
             $quote->viewed_at = now();
             $quote->saveQuietly();
         }
 
-        if (! $quote->isAnswerable()) {
+        if ($quote->sent_at && ! $quote->isAnswerable()) {
             return view('dashed-ecommerce-core::quotes.closed', ['quote' => $quote]);
         }
 
-        return view('dashed-ecommerce-core::quotes.show', ['quote' => $quote]);
+        return view('dashed-ecommerce-core::quotes.show', ['quote' => $quote, 'preview' => $preview]);
     }
 
     public function order(string $hash)

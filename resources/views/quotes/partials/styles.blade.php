@@ -7,6 +7,7 @@
     .dq { --dq-brand: {{ $color }}; --dq-ink: #18181b; --dq-text: #3f3f46; --dq-muted: #71717a; --dq-line: #e4e4e7; --dq-soft: #f4f4f5; color: var(--dq-text); font-size: 15px; line-height: 1.55; padding: clamp(24px, 5vw, 64px) 16px; background: #fafafa; }
     .dq * { box-sizing: border-box; }
     .dq [x-cloak] { display: none !important; }
+    .dq-preview { background: #fef3c7; color: #78350f; border: 1px solid #fcd34d; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 14px; }
     .dq-wrap { max-width: 860px; margin: 0 auto; }
     .dq-card { background: #fff; border: 1px solid var(--dq-line); border-radius: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04); overflow: hidden; }
     .dq-card + .dq-card { margin-top: 20px; }

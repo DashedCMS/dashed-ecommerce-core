@@ -7,8 +7,8 @@ use BackedEnum;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
-use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -41,6 +41,7 @@ class QuoteSettingsPage extends Page
             $formData["current_quote_number_{$site['id']}"] = Customsetting::get('current_quote_number', $site['id'], 1000);
             $formData["quote_validity_days_{$site['id']}"] = QuoteDefaults::validityDays($site['id']);
             $formData["quote_from_email_{$site['id']}"] = Customsetting::get('quote_from_email', $site['id'], '');
+            $formData["quote_mail_attach_pdf_{$site['id']}"] = QuoteDefaults::attachPdf($site['id']);
             $formData["quote_reminder_enabled_{$site['id']}"] = QuoteDefaults::reminderEnabled($site['id']);
             $formData["quote_reminder_days_before_{$site['id']}"] = QuoteDefaults::reminderDaysBefore($site['id']);
 
@@ -75,6 +76,9 @@ class QuoteSettingsPage extends Page
                     ->label(__('Afzenderadres voor offertemails'))
                     ->email()
                     ->helperText(__('Leeg laten om het algemene afzenderadres van de site te gebruiken')),
+                Toggle::make("quote_mail_attach_pdf_{$site['id']}")
+                    ->label(__('PDF als bijlage meesturen in de offertemail'))
+                    ->helperText(__('De klant krijgt altijd een link naar de online offerte, waar hij kiest en tekent. De PDF is daar een extra naast.')),
                 Toggle::make("quote_reminder_enabled_{$site['id']}")
                     ->label(__('Herinnering sturen voordat een offerte verloopt'))
                     ->reactive(),
@@ -119,6 +123,7 @@ class QuoteSettingsPage extends Page
                 'current_quote_number',
                 'quote_validity_days',
                 'quote_from_email',
+                'quote_mail_attach_pdf',
                 'quote_reminder_enabled',
                 'quote_reminder_days_before',
             ] as $key) {

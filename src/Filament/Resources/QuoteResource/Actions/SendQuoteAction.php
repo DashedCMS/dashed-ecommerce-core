@@ -36,7 +36,7 @@ class SendQuoteAction
                 Textarea::make('message')
                     ->label(__('Begeleidend bericht'))
                     ->rows(4)
-                    ->helperText(__('Komt in de mail te staan, niet op de PDF')),
+                    ->helperText(__('Komt in de mail te staan, niet op de offertepagina')),
             ])
             ->action(function (array $data) use ($quote) {
                 // Op rekening mag alleen als die klant er ook aan gekoppeld is.

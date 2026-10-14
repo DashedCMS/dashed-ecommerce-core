@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.153.0 - 2026-10-14
+
+### Changed
+- **De offerte is een online document, geen PDF.** Op de offerte in het CMS staat "Bekijk online": dezelfde pagina als de klant krijgt, ook voor een concept, via een ondertekende voorbeeldlink (`Quote::previewUrl()`) die geen opening stempelt en geen akkoord toelaat. Daarnaast "Klantlink kopiëren" zodra de offerte verstuurd is, en in de lijst een oogje per offerte. De knop "Voorbeeld" die een PDF maakte is weg.
+- **De offertemail stuurt de PDF niet meer standaard mee.** De klant krijgt de link naar de pagina waar hij kiest, tekent en akkoord geeft of afwijst. De PDF gaat alleen nog als bijlage mee met "PDF als bijlage meesturen in de offertemail" aan bij Instellingen, Offertes (per site, standaard uit). De standaardtekst van de mail belooft geen PDF meer; een al aangepast sjabloon in de database blijft zoals het is.
+
 ## v4.151.1 - 2026-10-12
 
 ### Fixed

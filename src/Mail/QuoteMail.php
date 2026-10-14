@@ -11,11 +11,12 @@ use Dashed\DashedCore\Mail\EmailRenderer;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedCore\Models\EmailTemplate;
 use Dashed\DashedEcommerceCore\Models\Quote;
-use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuotePdf;
-use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedEcommerceCore\Services\Quotes\QuoteTotals;
+use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedEcommerceCore\Services\Quotes\QuoteDefaults;
 
 class QuoteMail extends Mailable implements RegistersEmailTemplate
 {
@@ -34,7 +35,7 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
 
     public static function emailTemplateDescription(): ?string
     {
-        return 'Verzonden naar de klant met de offerte als bijlage en een link naar de offertepagina.';
+        return 'Verzonden naar de klant met de link naar de online offerte, waar hij kiest, tekent en akkoord geeft. De PDF gaat alleen mee als dat bij de offerte-instellingen aanstaat.';
     }
 
     public static function availableVariables(): array
@@ -55,7 +56,7 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
             ['type' => 'text', 'data' => ['body' => '<p>:bericht:</p>']],
             ['type' => 'button', 'data' => ['label' => 'Offerte bekijken', 'url' => ':offerteUrl:', 'background' => ':primaryColor:', 'color' => '#ffffff']],
             ['type' => 'divider', 'data' => []],
-            ['type' => 'text', 'data' => ['body' => '<p>Op de offertepagina kunt u eventuele keuzes aanvinken en de offerte accepteren of afwijzen. De offerte zit ook als PDF bij deze mail.</p><p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
+            ['type' => 'text', 'data' => ['body' => '<p>Op de offertepagina kunt u eventuele keuzes aanvinken, uw handtekening zetten en de offerte accepteren of afwijzen.</p><p>Met vriendelijke groet,<br>Het team van :siteName:</p>']],
         ];
     }
 
@@ -105,7 +106,7 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
         $templateHtml = $this->renderFromTemplate($context);
 
         [$fromEmail, $fromName] = $this->templateFrom(
-            \Dashed\DashedEcommerceCore\Services\Quotes\QuoteDefaults::fromEmail() ?? Customsetting::get('site_from_email'),
+            QuoteDefaults::fromEmail() ?? Customsetting::get('site_from_email'),
             Customsetting::get('site_name'),
         );
 
@@ -122,7 +123,9 @@ class QuoteMail extends Mailable implements RegistersEmailTemplate
 
         $this->html($templateHtml)->from($fromEmail, $fromName)->subject($subject);
 
-        return $this->attachQuotePdf();
+        // De online pagina is het document; de PDF is een extra die een site
+        // bewust aanzet (QuoteSettingsPage).
+        return QuoteDefaults::attachPdf($this->quote->site_id) ? $this->attachQuotePdf() : $this;
     }
 
     /**

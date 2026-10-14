@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Quotes;
 
 use RuntimeException;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Models\QuoteLine;
 use Dashed\DashedTranslations\Models\Translation;
@@ -31,10 +32,22 @@ class QuotePage extends Component
 
     public bool $showReject = false;
 
-    public function mount(string $hash): void
+    /**
+     * Beheerdersvoorbeeld: de controller heeft de voorbeeldlink of de
+     * paneelsessie al gecontroleerd. Vergrendeld, want een Livewire-update
+     * heeft die handtekening niet meer en mag dit dus ook niet omzetten.
+     */
+    #[Locked]
+    public bool $preview = false;
+
+    public function mount(string $hash, bool $preview = false): void
     {
         $this->hash = $hash;
-        $this->quote = Quote::with('lines')->where('hash', $hash)->whereNotNull('sent_at')->firstOrFail();
+        $this->preview = $preview;
+        $this->quote = Quote::with('lines')
+            ->where('hash', $hash)
+            ->when(! $preview, fn ($query) => $query->whereNotNull('sent_at'))
+            ->firstOrFail();
 
         foreach ($this->quote->lines as $line) {
             $this->selected[$line->id] = $line->is_optional ? (bool) $line->is_selected : true;
@@ -101,6 +114,10 @@ class QuotePage extends Component
 
     public function accept(): void
     {
+        // Alleen de klant geeft akkoord, via zijn eigen link. Een beheerder
+        // die de pagina nakijkt heeft daar MarkQuoteAnsweredAction voor.
+        abort_if($this->preview, 403);
+
         $this->validate([
             'acceptName' => ['required', 'string', 'min:2', 'max:255'],
             'acceptAgreed' => ['accepted'],
@@ -140,6 +157,8 @@ class QuotePage extends Component
 
     public function reject(): void
     {
+        abort_if($this->preview, 403);
+
         $this->validate([
             'rejectReason' => ['required', 'string', 'min:2', 'max:1000'],
         ], [

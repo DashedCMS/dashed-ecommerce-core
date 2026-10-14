@@ -163,6 +163,20 @@ class Quote extends Model
     }
 
     /**
+     * De link waarmee een beheerder de offerte online bekijkt, ook als concept.
+     * Ondertekend, zodat hij ook werkt in een browser zonder paneelsessie, en
+     * met preview=1 zodat de pagina weet dat dit geen klant is: geen stempel
+     * "geopend", geen akkoordknop.
+     */
+    public function previewUrl(): string
+    {
+        return \Illuminate\Support\Facades\URL::signedRoute('dashed.frontend.quote', [
+            'hash' => $this->hash,
+            'preview' => 1,
+        ]);
+    }
+
+    /**
      * De total-kolom is een gecachte waarde voor de lijst; de waarheid staat in
      * de regels. Na elke wijziging van de regels opnieuw uitrekenen en stil
      * opslaan, zodat dit geen extra "updated"-events afvuurt.
