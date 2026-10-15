@@ -595,6 +595,10 @@ class ProductGroupResource extends Resource
                             ->label(__('Alleen per volle set'))
                             ->helperText(__('Voor acties als 1+1 gratis: de korting geldt alleen voor volle sets van het "vanaf aantal". Bij 1+1 (50% vanaf 2) krijgen 3 stuks korting op 2 stuks en betaalt het derde de volle prijs.'))
                             ->default(false),
+                        Toggle::make('count_variants_separately')
+                            ->label(__('Varianten apart tellen'))
+                            ->helperText(__('Standaard tellen alle varianten samen voor de korting: 1x maat M en 1x maat L telt als 2 stuks, ook met verschillende opties. Zet dit aan als elke variant zelf het "vanaf aantal" moet halen.'))
+                            ->default(false),
                         Toggle::make('active_for_all_variants')
                             ->label(__('Actief voor alle varianten'))
                             ->default(true)

@@ -2176,6 +2176,26 @@ class PointOfSaleApiController extends Controller
         $vatTotal = 0.0;
         $vatPercentages = [];
 
+        // Volumekorting telt standaard alle varianten uit een productgroep samen,
+        // net als in de webshop-winkelwagen (CartHelper::syncVolumeDiscounts()).
+        $posProductIds = collect($products)
+            ->filter(fn ($p) => (int) ($p['quantity'] ?? 0) > 0 && ! ($p['customProduct'] ?? false))
+            ->pluck('id')
+            ->filter(fn ($id) => is_numeric($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique();
+        $posGroupKeys = Product::query()
+            ->whereIn('id', $posProductIds)
+            ->get(['id', 'product_group_id'])
+            ->mapWithKeys(fn (Product $p) => [$p->id => $p->product_group_id ? 'group-' . $p->product_group_id : 'product-' . $p->id]);
+        $posGroupQuantities = [];
+        foreach ($products as $p) {
+            $key = $posGroupKeys[(int) ($p['id'] ?? 0)] ?? null;
+            if ($key && ! ($p['customProduct'] ?? false)) {
+                $posGroupQuantities[$key] = ($posGroupQuantities[$key] ?? 0) + max(0, (int) ($p['quantity'] ?? 0));
+            }
+        }
+
         foreach ($products as $chosenProduct) {
             $qty = (int) ($chosenProduct['quantity'] ?? 0);
             if ($qty < 1) {
@@ -2189,6 +2209,13 @@ class PointOfSaleApiController extends Controller
                 $model = Product::with(['volumeDiscounts', 'productCategories'])->find((int) $item->product_id);
             }
             $item->model = $model;
+
+            $posGroupKey = $model ? ($posGroupKeys[$model->id] ?? null) : null;
+            if ($posGroupKey && isset($posGroupQuantities[$posGroupKey])) {
+                $options = (array) ($item->options ?? []);
+                $options['volumeDiscountQuantity'] = $posGroupQuantities[$posGroupKey];
+                $item->options = $options;
+            }
 
             // Een klant- of prijsgroepprijs mag een prijs die een mens zelf
             // heeft ingetypt niet overschrijven. isCustomPrice en customProduct

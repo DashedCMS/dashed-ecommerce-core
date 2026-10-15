@@ -1741,13 +1741,15 @@ class Product extends Model
 
         // 9) Volume discounts (alleen als er een model is en de gebruiker geen eigen prijs heeft)
         if ($model && method_exists($model, 'volumeDiscounts') && ! $model->hasCustomPriceForUser() && ! $model->isExcludedFromDiscounts()) {
-            $volumeDiscount = $model->volumeDiscounts()
-                ->where('min_quantity', '<=', $itemQty)
-                ->orderBy('min_quantity', 'desc')
-                ->first();
+            // Totaal over alle varianten in de wagen, gezet door CartHelper::syncVolumeDiscounts()
+            $groupQty = isset($rawOptions['volumeDiscountQuantity'])
+                ? max($itemQty, (int) $rawOptions['volumeDiscountQuantity'])
+                : null;
+
+            $volumeDiscount = ProductGroupVolumeDiscount::bestFor($model->volumeDiscounts, $itemQty, $groupQty);
 
             if ($volumeDiscount) {
-                $price = $volumeDiscount->getLinePrice($price, $itemQty);
+                $price = $volumeDiscount->getLinePrice($price, $itemQty, $groupQty);
             }
         }
 

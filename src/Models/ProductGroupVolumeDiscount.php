@@ -18,6 +18,7 @@ class ProductGroupVolumeDiscount extends Model
 
     protected $casts = [
         'apply_per_set' => 'boolean',
+        'count_variants_separately' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -55,33 +56,66 @@ class ProductGroupVolumeDiscount extends Model
     }
 
     /**
+     * Het aantal waarmee deze korting rekent. Standaard tellen alle varianten
+     * uit de productgroep samen (1x M + 1x L = 2 stuks, ook met verschillende
+     * extra opties). Met count_variants_separately telt alleen de eigen regel.
+     */
+    public function countedQuantity(int $lineQuantity, ?int $groupQuantity = null): int
+    {
+        if ($this->count_variants_separately || $groupQuantity === null) {
+            return $lineQuantity;
+        }
+
+        return max($lineQuantity, $groupQuantity);
+    }
+
+    /**
+     * De hoogste staffel die geldt voor deze regel.
+     *
+     * @param  iterable<self>  $volumeDiscounts
+     */
+    public static function bestFor(iterable $volumeDiscounts, int $lineQuantity, ?int $groupQuantity = null): ?self
+    {
+        return collect($volumeDiscounts)
+            ->filter(fn (self $discount) => (int) $discount->min_quantity <= $discount->countedQuantity($lineQuantity, $groupQuantity))
+            ->sortByDesc('min_quantity')
+            ->first();
+    }
+
+    /**
      * Prijs van een hele regel van $quantity stuks. Met apply_per_set telt de
      * korting alleen voor volle sets van min_quantity stuks: bij 1+1 (50% vanaf
      * 2) krijgen 3 stuks korting op 2 stuks en betaalt het derde de volle prijs.
      * Een vast bedrag (discount_price) is korting per stuk.
+     *
+     * $groupQuantity is het totaal over alle varianten in de winkelwagen. Bij
+     * apply_per_set krijgt elke regel dan naar rato korting voor de volle sets
+     * over dat totaal.
      */
-    public function getLinePrice(float $lineTotal, int $quantity): float
+    public function getLinePrice(float $lineTotal, int $quantity, ?int $groupQuantity = null): float
     {
         if ($quantity <= 0) {
             return (float) $this->getPrice($lineTotal);
         }
 
-        $discountedQuantity = $quantity;
+        $countedQuantity = $this->countedQuantity($quantity, $groupQuantity);
+
+        $ratio = 1.0;
         if ($this->apply_per_set) {
             $setSize = max(1, (int) $this->min_quantity);
-            $discountedQuantity = intdiv($quantity, $setSize) * $setSize;
+            $ratio = (intdiv($countedQuantity, $setSize) * $setSize) / $countedQuantity;
         }
 
         if ($this->type != 'percentage') {
-            return max(0.0, $lineTotal - (float) $this->discount_price * $discountedQuantity);
+            return max(0.0, $lineTotal - round((float) $this->discount_price * $quantity * $ratio, 2));
         }
 
         $discountedLineTotal = (float) $this->getPrice($lineTotal);
-        if ($discountedQuantity === $quantity) {
+        if ($ratio >= 1.0) {
             return $discountedLineTotal;
         }
 
-        $discount = round(($lineTotal - $discountedLineTotal) * $discountedQuantity / $quantity, 2);
+        $discount = round(($lineTotal - $discountedLineTotal) * $ratio, 2);
 
         return $lineTotal - $discount;
     }
