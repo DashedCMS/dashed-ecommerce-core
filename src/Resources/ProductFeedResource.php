@@ -118,6 +118,12 @@ class ProductFeedResource extends JsonResource
 
         $array['bol_description'] = self::bolDescription($description);
 
+        // Velden van andere pakketten (bijvoorbeeld de Bol-levertijd uit
+        // dashed-ecommerce-bol), zonder dat ec-core die pakketten hoeft te kennen.
+        foreach (ecommerce()->builder('productFeedFields') as $key => $value) {
+            $array[$key] = is_callable($value) ? $value($product) : $value;
+        }
+
         $array = array_merge($array, $attributes);
 
         if (! empty($images)) {
