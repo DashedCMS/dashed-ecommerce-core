@@ -29,6 +29,7 @@ use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Dashed\DashedEcommerceCore\Classes\PosCartExtras;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
@@ -1336,11 +1337,7 @@ class PointOfSaleApiController extends Controller
             $originalPosItem = collect($posCart->products ?? [])
                 ->first(fn ($p) => ($p['identifier'] ?? null) === ($line['source_identifier'] ?? null));
 
-            foreach (($originalPosItem['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
-                if (! $productExtraOptionId) {
-                    continue;
-                }
-
+            foreach (PosCartExtras::optionMap($originalPosItem['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
                 if (! isset($extraOptionCache[$productExtraOptionId])) {
                     $extraOptionCache[$productExtraOptionId] = ProductExtraOption::find($productExtraOptionId);
                 }
@@ -2099,11 +2096,7 @@ class PointOfSaleApiController extends Controller
         $options = $chosenProduct['options'] ?? [];
         $options['options'] = $options['options'] ?? [];
 
-        foreach (($chosenProduct['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
-            if (! $productExtraOptionId) {
-                continue;
-            }
-
+        foreach (PosCartExtras::optionMap($chosenProduct['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
             $options['options'][(string) $productExtraOptionId] = [
                 'quantity' => (int) ($chosenProduct['quantity'] ?? 1),
             ];

@@ -212,7 +212,7 @@ class ConceptOrderService
                 'price' => $lineTotal,
                 'priceFormatted' => CurrencyHelper::formatPrice($lineTotal),
                 'vat_rate' => (float) ($op->vat_rate ?? 21),
-                'extra' => is_array($op->product_extras) ? $op->product_extras : [],
+                'extra' => PosCartExtras::optionMap(is_array($op->product_extras) ? $op->product_extras : []),
                 'customProduct' => ! $op->product_id,
             ];
         }
