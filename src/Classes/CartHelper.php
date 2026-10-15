@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Models\CartItem as CartItemModel;
+use Dashed\DashedEcommerceCore\Models\ProductGroupVolumeDiscount;
 
 class CartHelper
 {
@@ -2053,38 +2054,6 @@ class CartHelper
             if ($model && $model->productGroup && ($model->productGroup->use_parent_stock ?? false)) {
                 $parentItemsToCheck->push($model->productGroup->id);
             }
-
-            // Volume korting & prijs sync (unit_price snapshot)
-            if ($model) {
-                $price = $runtimeItem->options['originalPrice'] ?? null;
-
-                if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty() && ! $model->isExcludedFromDiscounts()) {
-                    $volumeDiscount = $model->volumeDiscounts
-                        ->where('min_quantity', '<=', $runtimeItem->qty)
-                        ->sortByDesc('min_quantity')
-                        ->first();
-
-                    if ($volumeDiscount) {
-                        if (! ($runtimeItem->options['originalPrice'] ?? false)) {
-                            $opts = $dbItem->options ?? [];
-                            $opts['originalPrice'] = $dbItem->unit_price ?? (float) $model->price;
-                            $dbItem->options = $opts;
-                            $dbItem->save();
-                            $cartChanged = true;
-                        }
-
-                        $base = (float) ($runtimeItem->options['originalPrice'] ?? $dbItem->unit_price ?? $model->price);
-                        $qty = max(1, (int) $runtimeItem->qty);
-                        $price = round($volumeDiscount->getLinePrice($base * $qty, $qty) / $qty, 2);
-                    }
-                }
-
-                if ($price !== null && (float) $dbItem->unit_price !== (float) $price) {
-                    $dbItem->unit_price = (float) $price;
-                    $dbItem->save();
-                    $cartChanged = true;
-                }
-            }
         }
 
         // Parent product (groep) stock check
@@ -2128,8 +2097,113 @@ class CartHelper
             }
         });
 
+        if ($this->syncVolumeDiscounts($cart)) {
+            $cartChanged = true;
+        }
+
         if ($cartChanged) {
             $this->updateData();
+        }
+
+        return $cartChanged;
+    }
+
+    /**
+     * Volumekorting & prijs sync (unit_price snapshot).
+     *
+     * Het aantal voor de staffel telt standaard over alle regels uit dezelfde
+     * productgroep: 1x maat M + 1x maat L, of dezelfde maat met andere extra
+     * opties, is samen 2 stuks. Dat totaal komt als volumeDiscountQuantity in
+     * de opties, zodat Product::getShoppingCartItemPrice() ermee rekent zonder
+     * de hele wagen te kennen. Een korting met count_variants_separately telt
+     * alleen de eigen regel.
+     */
+    protected function syncVolumeDiscounts(CartModel $cart): bool
+    {
+        $cartChanged = false;
+
+        $dbItems = CartItemModel::query()
+            ->where('cart_id', $cart->id)
+            ->whereNotNull('product_id')
+            ->get();
+
+        if ($dbItems->isEmpty()) {
+            return false;
+        }
+
+        $models = [];
+        foreach ($dbItems as $dbItem) {
+            $model = static::$cartProductsById[$dbItem->product_id] ?? null;
+            if (! $model || ! $model->relationLoaded('volumeDiscounts')) {
+                $model = Product::with(['volumeDiscounts', 'productCategories'])->find($dbItem->product_id);
+            }
+            $models[$dbItem->id] = $model;
+        }
+
+        $groupKey = fn (Product $model) => $model->product_group_id ? 'group-' . $model->product_group_id : 'product-' . $model->id;
+
+        $groupQuantities = [];
+        foreach ($dbItems as $dbItem) {
+            $model = $models[$dbItem->id] ?? null;
+            if (! $model || (($dbItem->options ?? [])['customProduct'] ?? false)) {
+                continue;
+            }
+            $key = $groupKey($model);
+            $groupQuantities[$key] = ($groupQuantities[$key] ?? 0) + max(0, (int) $dbItem->quantity);
+        }
+
+        foreach ($dbItems as $dbItem) {
+            $model = $models[$dbItem->id] ?? null;
+            if (! $model) {
+                continue;
+            }
+
+            $opts = $dbItem->options ?? [];
+            if (! is_array($opts)) {
+                $opts = (array) $opts;
+            }
+
+            $qty = max(1, (int) $dbItem->quantity);
+            $groupQty = (int) ($groupQuantities[$groupKey($model)] ?? $qty);
+            $price = $opts['originalPrice'] ?? null;
+            $optionsChanged = false;
+
+            $volumeDiscount = null;
+            if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty() && ! $model->isExcludedFromDiscounts()) {
+                $volumeDiscount = ProductGroupVolumeDiscount::bestFor($model->volumeDiscounts, $qty, $groupQty);
+            }
+
+            if ($volumeDiscount) {
+                if (! ($opts['originalPrice'] ?? false)) {
+                    $opts['originalPrice'] = $dbItem->unit_price ?? (float) $model->price;
+                    $optionsChanged = true;
+                }
+
+                if ((int) ($opts['volumeDiscountQuantity'] ?? 0) !== $groupQty) {
+                    $opts['volumeDiscountQuantity'] = $groupQty;
+                    $optionsChanged = true;
+                }
+
+                $base = (float) ($opts['originalPrice'] ?? $dbItem->unit_price ?? $model->price);
+                $price = round($volumeDiscount->getLinePrice($base * $qty, $qty, $groupQty) / $qty, 2);
+            } elseif (array_key_exists('volumeDiscountQuantity', $opts)) {
+                unset($opts['volumeDiscountQuantity']);
+                $optionsChanged = true;
+            }
+
+            if ($optionsChanged) {
+                $dbItem->options = $opts;
+            }
+
+            if ($price !== null && (float) $dbItem->unit_price !== (float) $price) {
+                $dbItem->unit_price = (float) $price;
+                $optionsChanged = true;
+            }
+
+            if ($optionsChanged) {
+                $dbItem->save();
+                $cartChanged = true;
+            }
         }
 
         return $cartChanged;
