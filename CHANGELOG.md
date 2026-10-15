@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## v4.154.0 - 2026-10-15
+## v4.155.0 - 2026-10-15
 
 ### Changed
 - **Volumekorting telt standaard alle varianten samen.** 1x maat M + 1x maat L, of dezelfde maat met een andere extra optie, telt nu als 2 stuks voor de staffel. Voorheen telde elke winkelwagenregel los, waardoor een klant met verschillende maten of opties nooit de korting kreeg. `CartHelper::syncVolumeDiscounts()` zet het totaal per productgroep als `volumeDiscountQuantity` in de opties van elke regel; `Product::getShoppingCartItemPrice()` en de kassa rekenen ermee. Bij "Alleen per volle set" krijgt elke regel naar rato korting over het groepstotaal.
