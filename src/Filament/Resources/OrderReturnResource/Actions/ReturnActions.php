@@ -5,7 +5,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderReturnResource\Acti
 use Filament\Actions\Action;
 use Illuminate\Support\HtmlString;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -14,6 +13,7 @@ use Filament\Forms\Components\RichEditor;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Forms\Components\Placeholder;
 use Dashed\DashedCore\Models\EmailTemplate;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderReturn;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
@@ -21,9 +21,9 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
+use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversalProposal;
-use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 
 /**
  * De acties op een retour, één keer gedefinieerd voor de lijst en de

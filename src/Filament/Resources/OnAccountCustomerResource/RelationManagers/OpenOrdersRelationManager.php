@@ -3,12 +3,12 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource\RelationManagers;
 
 use Filament\Tables\Table;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountBalance;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountBalance;
 
 /**
  * Openstaande orders op rekening van deze klant. `User::orders()` bestaat

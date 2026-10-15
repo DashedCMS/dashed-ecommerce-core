@@ -10,9 +10,9 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
-use Dashed\DashedEcommerceCore\Mail\Concerns\AttachesInvoice;
 use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedEcommerceCore\Mail\Concerns\AttachesInvoice;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
 
 class AdminOrderConfirmationMail extends Mailable implements RegistersEmailTemplate, SendsToTelegram

@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Services\Quotes;
 
-use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Mails;
+use Dashed\DashedEcommerceCore\Models\Quote;
 use Illuminate\Support\Facades\Notification;
 use Dashed\DashedCore\Notifications\AdminNotifier;
-use Dashed\DashedEcommerceCore\Models\Quote;
 use Dashed\DashedEcommerceCore\Mail\QuoteAnsweredMail;
 use Dashed\DashedEcommerceCore\Notifications\QuoteAnsweredNotification;
 

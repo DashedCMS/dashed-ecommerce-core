@@ -5,8 +5,8 @@ namespace Dashed\DashedEcommerceCore\Services\Meta;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\OrderTracking;
 use Dashed\DashedEcommerceCore\Http\Middleware\CaptureMetaClickId;
 

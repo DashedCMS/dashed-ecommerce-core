@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Services\OnAccount;
 
-use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
 

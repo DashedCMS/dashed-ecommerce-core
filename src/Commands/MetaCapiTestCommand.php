@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Commands;
 
 use Illuminate\Console\Command;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Jobs\SendMetaPurchaseEventJob;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
+use Dashed\DashedEcommerceCore\Jobs\SendMetaPurchaseEventJob;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
 
 class MetaCapiTestCommand extends Command

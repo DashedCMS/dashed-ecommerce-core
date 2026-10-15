@@ -2,13 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Services\OnAccount;
 
-use Illuminate\Support\Facades\Mail;
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Mail;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Illuminate\Database\UniqueConstraintViolationException;
 use Dashed\DashedEcommerceCore\Mail\PaymentReminderMail;
 use Dashed\DashedEcommerceCore\Models\OrderPaymentReminder;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 /**
  * Wie krijgt vandaag welke herinnering. Alleen de hoogste stap die aan de

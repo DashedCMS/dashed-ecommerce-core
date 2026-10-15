@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
-use Dashed\DashedCore\Models\User;
 use Illuminate\Http\JsonResponse;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Support\SmartSearch;

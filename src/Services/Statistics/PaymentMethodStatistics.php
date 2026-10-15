@@ -3,7 +3,6 @@
 namespace Dashed\DashedEcommerceCore\Services\Statistics;
 
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Query\Builder;

@@ -4,14 +4,14 @@ namespace Dashed\DashedEcommerceCore\Mail;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Queue\SerializesModels;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Mail\Concerns\AttachesInvoice;
 use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
+use Dashed\DashedEcommerceCore\Mail\Concerns\AttachesInvoice;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountSettings;
 
 class PaymentReminderMail extends Mailable implements RegistersEmailTemplate

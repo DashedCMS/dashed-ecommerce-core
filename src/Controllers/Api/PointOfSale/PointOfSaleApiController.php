@@ -34,8 +34,8 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
-use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 
 class PointOfSaleApiController extends Controller
 {

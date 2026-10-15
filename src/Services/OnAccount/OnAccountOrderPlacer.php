@@ -3,12 +3,12 @@
 namespace Dashed\DashedEcommerceCore\Services\OnAccount;
 
 use Dashed\DashedCore\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 
 /**
  * Zet een order op rekening. De order loopt daarna de gewone weg van

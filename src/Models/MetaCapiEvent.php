@@ -4,9 +4,9 @@ namespace Dashed\DashedEcommerceCore\Models;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
 use Dashed\DashedEcommerceCore\Jobs\SendMetaPurchaseEventJob;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Logboek en idempotentiesleutel van events naar Meta's Conversions API. */
 class MetaCapiEvent extends Model

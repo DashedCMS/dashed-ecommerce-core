@@ -10,12 +10,12 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnClosedEvent;
-use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnApprovedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderReturnRejectedEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnApprovedMail;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnRejectedMail;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 
 class OrderReturn extends Model
 {

@@ -11,8 +11,8 @@ use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
-use Dashed\DashedEcommerceCore\Classes\PhoneNormalizer;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Dashed\DashedEcommerceCore\Classes\PhoneNormalizer;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserPayload;
 use Dashed\DashedEcommerceCore\Services\Payments\PspStatusResolver;
 

@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Resources;
 
-use Dashed\DashedEcommerceCore\Classes\BolTitleTemplate;
-use Dashed\DashedEcommerceCore\Classes\ProductFeedAttributes;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\BolTitleTemplate;
+use Dashed\DashedEcommerceCore\Classes\ProductFeedAttributes;
 
 /**
  * @mixin \Dashed\DashedEcommerceCore\Models\Product
