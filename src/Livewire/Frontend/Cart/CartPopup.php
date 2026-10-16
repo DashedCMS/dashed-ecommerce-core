@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Cart;
 
 use Livewire\Component;
 use Illuminate\Support\Collection;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 
@@ -47,9 +48,24 @@ class CartPopup extends Component
         if ($this->showCartPopup || ! $this->initialized) {
             cartHelper()->initialize();
             $this->cartItems = cartHelper()->getCartItems();
-            $this->cartTotal = cartHelper()->getTotal();
-            $this->cartSubtotal = cartHelper()->getSubtotal();
-            $this->cartTax = cartHelper()->getTax();
+
+            // De popup toont alleen de producten. Op de kassa staat de verzend- en
+            // betaalmethode al in de wagen; die kosten (en hun btw) zitten dan in
+            // het totaal en, bij prijzen incl. btw, ook in het subtotaal, terwijl
+            // de popup er geen regel voor heeft.
+            $extraCosts = cartHelper()->getShippingCosts() + cartHelper()->getPaymentCosts();
+            $extraVat = cartHelper()->getVatForShippingMethod() + cartHelper()->getVatForPaymentMethod();
+            $subtotal = cartHelper()->getSubtotal();
+            $total = cartHelper()->getTotal() - $extraCosts;
+            if (Customsetting::get('taxes_prices_include_taxes')) {
+                $subtotal -= $extraCosts;
+            } else {
+                $total -= $extraVat;
+            }
+
+            $this->cartTotal = round(max(0, $total), 2);
+            $this->cartSubtotal = round(max(0, $subtotal), 2);
+            $this->cartTax = round(max(0, cartHelper()->getTax() - $extraVat), 2);
             $helper = app(FreeShippingHelper::class);
             $progress = $helper->progress((float) $this->cartTotal);
             $this->freeShippingThreshold = $helper->threshold();

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.155.1 - 2026-10-16
+
+### Fixed
+- **De winkelwagenpopup telde op de kassa de verzend- en betaalkosten mee.** Op `/afrekenen` staat de gekozen verzend- en betaalmethode al in de wagen; de popup toonde daardoor een totaal (en bij prijzen incl. btw ook een subtotaal) inclusief die kosten, zonder regel ervoor, en telde ze mee voor de gratis-verzendingbalk. `CartPopup` toont nu alleen de producten: subtotaal, btw en totaal zonder verzend- en betaalkosten.
+
 ## v4.155.0 - 2026-10-15
 
 ### Changed
