@@ -61,6 +61,9 @@ trait ProductCartActions
     // Componenten als CrossSellVariantPicker zetten dit; standaard leeg.
     public ?string $addedVia = null;
 
+    /** Tijdens addBundleToCart(): addToCart() voegt alleen toe en meldt niets. */
+    protected bool $addingBundle = false;
+
     public string|int $quantity = 1;
 
     public array $files = [];
@@ -1204,10 +1207,116 @@ trait ProductCartActions
             );
         }
 
+        if ($this->addingBundle) {
+            $this->quantity = 1;
+
+            return true;
+        }
+
         $quantity = (int) $this->quantity;
         $this->quantity = 1;
         $this->hiddenOptions = [];
 
+        return $this->afterAddedToCart($product, $quantity, $productPrice, $options);
+    }
+
+    /**
+     * Een bundel losse boxen in één keer toevoegen, elk met eigen extra's (bijv.
+     * maat en voorkeur per box). Gelijke boxen komen via de merge in addToCart()
+     * op één regel; samen telt het groepstotaal voor de volumekorting. Er volgt
+     * één melding en één productAddedToCart voor de hele bundel.
+     *
+     * Per box: ['product_id' => optioneel, standaard het huidige product,
+     * 'extras' => [product extra id => gekozen optie id]].
+     *
+     * @param  array<int, array<string, mixed>>  $boxes
+     */
+    public function addBundleToCart(array $boxes)
+    {
+        $boxes = array_values(array_filter($boxes, 'is_array'));
+
+        if (! $boxes || count($boxes) > 100) {
+            return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
+        }
+
+        // Eerst alles controleren, zodat een fout bij box 3 niet box 1 en 2 al in de wagen laat.
+        $prepared = [];
+        foreach ($boxes as $box) {
+            $product = is_numeric($box['product_id'] ?? null) ? Product::find((int) $box['product_id']) : $this->product;
+
+            if (! $product) {
+                return $this->checkCart('danger', Translation::get('choose-a-product', $this->cartType, 'Please select a product'));
+            }
+
+            $productExtras = $product->allProductExtras();
+            $chosen = (array) ($box['extras'] ?? []);
+            $extras = $productExtras->toArray();
+
+            foreach ($productExtras->values() as $extraKey => $productExtra) {
+                $value = $chosen[$productExtra->id] ?? null;
+                $isChoice = in_array($productExtra->type, ['single', 'imagePicker']);
+
+                if ($isChoice && $value && ! $productExtra->productExtraOptions->firstWhere('id', (int) $value)) {
+                    $value = null;
+                }
+
+                if ($isChoice && $productExtra->required && ! $value) {
+                    return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
+                        'optionName' => $productExtra->name,
+                    ]));
+                }
+
+                $extras[$extraKey]['value'] = $isChoice && $value ? (int) $value : ($value ?: null);
+            }
+
+            $prepared[] = [$product, $extras];
+        }
+
+        $originalExtras = $this->extras;
+        $added = [];
+        $total = 0.0;
+
+        $this->addingBundle = true;
+
+        try {
+            foreach ($prepared as [$product, $extras]) {
+                $this->extras = $extras;
+                $this->quantity = 1;
+
+                if ($this->addToCart($product->id) !== true) {
+                    break;
+                }
+
+                $added[] = $product;
+            }
+        } finally {
+            $this->addingBundle = false;
+            $this->extras = $originalExtras;
+            $this->quantity = 1;
+            $this->hiddenOptions = [];
+        }
+
+        if (! $added) {
+            return;
+        }
+
+        if (count($added) < count($prepared)) {
+            // addToCart() heeft de reden al gemeld (limiet, prijs 0); de rest staat er wel in.
+            return $this->checkCart();
+        }
+
+        foreach ($added as $product) {
+            $total += (float) $product->priceForUser();
+        }
+
+        return $this->afterAddedToCart($added[0], count($added), $total / count($added), []);
+    }
+
+    /**
+     * Melding, events en redirect na een geslaagde toevoeging.
+     */
+    protected function afterAddedToCart(Product $product, int $quantity, float $productPrice, array $options)
+    {
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
         $cartTotal = cartHelper()->getTotal();

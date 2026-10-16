@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.156.0 - 2026-10-16
+
+### Added
+- **`addBundleToCart(array $boxes)` op de productpagina (`ProductCartActions`).** Een thema kan een bundel losse boxen in één keer toevoegen, elk met eigen extra's (bijv. maat en voorkeur per box): `[['extras' => [productExtraId => optieId]], ...]`, optioneel met `product_id` per box. Alles wordt eerst gecontroleerd, gelijke boxen komen op één regel en er volgt één melding en één `productAddedToCart`. De afhandeling na het toevoegen (melding, events, redirect) staat nu in `afterAddedToCart()`.
+
 ## v4.155.1 - 2026-10-16
 
 ### Fixed
