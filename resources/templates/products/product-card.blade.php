@@ -1,7 +1,5 @@
 <div>
     <div class="relative">
-        <x-dashed-ecommerce-core::frontend.products.schema
-                :product="$product"></x-dashed-ecommerce-core::frontend.products.schema>
         <div class="relative h-72 w-full overflow-hidden rounded-lg">
             @if($product->firstImage)
                 <a href="{{$product->getUrl()}}">

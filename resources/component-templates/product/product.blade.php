@@ -1,5 +1,4 @@
 <div class="rounded-lg bg-white relative group flex flex-col h-full">
-    <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
     <a href="{{ $product->getUrl() }}" class="flex flex-col h-full">
         @if ($product->discountPrice)
             <div

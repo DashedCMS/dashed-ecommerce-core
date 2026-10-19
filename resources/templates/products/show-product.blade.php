@@ -2,7 +2,6 @@
     <div class="mt-8">
         <x-container>
             @if($product)
-                <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
             @endif
             {{-- FAQPage JSON-LD is now injected into the head via
                  seo()->metaData('customStructuredData', …) by ProductCartActions

@@ -43,6 +43,24 @@ class ShowProduct extends Component
         static::applyMetaData($metaModel);
 
         $this->fillInformation(true);
+
+        // Op een groeps-URL is de variant pas na fillInformation() bekend.
+        if ($this->product instanceof \Dashed\DashedEcommerceCore\Models\Product) {
+            static::pushProductSchema($this->product);
+        }
+    }
+
+    /**
+     * Eén Product- of ProductGroup-schema per productpagina, onder de sleutel
+     * 'product' zodat de head het precies één keer rendert.
+     */
+    public static function pushProductSchema(\Dashed\DashedEcommerceCore\Models\Product $product): void
+    {
+        $schemas = seo()->metaData('schemas');
+
+        seo()->metaData('schemas', array_merge(is_array($schemas) ? $schemas : [], [
+            'product' => \Dashed\DashedEcommerceCore\Classes\Seo\ProductSchema::for($product),
+        ]));
     }
 
     /**
@@ -59,6 +77,11 @@ class ShowProduct extends Component
         seo()->metaData('metaTitle', $metaModel->metadata && $metaModel->metadata->title ? $metaModel->metadata->title : $metaModel->name);
         seo()->metaData('metaDescription', $metaDescription);
         seo()->set('ogType', 'product');
+
+        if ($metaModel instanceof \Dashed\DashedEcommerceCore\Models\Product) {
+            static::pushProductSchema($metaModel);
+        }
+
 
         $metaImage = $metaModel->metadata->image ?? '';
         if (! $metaImage) {

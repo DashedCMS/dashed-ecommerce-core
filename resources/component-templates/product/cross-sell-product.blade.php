@@ -1,5 +1,4 @@
 <div class="bg-gray-100 p-4 relative group flex gap-4">
-    <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
     @if($product->firstImage)
         <a href="{{ $product->getUrl() }}">
             <x-dashed-files::image

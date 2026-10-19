@@ -1,5 +1,4 @@
 <a href="{{ $product->url }}" class="card mx-auto w-full max-w-sm md:ml-0 group">
-    <x-dashed-ecommerce-core::frontend.products.schema :product="$product"/>
     <div class="img-box rounded-t-3xl w-full aspect-square overflow-hidden border-gray-200 border bg-primary/50">
         @if($product->firstImage)
             <x-dashed-files::image

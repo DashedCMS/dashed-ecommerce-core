@@ -1,13 +1,3 @@
-@if(isset($product))
-    <x-dashed-ecommerce-core::frontend.products.schema :product="$product" />
-@endif
-
-@if(isset($products))
-    @foreach($products as $product)
-        <x-dashed-ecommerce-core::frontend.products.schema :product="$product" />
-    @endforeach
-@endif
-
 @if(isset($productCategory) && $productCategory)
     <x-dashed-ecommerce-core::frontend.product-categories.schema :productCategory="$productCategory" />
 @endif
