@@ -129,6 +129,43 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // De productoverzichtspagina levert de SearchAction van het WebSite-schema (dashed-core).
+        if (class_exists(\Dashed\DashedCore\Classes\Seo\BusinessProfile::class)) {
+            cms()->builder('organizationProfileSettings', ['product_overview_page_id']);
+            cms()->builder('siteSearchUrl', [function (string $siteId): ?string {
+                $pageId = \Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id', $siteId);
+
+                // Bewust niet publicShowable(): die scope is een no-op voor een
+                // ingelogde admin en kijkt naar de actieve site, terwijl het
+                // profiel forever gecachet wordt en per site opgebouwd.
+                $page = $pageId ? \Dashed\DashedPages\Models\Page::query()
+                    ->whereKey($pageId)
+                    ->where('public', 1)
+                    ->whereJsonContains('site_ids', $siteId)
+                    ->first() : null;
+
+                if (! $page) {
+                    return null;
+                }
+
+                return \Dashed\DashedCore\Classes\Sites::url($page->getUrl(app()->getLocale()), $siteId) . '?search={search_term_string}';
+            }]);
+
+            // De zoek-URL staat in het gecachete profiel; een andere slug of
+            // depubliceren van de overzichtspagina moet hem verversen.
+            $forgetIfOverview = function (\Dashed\DashedPages\Models\Page $page): void {
+                foreach (\Dashed\DashedCore\Classes\Sites::getSites() as $site) {
+                    if ((string) \Dashed\DashedCore\Models\Customsetting::get('product_overview_page_id', $site['id']) === (string) $page->getKey()) {
+                        \Dashed\DashedCore\Classes\Seo\BusinessProfile::forget();
+
+                        return;
+                    }
+                }
+            };
+            \Dashed\DashedPages\Models\Page::saved($forgetIfOverview);
+            \Dashed\DashedPages\Models\Page::deleted($forgetIfOverview);
+        }
+
         // Gewicht in de zoekpopup van het menu (NavigationSearch in dashed-core).
         cms()->builder('navigationSearchPriority', [
             \Dashed\DashedEcommerceCore\Filament\Resources\OrderResource::class => 95,
