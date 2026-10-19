@@ -22,6 +22,7 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Illuminate\Support\Collection as SupportCollection;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Classes\ProductExtraSelection;
 
 trait ProductCartActions
 {
@@ -420,13 +421,26 @@ trait ProductCartActions
 
         if (($this->product->id ?? 0) != ($previousProduct->id ?? 0) || ! $this->productExtras) {
             if (! $isMount && Customsetting::get('product_redirect_after_new_variation_selected', null, false) && $this->product) {
+                ProductExtraSelection::remember($this->productGroup->id, $this->extras ?? []);
+
                 return redirect($this->product->getUrl(forceOwnUrl: true));
             }
+
+            // Wat de bezoeker op de vorige variant koos blijft staan zolang het
+            // op de nieuwe variant nog kan; na een doorstuur komt het uit de sessie.
+            $previousExtras = $isMount
+                ? ProductExtraSelection::pull($this->productGroup->id)
+                : ($this->extras ?? []);
 
             $extrasCollection = $this->product?->allProductExtras() ?? collect();
             $this->applyUserPricesToExtras($extrasCollection);
             $this->productExtras = $extrasCollection;
-            $this->extras = $extrasCollection->toArray();
+
+            // Zonder product (de filters wijzen nog nergens heen) blijft de vorige
+            // keuze bewaard voor de variant die straks wel gevonden wordt.
+            if ($this->product) {
+                $this->extras = ProductExtraSelection::carryOver($previousExtras, $extrasCollection->toArray());
+            }
         }
 
         $this->name = $this->product->name ?? $this->productGroup->name;

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.157.0 - 2026-10-19
+
+### Changed
+- **Gekozen extra's blijven staan bij het wisselen van variatie.** Wie op de productpagina eerst een kleur, gravuretekst of andere extra kiest en daarna van maat wisselt, raakte die keuzes kwijt: `fillInformation()` bouwde `extras` bij elke productwissel opnieuw op. `ProductExtraSelection::carryOver()` zet de vorige keuze terug zolang die op de nieuwe variant nog kan: een extra wordt herkend op id (gedeelde extra's) of op naam en type (eigen extra's per variant), een optie op id of op haar tekst; een optie die niet meer bestaat wordt leeg, bij meerkeuze blijven alleen de nog bestaande opties en eigen tekstwaarden over. Met "Doorsturen na kiezen van een variatie" aan gaat de keuze via de sessie mee naar de nieuwe productpagina, eenmalig. Zolang de filters nog op geen variant wijzen blijft de keuze bewaard voor de variant die daarna gevonden wordt.
+
 ## v4.156.0 - 2026-10-16
 
 ### Added
