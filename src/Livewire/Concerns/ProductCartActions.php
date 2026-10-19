@@ -514,8 +514,15 @@ trait ProductCartActions
         if ($this->product) {
             $cartTotal = cartHelper()->getTotal();
 
+            // Alleen wat de pixels (Meta, GTM, TikTok) lezen: het hele model meesturen zette de
+            // volledige productgroep met alle varianten en extra's in de HTML (meerdere MB's).
             $this->dispatch('viewProduct', [
-                'product' => $this->product,
+                'product' => [
+                    'id' => $this->product->id,
+                    'name' => $this->product->name,
+                    'sku' => $this->product->sku,
+                    'product_group_id' => $this->product->product_group_id,
+                ],
                 'productName' => $this->product->name,
                 'quantity' => $this->quantity,
                 'price' => number_format($this->price, 2, '.', ''),

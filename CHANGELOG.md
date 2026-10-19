@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.157.2 - 2026-10-19
+
+### Fixed
+- **De productpagina stuurde het hele productmodel mee in het `viewProduct`-event.** `ProductCartActions` zette `$this->product` in de dispatch, en Livewire serialiseert dat met alle geladen relaties in het `wire:effects`-attribuut van de HTML: bij een productgroep met veel varianten en extra's (Lovora, familiebeeldjes: 78 varianten en 20 extra's) werd de pagina daardoor 4,5 MB (470 KB gecomprimeerd) in plaats van ruim 500 KB, met 1,5 s extra serverresponse en seconden blokkering op mobiel. De pixels lezen alleen `product.id`; het event bevat nu enkel id, naam, sku en productgroep-id.
+
 ## v4.157.0 - 2026-10-19
 
 ### Changed
