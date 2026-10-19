@@ -323,7 +323,10 @@
                                             }"
                                             class="col-span-full mt-12 flex items-center justify-center py-8 text-sm text-gray-500"
                                         >
-                                            <span wire:loading.remove wire:target="loadMore">Meer producten laden...</span>
+                                            <span wire:loading.remove wire:target="loadMore">
+                                                {{-- Crawlbaar anker naar de volgende pagina; een bezoeker scrollt gewoon door. --}}
+                                                @include('dashed-ecommerce-core::frontend.load-more', ['paginator' => $products, 'class' => 'underline'])
+                                            </span>
                                             <span wire:loading wire:target="loadMore" class="inline-flex items-center gap-2">
                                                 <svg class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

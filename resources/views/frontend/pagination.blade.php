@@ -14,6 +14,10 @@
     $btnBase = 'grid size-11 place-items-center rounded-full transition';
     $btnActive = 'border border-[rgba(48,84,91,0.12)] bg-white text-black hover:bg-secondary hover:text-white';
     $btnDisabled = 'border border-[rgba(48,84,91,0.08)] bg-white text-[rgba(48,84,91,0.3)] cursor-not-allowed';
+
+    // Livewire zet het paginatorpad op zijn relatieve originalPath() (zonder
+    // slash); als relatieve href zou dat op /en/blog naar /en/en/blog wijzen.
+    $absolute = fn (?string $url): string => $url && ! preg_match('#^https?://#', $url) ? url($url) : (string) $url;
 @endphp
 
 {{--
@@ -37,7 +41,7 @@
                 </svg>
             </span>
         @else
-            <a href="{{ $paginator->url(1) }}" class="hidden md:grid {{ $btnBase }} {{ $btnActive }}"
+            <a href="{{ $absolute($paginator->url(1)) }}" class="hidden md:grid {{ $btnBase }} {{ $btnActive }}"
                wire:click.prevent="gotoPage(1)"
                x-on:click="{{ $scrollIntoViewJsSnippet }}"
                aria-label="{{ Translation::get('pagination-first', 'pagination', 'Eerste pagina') }}">
@@ -45,7 +49,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
                 </svg>
             </a>
-            <a href="{{ $paginator->previousPageUrl() }}" class="{{ $btnBase }} {{ $btnActive }}"
+            <a href="{{ $absolute($paginator->previousPageUrl()) }}" class="{{ $btnBase }} {{ $btnActive }}"
                wire:click.prevent="previousPage"
                x-on:click="{{ $scrollIntoViewJsSnippet }}"
                rel="prev"
@@ -69,7 +73,7 @@
                     @if ($page == $paginator->currentPage())
                         <span aria-current="page" class="{{ $btnBase }} bg-black font-semibold text-white">{{ $page }}</span>
                     @else
-                        <a href="{{ $url }}" class="{{ $btnBase }} {{ $btnActive }} font-semibold"
+                        <a href="{{ $absolute($url) }}" class="{{ $btnBase }} {{ $btnActive }} font-semibold"
                            wire:click.prevent="gotoPage({{ $page }})"
                            x-on:click="{{ $scrollIntoViewJsSnippet }}">{{ $page }}</a>
                     @endif
@@ -79,7 +83,7 @@
 
         {{-- Next Page Link --}}
         @if ($paginator->hasMorePages())
-            <a href="{{ $paginator->nextPageUrl() }}" class="{{ $btnBase }} {{ $btnActive }}"
+            <a href="{{ $absolute($paginator->nextPageUrl()) }}" class="{{ $btnBase }} {{ $btnActive }}"
                wire:click.prevent="nextPage"
                x-on:click="{{ $scrollIntoViewJsSnippet }}"
                rel="next"
@@ -88,7 +92,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                 </svg>
             </a>
-            <a href="{{ $paginator->url($paginator->lastPage()) }}" class="hidden md:grid {{ $btnBase }} {{ $btnActive }}"
+            <a href="{{ $absolute($paginator->url($paginator->lastPage())) }}" class="hidden md:grid {{ $btnBase }} {{ $btnActive }}"
                wire:click.prevent="gotoPage({{ $paginator->lastPage() }})"
                x-on:click="{{ $scrollIntoViewJsSnippet }}"
                aria-label="{{ Translation::get('pagination-last', 'pagination', 'Laatste pagina') }}">
