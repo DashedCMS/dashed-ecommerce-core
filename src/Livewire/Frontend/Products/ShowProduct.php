@@ -40,6 +40,17 @@ class ShowProduct extends Component
 
         $metaModel = $this->product ?: $this->productGroup;
 
+        static::applyMetaData($metaModel);
+
+        $this->fillInformation(true);
+    }
+
+    /**
+     * Meta-gegevens van een product- of productgroeppagina. Statisch zodat het
+     * zonder het thema te renderen te toetsen is.
+     */
+    public static function applyMetaData(object $metaModel): void
+    {
         $metaDescription = $metaModel->metadata->description ?? '';
         if (! $metaDescription) {
             $metaDescription = $metaModel->productGroup ? ($metaModel->productGroup->metadata->description ?? '') : '';
@@ -47,6 +58,8 @@ class ShowProduct extends Component
 
         seo()->metaData('metaTitle', $metaModel->metadata && $metaModel->metadata->title ? $metaModel->metadata->title : $metaModel->name);
         seo()->metaData('metaDescription', $metaDescription);
+        seo()->set('ogType', 'product');
+
         $metaImage = $metaModel->metadata->image ?? '';
         if (! $metaImage) {
             $metaImage = $metaModel->productGroup ? ($metaModel->productGroup->metadata->image ?? '') : '';
@@ -57,9 +70,8 @@ class ShowProduct extends Component
         if ($metaImage) {
             seo()->metaData('metaImage', $metaImage);
         }
-
-        $this->fillInformation(true);
     }
+
 
     public function updated($name, $value)
     {

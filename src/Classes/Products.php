@@ -405,8 +405,11 @@ class Products
             $pagination,
             $page,
             [
-                'path' => request()->url(),
-                'query' => request()->query(),
+                // Op een Livewire-update is request()->url() /livewire/update;
+                // originalUrl() is de pagina zelf. Zonder query, zodat de
+                // paginalinks kaal zijn: een crawler volgt ?page=N, een bezoeker
+                // gaat via wire:click.prevent en houdt zijn filters.
+                'path' => \Livewire\Livewire::originalUrl(),
             ]
         );
 

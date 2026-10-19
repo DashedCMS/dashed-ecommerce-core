@@ -130,6 +130,12 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
     public function bootingPackage()
     {
         // De productoverzichtspagina levert de SearchAction van het WebSite-schema (dashed-core).
+        // Winkelwagen, afrekenen, bestellingen en verlanglijst horen nooit in de
+        // index; gelezen door RobotsDecision in dashed-core.
+        if (class_exists(\Dashed\DashedCore\Classes\Seo\RobotsDecision::class)) {
+            cms()->builder('noindexPageSettings', ['cart_page_id', 'checkout_page_id', 'orders_page_id', 'wishlist_page_id']);
+        }
+
         if (class_exists(\Dashed\DashedCore\Classes\Seo\BusinessProfile::class)) {
             cms()->builder('organizationProfileSettings', ['product_overview_page_id']);
             cms()->builder('siteSearchUrl', [function (string $siteId): ?string {
