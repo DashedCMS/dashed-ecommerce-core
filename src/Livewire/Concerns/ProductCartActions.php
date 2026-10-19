@@ -439,7 +439,9 @@ trait ProductCartActions
             // Zonder product (de filters wijzen nog nergens heen) blijft de vorige
             // keuze bewaard voor de variant die straks wel gevonden wordt.
             if ($this->product) {
-                $this->extras = ProductExtraSelection::carryOver($previousExtras, $extrasCollection->toArray());
+                $this->extras = static::slimExtras(
+                    ProductExtraSelection::carryOver($previousExtras, $extrasCollection->toArray())
+                );
             }
         }
 
@@ -786,6 +788,37 @@ trait ProductCartActions
      * de berekening zelf gebruikt priceForUser() (incl) rechtstreeks en zet het
      * totaal aan het einde om naar ex BTW.
      */
+    /**
+     * The Livewire state only needs the chosen value and a few identifiers per extra;
+     * the full option lists (with images, timestamps and prices) are rendered from
+     * $productExtras. Keeping them in $extras put tens of kilobytes in every
+     * snapshot and request for a product with many extras.
+     *
+     * @param  array<int, array<string, mixed>>  $extras
+     * @return array<int, array<string, mixed>>
+     */
+    public static function slimExtras(array $extras): array
+    {
+        $keep = ['id', 'product_id', 'product_group_id', 'name', 'type', 'input_type', 'required', 'global', 'value'];
+
+        foreach ($extras as $key => $extra) {
+            $slim = array_intersect_key($extra, array_flip($keep));
+            $slim['value'] = $extra['value'] ?? null;
+
+            // A checkbox extra carries its single option; the price lookup reads its id.
+            if (($extra['type'] ?? null) === 'checkbox') {
+                $slim['product_extra_options'] = array_values(array_map(
+                    fn ($option) => ['id' => $option['id'] ?? null],
+                    array_slice((array) ($extra['product_extra_options'] ?? []), 0, 1)
+                ));
+            }
+
+            $extras[$key] = $slim;
+        }
+
+        return $extras;
+    }
+
     protected function applyUserPricesToExtras($extras): void
     {
         $user = auth()->check() ? auth()->user() : null;
@@ -1447,6 +1480,7 @@ trait ProductCartActions
         ])->values();
 
         $filters = $this->filters;
+        $fallbackIndex = null;
         foreach ($filters as $filterKey => $filter) {
             foreach (($filter['options'] ?? []) as $optionKey => $option) {
                 $filters[$filterKey]['options'][$optionKey]['variantProductId'] = null;
@@ -1486,7 +1520,11 @@ trait ProductCartActions
                 $productId = $index[$key] ?? null;
 
                 if (! $productId) {
-                    $productId = $this->lookupVariationProductIdFromDb($selection, $publicProductIds);
+                    // Combinations missing from the index (usually ones that do not exist)
+                    // are resolved from one query over the pivot rows instead of one
+                    // query per combination on every page load.
+                    $fallbackIndex ??= $this->buildVariationIndexFromDb($publicProductIds, $variationFilters->pluck('id')->all());
+                    $productId = $fallbackIndex[$key] ?? null;
                 }
 
                 if (! $productId) {
@@ -1542,6 +1580,46 @@ trait ProductCartActions
         }
 
         $this->filters = $filters;
+    }
+
+    /**
+     * Same keys as ProductGroup::variation_index ("filterId-optionId" pairs, sorted,
+     * joined by "|"), built from the pivot rows of the given products in one query.
+     *
+     * @param  array<int>  $productIds
+     * @param  array<int>  $filterIds
+     * @return array<string, int>
+     */
+    protected function buildVariationIndexFromDb(array $productIds, array $filterIds): array
+    {
+        if (empty($productIds) || empty($filterIds)) {
+            return [];
+        }
+
+        $pairs = DB::table('dashed__product_filter')
+            ->whereIn('product_id', $productIds)
+            ->whereIn('product_filter_id', $filterIds)
+            ->get(['product_id', 'product_filter_id', 'product_filter_option_id'])
+            ->groupBy('product_id');
+
+        $index = [];
+
+        foreach ($pairs as $productId => $rows) {
+            $selection = $rows
+                ->map(fn ($row) => $row->product_filter_id.'-'.$row->product_filter_option_id)
+                ->unique()
+                ->values()
+                ->all();
+
+            if (count($selection) !== count($filterIds)) {
+                continue;
+            }
+
+            sort($selection);
+            $index[implode('|', $selection)] ??= (int) $productId;
+        }
+
+        return $index;
     }
 
     protected function lookupVariationProductIdFromDb(array $selection, array $productIds): ?int

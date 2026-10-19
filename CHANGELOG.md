@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.158.0 - 2026-10-19
+
+### Changed
+- **De Livewire-staat van de productpagina bevat per extra alleen nog de keuze.** `ProductCartActions::$extras` droeg per extra de volledige optielijst mee (afbeeldingen, prijzen, tijdstempels): bij een product met 20 extra's van 60 opties was dat 89 KB in elke snapshot en elk verzoek. `slimExtras()` houdt id, naam, type, verplicht, `value` en bij een checkbox het id van zijn optie; de velden renderen uit `$productExtras` (de modellen), dat deden ze al. Thema's die `$this->extras[...]['product_extra_options']` zelf lazen, moeten naar `$productExtras`.
+
+### Fixed
+- **Eén query voor filtercombinaties die niet in de variatie-index staan.** `enrichFilterOptionPrices()` deed voor elke combinatie zonder variant (bijvoorbeeld een maat die er voor één samenstelling niet is) bij elke paginaweergave een losse query; bij de familiebeeldjes van Lovora waren dat er 20 per bezoek. Ontbrekende combinaties komen nu uit één query over de pivotrijen (`buildVariationIndexFromDb()`, dezelfde sleutels als `variation_index`).
+
 ## v4.157.2 - 2026-10-19
 
 ### Fixed
