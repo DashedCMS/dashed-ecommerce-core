@@ -22,6 +22,7 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountBalance;
 use Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource\Pages\EditOnAccountCustomer;
 use Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource\Pages\ListOnAccountCustomers;
+use Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource\Widgets\OnAccountCustomerStats;
 use Dashed\DashedEcommerceCore\Filament\Resources\OnAccountCustomerResource\RelationManagers\OpenOrdersRelationManager;
 
 /**
@@ -126,6 +127,19 @@ class OnAccountCustomerResource extends Resource
         return [
             'index' => ListOnAccountCustomers::route('/'),
             'edit' => EditOnAccountCustomer::route('/{record}/edit'),
+        ];
+    }
+
+    /**
+     * Alleen hier registreert Filament een widget als Livewire-component.
+     * Zonder deze registratie rendert de pagina nog, maar laat het lui laden
+     * van de widget de pagina eindeloos herladen (zie
+     * ResourceWidgetRegistrationGuardTest in de root).
+     */
+    public static function getWidgets(): array
+    {
+        return [
+            OnAccountCustomerStats::class,
         ];
     }
 
