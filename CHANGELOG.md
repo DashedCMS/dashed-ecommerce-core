@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.160.0 - 2026-10-20
+
+### Added
+- **Toeslag bovenop de verzendkosten vanuit de webshop.** `ShippingMethod::resolveExtraCostsUsing(fn (ShippingMethod $methode, ?int $zoneId, array $cartItems): float)` registreert een bedrag dat bij elke methode behalve afhalen bovenop de verzendkosten komt, bijvoorbeeld per extra doos als de bestelling niet in één pakket past. `costsForCart()` telt het mee (dus ook de order, de btw over de verzending en de kassa); `extraCostsForCart()` geeft alleen de toeslag, voor weergave. `getAvailableShippingMethods()` zet hem als `extraCosts` op elke methode en laat een gratis methode mét zo'n toeslag staan (met de toeslag als prijs), anders dan bij een verzendklasse, die een gratis methode nog steeds laat vervallen.
+
 ## v4.158.0 - 2026-10-19
 
 ### Changed

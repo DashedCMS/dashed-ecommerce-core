@@ -43,6 +43,26 @@ class ShippingMethod extends Model
 
     protected $table = 'dashed__shipping_methods';
 
+    /**
+     * Optionele toeslag van de webshop bovenop de verzendkosten van een
+     * methode, bijvoorbeeld een bedrag per extra doos als de bestelling niet
+     * in één pakket past. De closure krijgt de methode, de zone-id en de
+     * cartregels (objecten met `model` en `qty`) en geeft het bedrag terug
+     * (inclusief btw als de shop met prijzen inclusief btw rekent, net als
+     * `costs`). Geldt voor elke soort behalve "afhalen", dus ook bovenop
+     * gratis verzending: zo'n methode blijft dan beschikbaar met de toeslag
+     * als prijs (zie ShoppingCart::getAvailableShippingMethods()), anders
+     * dan bij verzendklassen, die een gratis methode laten vervallen.
+     *
+     * @var (\Closure(self, ?int, array<object>): float)|null
+     */
+    protected static ?\Closure $extraCostsResolver = null;
+
+    public static function resolveExtraCostsUsing(?\Closure $resolver): void
+    {
+        static::$extraCostsResolver = $resolver;
+    }
+
     public static function booted()
     {
         static::creating(function ($shippingMethod) {
@@ -148,7 +168,33 @@ class ShippingMethod extends Model
             }
         }
 
-        return $shippingCosts;
+        return $shippingCosts + $this->extraCostsFor($shippingZoneId, $cartItems);
+    }
+
+    /**
+     * De toeslag van de app-resolver voor deze wagen, los van de gewone
+     * verzendkosten; zit al in costsForCart(). Voor weergave ("waarvan
+     * € 7,95 voor een tweede pakket").
+     *
+     * @param  iterable<object>|null  $cartItems  zie costsForCart()
+     */
+    public function extraCostsForCart(?int $shippingZoneId = null, ?iterable $cartItems = null): float
+    {
+        $cartItems = $cartItems === null ? $this->webshopCartItems() : collect($cartItems)->all();
+
+        return $this->extraCostsFor($shippingZoneId, $cartItems);
+    }
+
+    /**
+     * @param  iterable<object>  $cartItems  al opgehaalde regels
+     */
+    private function extraCostsFor(?int $shippingZoneId, iterable $cartItems): float
+    {
+        if (! static::$extraCostsResolver || $this->sort == 'take_away') {
+            return 0.0;
+        }
+
+        return max(0.0, round((float) (static::$extraCostsResolver)($this, $shippingZoneId, collect($cartItems)->values()->all()), 2));
     }
 
     /**

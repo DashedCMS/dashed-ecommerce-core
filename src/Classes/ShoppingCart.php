@@ -313,11 +313,15 @@ class ShoppingCart
                         $shippingMethod->shippingZoneId = $shippingZone->id;
                         $costs = $shippingMethod->costsForCart($shippingZone->id, $ownCartItems ? $cartItems : null);
                         $shippingMethod->activatedShippingClasses = $shippingMethod->getActivatedShippingClasses($shippingZone->id, $ownCartItems ? $cartItems : null);
+                        $shippingMethod->extraCosts = $shippingMethod->extraCostsForCart($shippingZone->id, $ownCartItems ? $cartItems : null);
 
                         $shippingMethod->costs = $costs;
                         if ($shippingMethod->costs == 0) {
                             $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');
-                        } elseif ($shippingMethod->costs > 0 && $shippingMethod->sort == 'free_delivery') {
+                        } elseif ($shippingMethod->costs > $shippingMethod->extraCosts && $shippingMethod->sort == 'free_delivery') {
+                            // Een verzendklasse maakt gratis verzending niet-gratis: de methode vervalt.
+                            // Alleen de toeslag van de app-resolver (ShippingMethod::resolveExtraCostsUsing())
+                            // laat haar staan, met de toeslag als prijs.
                             unset($shippingMethods[$key]);
                         } else {
                             $shippingMethod->costsFormatted = CurrencyHelper::formatPrice($costs);
@@ -402,11 +406,12 @@ class ShoppingCart
                     $shippingMethod->shippingZoneId = $shippingZone->id;
                     $costs = $shippingMethod->costsForCart($shippingZone->id);
                     $shippingMethod->activatedShippingClasses = $shippingMethod->getActivatedShippingClasses($shippingZone->id);
+                    $shippingMethod->extraCosts = $shippingMethod->extraCostsForCart($shippingZone->id);
 
                     $shippingMethod->costs = $costs;
                     if ($shippingMethod->costs == 0) {
                         $shippingMethod->costsFormatted = Translation::get('free', 'checkout', 'Gratis');
-                    } elseif ($shippingMethod->costs > 0 && $shippingMethod->sort == 'free_delivery') {
+                    } elseif ($shippingMethod->costs > $shippingMethod->extraCosts && $shippingMethod->sort == 'free_delivery') {
                         unset($shippingMethods[$key]);
                     } else {
                         $shippingMethod->costsFormatted = CurrencyHelper::formatPrice($costs);
