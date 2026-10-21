@@ -87,6 +87,7 @@ class ProductSchema
     {
         $others = $group->products()
             ->where('public', 1)
+            ->thisSite()
             ->whereKeyNot($mounted->getKey())
             ->orderBy('id')
             ->with(['productFilters', 'productCategories'])

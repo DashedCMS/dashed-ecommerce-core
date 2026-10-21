@@ -583,7 +583,10 @@ class Product extends Model
             } else {
                 $overviewPage = Product::getOverviewPage();
                 if (! $overviewPage) {
-                    return 'link-product-overview-page';
+                    // Zonder overzichtspagina is er geen productadres; de root
+                    // van de site is dan het eerlijkste antwoord, en geen
+                    // letterlijke tekst die als href of in de sitemap belandt.
+                    return LaravelLocalization::localizeUrl('/');
                 }
                 $url = $overviewPage->getUrl($locale).'/'.$this->getTranslation('slug', $locale);
             }

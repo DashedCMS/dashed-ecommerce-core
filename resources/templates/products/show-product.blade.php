@@ -1,8 +1,6 @@
 <div>
     <div class="mt-8">
         <x-container>
-            @if($product)
-            @endif
             {{-- FAQPage JSON-LD is now injected into the head via
                  seo()->metaData('customStructuredData', …) by ProductCartActions
                  (Bundle 4 v4.27.x). The component file faq-schema.blade.php

@@ -133,7 +133,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         // Winkelwagen, afrekenen, bestellingen en verlanglijst horen nooit in de
         // index; gelezen door RobotsDecision in dashed-core.
         if (class_exists(\Dashed\DashedCore\Classes\Seo\RobotsDecision::class)) {
-            cms()->builder('noindexPageSettings', ['cart_page_id', 'checkout_page_id', 'orders_page_id', 'wishlist_page_id']);
+            cms()->builder('noindexPageSettings', ['cart_page_id', 'checkout_page_id', 'orders_page_id', 'wishlist_page_id', 'order_page_id', 'return_page_id']);
+            // Routes zonder paginamodel die alleen voor één klant bedoeld zijn.
+            cms()->builder('noindexPaths', ['return-status', 'proforma', 'pay/order', 'download-invoice', 'download-packing-slip']);
         }
 
         if (class_exists(\Dashed\DashedCore\Classes\Seo\BusinessProfile::class)) {
