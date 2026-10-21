@@ -118,6 +118,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 PrintQueueSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\ShippingLabelErrors::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\PurchaseAdvicePage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\InsightsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class,
