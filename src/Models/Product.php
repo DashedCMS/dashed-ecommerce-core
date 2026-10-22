@@ -586,7 +586,10 @@ class Product extends Model
                     // Zonder overzichtspagina is er geen productadres; de root
                     // van de site is dan het eerlijkste antwoord, en geen
                     // letterlijke tekst die als href of in de sitemap belandt.
-                    return LaravelLocalization::localizeUrl('/');
+                    // Een pad en geen absolute URL: een mail of de sitemap
+                    // zet hem zelf af tegen de juiste site-URL, en een
+                    // absolute URL van het huidige verzoek zou daar winnen.
+                    return $locale != config('app.locale') ? '/' . $locale . '/' : '/';
                 }
                 $url = $overviewPage->getUrl($locale).'/'.$this->getTranslation('slug', $locale);
             }

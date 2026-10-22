@@ -2726,6 +2726,8 @@ MARKDOWN,
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\OrderTotalCondition());
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\LastOrderDateCondition());
             app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\WishlistCondition());
+            app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\OrderCountCondition());
+            app('newsletter')->registerSegmentCondition(new \Dashed\DashedEcommerceCore\Newsletter\PurchasedCondition());
 
             // De eigen nieuwsbrief moet overal te kiezen zijn waar een koppeling
             // als Laposta dat ook is. Zonder deze registratie staat hij wel bij
