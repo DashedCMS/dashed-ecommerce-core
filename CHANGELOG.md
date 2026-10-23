@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.165.0 - 2026-10-23
+
+### Added
+- **Productcontrole: welke producten iets missen.** Nieuwe pagina Producten → Productcontrole (`ProductCompletenessPage`, permissie `view_product`) toont per productgroep wat de groep zelf mist en hoeveel van zijn producten iets missen, met daarboven een telling per controle; een groep of controle aanklikken opent `ProductCompletenessProductsPage` met de producten, te filteren op groep, openbaar, soort en losse controle. Controles (`Classes\ProductCompleteness`): foto's (geen foto's op product én groep, of een variant zonder eigen foto in een groep met meer producten), teksten (beschrijving, korte beschrijving, SEO-titel en -omschrijving; een product erft van zijn groep, een leeg TipTap-document telt als leeg), vertalingen per extra taal (naam, slug, beschrijving) en product- en feeddata (prijs, inkoopprijs, SKU, EAN, gewicht, afmetingen, categorie, variatiefilter zonder waarde). Wat een webshop niet gebruikt zet je uit via "Controles instellen" (Customsetting `product_completeness_ignored_checks`, per site). De rapportage leest alles in een paar ruwe queries (± 0,3 s voor 3.500 producten).
+
 ## v4.160.0 - 2026-10-20
 
 ### Added

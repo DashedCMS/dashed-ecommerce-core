@@ -119,6 +119,8 @@ class DashedEcommerceCorePlugin implements Plugin
                 \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\ShippingLabelErrors::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\PurchaseAdvicePage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\ProductCompletenessPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\ProductCompletenessProductsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\InsightsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class,
