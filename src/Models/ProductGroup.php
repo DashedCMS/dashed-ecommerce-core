@@ -294,7 +294,7 @@ class ProductGroup extends Model
     public function variationExists(array $array): bool
     {
         foreach ($this->products as $product) {
-            $arrayToCheck = &$array;
+            $arrayToCheck = $array;
             foreach ($product->productFilters as $filter) {
                 $key = array_search($filter->pivot->product_filter_option_id, $arrayToCheck);
                 if ($key !== false) {

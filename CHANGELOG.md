@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.166.0 - 2026-10-23
+
+- "Ontbrekende variaties aanmaken" kan de prijs overnemen van bestaande producten met dezelfde optie op gekozen filters (bv. Maat): meest voorkomende prijs en van-prijs, per variatie zichtbaar in de vinklijst.
+- Fix: `ProductGroup::variationExists()` hield weggestreepte opties vast over producten heen (referentie), waardoor een combinatie als "bestaat al" telde zodra de losse opties bij verschillende producten voorkwamen.
+
 ## v4.165.0 - 2026-10-23
 
 ### Added

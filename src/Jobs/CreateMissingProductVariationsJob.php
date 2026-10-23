@@ -13,6 +13,7 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Dashed\DashedEcommerceCore\Classes\ProductVariationNaming;
+use Dashed\DashedEcommerceCore\Classes\VariationPriceSuggester;
 
 class CreateMissingProductVariationsJob implements ShouldQueue
 {
@@ -35,12 +36,20 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     public ?array $variations = null;
 
     /**
+     * Prijs per variatie, sleutel = optie-id's met '-' (zie VariationPriceSuggester).
+     *
+     * @var array<string, array{price: float, new_price: float|null}>
+     */
+    public array $prices = [];
+
+    /**
      * Create a new job instance.
      */
-    public function __construct(ProductGroup $productGroup, ?array $variations = null)
+    public function __construct(ProductGroup $productGroup, ?array $variations = null, array $prices = [])
     {
         $this->productGroup = $productGroup;
         $this->variations = $variations;
+        $this->prices = $prices;
     }
 
     /**
@@ -72,6 +81,10 @@ class CreateMissingProductVariationsJob implements ShouldQueue
                 $newProduct->sku = 'SKU' . rand(10000, 99999);
             }
             $newProduct->product_group_id = $this->productGroup->id;
+            if ($price = $this->prices[VariationPriceSuggester::key($optionIds)] ?? null) {
+                $newProduct->price = $price['price'];
+                $newProduct->new_price = $price['new_price'] ?? null;
+            }
             $newProduct->save();
 
             foreach ($missingVariation as $optionId) {

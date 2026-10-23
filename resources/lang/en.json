@@ -2183,5 +2183,10 @@
     "Niets gevonden": "Nothing found",
     "Geen productgroepen die aan de filters voldoen.": "No product groups match the filters.",
     "Geen producten die aan de filters voldoen.": "No products match the filters.",
-    "Compleet": "Complete"
+    "Compleet": "Complete",
+    "Prijs overnemen van producten met dezelfde": "Copy the price from products with the same",
+    "Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.": "For example choose Size: a new variation then gets the price (and compare-at price) that occurs most often among existing products with the same size. Empty = create without a price.",
+    "van": "was",
+    "geen prijs gevonden": "no price found",
+    ":aantal van :totaal met een overgenomen prijs": ":aantal of :totaal with a copied price"
 }

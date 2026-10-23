@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Filament\Actions\RestoreAction;
 use Filament\Tables\Filters\Filter;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\VariationPriceSuggester;
 use Filament\Support\Icons\Heroicon;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
@@ -218,9 +220,15 @@ class ProductGroupResource extends Resource
                     ->modalSubmitActionLabel(__('Geselecteerde aanmaken'))
                     ->fillForm(fn ($record) => ['variations' => array_keys(static::missingVariationOptions($record))])
                     ->form(fn ($record) => [
+                        Select::make('price_filters')
+                            ->label(__('Prijs overnemen van producten met dezelfde'))
+                            ->helperText(__('Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.'))
+                            ->multiple()
+                            ->options(fn () => $record->activeProductFiltersForVariations->mapWithKeys(fn ($filter) => [$filter->id => $filter->name])->all())
+                            ->live(),
                         CheckboxList::make('variations')
                             ->label(__('Aan te maken variaties'))
-                            ->options(static::missingVariationOptions($record))
+                            ->options(fn (Get $get) => static::missingVariationOptions($record, $get('price_filters') ?? []))
                             ->columns(2)
                             ->bulkToggleable(),
                         Toggle::make('exclude_unchecked')
@@ -251,8 +259,10 @@ class ProductGroupResource extends Resource
                             return;
                         }
 
+                        $prices = array_filter(VariationPriceSuggester::forVariations($record, $variations, $data['price_filters'] ?? []));
+
                         if (count($variations)) {
-                            CreateMissingProductVariationsJob::dispatch($record, $variations)
+                            CreateMissingProductVariationsJob::dispatch($record, $variations, $prices)
                                 ->onQueue('ecommerce');
                         }
 
@@ -260,9 +270,14 @@ class ProductGroupResource extends Resource
                             ? __(':aantal variatie(s) worden aangemaakt, refresh de pagina om de voortgang te zien', ['aantal' => count($variations)])
                             : __(':aantal variatie(s) uitgesloten', ['aantal' => $excluded]);
 
+                        $body = collect([
+                            count($variations) && count($data['price_filters'] ?? []) ? __(':aantal van :totaal met een overgenomen prijs', ['aantal' => count($prices), 'totaal' => count($variations)]) : null,
+                            count($variations) && $excluded ? __(':aantal variatie(s) uitgesloten', ['aantal' => $excluded]) : null,
+                        ])->filter()->implode('. ');
+
                         Notification::make()
                             ->title($title)
-                            ->body(count($variations) && $excluded ? __(':aantal variatie(s) uitgesloten', ['aantal' => $excluded]) : null)
+                            ->body($body ?: null)
                             ->success()
                             ->send();
                     }),
@@ -732,9 +747,25 @@ class ProductGroupResource extends Resource
      *
      * @return array<string, string>
      */
-    public static function missingVariationOptions($record): array
+    public static function missingVariationOptions($record, array $priceFilterIds = []): array
     {
-        return static::variationOptions($record->missingVariations());
+        $variations = $record->missingVariations();
+        $options = static::variationOptions($variations);
+
+        if (! count(array_filter($priceFilterIds))) {
+            return $options;
+        }
+
+        $prices = VariationPriceSuggester::forVariations($record, $variations, $priceFilterIds);
+
+        foreach ($options as $key => $label) {
+            $price = $prices[$key] ?? null;
+            $options[$key] = $label . ' → ' . ($price
+                ? CurrencyHelper::formatPrice($price['price']) . ($price['new_price'] ? ' (' . __('van') . ' ' . CurrencyHelper::formatPrice($price['new_price']) . ')' : '')
+                : __('geen prijs gevonden'));
+        }
+
+        return $options;
     }
 
     /**

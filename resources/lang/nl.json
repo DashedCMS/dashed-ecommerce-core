@@ -2183,5 +2183,10 @@
     "Niets gevonden": "Niets gevonden",
     "Geen productgroepen die aan de filters voldoen.": "Geen productgroepen die aan de filters voldoen.",
     "Geen producten die aan de filters voldoen.": "Geen producten die aan de filters voldoen.",
-    "Compleet": "Compleet"
+    "Compleet": "Compleet",
+    "Prijs overnemen van producten met dezelfde": "Prijs overnemen van producten met dezelfde",
+    "Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.": "Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.",
+    "van": "van",
+    "geen prijs gevonden": "geen prijs gevonden",
+    ":aantal van :totaal met een overgenomen prijs": ":aantal van :totaal met een overgenomen prijs"
 }
