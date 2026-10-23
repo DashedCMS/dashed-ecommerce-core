@@ -8,6 +8,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Spatie\SchemaOrg\ItemAvailability;
 use Spatie\SchemaOrg\OfferItemCondition;
 use Dashed\DashedCore\Models\Customsetting;
+use Spatie\SchemaOrg\ReturnFeesEnumeration;
 use Spatie\SchemaOrg\ReturnMethodEnumeration;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Spatie\SchemaOrg\MerchantReturnEnumeration;
@@ -292,7 +293,19 @@ class ProductSchema
             ->returnPolicyCategory(MerchantReturnEnumeration::MerchantReturnFiniteReturnWindow)
             ->merchantReturnDays($days)
             ->returnMethod(ReturnMethodEnumeration::ReturnByMail)
+            ->returnFees(static::returnFees($siteId))
             ->applicableCountry($countryCodes);
+    }
+
+    /**
+     * Wie de retourzending betaalt, voor Google's verkopersvermeldingen.
+     * Standaard de klant; "free" alleen als de shop het retourlabel betaalt.
+     */
+    public static function returnFees(?string $siteId = null): string
+    {
+        return Customsetting::get('returns_schema_return_fees', $siteId) === 'free'
+            ? ReturnFeesEnumeration::FreeReturn
+            : ReturnFeesEnumeration::ReturnFeesCustomerResponsibility;
     }
 
     protected static function setVariationValues(BaseType $node, Product $product, $filters, $options): void

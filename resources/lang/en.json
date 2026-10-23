@@ -2188,5 +2188,9 @@
     "Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.": "For example choose Size: a new variation then gets the price (and compare-at price) that occurs most often among existing products with the same size. Empty = create without a price.",
     "van": "was",
     "geen prijs gevonden": "no price found",
-    ":aantal van :totaal met een overgenomen prijs": ":aantal of :totaal with a copied price"
+    ":aantal van :totaal met een overgenomen prijs": ":aantal of :totaal with a copied price",
+    "Kosten van de retourzending": "Return shipping costs",
+    "Gaat mee in de productgegevens voor Google. Laat dit gelijk aan wat op je retourpagina en in Merchant Center staat.": "Included in the product data for Google. Keep this in line with your returns page and Merchant Center.",
+    "Klant betaalt de retourzending": "Customer pays return shipping",
+    "Gratis retourneren (wij betalen)": "Free returns (we pay)"
 }

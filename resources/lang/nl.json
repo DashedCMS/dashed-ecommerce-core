@@ -2188,5 +2188,9 @@
     "Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.": "Kies bv. Maat: een nieuwe variatie krijgt dan de prijs (en van-prijs) die het vaakst voorkomt bij bestaande producten met dezelfde maat. Leeg = zonder prijs aanmaken.",
     "van": "van",
     "geen prijs gevonden": "geen prijs gevonden",
-    ":aantal van :totaal met een overgenomen prijs": ":aantal van :totaal met een overgenomen prijs"
+    ":aantal van :totaal met een overgenomen prijs": ":aantal van :totaal met een overgenomen prijs",
+    "Kosten van de retourzending": "Kosten van de retourzending",
+    "Gaat mee in de productgegevens voor Google. Laat dit gelijk aan wat op je retourpagina en in Merchant Center staat.": "Gaat mee in de productgegevens voor Google. Laat dit gelijk aan wat op je retourpagina en in Merchant Center staat.",
+    "Klant betaalt de retourzending": "Klant betaalt de retourzending",
+    "Gratis retourneren (wij betalen)": "Gratis retourneren (wij betalen)"
 }

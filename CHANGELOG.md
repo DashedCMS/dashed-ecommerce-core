@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.167.0 - 2026-10-23
+
+- Productgegevens (JSON-LD) melden in het retourbeleid nu `returnFees`, zoals Google voor verkopersvermeldingen vraagt. Instelbaar op de retourinstellingen ("Kosten van de retourzending", Customsetting `returns_schema_return_fees`); standaard betaalt de klant de retourzending.
+
 ## v4.166.0 - 2026-10-23
 
 - "Ontbrekende variaties aanmaken" kan de prijs overnemen van bestaande producten met dezelfde optie op gekozen filters (bv. Maat): meest voorkomende prijs en van-prijs, per variatie zichtbaar in de vinklijst.

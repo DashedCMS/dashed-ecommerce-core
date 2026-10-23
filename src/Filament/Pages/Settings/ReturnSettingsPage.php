@@ -42,6 +42,7 @@ class ReturnSettingsPage extends Page
 
         $this->form->fill([
             'return_page_id' => Customsetting::get('return_page_id'),
+            'returns_schema_return_fees' => Customsetting::get('returns_schema_return_fees') === 'free' ? 'free' : 'customer',
             'returns_auto_accept_enabled' => (bool) Customsetting::get('returns_auto_accept_enabled', null, false),
             'returns_auto_accept_max_days' => (int) Customsetting::get('returns_auto_accept_max_days', null, 14),
             'returns_auto_accept_excluded_category_ids' => (array) (Customsetting::get('returns_auto_accept_excluded_category_ids') ?: []),
@@ -74,6 +75,14 @@ class ReturnSettingsPage extends Page
                             ->helperText(__('De pagina met het retourformulier waar klanten hun retour aanmelden. Wordt automatisch aangemaakt; hier kun je een andere pagina kiezen.'))
                             ->searchable()
                             ->options(PageModel::pluck('name', 'id')),
+                        Select::make('returns_schema_return_fees')
+                            ->label(__('Kosten van de retourzending'))
+                            ->helperText(__('Gaat mee in de productgegevens voor Google. Laat dit gelijk aan wat op je retourpagina en in Merchant Center staat.'))
+                            ->options([
+                                'customer' => __('Klant betaalt de retourzending'),
+                                'free' => __('Gratis retourneren (wij betalen)'),
+                            ])
+                            ->required(),
                     ]),
 
                 Section::make(__('Automatisch goedkeuren'))
@@ -158,6 +167,7 @@ class ReturnSettingsPage extends Page
         $data = $this->form->getState();
 
         Customsetting::set('return_page_id', $data['return_page_id'] ?? '');
+        Customsetting::set('returns_schema_return_fees', ($data['returns_schema_return_fees'] ?? 'customer') === 'free' ? 'free' : 'customer');
         Customsetting::set('returns_auto_accept_enabled', ! empty($data['returns_auto_accept_enabled']) ? '1' : '0');
         Customsetting::set('returns_auto_accept_max_days', (int) ($data['returns_auto_accept_max_days'] ?: 14));
         Customsetting::set('returns_auto_accept_excluded_category_ids', array_values(array_map('intval', (array) ($data['returns_auto_accept_excluded_category_ids'] ?? []))));
