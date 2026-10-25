@@ -146,6 +146,7 @@ class DashedEcommerceCorePlugin implements Plugin
             ])
             ->resources([
                 \Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\ApiClientResource::class,
                 PaymentMethodResource::class,
                 OrderLogTemplateResource::class,
                 ShippingClassResource::class,

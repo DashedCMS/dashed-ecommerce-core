@@ -104,7 +104,11 @@ class ViewOrder extends Component
             }
         }
 
-        if ($this->order->isPaidFor()) {
+        // De aankoop-events (GTM purchase, Meta pixel, TikTok) maar één keer per
+        // order: niet opnieuw bij herladen, de terugknop of de link in de
+        // bevestigingsmail. De update is atomair, dus ook twee tabbladen
+        // tegelijk meten maar één conversie.
+        if ($this->order->isPaidFor() && $this->claimPurchaseTracking()) {
             $itemLoop = 0;
             $items = [];
 
@@ -156,6 +160,13 @@ class ViewOrder extends Component
                 'tiktokItems' => Customsetting::get('trigger_tiktok_events') ? TikTokHelper::getShoppingCartItems($this->order->total, $this->order->email, $this->order->phone_number) : [],
             ]));
         }
+    }
+
+    private function claimPurchaseTracking(): bool
+    {
+        return Order::whereKey($this->order->id)
+            ->whereNull('purchase_tracked_at')
+            ->update(['purchase_tracked_at' => now()]) === 1;
     }
 
     public function render()

@@ -276,6 +276,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(10)->by($request->ip() ?? 'unknown');
         });
 
+        \Illuminate\Support\Facades\RateLimiter::for('dashed-export-api', function (\Illuminate\Http\Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by(substr(hash('sha256', (string) $request->bearerToken()), 0, 16) . '|' . ($request->ip() ?? 'unknown'));
+        });
+
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('own', 'Webshop', true);
         \Dashed\DashedEcommerceCore\Classes\OrderOrigins::register('pos', 'POS', false);
 
@@ -2751,6 +2755,7 @@ MARKDOWN,
         cms()->registerSettingsPage(VATSettingsPage::class, 'BTW instellingen', 'receipt-percent', 'Beheren hoe je winkel belastingen in rekening brengt');
         cms()->registerSettingsPage(OrderCancelSettingsPage::class, 'Annuleer bestelling instellingen', 'arrow-uturn-left', 'Beheer instellingen voor het annuleren van bestellingen');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\ReturnSettingsPage::class, 'Retour-instellingen', 'arrow-uturn-left', 'Beheer regels voor het automatisch goedkeuren van retouren');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Resources\ApiClientResource::class, 'API-koppelingen', 'key', 'API-sleutels voor externe partijen, zoals een marketingbureau dat orderdata ophaalt');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage::class, 'Meta Conversions API', 'signal', 'Stuur aankopen ook vanaf de server naar Meta');
         cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');
         cms()->registerSettingsPage(CheckoutSettingsPage::class, 'Afreken instellingen', 'shopping-cart', 'Je online betaalprocess aanpassen');
@@ -2775,6 +2780,7 @@ MARKDOWN,
                 'google-ads',
                 'order-handled-frontend',
                 'print-queue-api',
+                'export-api',
             ])
             ->hasConfigFile([
                 'dashed-ecommerce-core',

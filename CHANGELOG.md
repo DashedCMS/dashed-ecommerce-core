@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.168.0 - 2026-10-25
+
+### Added
+- **Export-API voor externe partijen.** Onder Instellingen → API-koppelingen (`ApiClientResource`, tabel `dashed__api_clients`) maak je een sleutel voor bijvoorbeeld een marketingbureau; de sleutel wordt één keer getoond, alleen de sha256 wordt bewaard, en is in te trekken, opnieuw aan te maken en uit te zetten. Bewust geen Sanctum-token: de sleutel werkt alleen op de export-routes (`AuthenticateApiClient`), niet op de mobiele API. Endpoints (Bearer, 60 verzoeken per minuut): `GET /api/v1/export/orders` (per order bedragen, betaal- en verzendmethode, kortingscode, nieuwe klant, landcode, attributie en orderregels; gepagineerd, `per_page` tot 250) en `GET /api/v1/export/orders/daily` (dagtotalen). Filters `start_date`/`end_date` (JJJJ-MM-DD, Europe/Amsterdam, einddatum inclusief, max. 366 dagen), optioneel `site_id`; zonder datums vandaag. Betaalde orders en creditorders, geen pending of geannuleerd. Geen persoonsgegevens: geen naam, e-mail, telefoon of adres.
+
+### Fixed
+- **Purchase-events vuren nog maar één keer per order.** De bedankpagina (`ViewOrder`) stuurde `orderPaid` bij elke weergave, dus ook bij herladen, de terugknop en de link "bekijk bestelling" in de bevestigingsmail; GTM `purchase`, de Meta pixel en TikTok telden dan dubbele conversies. Nieuwe kolom `purchase_tracked_at`: het event gaat alleen mee als een atomaire update die kolom vult. Bestaande betaalde orders krijgen de kolom bij de migratie al gevuld.
+
 ## v4.167.0 - 2026-10-23
 
 - Productgegevens (JSON-LD) melden in het retourbeleid nu `returnFees`, zoals Google voor verkopersvermeldingen vraagt. Instelbaar op de retourinstellingen ("Kosten van de retourzending", Customsetting `returns_schema_return_fees`); standaard betaalt de klant de retourzending.
