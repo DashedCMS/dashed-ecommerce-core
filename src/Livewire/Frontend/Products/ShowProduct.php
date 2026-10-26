@@ -58,7 +58,18 @@ class ShowProduct extends Component
     {
         $schemas = seo()->metaData('schemas');
 
-        seo()->metaData('schemas', array_merge(is_array($schemas) ? $schemas : [], [
+        $schemas = is_array($schemas) ? $schemas : [];
+
+        // Winkelreviews (dashed-core zet ze op het OnlineStore-blok) gaan over de
+        // organisatie zelf: die tellen niet voor reviewfragmenten, en op een
+        // productpagina meldde Search Console ze als "Ontbrekend veld 'name' (in
+        // '<parent_node>')". Hier horen alleen reviews van het product.
+        if (($schemas['organization'] ?? null) instanceof \Spatie\SchemaOrg\BaseType) {
+            $schemas['organization']->offsetUnset('aggregateRating');
+            $schemas['organization']->offsetUnset('review');
+        }
+
+        seo()->metaData('schemas', array_merge($schemas, [
             'product' => \Dashed\DashedEcommerceCore\Classes\Seo\ProductSchema::for($product),
         ]));
     }

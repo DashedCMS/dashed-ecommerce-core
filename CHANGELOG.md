@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.174.0 - 2026-10-26
+
+### Fixed
+- **Productschema geldig voor reviewfragmenten en verkopersvermeldingen.** Aanleiding: Search Console meldde bij lovora.nl/producten/vaas-lumora "Ontbrekend veld 'name' (in '<parent_node>')" voor de winkelreviews en "Ontbrekend veld 'name'" bij de verkoper.
+  - Op een productpagina haalt `ShowProduct::pushProductSchema()` `aggregateRating` en `review` van het OnlineStore-blok van dashed-core: reviews over de eigen winkel tellen niet voor reviewfragmenten. Productreviews kan een app zelf op `ProductSchema::for()` zetten.
+  - De parent (ProductGroup, of een los Product) heeft altijd een `@id` (`{url}#product`), een naam (groepsnaam in de huidige taal, anders de fallback-taal of een andere taal, anders de eerste variant; een groep zonder Duitse naam gaf een lege naam) en een afbeelding (zonder groepsfoto die van de eerste variant met een foto). Ook `isVariantOf` krijgt die naam.
+  - `variesBy` bevat alleen eigenschappen die tussen de varianten echt verschillen, als `https://schema.org/color|size|material|pattern`; de filternaam wordt in elke taal herkend (Kleuren, Hoogte, Farbe, Größe, …). Een filter zonder schema.org-eigenschap blijft `additionalProperty` op de variant en staat niet meer letterlijk in `variesBy`. Twee filters op dezelfde eigenschap (Hoogte en Maat) worden samengevoegd; een optie zonder naam in de huidige taal neemt die van een andere taal.
+  - Elke variant heeft `inProductGroupWithID`.
+  - De verkoper in elk aanbod heeft `@type` Organization en de naam uit het bedrijfsprofiel naast het `@id`.
+
 ## v4.168.0 - 2026-10-25
 
 ### Added

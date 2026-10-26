@@ -23,22 +23,27 @@ use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
  * Eén productschema per productpagina: een Product voor een groep met één
  * variant (of een los product), een ProductGroup met hasVariant voor een
  * groep met meerdere, en boven MAX_VARIANTS alleen de gemounte variant met
- * isVariantOf. Geen aggregateRating: er zijn geen productreviews.
+ * isVariantOf. Geen aggregateRating: er zijn geen productreviews (een app
+ * kan ze zelf op dit object zetten via for()).
+ *
+ * De parent heeft altijd een @id, naam en afbeelding: reviews hangen aan de
+ * parent en Search Console meldt anders "Ontbrekend veld 'name' (in
+ * '<parent_node>')", zoals bij een groep zonder foto of zonder Duitse naam.
  */
 class ProductSchema
 {
     public const MAX_VARIANTS = 100;
 
-    /** schema.org-eigenschappen voor bekende variatiefilters, op kleine letters. */
+    /** schema.org-eigenschappen voor bekende variatiefilters, op kleine letters, in elke taal. */
     protected const VARIES_BY = [
-        'kleur' => 'color',
-        'color' => 'color',
-        'maat' => 'size',
-        'size' => 'size',
-        'materiaal' => 'material',
-        'material' => 'material',
-        'patroon' => 'pattern',
-        'pattern' => 'pattern',
+        'kleur' => 'color', 'kleuren' => 'color', 'color' => 'color', 'colors' => 'color', 'colour' => 'color',
+        'colours' => 'color', 'farbe' => 'color', 'farben' => 'color',
+        'maat' => 'size', 'maten' => 'size', 'size' => 'size', 'sizes' => 'size', 'grootte' => 'size',
+        'hoogte' => 'size', 'breedte' => 'size', 'afmeting' => 'size', 'afmetingen' => 'size', 'diameter' => 'size',
+        'height' => 'size', 'width' => 'size', 'dimensions' => 'size', 'größe' => 'size', 'grösse' => 'size',
+        'höhe' => 'size', 'breite' => 'size', 'abmessung' => 'size', 'abmessungen' => 'size',
+        'materiaal' => 'material', 'material' => 'material',
+        'patroon' => 'pattern', 'pattern' => 'pattern', 'muster' => 'pattern',
     ];
 
     /** Per verzoek gebouwde schema's, op product-id; een productpagina vraagt hem twee keer. */
@@ -69,16 +74,47 @@ class ProductSchema
         }
 
         $node = self::product($product, $group, null, $shared);
+        $node->setProperty('@id', self::nodeId((string) $node->getProperty('url')));
 
         if ($group && $variants->count() > self::MAX_VARIANTS) {
-            $node->setProperty('isVariantOf', [
+            $node->setProperty('isVariantOf', array_filter([
                 '@type' => 'ProductGroup',
                 'productGroupID' => (string) $group->getKey(),
-                'name' => (string) $group->name,
-            ]);
+                'name' => self::groupName($group, $variants),
+            ]));
         }
 
         return $node;
+    }
+
+    /** {url}#product, zodat reviews ondubbelzinnig aan deze parent hangen. */
+    protected static function nodeId(string $url): string
+    {
+        return strtok($url, '#') . '#product';
+    }
+
+    /**
+     * De groepsnaam in de huidige taal, anders in de fallback-taal of een
+     * andere taal, anders de naam van de eerste variant.
+     */
+    public static function groupName(ProductGroup $group, $variants = null): string
+    {
+        $translations = method_exists($group, 'getTranslations') ? $group->getTranslations('name') : [];
+        $candidates = [
+            $translations[app()->getLocale()] ?? null,
+            $translations[(string) config('app.fallback_locale')] ?? null,
+            ...array_values($translations),
+            $variants ? $variants->first()?->name : null,
+        ];
+
+        foreach ($candidates as $candidate) {
+            $name = self::cleanText($candidate);
+            if ($name !== '') {
+                return $name;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -102,33 +138,68 @@ class ProductSchema
     protected static function productGroup(ProductGroup $group, $variants, array $shared): BaseType
     {
         $filters = $group->activeProductFiltersForVariations;
-        $variesBy = $filters->map(fn ($filter) => self::variationProperty((string) $filter->name))->values()->all();
         $options = $filters->isEmpty()
             ? collect()
             : ProductFilterOption::query()->whereIn('product_filter_id', $filters->pluck('id'))->get()->keyBy('id');
+        $groupId = (string) $group->getKey();
+        $url = self::absolute((string) $group->getUrl(app()->getLocale(), false));
 
         $node = Schema::productGroup()
-            ->setProperty('productGroupID', (string) $group->getKey())
-            ->name((string) $group->name)
-            ->url(self::absolute((string) $group->getUrl(app()->getLocale(), false)));
+            ->setProperty('@id', self::nodeId($url))
+            ->setProperty('productGroupID', $groupId)
+            ->url($url);
 
+        self::setIfFilled($node, 'name', self::groupName($group, $variants));
         self::setIfFilled($node, 'description', self::cleanText($group->short_description) ?: self::cleanText($group->description));
-        self::setIfFilled($node, 'image', self::imageUrls(is_array($group->images) ? $group->images : []));
+
+        $variantNodes = $variants->map(function (Product $variant) use ($group, $filters, $shared, $options, $groupId) {
+            $variantNode = self::product($variant, $group, $filters, $shared, $options);
+            $variantNode->setProperty('inProductGroupWithID', $groupId);
+
+            return $variantNode;
+        })->all();
+
+        // Zonder groepsfoto: de hoofdfoto van de eerste variant met een foto.
+        $image = self::imageUrls(is_array($group->images) ? $group->images : [])
+            ?: collect($variantNodes)->map(fn (BaseType $variant) => (array) $variant->getProperty('image'))->first(fn (array $images) => $images !== [], []);
+        self::setIfFilled($node, 'image', array_values($image));
         self::setBrand($node, $variants->first());
 
-        if ($variesBy) {
+        if ($variesBy = self::variesBy($variantNodes)) {
             $node->setProperty('variesBy', $variesBy);
         }
 
-        $node->setProperty('hasVariant', $variants->map(fn (Product $variant) => self::product($variant, $group, $filters, $shared, $options))->all());
+        $node->setProperty('hasVariant', $variantNodes);
 
         return $node;
+    }
+
+    /**
+     * Alleen eigenschappen die tussen de varianten echt verschillen, als
+     * schema.org-URL. Een filter zonder schema.org-eigenschap staat als
+     * additionalProperty op de variant en hoort niet in variesBy.
+     *
+     * @param  list<BaseType>  $variants
+     * @return list<string>
+     */
+    public static function variesBy(array $variants): array
+    {
+        $variesBy = [];
+
+        foreach (array_unique(self::VARIES_BY) as $property) {
+            $values = collect($variants)->map(fn (BaseType $variant) => (string) $variant->getProperty($property))->unique();
+            if ($values->count() > 1) {
+                $variesBy[] = 'https://schema.org/' . $property;
+            }
+        }
+
+        return $variesBy;
     }
 
     protected static function product(Product $product, ?ProductGroup $group, $variationFilters, array $shared, $options = null): BaseType
     {
         $node = Schema::product()
-            ->name((string) $product->name)
+            ->name(self::cleanText($product->name) ?: ($group ? self::groupName($group) : ''))
             ->setProperty('productID', (string) $product->getKey())
             ->url(self::absoluteUrl($product));
 
@@ -167,8 +238,11 @@ class ProductSchema
             ->values()
             ->all();
 
+        $profile = BusinessProfile::for($siteId, app()->getLocale());
+
         return [
-            'sellerId' => BusinessProfile::for($siteId, app()->getLocale())['id'] ?? null,
+            'sellerId' => $profile['id'] ?? null,
+            'sellerName' => trim((string) ($profile['name'] ?? '')),
             'shipping' => $shipping,
             'returnPolicy' => self::returnPolicy($countries, $siteId),
             'currency' => (string) config('app.currency', 'EUR'),
@@ -195,8 +269,13 @@ class ProductSchema
             ->itemCondition(OfferItemCondition::NewCondition)
             ->url(self::absoluteUrl($product));
 
-        if ($shared['sellerId']) {
-            $offer->setProperty('seller', ['@id' => $shared['sellerId']]);
+        // Met type en naam: alleen een @id gaf bij verkopersvermeldingen "Ontbrekend veld 'name'".
+        if ($shared['sellerId'] || ($shared['sellerName'] ?? '') !== '') {
+            $offer->setProperty('seller', array_filter([
+                '@type' => 'Organization',
+                '@id' => $shared['sellerId'] ?: null,
+                'name' => ($shared['sellerName'] ?? '') ?: null,
+            ]));
         }
         if ($shared['shipping']) {
             $offer->setProperty('shippingDetails', $shared['shipping']);
@@ -320,16 +399,38 @@ class ProductSchema
                 continue;
             }
 
-            if (isset(self::VARIES_BY[mb_strtolower(trim((string) $filter->name))])) {
-                $node->setProperty(self::variationProperty((string) $filter->name), (string) $option->name);
+            $value = self::translated($option);
+            if ($value === '') {
+                continue;
+            }
+
+            if ($property = self::variationProperty($filter)) {
+                // Twee filters op dezelfde eigenschap (Hoogte en Maat): samen.
+                $existing = (string) $node->getProperty($property);
+                $node->setProperty($property, $existing !== '' && $existing !== $value ? $existing . ' / ' . $value : $value);
             } else {
-                $extra[] = Schema::propertyValue()->name((string) $filter->name)->value((string) $option->name);
+                $extra[] = Schema::propertyValue()->name(self::translated($filter))->value($value);
             }
         }
 
         if ($extra) {
             $node->setProperty('additionalProperty', $extra);
         }
+    }
+
+    /** De naam in de huidige taal, anders in een andere taal: een Duitse filter heeft vaak geen naam. */
+    protected static function translated(object $model): string
+    {
+        $translations = method_exists($model, 'getTranslations') ? $model->getTranslations('name') : [];
+
+        foreach ([$translations[app()->getLocale()] ?? null, $translations[(string) config('app.fallback_locale')] ?? null, ...array_values($translations), $model->name ?? null] as $candidate) {
+            $text = is_scalar($candidate) ? trim(preg_replace('/\s+/u', ' ', (string) $candidate)) : '';
+            if ($text !== '') {
+                return $text;
+            }
+        }
+
+        return '';
     }
 
     /**
@@ -346,9 +447,20 @@ class ProductSchema
         return preg_match('#^https?://#', $url) ? $url : url($url);
     }
 
-    protected static function variationProperty(string $filterName): string
+    /** De schema.org-eigenschap van een filter, herkend op zijn naam in elke taal; null als er geen is. */
+    public static function variationProperty(object|string $filter): ?string
     {
-        return self::VARIES_BY[mb_strtolower(trim($filterName))] ?? $filterName;
+        $names = is_string($filter)
+            ? [$filter]
+            : [...(method_exists($filter, 'getTranslations') ? array_values($filter->getTranslations('name')) : []), $filter->name ?? null];
+
+        foreach ($names as $name) {
+            if (is_scalar($name) && isset(self::VARIES_BY[$key = mb_strtolower(trim((string) $name))])) {
+                return self::VARIES_BY[$key];
+            }
+        }
+
+        return null;
     }
 
     /**
