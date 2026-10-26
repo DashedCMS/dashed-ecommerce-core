@@ -2299,6 +2299,9 @@ MARKDOWN,
         // (zie ProductCompleteness en Completeness in dashed-core).
         rescue(fn () => \Dashed\DashedEcommerceCore\Classes\ProductCompleteness::registerRules(), report: false);
 
+        // Kortingscodes op de campagnekalender van dashed-core.
+        \Dashed\DashedEcommerceCore\Classes\Calendar\DiscountCodeCalendar::register();
+
         // Beveiligingsmaatregelen uit het playbook (september 2026): bewaking
         // van geldvelden, betaalmethodes en handmatige betaalmarkeringen, en
         // twee rijen op de Beveiligingscheck. Zie EcommerceActionMonitor en
