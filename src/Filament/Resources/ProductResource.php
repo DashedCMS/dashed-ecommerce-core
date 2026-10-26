@@ -724,6 +724,18 @@ class ProductResource extends Resource
                     ->badge()
                     ->getStateUsing(fn ($record) => $record->openOrdersCount())
                     ->color(fn ($state) => $state > 0 ? 'warning' : 'gray'),
+                TextColumn::make('completeness')
+                    ->label(__('Compleet'))
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state === null ? '-' : $state.'%')
+                    ->color(fn ($state) => match (true) {
+                        $state === null => 'gray',
+                        $state >= \Dashed\DashedEcommerceCore\Classes\ProductCompleteness::THRESHOLD => 'success',
+                        $state >= 50 => 'warning',
+                        default => 'danger',
+                    })
+                    ->sortable()
+                    ->toggleable(),
                 IconColumn::make('indexable')
                     ->label(__('Tonen in overzicht'))
                     ->trueIcon('heroicon-o-check-circle')
@@ -868,6 +880,10 @@ class ProductResource extends Resource
 
                         return $query->where('indexable', $data['indexable']);
                     }),
+                Filter::make('incomplete')
+                    ->label(__('Onder :procent% compleet', ['procent' => \Dashed\DashedEcommerceCore\Classes\ProductCompleteness::THRESHOLD]))
+                    ->toggle()
+                    ->query(fn (Builder $query): Builder => $query->where('completeness', '<', \Dashed\DashedEcommerceCore\Classes\ProductCompleteness::THRESHOLD)),
                 TernaryFilter::make('out_of_stock')
                     ->label(__('Niet op voorraad'))
                     ->placeholder(__('Alle producten'))

@@ -52,6 +52,7 @@ class ProductCompleteness
         $checks = [
             'no_images' => [__("Geen foto's"), self::CATEGORY_IMAGES],
             'no_own_images' => [__("Geen eigen foto's"), self::CATEGORY_IMAGES],
+            'no_name' => [__('Geen naam'), self::CATEGORY_TEXTS],
             'no_description' => [__('Geen beschrijving'), self::CATEGORY_TEXTS],
             'no_short_description' => [__('Geen korte beschrijving'), self::CATEGORY_TEXTS],
             'no_seo_title' => [__('Geen SEO-titel'), self::CATEGORY_TEXTS],
@@ -113,6 +114,10 @@ class ProductCompleteness
             $otherLocales,
             $product,
         ));
+
+        if (! self::hasText(self::translation($product['name'] ?? null, $mainLocale))) {
+            $missing[] = 'no_name';
+        }
 
         if (! ($product['is_bundle'] ?? false) && (float) ($product['price'] ?? 0) <= 0) {
             $missing[] = 'no_price';
@@ -477,6 +482,159 @@ class ProductCompleteness
         }
 
         return ['groups' => $groupRows, 'products' => $productRows];
+    }
+
+    /**
+     * Onder deze score staat een product in het filter "onder 80%".
+     */
+    public const THRESHOLD = 80;
+
+    /**
+     * Controles die het publiceren van een product tegenhouden.
+     */
+    public const BLOCKING = ['no_name', 'no_price'];
+
+    /** @var \WeakMap<Product, array<int, string>>|null */
+    private static ?\WeakMap $memo = null;
+
+    /**
+     * Wat één product mist, met dezelfde controles als report(), maar met
+     * een handvol queries voor alleen dit product. Per model-object
+     * onthouden: de balk en de publicatiecheck lezen het in één verzoek
+     * meerdere keren.
+     *
+     * @return array<int, string>
+     */
+    public static function forProduct(Product $product, bool $fresh = false): array
+    {
+        self::$memo ??= new \WeakMap();
+
+        if (! $fresh && isset(self::$memo[$product])) {
+            return self::$memo[$product];
+        }
+
+        [$mainLocale, $otherLocales] = self::locales();
+        $groupId = $product->product_group_id;
+
+        $group = $groupId
+            ? (array) (DB::table('dashed__product_groups')->where('id', $groupId)->first(['id', 'name', 'slug', 'short_description', 'description', 'images', 'public']) ?? [])
+            : [];
+
+        $metas = DB::table('dashed__metadata')
+            ->where(fn ($q) => $q
+                ->where(fn ($q) => $q->where('metadatable_type', Product::class)->where('metadatable_id', $product->id))
+                ->orWhere(fn ($q) => $q->where('metadatable_type', ProductGroup::class)->where('metadatable_id', $groupId ?? 0)))
+            ->get(['metadatable_type', 'title', 'description'])
+            ->keyBy('metadatable_type')
+            ->map(fn ($row) => ['title' => $row->title, 'description' => $row->description]);
+
+        $hasCategory = DB::table('dashed__product_category')
+            ->where(fn ($q) => $q->where('product_id', $product->id)->when($groupId, fn ($q) => $q->orWhere('product_group_id', $groupId)))
+            ->exists();
+
+        $missingFilter = false;
+        if ($groupId) {
+            $variationFilters = DB::table('dashed__active_product_filter')
+                ->where('use_for_variations', 1)
+                ->where('product_group_id', $groupId)
+                ->pluck('product_filter_id')
+                ->all();
+
+            if ($variationFilters) {
+                $filled = DB::table('dashed__product_filter')
+                    ->where('product_id', $product->id)
+                    ->whereNotNull('product_filter_option_id')
+                    ->whereIn('product_filter_id', $variationFilters)
+                    ->distinct()
+                    ->count('product_filter_id');
+                $missingFilter = $filled < count(array_unique($variationFilters));
+            }
+        }
+
+        $raw = $product->getAttributes();
+
+        return self::$memo[$product] = self::evaluateProduct($raw, $group ?: null, [
+            'product_meta' => $metas[Product::class] ?? null,
+            'group_meta' => $metas[ProductGroup::class] ?? null,
+            'has_category' => $hasCategory,
+            'missing_filter' => $missingFilter,
+            'group_product_count' => $groupId ? Product::query()->where('product_group_id', $groupId)->count() : 1,
+        ], $mainLocale, $otherLocales);
+    }
+
+    /**
+     * Percentage uit een lijst ontbrekende controles: elke controle telt
+     * even zwaar. Dezelfde som als Completeness::check() met de regels uit
+     * registerRules(), zodat de kolom en de balk hetzelfde zeggen.
+     *
+     * @param  array<int, string>  $missing
+     */
+    public static function score(array $missing): int
+    {
+        $checks = array_keys(self::checks(self::locales()[1]));
+        $total = count($checks);
+
+        if ($total === 0) {
+            return 100;
+        }
+
+        return (int) floor(($total - count(array_intersect($checks, array_unique($missing)))) / $total * 100);
+    }
+
+    /**
+     * Zet `completeness` op één product, zonder events: dit is afgeleide
+     * informatie en hoort geen saved-hooks (feeds, caches) af te laten gaan.
+     */
+    public static function store(Product $product): int
+    {
+        $score = self::score(self::forProduct($product, fresh: true));
+
+        Product::query()->whereKey($product->id)->update(['completeness' => $score]);
+        $product->setRawAttributes(array_merge($product->getAttributes(), ['completeness' => $score]), true);
+
+        return $score;
+    }
+
+    /**
+     * De hele catalogus in één keer, uit report(): een update per
+     * voorkomend percentage in plaats van een per product.
+     */
+    public static function storeAll(): int
+    {
+        $perScore = [];
+        foreach (self::report()['products'] as $row) {
+            $perScore[self::score($row['missing'])][] = $row['id'];
+        }
+
+        foreach ($perScore as $score => $ids) {
+            foreach (array_chunk($ids, 1000) as $chunk) {
+                Product::query()->whereIn('id', $chunk)->update(['completeness' => $score]);
+            }
+        }
+
+        return array_sum(array_map('count', $perScore));
+    }
+
+    /**
+     * Meldt de controles aan bij het register in dashed-core, voor de balk op
+     * de bewerkpagina. Achter class_exists: een oudere dashed-core kent het
+     * register niet.
+     */
+    public static function registerRules(): void
+    {
+        if (! class_exists(\Dashed\DashedCore\Classes\Completeness\Completeness::class)) {
+            return;
+        }
+
+        foreach (self::checks(self::locales()[1]) as $key => $check) {
+            \Dashed\DashedCore\Classes\Completeness\Completeness::register(
+                Product::class,
+                $key,
+                $check['label'],
+                fn (Product $product) => ! in_array($key, self::forProduct($product), true),
+                blocking: in_array($key, self::BLOCKING, true),
+            );
+        }
     }
 
     private static function plain(mixed $value): string

@@ -1599,6 +1599,9 @@ MARKDOWN,
             $schedule = app(Schedule::class);
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
                 ->daily();
+            $schedule->job(new \Dashed\DashedEcommerceCore\Jobs\StoreProductCompletenessJob())
+                ->dailyAt('04:15')
+                ->name('dashed:product-completeness');
             $schedule->command(CancelOldOrders::class)
                 ->everyFifteenMinutes();
             $schedule->command(UpdateProductInformations::class)
@@ -2291,6 +2294,10 @@ MARKDOWN,
 
         self::registreerBewaartermijnen();
         self::registreerVertaalbaren();
+
+        // Volledigheidsregels voor de balk op de bewerkpagina van een product
+        // (zie ProductCompleteness en Completeness in dashed-core).
+        rescue(fn () => \Dashed\DashedEcommerceCore\Classes\ProductCompleteness::registerRules(), report: false);
 
         // Beveiligingsmaatregelen uit het playbook (september 2026): bewaking
         // van geldvelden, betaalmethodes en handmatige betaalmarkeringen, en

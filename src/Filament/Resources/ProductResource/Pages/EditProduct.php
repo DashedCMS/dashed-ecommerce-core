@@ -18,12 +18,14 @@ use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductOpenOrdersWidget;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\GuardsPriceChanges;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\ChecksProductCompleteness;
 
 class EditProduct extends EditRecord
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasEditableCMSActions;
     use GuardsPriceChanges;
+    use ChecksProductCompleteness;
 
     protected static string $resource = ProductResource::class;
 
@@ -61,7 +63,13 @@ class EditProduct extends EditRecord
 
     protected function beforeSave(): void
     {
+        $this->guardPublication();
         $this->guardPrice();
+    }
+
+    protected function afterSave(): void
+    {
+        $this->reportCompleteness();
     }
 
     protected function confirmGuardedSave(): void
