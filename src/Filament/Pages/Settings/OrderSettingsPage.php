@@ -55,6 +55,7 @@ class OrderSettingsPage extends Page
             $formData["notification_invoice_emails_{$site['id']}"] = Customsetting::get('notification_invoice_emails', $site['id']);
             $formData["notification_low_stock_emails_{$site['id']}"] = Customsetting::get('notification_low_stock_emails', $site['id']);
             $formData["notification_bcc_order_emails_{$site['id']}"] = Customsetting::get('notification_bcc_order_emails', $site['id']);
+            $formData["revenue_alarm_enabled_{$site['id']}"] = (bool) Customsetting::get('revenue_alarm_enabled', $site['id'], true);
 
             $overridesForSite = Customsetting::get('admin_notify_per_order_origin', $site['id'], []);
             $overridesForSite = is_array($overridesForSite) ? $overridesForSite : [];
@@ -266,6 +267,10 @@ class OrderSettingsPage extends Page
                     ->label(__('Emails om alle bestel notificaties van de klant naar te sturen in BCC'))
                     ->placeholder(__('Voer een email in'))
                     ->reactive(),
+                Toggle::make("revenue_alarm_enabled_{$site['id']}")
+                    ->label(__('Omzetalarm'))
+                    ->helperText(__('Mail en melding als er drie uur lang duidelijk minder betaalde bestellingen binnenkomen dan normaal op dat moment van de week. Meestal betekent dat een kapotte checkout of betaalprovider.'))
+                    ->columnSpanFull(),
                 Section::make(__('Admin notificaties per bestel kanaal'))
                     ->columnSpanFull()
                     ->schema(
@@ -429,6 +434,7 @@ class OrderSettingsPage extends Page
                 $overrides[$origin['key']] = $channelValues;
             }
             Customsetting::set('admin_notify_per_order_origin', $overrides, $site['id']);
+            Customsetting::set('revenue_alarm_enabled', $this->form->getState()["revenue_alarm_enabled_{$site['id']}"] ? '1' : '0', $site['id']);
 
             Customsetting::set('cart_suggestions_enabled', $this->form->getState()["cart_suggestions_enabled_{$site['id']}"] ? '1' : '0', $site['id']);
             Customsetting::set('cart_suggestions_limit_cart', (string) ($this->form->getState()["cart_suggestions_limit_cart_{$site['id']}"] ?? 6), $site['id']);

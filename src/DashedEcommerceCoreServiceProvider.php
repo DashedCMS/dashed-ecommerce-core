@@ -1658,6 +1658,11 @@ MARKDOWN,
                 ->dailyAt('09:00')
                 ->withoutOverlapping();
 
+            // Omzetalarm: drie uur duidelijk minder betaalde bestellingen dan
+            // normaal is meestal een kapotte checkout of betaalprovider.
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::class)
+                ->everyThirtyMinutes()
+                ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\ExpireQuotesCommand::class)
                 ->dailyAt('00:30')
                 ->withoutOverlapping();
@@ -2819,6 +2824,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class,
                 \Dashed\DashedEcommerceCore\Commands\SendPaymentRemindersCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\ExpireQuotesCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class,
             ]);
 
