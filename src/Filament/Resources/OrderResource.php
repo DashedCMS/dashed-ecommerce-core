@@ -407,7 +407,9 @@ class OrderResource extends Resource
                         ->keys()
                         ->map(fn ($key) => Str::snake($key))
                         ->toArray()))
-                    ->sortable(),
+                    // `name` is een accessor, geen kolom: sorteer zoals getNameAttribute() hem opbouwt.
+                    ->sortable(query: fn ($query, string $direction) => $query
+                        ->orderByRaw("coalesce(nullif(trim(concat_ws(' ', first_name, last_name)), ''), email) " . ($direction === 'desc' ? 'desc' : 'asc'))),
                 TextColumn::make('total')
                     ->toggleable()
                     ->sortable()
