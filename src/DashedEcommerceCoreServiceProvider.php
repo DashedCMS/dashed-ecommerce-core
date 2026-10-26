@@ -2302,6 +2302,9 @@ MARKDOWN,
         // Kortingscodes op de campagnekalender van dashed-core.
         \Dashed\DashedEcommerceCore\Classes\Calendar\DiscountCodeCalendar::register();
 
+        // Webshoppunten op de livegang-checklist van dashed-core.
+        \Dashed\DashedEcommerceCore\Classes\LaunchChecklistItems::register();
+
         // Beveiligingsmaatregelen uit het playbook (september 2026): bewaking
         // van geldvelden, betaalmethodes en handmatige betaalmarkeringen, en
         // twee rijen op de Beveiligingscheck. Zie EcommerceActionMonitor en
