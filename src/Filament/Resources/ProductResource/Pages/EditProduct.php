@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\GuardsPriceChanges;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -18,6 +17,7 @@ use Dashed\DashedEcommerceCore\Models\ProductCharacteristics;
 use Dashed\DashedCore\Filament\Concerns\HasEditableCMSActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Product\ProductOpenOrdersWidget;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\GuardsPriceChanges;
 
 class EditProduct extends EditRecord
 {

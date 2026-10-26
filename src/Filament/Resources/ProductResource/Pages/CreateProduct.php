@@ -4,10 +4,10 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
 use Dashed\DashedCore\Classes\Sites;
 use Filament\Resources\Pages\CreateRecord;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\GuardsPriceChanges;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedCore\Filament\Concerns\HasCreatableCMSActions;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\GuardsPriceChanges;
 
 class CreateProduct extends CreateRecord
 {

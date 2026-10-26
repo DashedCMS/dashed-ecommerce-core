@@ -2,14 +2,13 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
-use Illuminate\Support\Facades\Storage;
-use Dashed\DashedEcommerceCore\Classes\Guards\PriceGuard;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Support\Enums\Width;
 use Filament\Actions\CreateAction;
 use Dashed\DashedCore\Classes\Sites;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 use Filament\Notifications\Notification;
 use Filament\Forms\Components\FileUpload;
 use Filament\Resources\Pages\ListRecords;
@@ -18,6 +17,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Exports\ProductsToEdit;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
+use Dashed\DashedEcommerceCore\Classes\Guards\PriceGuard;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1EanSyncer;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FileReader;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FileWriter;
@@ -84,7 +84,11 @@ class ListProducts extends ListRecords
                     // Prijsvangrail: een import met prijzen die flink afwijken of
                     // onder de inkoopprijs zakken, vraagt eerst om een bevestiging.
                     $analysis = rescue(
-                        fn () => PriceGuard::analyzeImport(Excel::toArray(new class implements \Maatwebsite\Excel\Concerns\ToArray { public function array(array $array): void {} }, Storage::disk('local')->path($data['file']))[0] ?? []),
+                        fn () => PriceGuard::analyzeImport(Excel::toArray(new class () implements \Maatwebsite\Excel\Concerns\ToArray {
+                            public function array(array $array): void
+                            {
+                            }
+                        }, Storage::disk('local')->path($data['file']))[0] ?? []),
                         ['count' => 0, 'rows' => []],
                     );
 

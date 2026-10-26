@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns;
 
-use Livewire\Attributes\Locked;
 use Filament\Actions\Action;
+use Livewire\Attributes\Locked;
 use Illuminate\Support\HtmlString;
 use Filament\Support\Exceptions\Halt;
 use Dashed\DashedEcommerceCore\Classes\Guards\PriceGuard;
