@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\GuardsPriceChanges;
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
@@ -22,6 +23,7 @@ class EditProduct extends EditRecord
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasEditableCMSActions;
+    use GuardsPriceChanges;
 
     protected static string $resource = ProductResource::class;
 
@@ -55,6 +57,16 @@ class EditProduct extends EditRecord
         //        }
 
         parent::mount($record);
+    }
+
+    protected function beforeSave(): void
+    {
+        $this->guardPrice();
+    }
+
+    protected function confirmGuardedSave(): void
+    {
+        $this->save();
     }
 
     protected function mutateFormDataBeforeSave(array $data): array

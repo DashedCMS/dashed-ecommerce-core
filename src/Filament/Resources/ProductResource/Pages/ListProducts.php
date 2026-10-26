@@ -2,6 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages;
 
+use Illuminate\Support\Facades\Storage;
+use Dashed\DashedEcommerceCore\Classes\Guards\PriceGuard;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Support\Enums\Width;
@@ -79,14 +81,21 @@ class ListProducts extends ListRecords
                         ]),
                 ])
                 ->action(function ($data) {
+                    // Prijsvangrail: een import met prijzen die flink afwijken of
+                    // onder de inkoopprijs zakken, vraagt eerst om een bevestiging.
+                    $analysis = rescue(
+                        fn () => PriceGuard::analyzeImport(Excel::toArray(new class implements \Maatwebsite\Excel\Concerns\ToArray { public function array(array $array): void {} }, Storage::disk('local')->path($data['file']))[0] ?? []),
+                        ['count' => 0, 'rows' => []],
+                    );
 
-                    ImportProductToEditJob::dispatch($data['file']);
+                    if ($analysis['count'] > 0) {
+                        $this->priceImportAnalysis = $analysis;
+                        $this->replaceMountedAction('confirmPriceImport', ['file' => $data['file']]);
 
-                    Notification::make()
-                        ->title(__('Importeren'))
-                        ->body(__('Het importeren wordt op de achtergrond uitgevoerd.'))
-                        ->success()
-                        ->send();
+                        return;
+                    }
+
+                    $this->dispatchProductImport($data['file']);
                 }),
             ActionGroup::make([
                 Action::make('processGs1File')
@@ -206,5 +215,46 @@ class ListProducts extends ListRecords
                 ->color('primary')
                 ->button(),
         ];
+    }
+
+    /** @var array{count: int, rows: array<int, array{id: int, name: string, old: ?float, new: float, reasons: array<int, string>}>} */
+    #[\Livewire\Attributes\Locked]
+    public array $priceImportAnalysis = ['count' => 0, 'rows' => []];
+
+    public function confirmPriceImportAction(): Action
+    {
+        return Action::make('confirmPriceImport')
+            ->modalHeading(__('Kloppen deze prijzen?'))
+            ->modalDescription(fn () => new \Illuminate\Support\HtmlString(
+                '<p>'.e(trans_choice(':aantal product krijgt een prijs die flink afwijkt of onder de inkoopprijs ligt.|:aantal producten krijgen een prijs die flink afwijkt of onder de inkoopprijs ligt.', $this->priceImportAnalysis['count'], ['aantal' => $this->priceImportAnalysis['count']])).'</p>'.
+                '<table style="margin-top:.75rem;width:100%;font-size:.875rem;text-align:left"><thead><tr><th>'.e(__('Product')).'</th><th>'.e(__('Oud')).'</th><th>'.e(__('Nieuw')).'</th></tr></thead><tbody>'.
+                collect(array_slice($this->priceImportAnalysis['rows'], 0, PriceGuard::PREVIEW_LIMIT))
+                    ->map(fn ($row) => '<tr><td>'.e($row['name']).'<br><small>'.e(implode(' ', $row['reasons'])).'</small></td><td>'.e(PriceGuard::format($row['old'])).'</td><td>'.e(PriceGuard::format($row['new'])).'</td></tr>')
+                    ->implode('').
+                '</tbody></table>'
+            ))
+            ->modalSubmitActionLabel(__('Toch importeren'))
+            ->color('warning')
+            ->requiresConfirmation()
+            ->action(function (array $arguments): void {
+                $this->priceImportAnalysis = ['count' => 0, 'rows' => []];
+                $this->dispatchProductImport((string) ($arguments['file'] ?? ''));
+            });
+    }
+
+    protected function dispatchProductImport(string $file): void
+    {
+        // Alleen een bestand dat de importactie zelf in imports/ heeft gezet.
+        if ($file === '' || ! str_starts_with($file, 'imports/')) {
+            return;
+        }
+
+        ImportProductToEditJob::dispatch($file);
+
+        Notification::make()
+            ->title(__('Importeren'))
+            ->body(__('Het importeren wordt op de achtergrond uitgevoerd.'))
+            ->success()
+            ->send();
     }
 }

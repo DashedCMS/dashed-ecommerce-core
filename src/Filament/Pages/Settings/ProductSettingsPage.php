@@ -45,6 +45,7 @@ class ProductSettingsPage extends Page
             $formData["product_categories_default_order_by_{$site['id']}"] = Customsetting::get('product_categories_default_order_by', $site['id'], 'created_at');
             $formData["product_categories_default_order_{$site['id']}"] = Customsetting::get('product_categories_default_order', $site['id'], 'DESC');
             $formData["product_default_amount_of_products_{$site['id']}"] = Customsetting::get('product_default_amount_of_products', $site['id'], 12);
+            $formData["price_guard_threshold_{$site['id']}"] = Customsetting::get('price_guard_threshold', $site['id'], \Dashed\DashedEcommerceCore\Classes\Guards\PriceGuard::DEFAULT_THRESHOLD);
             $formData["product_use_simple_variation_style_{$site['id']}"] = Customsetting::get('product_use_simple_variation_style', $site['id'], false);
             $formData["products_hide_parents_in_overview_{$site['id']}"] = Customsetting::get('products_hide_parents_in_overview', $site['id'], false);
             $formData["product_redirect_after_new_variation_selected_{$site['id']}"] = Customsetting::get('product_redirect_after_new_variation_selected', $site['id'], false);
@@ -131,6 +132,12 @@ class ProductSettingsPage extends Page
                     ->label(__('Standaard aantal producten per pagina'))
                     ->numeric()
                     ->required(),
+                TextInput::make("price_guard_threshold_{$site['id']}")
+                    ->label(__('Prijsvangrail: bevestiging vragen vanaf deze afwijking'))
+                    ->helperText(__('Een prijs die meer dan dit percentage omhoog of omlaag gaat, of onder de inkoopprijs zakt, vraagt bij opslaan en importeren om een bevestiging. 0 is uit.'))
+                    ->numeric()
+                    ->minValue(0)
+                    ->suffix('%'),
                 Select::make("product_overview_page_id_{$site['id']}")
                     ->label(__('Product overview pagina'))
                     ->options(PageModel::thisSite($site['id'])->pluck('name', 'id')),
@@ -192,6 +199,7 @@ class ProductSettingsPage extends Page
             Customsetting::set('product_categories_default_order_by', $this->form->getState()["product_categories_default_order_by_{$site['id']}"], $site['id']);
             Customsetting::set('product_categories_default_order', $this->form->getState()["product_categories_default_order_{$site['id']}"], $site['id']);
             Customsetting::set('product_default_amount_of_products', $this->form->getState()["product_default_amount_of_products_{$site['id']}"], $site['id']);
+            Customsetting::set('price_guard_threshold', (int) ($this->form->getState()["price_guard_threshold_{$site['id']}"] ?? \Dashed\DashedEcommerceCore\Classes\Guards\PriceGuard::DEFAULT_THRESHOLD), $site['id']);
             Customsetting::set('product_use_simple_variation_style', $this->form->getState()["product_use_simple_variation_style_{$site['id']}"], $site['id']);
             //            Customsetting::set('products_hide_parents_in_overview', $this->form->getState()["products_hide_parents_in_overview_{$site['id']}"], $site['id']);
             Customsetting::set('product_redirect_after_new_variation_selected', $this->form->getState()["product_redirect_after_new_variation_selected_{$site['id']}"], $site['id']);
