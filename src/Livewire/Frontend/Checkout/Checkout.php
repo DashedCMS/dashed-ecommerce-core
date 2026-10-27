@@ -751,6 +751,11 @@ class Checkout extends Component
 
     public function submit()
     {
+        // Wat de klant bij de laatste render zag, vóór fillPrices() het
+        // opnieuw uitrekent. Alleen gebruikt om af te breken: wie hiermee
+        // knoeit, krijgt hooguit een extra ververste checkout.
+        $sawFullGiftcardCoverage = $this->sawFullGiftcardCoverage();
+
         cartHelper()->initialize($this->cartType);
         cartHelper()->setCartType($this->cartType);
 
@@ -781,6 +786,14 @@ class Checkout extends Component
 
         $this->fillPrices();
         $this->checkCart();
+
+        // De klant zag dat de cadeaubonnen alles betaalden (en dus geen
+        // betaalmethode), maar intussen is er saldo elders gebruikt. Geen
+        // order: de prijzen zijn hierboven ververst, de klant kiest een
+        // betaalmethode voor de rest.
+        if ($sawFullGiftcardCoverage && ! $this->giftcardsCoverCart()) {
+            return $this->refuseChangedGiftcardBalance();
+        }
 
         $validator = Validator::make([
             'shippingMethod' => $this->shippingMethod,
@@ -988,26 +1001,6 @@ class Checkout extends Component
 
                 return $this->dispatch('showAlert', 'error', Translation::get('no-valid-deposit-payment-method-chosen', 'cart', 'You did not choose a valid payment method for the deposit'));
             }
-        }
-
-        // Liet de wagen zien dat de cadeaubonnen alles betalen, kijk dan vóór
-        // het aanmaken van de order of dat saldo er nog is. Is het intussen
-        // elders gebruikt, dan geen order: prijzen verversen en de klant een
-        // betaalmethode voor de rest laten kiezen.
-        if ($giftcardsCoverCart && $this->giftcardBalancesChanged()) {
-            cartHelper()->updateData();
-            $this->fillPrices();
-
-            $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is intussen gewijzigd. Kies een betaalmethode voor het restbedrag.');
-
-            Notification::make()
-                ->danger()
-                ->title($message)
-                ->send();
-
-            $this->recordAbandonment('giftcard_balance_changed');
-
-            return $this->dispatch('showAlert', 'error', $message);
         }
 
         if (Customsetting::get('checkout_account') != 'disabled' && auth()->guest() && $this->password) {
@@ -1264,16 +1257,7 @@ class Checkout extends Component
 
             $this->fillPrices();
 
-            $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is intussen gewijzigd. Kies een betaalmethode voor het restbedrag.');
-
-            Notification::make()
-                ->danger()
-                ->title($message)
-                ->send();
-
-            $this->recordAbandonment('giftcard_balance_changed');
-
-            return $this->dispatch('showAlert', 'error', $message);
+            return $this->refuseChangedGiftcardBalance();
         }
 
         $orderPayment = new OrderPayment();
@@ -1461,26 +1445,25 @@ class Checkout extends Component
     }
 
     /**
-     * Is het saldo van een toegepaste verkochte bon intussen lager dan wat de
-     * wagen ermee betaalt? Leest de bonnen opnieuw uit de database.
+     * Liet de laatste render zien dat de cadeaubonnen alles betalen?
      */
-    protected function giftcardBalancesChanged(): bool
+    protected function sawFullGiftcardCoverage(): bool
     {
-        foreach ($this->giftcardRedemptions() as $redemption) {
-            $redeemed = round((float) ($redemption['redeemed'] ?? 0), 2);
+        return ! empty($this->giftcards) && (float) $this->amountToPay <= 0;
+    }
 
-            if ($redeemed <= 0) {
-                continue;
-            }
+    protected function refuseChangedGiftcardBalance()
+    {
+        $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is intussen gewijzigd. Kies een betaalmethode voor het restbedrag.');
 
-            $card = DiscountCode::whereKey((int) ($redemption['discount_code_id'] ?? 0))->first();
+        Notification::make()
+            ->danger()
+            ->title($message)
+            ->send();
 
-            if (! $card || ! $card->isSoldGiftcard() || round((float) $card->discount_amount, 2) < $redeemed) {
-                return true;
-            }
-        }
+        $this->recordAbandonment('giftcard_balance_changed');
 
-        return false;
+        return $this->dispatch('showAlert', 'error', $message);
     }
 
     /**

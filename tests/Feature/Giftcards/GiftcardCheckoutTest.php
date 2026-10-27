@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Bus;
+use Dashed\DashedEcommerceCore\Models\Cart;
+use Dashed\DashedEcommerceCore\Models\CartItem;
+use Dashed\DashedEcommerceCore\Classes\CartHelper;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Event;
 use Dashed\DashedCore\Classes\Sites;
@@ -36,9 +40,19 @@ class GiftcardCheckoutProbe extends Checkout
 {
     public array $redemptions = [];
 
+    /** Computed properties draaien alleen binnen Livewire; hier rechtstreeks. */
+    public function __get($property)
+    {
+        if ($property === 'cartItems') {
+            return $this->getCartItemsProperty();
+        }
+
+        return parent::__get($property);
+    }
+
     protected function giftcardRedemptions(): array
     {
-        return $this->redemptions;
+        return $this->redemptions ?: parent::giftcardRedemptions();
     }
 
     public function pay(Order $order): ?OrderPayment
@@ -54,11 +68,6 @@ class GiftcardCheckoutProbe extends Checkout
     public function rest(Order $order): float
     {
         return $this->amountForPaymentProvider($order);
-    }
-
-    public function balancesChanged(): bool
-    {
-        return $this->giftcardBalancesChanged();
     }
 }
 
@@ -137,6 +146,61 @@ function afrekenOrder(): array
     ]));
 
     return [$order->fresh(), $product];
+}
+
+function afrekenProduct(float $prijs): Product
+{
+    $group = ProductGroup::create([
+        'name' => ['nl' => 'Groep'],
+        'slug' => ['nl' => 'groep-' . uniqid()],
+        'short_description' => ['nl' => ''],
+        'description' => ['nl' => ''],
+        'content' => ['nl' => ''],
+        'search_terms' => ['nl' => ''],
+        'site_ids' => [Sites::getActive()],
+    ]);
+
+    return Product::withoutEvents(fn () => Product::create([
+        'name' => ['nl' => 'Vaas'],
+        'slug' => ['nl' => 'vaas-' . uniqid()],
+        'site_ids' => [Sites::getActive()],
+        'product_group_id' => $group->id,
+        'use_stock' => 0,
+        'stock' => 0,
+        'total_stock' => 0,
+        'in_stock' => 1,
+        'stock_status' => 'in_stock',
+        'price' => $prijs,
+        'current_price' => $prijs,
+        'vat_rate' => 21,
+        'public' => 1,
+    ]));
+}
+
+function afrekenWagen(Product $product): Cart
+{
+    $token = (string) Str::uuid();
+    request()->cookies->set(config('dashed-ecommerce.cart_cookie', 'cart_token'), $token);
+
+    $cart = Cart::create(['token' => $token, 'type' => 'default']);
+    CartItem::create([
+        'cart_id' => $cart->id,
+        'product_id' => $product->id,
+        'name' => 'Vaas',
+        'unit_price' => $product->price,
+        'quantity' => 1,
+        'options' => [],
+        'options_hash' => '',
+    ]);
+
+    CartHelper::$cart = null;
+    CartHelper::$cartItemsInitialized = false;
+    CartHelper::$cartItems = [];
+    CartHelper::$cartProductsById = [];
+    CartHelper::$calculateInclusiveTax = true;
+    cartHelper()->updateData();
+
+    return $cart;
 }
 
 function afrekenProbe(DiscountCode $bon, float $bedrag): GiftcardCheckoutProbe
@@ -241,26 +305,30 @@ it('doet niets zonder bonnen', function () {
         ->and($probe->rest($order))->toBe(50.0);
 });
 
-it('ziet vóór het aanmaken van de order dat het saldo intussen lager is', function () {
+it('maakt geen order als de klant volledige dekking zag en het saldo intussen elders gebruikt is', function () {
+    $product = afrekenProduct(50);
     $bon = afrekenBon(50);
-    $probe = afrekenProbe($bon, 50);
+    afrekenWagen($product);
+    expect(cartHelper()->applyDiscountCode($bon->code)['status'])->toBe('success')
+        ->and(cartHelper()->getAmountToPay())->toBe(0.0);
 
-    expect($probe->balancesChanged())->toBeFalse();
+    // Zo stond de checkout bij de laatste render: alles door de bon betaald.
+    $probe = new GiftcardCheckoutProbe();
+    $probe->giftcards = cartHelper()->getGiftcardRedemptions();
+    $probe->amountToPay = 0.0;
 
-    // Elders € 20 van de bon gebruikt terwijl de klant in de checkout zat.
+    // Intussen elders € 20 van de bon gebruikt.
     $bon->forceFill(['discount_amount' => 30]);
     DiscountCode::withoutEvents(fn () => $bon->save());
 
-    expect($probe->balancesChanged())->toBeTrue();
-});
+    $probe->submit();
 
-it('ziet een bon die geen verkochte bon meer is als gewijzigd', function () {
-    $bon = afrekenBon(50);
-    $probe = afrekenProbe($bon, 20);
-    $bon->forceFill(['giftcard_type' => 'promo']);
-    DiscountCode::withoutEvents(fn () => $bon->save());
+    $meldingen = collect(session('filament.notifications', []))->pluck('title');
 
-    expect($probe->balancesChanged())->toBeTrue();
+    expect(Order::count())->toBe(0)
+        ->and($meldingen)->toContain('Het saldo van je cadeaubon is intussen gewijzigd. Kies een betaalmethode voor het restbedrag.')
+        ->and((float) $probe->amountToPay)->toBe(20.0)
+        ->and((float) $bon->fresh()->reserved_amount)->toBe(0.0);
 });
 
 it('stuurt bij een tekort na het reserveren de rest naar de betaalprovider in plaats van te annuleren', function () {

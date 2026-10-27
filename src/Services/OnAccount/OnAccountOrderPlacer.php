@@ -59,17 +59,6 @@ class OnAccountOrderPlacer
      *
      * @throws \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused
      */
-    /**
-     * Op rekening gaat alleen wat de verkochte cadeaubonnen niet al betaald
-     * hebben; zonder bonnen is dat gewoon het totaal.
-     */
-    protected static function amountOnAccount(Order $order): float
-    {
-        $giftcards = (float) $order->orderPayments()->where('psp', 'giftcard')->where('status', 'paid')->sum('amount');
-
-        return round(max(0.0, (float) $order->total - $giftcards), 2);
-    }
-
     public static function placeFromCheckout(Order $order, OrderPayment $payment, PaymentMethod $method, ?User $customer): bool
     {
         if (! $method->on_account) {
@@ -98,5 +87,16 @@ class OnAccountOrderPlacer
                 __('Er wordt al een bestelling op rekening verwerkt, probeer het zo opnieuw.'),
             );
         }
+    }
+
+    /**
+     * Op rekening gaat alleen wat de verkochte cadeaubonnen niet al betaald
+     * hebben; zonder bonnen is dat gewoon het totaal.
+     */
+    protected static function amountOnAccount(Order $order): float
+    {
+        $giftcards = (float) $order->orderPayments()->where('psp', 'giftcard')->where('status', 'paid')->sum('amount');
+
+        return round(max(0.0, (float) $order->total - $giftcards), 2);
     }
 }
