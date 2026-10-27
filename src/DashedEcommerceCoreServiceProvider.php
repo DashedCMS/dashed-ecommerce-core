@@ -2843,6 +2843,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\ExpireQuotesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\IssueMissingGiftcardsCommand::class,
             ]);
 
     }
