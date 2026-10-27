@@ -30,6 +30,8 @@ class GiftcardLedger
 
     public const STATUS_RELEASED = 'released';
 
+    public const STATUS_TRANSFERRED = 'transferred';
+
     /**
      * @param  array<int, array{code?: string, discount_code_id: int, redeemed: float}>  $redemptions
      * @return array<int, array{code: string, discount_code_id: int, redeemed: float, status: string, refunded: float}>
@@ -138,6 +140,17 @@ class GiftcardLedger
                 ->where('status', 'paid')
                 ->update(['status' => 'cancelled']);
         }
+    }
+
+    /**
+     * Order vervangen door een wijziging (OrderModificationService): de
+     * vervanger erfde dezelfde regels en de bonbetalingen. Op de oude order
+     * gaat de reservering op `transferred`, zodat hij nooit meer vrijgegeven
+     * of afgeboekt wordt. Het saldo op de bon verandert niet.
+     */
+    public static function transfer(Order $order): void
+    {
+        static::transition($order, fn () => static::STATUS_TRANSFERRED);
     }
 
     /**

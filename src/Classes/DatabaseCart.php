@@ -186,7 +186,8 @@ class DatabaseCart
             ->where('code', $code)
             ->first();
 
-        if (! $discount || ! $discount->isValidForCart(cartType: $cart->type)) {
+        // Een verkochte cadeaubon is betaalmiddel, nooit de kortingscode.
+        if (! $discount || $discount->isSoldGiftcard() || ! $discount->isValidForCart(cartType: $cart->type)) {
             return ['ok' => false, 'message' => 'Discount code not valid'];
         }
 

@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
 
 /**
  * Wijzigt de inhoud van een bestelling. Onbetaalde orders zonder echte factuur
@@ -269,6 +270,11 @@ class OrderModificationService
                 // (paid, partially_paid én waiting_for_confirmation).
                 $order->markAsCancelled(sendMail: false, refillStock: ! $alreadyShipped, refillDiscount: false);
                 $order->orderPayments()->where('status', 'paid')->update(['order_id' => $newOrder->id]);
+
+                // Verkochte cadeaubonnen: de bonbetalingen zijn hierboven mee
+                // verhuisd en de vervanger erfde applied_gift_cards via
+                // replicate(). De reservering hoort voortaan bij de vervanger.
+                GiftcardLedger::transfer($order);
             }
 
             if ($productsMustBeReturned) {
@@ -326,6 +332,13 @@ class OrderModificationService
             // vervanger nooit de status 'concept' heeft gehad.
             $newOrder->alignCreatedAtToFirstPayment(force: true);
             $newOrder->save();
+
+            // Niet via markAsPaid(), dus de reservering van verkochte
+            // cadeaubonnen hier zelf afboeken zodra de vervanger betaald is.
+            // Deels betaald: dat gebeurt later in markAsPaid().
+            if ($newOrder->status === 'paid') {
+                GiftcardLedger::commit($newOrder);
+            }
             $newOrder->createInvoice();
 
             if ($deductNewStock) {

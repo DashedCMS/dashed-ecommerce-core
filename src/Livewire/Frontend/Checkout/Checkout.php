@@ -25,6 +25,7 @@ use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\CartHelper;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
@@ -284,7 +285,7 @@ class Checkout extends Component
     public function retrievePaymentMethods(): void
     {
         $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, null, $this->paymentMethodsTotal()) : [];
-        $this->onAccountNotice = OnAccount::unavailableNotice(auth()->user(), (float) cartHelper()->getTotal());
+        $this->onAccountNotice = OnAccount::unavailableNotice(auth()->user(), (float) ($this->paymentMethodsTotal() ?? cartHelper()->getTotal()));
 
         if (
             Customsetting::get('first_payment_method_selected', null, true)
@@ -989,6 +990,26 @@ class Checkout extends Component
             }
         }
 
+        // Liet de wagen zien dat de cadeaubonnen alles betalen, kijk dan vóór
+        // het aanmaken van de order of dat saldo er nog is. Is het intussen
+        // elders gebruikt, dan geen order: prijzen verversen en de klant een
+        // betaalmethode voor de rest laten kiezen.
+        if ($giftcardsCoverCart && $this->giftcardBalancesChanged()) {
+            cartHelper()->updateData();
+            $this->fillPrices();
+
+            $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is intussen gewijzigd. Kies een betaalmethode voor het restbedrag.');
+
+            Notification::make()
+                ->danger()
+                ->title($message)
+                ->send();
+
+            $this->recordAbandonment('giftcard_balance_changed');
+
+            return $this->dispatch('showAlert', 'error', $message);
+        }
+
         if (Customsetting::get('checkout_account') != 'disabled' && auth()->guest() && $this->password) {
             if (User::where('email', $this->email)->count()) {
                 Notification::make()
@@ -1229,16 +1250,21 @@ class Checkout extends Component
             return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$giftcardPayment->hash);
         }
 
-        // De wagen liet zien dat de bonnen alles betaalden, maar intussen is
-        // er saldo elders gebruikt. Er is dan geen betaalmethode gekozen voor
-        // de rest: deze order laten vervallen (het saldo gaat terug op de bon)
-        // en de klant opnieuw laten kiezen.
-        if ($giftcardsCoverCart) {
+        // Zonder gekozen betaalmethode gaat de rest naar een gekoppelde
+        // betaalprovider, die zelf de methode laat kiezen. Dat gebeurt ook als
+        // de wagen volledige dekking liet zien en het saldo pas tussen de
+        // controle hierboven en het reserveren elders is gebruikt.
+        $psp = $paymentMethod ? $paymentMethod['psp'] : $this->connectedPaymentServiceProvider();
+
+        // Laatste redmiddel: geen methode en geen gekoppelde provider (kan
+        // alleen bij die race). De order kan niet betaald worden, dus laten
+        // vervallen; het gereserveerde saldo gaat terug op de bon.
+        if (! $psp) {
             $order->changeStatus('cancelled');
 
             $this->fillPrices();
 
-            $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is gewijzigd. Kies een betaalmethode voor het restbedrag.');
+            $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is intussen gewijzigd. Kies een betaalmethode voor het restbedrag.');
 
             Notification::make()
                 ->danger()
@@ -1253,17 +1279,6 @@ class Checkout extends Component
         $orderPayment = new OrderPayment();
         $orderPayment->amount = $this->amountForPaymentProvider($order);
         $orderPayment->order_id = $order->id;
-
-        if ($paymentMethod) {
-            $psp = $paymentMethod['psp'];
-        } else {
-            foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
-                if ($ecommercePSP['class']::isConnected()) {
-                    $psp = $pspId;
-                }
-            }
-        }
-
         $orderPayment->psp = $psp;
 
         $onAccountMethod = null;
@@ -1278,7 +1293,8 @@ class Checkout extends Component
             if ($onAccountMethod?->on_account) {
                 $orderPayment->payment_method = $onAccountMethod->name;
             } elseif ($depositAmount > 0.00) {
-                $orderPayment->amount = $depositAmount;
+                // Nooit meer dan wat er na de cadeaubonnen openstaat.
+                $orderPayment->amount = min($depositAmount, $this->amountForPaymentProvider($order));
 
                 $depositPaymentMethod = '';
                 foreach ($paymentMethods as $thisPaymentMethod) {
@@ -1429,6 +1445,42 @@ class Checkout extends Component
     {
         return $order->orderPayments()->where('psp', 'giftcard')->where('status', 'paid')->exists()
             && $order->outstandingAmount() <= 0;
+    }
+
+    protected function connectedPaymentServiceProvider(): ?string
+    {
+        $psp = null;
+
+        foreach (ecommerce()->builder('paymentServiceProviders') as $pspId => $ecommercePSP) {
+            if ($ecommercePSP['class']::isConnected()) {
+                $psp = $pspId;
+            }
+        }
+
+        return $psp;
+    }
+
+    /**
+     * Is het saldo van een toegepaste verkochte bon intussen lager dan wat de
+     * wagen ermee betaalt? Leest de bonnen opnieuw uit de database.
+     */
+    protected function giftcardBalancesChanged(): bool
+    {
+        foreach ($this->giftcardRedemptions() as $redemption) {
+            $redeemed = round((float) ($redemption['redeemed'] ?? 0), 2);
+
+            if ($redeemed <= 0) {
+                continue;
+            }
+
+            $card = DiscountCode::whereKey((int) ($redemption['discount_code_id'] ?? 0))->first();
+
+            if (! $card || ! $card->isSoldGiftcard() || round((float) $card->discount_amount, 2) < $redeemed) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

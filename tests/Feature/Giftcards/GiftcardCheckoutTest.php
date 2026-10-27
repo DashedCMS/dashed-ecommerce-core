@@ -55,6 +55,11 @@ class GiftcardCheckoutProbe extends Checkout
     {
         return $this->amountForPaymentProvider($order);
     }
+
+    public function balancesChanged(): bool
+    {
+        return $this->giftcardBalancesChanged();
+    }
 }
 
 function afrekenBon(float $saldo): DiscountCode
@@ -171,7 +176,7 @@ it('betaalt een bestelling die de bon helemaal dekt zonder betaalprovider', func
         ->and((float) $bon->fresh()->used_amount)->toBe(50.0)
         ->and((float) $bon->fresh()->reserved_amount)->toBe(0.0);
 
-    Event::assertDispatched(OrderMarkedAsPaidEvent::class);
+    Event::assertDispatchedTimes(OrderMarkedAsPaidEvent::class, 1);
 });
 
 it('maakt een bestelling met bon en betaalprovider betaald zodra de rest binnen is', function () {
@@ -195,7 +200,7 @@ it('maakt een bestelling met bon en betaalprovider betaald zodra de rest binnen 
         ->and((float) $bon->fresh()->used_amount)->toBe(20.0)
         ->and((float) $bon->fresh()->reserved_amount)->toBe(0.0);
 
-    Event::assertDispatched(OrderMarkedAsPaidEvent::class);
+    Event::assertDispatchedTimes(OrderMarkedAsPaidEvent::class, 1);
 });
 
 it('zet de bon terug als de rest bij de betaalprovider mislukt', function () {
@@ -234,4 +239,45 @@ it('doet niets zonder bonnen', function () {
     expect($probe->pay($order))->toBeNull()
         ->and($probe->covered($order))->toBeFalse()
         ->and($probe->rest($order))->toBe(50.0);
+});
+
+it('ziet vóór het aanmaken van de order dat het saldo intussen lager is', function () {
+    $bon = afrekenBon(50);
+    $probe = afrekenProbe($bon, 50);
+
+    expect($probe->balancesChanged())->toBeFalse();
+
+    // Elders € 20 van de bon gebruikt terwijl de klant in de checkout zat.
+    $bon->forceFill(['discount_amount' => 30]);
+    DiscountCode::withoutEvents(fn () => $bon->save());
+
+    expect($probe->balancesChanged())->toBeTrue();
+});
+
+it('ziet een bon die geen verkochte bon meer is als gewijzigd', function () {
+    $bon = afrekenBon(50);
+    $probe = afrekenProbe($bon, 20);
+    $bon->forceFill(['giftcard_type' => 'promo']);
+    DiscountCode::withoutEvents(fn () => $bon->save());
+
+    expect($probe->balancesChanged())->toBeTrue();
+});
+
+it('stuurt bij een tekort na het reserveren de rest naar de betaalprovider in plaats van te annuleren', function () {
+    [$order] = afrekenOrder();
+    $bon = afrekenBon(50);
+    $probe = afrekenProbe($bon, 50);
+
+    // De race tussen de controle en reserve(): het saldo zakt net daartussen.
+    $bon->forceFill(['discount_amount' => 35]);
+    DiscountCode::withoutEvents(fn () => $bon->save());
+
+    $payment = $probe->pay($order);
+
+    expect((float) $payment->amount)->toBe(35.0)
+        ->and($probe->covered($order))->toBeFalse()
+        ->and($probe->rest($order))->toBe(15.0)
+        ->and($order->fresh()->status)->toBe('pending');
+
+    Event::assertNotDispatched(OrderCancelledEvent::class);
 });

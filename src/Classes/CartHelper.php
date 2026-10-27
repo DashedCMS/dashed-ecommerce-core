@@ -684,7 +684,8 @@ class CartHelper
 
         if (! $code && $cart->discount_code_id) {
             $discount = DiscountCode::find($cart->discount_code_id);
-            if ($discount) {
+            // Een verkochte cadeaubon is nooit de kortingscode van de wagen.
+            if ($discount && ! $discount->isSoldGiftcard()) {
                 static::$discountCode = $discount;
                 static::$discountCodeString = $discount->code ?? null;
                 static::$discountCodeInitialized = true;
