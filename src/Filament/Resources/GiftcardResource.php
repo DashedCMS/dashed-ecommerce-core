@@ -207,6 +207,12 @@ class GiftcardResource extends Resource
                     ->money('EUR')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('giftcard_type')
+                    ->label(__('Soort'))
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state === 'verkocht' ? __('Verkocht') : __('Weggegeven'))
+                    ->color(fn ($state) => $state === 'verkocht' ? 'success' : 'gray')
+                    ->sortable(),
                 TextColumn::make('site_ids')
                     ->label(__('Actief op site(s)'))
                     ->sortable()
@@ -227,6 +233,12 @@ class GiftcardResource extends Resource
             ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited($query))
             ->defaultSort('created_at', 'DESC')
             ->filters([
+                \Filament\Tables\Filters\SelectFilter::make('giftcard_type')
+                    ->label(__('Soort'))
+                    ->options([
+                        'promo' => __('Weggegeven'),
+                        'verkocht' => __('Verkocht'),
+                    ]),
                 \Filament\Tables\Filters\TernaryFilter::make('has_balance')
                     ->label(__('Met restsaldo'))
                     ->queries(
@@ -268,6 +280,19 @@ class GiftcardResource extends Resource
                             ->label(__('Aangemaakt door'))
                             ->getStateUsing(function ($record) {
                                 return $record->user ? $record->user->name : 'Systeem';
+                            }),
+                        TextEntry::make('source_order_product_id')
+                            ->label(__('Gekocht in order'))
+                            ->visible(fn ($record) => (bool) $record?->source_order_product_id)
+                            ->getStateUsing(function ($record) {
+                                $order = \Dashed\DashedEcommerceCore\Models\OrderProduct::withTrashed()->find($record->source_order_product_id)?->order;
+
+                                return $order ? '#' . ($order->invoice_id ?: $order->id) : '#' . $record->source_order_product_id;
+                            })
+                            ->url(function ($record) {
+                                $order = \Dashed\DashedEcommerceCore\Models\OrderProduct::withTrashed()->find($record->source_order_product_id)?->order;
+
+                                return $order ? \Dashed\DashedEcommerceCore\Filament\Resources\OrderResource::getUrl('view', ['record' => $order]) : null;
                             }),
                         TextEntry::make('site_ids')
                             ->label(__('Actief op site(s)'))

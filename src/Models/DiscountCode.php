@@ -83,7 +83,7 @@ class DiscountCode extends Model
 
         static::created(function ($discountCode) {
             if ($discountCode->is_giftcard) {
-                $discountCode->createLog(tag: 'giftcard.created', userId: auth()->user()->id, oldAmount: 0, newAmount: $discountCode->discount_amount);
+                $discountCode->createLog(tag: 'giftcard.created', userId: auth()->id(), oldAmount: 0, newAmount: $discountCode->discount_amount);
             }
         });
 
@@ -166,6 +166,16 @@ class DiscountCode extends Model
                 $query->where('end_date', null)
                     ->orWhere('end_date', '>=', now()->format('Y-m-d H:i:s'));
             });
+    }
+
+    public function isSoldGiftcard(): bool
+    {
+        return (bool) $this->is_giftcard && $this->giftcard_type === 'verkocht';
+    }
+
+    public function scopeSoldGiftcard($query)
+    {
+        return $query->where('is_giftcard', 1)->where('giftcard_type', 'verkocht');
     }
 
     public function scopeIsGiftcard($query)

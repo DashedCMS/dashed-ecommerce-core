@@ -45,6 +45,8 @@ class ProductGroup extends Model
         'excluded_variations' => 'array',
         'gs1_excluded' => 'boolean',
         'exclude_from_discounts' => 'boolean',
+        'is_giftcard_product' => 'boolean',
+        'is_digital' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',

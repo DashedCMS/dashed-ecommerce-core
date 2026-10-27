@@ -135,6 +135,12 @@ class ProductResource extends Resource
                 Toggle::make('exclude_from_discounts')
                     ->label(__('Uitsluiten van korting'))
                     ->helperText(__('Kortingscodes, acties en staffelkorting gelden niet voor dit product. Een cadeaubon blijft bruikbaar. Kan ook voor een hele productgroep.')),
+                Toggle::make('is_giftcard_product')
+                    ->label(__('Is cadeaubon'))
+                    ->helperText(__('Na betaling wordt er per stuk een cadeaubon-code aangemaakt en gemaild. Kan ook voor een hele productgroep.')),
+                Toggle::make('is_digital')
+                    ->label(__('Digitaal (geen verzending)'))
+                    ->helperText(__('Dit product wordt niet verzonden. Kan ook voor een hele productgroep.')),
                 Toggle::make('is_bundle')
                     ->label(__('Bundel product'))
                     ->helperText(__('Bestaat dit product uit meerdere andere producten?'))

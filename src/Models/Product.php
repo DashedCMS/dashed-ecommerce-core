@@ -89,6 +89,8 @@ class Product extends Model
         'site_ids' => 'array',
         'gs1_excluded' => 'boolean',
         'exclude_from_discounts' => 'boolean',
+        'is_giftcard_product' => 'boolean',
+        'is_digital' => 'boolean',
         'images' => 'array',
         'copyable_to_childs' => 'array',
         'start_date' => 'datetime',
@@ -1325,6 +1327,25 @@ class Product extends Model
     {
         return (bool) $this->exclude_from_discounts
             || (bool) $this->productGroup?->exclude_from_discounts;
+    }
+
+    /**
+     * Is dit product een te verkopen cadeaubon? Staat aan op het product zelf
+     * of op zijn productgroep.
+     */
+    public function isGiftcardProduct(): bool
+    {
+        return (bool) $this->is_giftcard_product
+            || (bool) $this->productGroup?->is_giftcard_product;
+    }
+
+    /**
+     * Digitaal product: geen verzending nodig. Product of productgroep.
+     */
+    public function isDigital(): bool
+    {
+        return (bool) $this->is_digital
+            || (bool) $this->productGroup?->is_digital;
     }
 
     public function showableCharacteristics($withoutIds = [])
