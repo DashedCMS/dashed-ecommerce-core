@@ -111,7 +111,7 @@ Route::middleware(['web'])->prefix(config('filament.path', 'dashed') . '/api')->
     Route::get('/checkout/get-checkout-data', [CheckoutApiController::class, 'getCheckoutData'])->name('dashed.api.checkout.get-checkout-data');
 });
 
-Route::middleware(['web', AdminMiddleware::class])->group(function () {
+Route::middleware(['web', AdminMiddleware::class, ...\Dashed\DashedEcommerceCore\Middleware\EnsurePointOfSaleAccess::stack()])->group(function () {
     Route::get('/ecommerce/point-of-sale', function () {
         return view('dashed-ecommerce-core::pos.pages.point-of-sale-wrapper');
     })->name('dashed.ecommerce.point-of-sale');

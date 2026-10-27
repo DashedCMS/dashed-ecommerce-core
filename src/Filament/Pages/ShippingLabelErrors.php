@@ -22,6 +22,15 @@ class ShippingLabelErrors extends Page
     }
 
     /**
+     * De pagina toont bestellingen en adressen uit de foutmeldingen van de
+     * vervoerder; opnieuw proberen wijzigt de bestelling (zie retry()).
+     */
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->can('view_order') ?? false;
+    }
+
+    /**
      * @return array<int, array{provider_key:string, provider_label:string, id:int, order_id:int|null, invoice_id:string|null, error:string}>
      */
     public function rows(): array
@@ -41,6 +50,8 @@ class ShippingLabelErrors extends Page
 
     public function retry(string $providerKey, int $id): void
     {
+        abort_unless(auth()->user()?->can('edit_order') ?? false, 403);
+
         $provider = ecommerce()->shippingLabelProviders()[$providerKey] ?? null;
         if ($provider) {
             $provider->retry($id);

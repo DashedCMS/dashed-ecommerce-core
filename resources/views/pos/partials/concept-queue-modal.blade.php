@@ -1,6 +1,6 @@
 @php
     use Dashed\DashedEcommerceCore\Models\Order;
-    $concepts = Order::concept()
+    $concepts = Order::thisSite()->concept()
         ->with(['orderProducts', 'user'])
         ->latest()
         ->get();

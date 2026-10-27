@@ -30,6 +30,9 @@ class ChangeOrderFulfillmentStatus extends Component implements HasSchemas, HasA
     public function action(): Action
     {
         return Action::make('action')
+            // Alleen met "Bestellingen bewerken"; authorize() verbergt de knop
+            // en weigert hem ook bij een rechtstreekse aanroep.
+            ->authorize(fn (): bool => auth()->user()?->can('update', $this->order) ?? false)
             ->label(__('Verander fulfilment status'))
             ->color($this->color)
             ->fillForm(function () {

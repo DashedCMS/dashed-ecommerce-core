@@ -29,6 +29,9 @@ class AddPaymentToOrder extends Component implements HasSchemas, HasActions
     {
 
         return Action::make('action')
+            // Alleen met "Bestellingen bewerken"; authorize() verbergt de knop
+            // en weigert hem ook bij een rechtstreekse aanroep.
+            ->authorize(fn (): bool => auth()->user()?->can('update', $this->order) ?? false)
             ->label(__('Voeg betaling toe (al voldaan: :bedrag)', ['bedrag' => $this->order->paidAmount]))
             ->color('primary')
             ->fillForm(function () {

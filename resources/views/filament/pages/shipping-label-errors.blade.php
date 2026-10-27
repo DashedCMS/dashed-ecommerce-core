@@ -36,12 +36,14 @@
                                                 Naar bestelling
                                             </x-filament::button>
                                         @endif
-                                        <x-filament::button
-                                            size="xs"
-                                            wire:click="retry('{{ $row['provider_key'] }}', {{ $row['id'] }})"
-                                        >
-                                            Opnieuw in wachtrij
-                                        </x-filament::button>
+                                        @can('edit_order')
+                                            <x-filament::button
+                                                size="xs"
+                                                wire:click="retry('{{ $row['provider_key'] }}', {{ $row['id'] }})"
+                                            >
+                                                Opnieuw in wachtrij
+                                            </x-filament::button>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

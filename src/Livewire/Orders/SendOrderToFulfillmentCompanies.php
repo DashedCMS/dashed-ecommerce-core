@@ -61,6 +61,9 @@ class SendOrderToFulfillmentCompanies extends Component implements HasSchemas, H
     public function action(): Action
     {
         return Action::make('action')
+            // Alleen met "Bestellingen bewerken"; authorize() verbergt de knop
+            // en weigert hem ook bij een rechtstreekse aanroep.
+            ->authorize(fn (): bool => auth()->user()?->can('update', $this->order) ?? false)
             ->label($this->buttonText)
             ->extraAttributes(['class' => $this->buttonClass])
             ->color($this->color)

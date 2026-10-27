@@ -18,8 +18,10 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Classes\OrderProgress;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\ManualPaymentPin;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterRefundAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterReturnAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
@@ -107,8 +109,21 @@ class ViewOrder extends ViewRecord
         return false;
     }
 
+    /**
+     * Alles op deze pagina dat de bestelling wijzigt, vraagt het recht
+     * "Bestellingen bewerken"; bekijken alleen is niet genoeg. authorize()
+     * verbergt de knop en weigert hem ook als hij toch wordt aangeroepen.
+     */
+    public function mayEditOrder(): bool
+    {
+        return auth()->user()?->can('update', $this->record) ?? false;
+    }
+
     protected function getActions(): array
     {
+        $mayEdit = fn (): bool => $this->mayEditOrder();
+        $mayUsePos = fn (): bool => $this->mayEditOrder() && POSPageRedirect::canAccess();
+
         $invoiceUrl = $this->record->downloadInvoiceUrl();
         $packingSlipUrl = $this->record->downloadPackingslipUrl();
 
@@ -130,6 +145,7 @@ class ViewOrder extends ViewRecord
                 ->tooltip(fn () => $this->record->is_priority ? __('Prioriteit uitzetten') : __('Markeer als prioriteit'))
                 ->icon(fn () => $this->record->is_priority ? 'heroicon-s-star' : 'heroicon-o-star')
                 ->color(fn () => $this->record->is_priority ? 'gray' : 'warning')
+                ->authorize($mayEdit)
                 ->action(function () {
                     $this->record->forceFill(['is_priority' => ! $this->record->is_priority])->save();
                     $this->record->refresh();
@@ -160,15 +176,18 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
-            'registerReturn' => RegisterReturnAction::forOrder($this->record),
+            'registerReturn' => RegisterReturnAction::forOrder($this->record)
+                ->authorize(fn (): bool => $this->mayEditOrder() || (auth()->user()?->can('edit_order_return') ?? false)),
             ActionGroup::make([
                 Action::make('edit')
                     ->label(__('Gegevens wijzigen'))
                     ->icon('heroicon-o-identification')
+                    ->authorize($mayEdit)
                     ->url(route('filament.dashed.resources.orders.edit', ['record' => $this->record])),
                 Action::make('modify')
                     ->label(__('Producten wijzigen'))
                     ->icon('heroicon-o-shopping-bag')
+                    ->authorize($mayEdit)
                     // De route-check hoort hier echt bij: draait er nog een oude
                     // route-cache, dan bestaat deze pagina niet en gooit route()
                     // een exception. Omdat de knop bij het renderen van de
@@ -195,8 +214,9 @@ class ViewOrder extends ViewRecord
                     ->url($packingSlipUrl)
                     ->openUrlInNewTab()
                     ->visible((bool)$packingSlipUrl),
-                RegenerateInvoiceAction::make($this->record),
+                RegenerateInvoiceAction::make($this->record)->authorize($mayEdit),
                 Action::make('reprintDocuments')
+                    ->authorize($mayEdit)
                     ->label(__('Pakbon + label printen'))
                     ->icon('heroicon-s-printer')
                     ->tooltip(__('Stuur pakbon én label (opnieuw) naar de printers — zonder dubbele wachtrij-jobs'))
@@ -232,6 +252,7 @@ class ViewOrder extends ViewRecord
                         }
                     }),
                 Action::make('printLabelOnly')
+                    ->authorize($mayEdit)
                     ->label(__('Alleen label printen'))
                     ->icon('heroicon-s-tag')
                     ->tooltip(__('Stuur enkel het verzendlabel naar de label-printer'))
@@ -251,6 +272,7 @@ class ViewOrder extends ViewRecord
                         }
                     }),
                 Action::make('printPackingSlipOnly')
+                    ->authorize($mayEdit)
                     ->label(__('Alleen pakbon printen'))
                     ->icon('heroicon-s-document-text')
                     ->tooltip(__('Stuur enkel de pakbon naar de pakbon-printer'))
@@ -274,6 +296,7 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-document-text')
                 ->button(),
             'sync' => Action::make('syncLabelStatuses')
+                ->authorize($mayEdit)
                 ->label(__('Labelstatussen bijwerken'))
                 ->icon('heroicon-o-arrow-path')
                 ->color('gray')
@@ -298,10 +321,16 @@ class ViewOrder extends ViewRecord
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->visible(fn () => $this->record->status === 'cancelled')
+                    ->authorize($mayEdit)
                     ->requiresConfirmation()
                     ->modalHeading(__('Geannuleerde bestelling op betaald zetten?'))
                     ->modalDescription(__('De bestelling wordt alsnog op betaald gezet (factuur, voorraad en afhandeling worden verwerkt).'))
-                    ->action(function () {
+                    // Er staat geen betaling tegenover: dit is handmatig op
+                    // betaald zetten, dus dezelfde pincode als de andere knoppen.
+                    ->form([ManualPaymentPin::formField()])
+                    ->action(function (array $data) {
+                        ManualPaymentPin::verifyOrFail($data['pin'] ?? null, $this->record);
+
                         $this->record->changeStatus('paid');
 
                         Notification::make()
@@ -320,6 +349,7 @@ class ViewOrder extends ViewRecord
                     // "handmatige betaling registreren" verbergt zichzelf
                     // terecht, want er staat niets meer open.
                     ->visible(fn (): bool => $this->record->needsPaidStatusCorrection())
+                    ->authorize($mayEdit)
                     ->requiresConfirmation()
                     ->modalHeading(__('Bestelling op betaald zetten?'))
                     ->modalDescription(__('De betalingen dekken het totaalbedrag al; alleen de status loopt achter. Die wordt nu bijgewerkt naar betaald.'))
@@ -333,11 +363,11 @@ class ViewOrder extends ViewRecord
 
                         $this->redirect(route('filament.dashed.resources.orders.view', ['record' => $this->record->id]));
                     }),
-                RegisterManualPaymentAction::make($this->record),
-                SendPaymentLinkAction::make($this->record),
+                RegisterManualPaymentAction::make($this->record)->authorize($mayEdit),
+                SendPaymentLinkAction::make($this->record)->authorize($mayEdit),
                 SendPaymentReminderAction::make($this->record),
                 TogglePaymentRemindersAction::make($this->record),
-                RegisterRefundAction::make($this->record),
+                RegisterRefundAction::make($this->record)->authorize($mayEdit),
             ])
                 ->label(__('Betaling'))
                 ->icon('heroicon-o-banknotes')
@@ -348,6 +378,7 @@ class ViewOrder extends ViewRecord
                     ->label(__('Bewerken in kassa'))
                     ->icon('heroicon-o-pencil-square')
                     ->visible(fn (): bool => $this->record->isConcept())
+                    ->authorize($mayUsePos)
                     ->requiresConfirmation(fn (): bool => $this->activeCartHasProducts())
                     ->modalHeading(__('Kassa-winkelwagen vervangen?'))
                     ->modalDescription(__('Je kassa bevat al producten. Die worden vervangen door dit concept.'))
@@ -363,6 +394,7 @@ class ViewOrder extends ViewRecord
                 Action::make('copyToPos')
                     ->label(__('Kopiëren naar kassa'))
                     ->icon('heroicon-o-document-duplicate')
+                    ->authorize($mayUsePos)
                     // De modal staat er nu altijd, want het vinkje hieronder moet
                     // gezet kunnen worden. De waarschuwing over een volle kassa
                     // blijft wat hij was: alleen wanneer er echt iets vervangen
@@ -410,6 +442,7 @@ class ViewOrder extends ViewRecord
                 ->icon('heroicon-o-trash')
                 ->color('danger')
                 ->visible(fn (): bool => $this->record->isDeletableDraft())
+                ->authorize($mayEdit)
                 ->requiresConfirmation()
                 ->modalHeading(__('Concept/proforma verwijderen'))
                 ->modalDescription(__('Deze concept- of proforma-bestelling zonder factuur en zonder betaling wordt verwijderd (herstelbaar).'))

@@ -43,6 +43,9 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
 
         foreach (OrderLogTemplate::all() as $template) {
             $actions[] = Action::make('template-' . $template->id)
+                // Alleen met "Bestellingen bewerken"; authorize() verbergt de knop
+                // en weigert hem ook bij een rechtstreekse aanroep.
+                ->authorize(fn (): bool => auth()->user()?->can('update', $this->order) ?? false)
                 ->label(__('Verstuur :naam', ['naam' => $template->name]))
                 ->color('warning')
                 ->action(function ($data, $action) use ($template) {
@@ -73,6 +76,9 @@ class CreateOrderLog extends Component implements HasSchemas, HasActions
         }
 
         return Action::make('action')
+            // Alleen met "Bestellingen bewerken"; authorize() verbergt de knop
+            // en weigert hem ook bij een rechtstreekse aanroep.
+            ->authorize(fn (): bool => auth()->user()?->can('update', $this->order) ?? false)
             ->label(__('Maak bestellings notitie'))
             ->color($this->color)
             ->extraModalFooterActions($actions)

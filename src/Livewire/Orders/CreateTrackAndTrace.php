@@ -33,6 +33,9 @@ class CreateTrackAndTrace extends Component implements HasSchemas, HasActions
     public function action(): Action
     {
         return Action::make('action')
+            // Alleen met "Bestellingen bewerken"; authorize() verbergt de knop
+            // en weigert hem ook bij een rechtstreekse aanroep.
+            ->authorize(fn (): bool => auth()->user()?->can('update', $this->order) ?? false)
             ->label(__('Voeg track and trace toe'))
             ->color($this->color)
             ->schema([

@@ -125,6 +125,16 @@ class POSPage extends Component implements HasActions, HasSchemas
         'notify',
     ];
 
+    /**
+     * Draait bij de eerste render én bij elk Livewire-verzoek daarna. De
+     * route van de kassa toetst het recht al, maar een Livewire-verzoek
+     * gaat via /livewire/update en kan elke publieke methode aanroepen.
+     */
+    public function boot(): void
+    {
+        abort_unless(POSPageRedirect::canAccess(), 403);
+    }
+
     public function mount(): void
     {
         $this->searchQueryInputmode = Customsetting::get('pos_search_query_inputmode', default: false);
@@ -1102,7 +1112,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public function conceptQueueAction(): Action
     {
-        $count = Order::concept()->count();
+        $count = Order::thisSite()->concept()->count();
 
         return Action::make('conceptQueue')
             ->label(__('Concepten (:count)', ['count' => $count]))
@@ -1115,7 +1125,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public function loadConcept(int $orderId): void
     {
-        $order = Order::concept()->find($orderId);
+        $order = Order::thisSite()->concept()->find($orderId);
 
         if (! $order) {
             Notification::make()
@@ -1143,7 +1153,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
     public function cancelConcept(int $orderId): void
     {
-        $order = Order::concept()->find($orderId);
+        $order = Order::thisSite()->concept()->find($orderId);
         if (! $order) {
             return;
         }

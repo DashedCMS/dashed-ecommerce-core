@@ -32,6 +32,7 @@ use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\PosCartExtras;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\ManualPaymentPin;
 use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
@@ -1550,6 +1551,19 @@ class PointOfSaleApiController extends Controller
                 'startPinTerminalPayment' => false,
                 'firstPaymentMethod' => $this->resolveFirstPaymentMethodPayload($paymentMethod),
             ]);
+        }
+
+        // Een kassaverkoop (order_origin pos, aangemaakt door createOrder)
+        // rekent de kassa gewoon af. Elke andere bestelling via dit endpoint
+        // op betaald zetten is een handmatige betaling, en vraagt dus dezelfde
+        // pincode als de knoppen in het CMS en de app (MANUAL_PAID_PIN).
+        if ($order->order_origin !== 'pos'
+            && ($error = ManualPaymentPin::attempt(isset($data['pin']) ? (string) $data['pin'] : null, $order))) {
+            return response()->json([
+                'success' => false,
+                'message' => $error,
+                'pinRequired' => true,
+            ], 422);
         }
 
         // Cash-validaties zijn alleen zinvol voor orders > €0. Bij gratis
