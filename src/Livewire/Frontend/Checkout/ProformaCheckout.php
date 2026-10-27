@@ -3,9 +3,9 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
 use Livewire\Component;
-use Livewire\Attributes\Locked;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Locked;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
