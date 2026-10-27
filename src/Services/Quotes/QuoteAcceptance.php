@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Services\Quotes;
 
 use RuntimeException;
+use InvalidArgumentException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\App;
 use Dashed\DashedEcommerceCore\Models\Quote;
@@ -26,8 +27,31 @@ class QuoteAcceptance
      * De handtekening is een PNG-data-URL uit het tekenvlak; wat
      * QuoteSignature niet als echte PNG herkent wordt niet opgeslagen.
      */
+    /**
+     * Keuzegroepen waarin niet precies een regel gekozen is. Een keuzegroep
+     * is "een uit meerdere": nul kiezen haalt de dure optie gratis weg, twee
+     * kiezen telt ze allebei. De pagina dwingt dat af met radioknoppen, maar
+     * de keuze komt uit de Livewire-staat, dus hier nog een keer.
+     *
+     * @param  array<int, int>  $selectedLineIds
+     * @return array<int, string>
+     */
+    public static function invalidChoiceGroups(Quote $quote, array $selectedLineIds): array
+    {
+        return $quote->lines
+            ->filter(fn ($line) => $line->is_optional && filled($line->choice_group))
+            ->groupBy('choice_group')
+            ->filter(fn ($lines) => $lines->filter(fn ($line) => in_array((int) $line->id, $selectedLineIds, true))->count() !== 1)
+            ->keys()
+            ->map(fn ($group) => (string) $group)
+            ->values()
+            ->all();
+    }
+
     public static function accept(Quote $quote, array $selectedLineIds, string $name, string $ip, ?string $signature = null, bool $notifyCustomer = true): Quote
     {
+        $selectedLineIds = array_map('intval', $selectedLineIds);
+
         if ($quote->status === Quote::STATUS_ACCEPTED) {
             return $quote;
         }
@@ -55,6 +79,12 @@ class QuoteAcceptance
 
                 if ($locked->status !== Quote::STATUS_SENT) {
                     return $locked;
+                }
+
+                if ($groups = self::invalidChoiceGroups($locked, $selectedLineIds)) {
+                    throw new InvalidArgumentException(__('Kies precies een optie in elke keuzegroep: :groepen', [
+                        'groepen' => implode(', ', $groups),
+                    ]));
                 }
 
                 // Wat de klant koos vastleggen op de regels zelf: de akkoord-PDF

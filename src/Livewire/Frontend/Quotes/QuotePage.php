@@ -135,6 +135,14 @@ class QuotePage extends Component
 
         $chosen = collect($this->selected)->filter()->keys()->map(fn ($id) => (int) $id)->all();
 
+        // QuoteAcceptance controleert dit ook; hier zodat de klant een
+        // melding krijgt in plaats van een fout.
+        if (QuoteAcceptance::invalidChoiceGroups($this->quote, $chosen)) {
+            $this->addError('selected', Translation::get('validation-choice-group-required', 'quote', 'Kies bij elke keuze precies een optie'));
+
+            return;
+        }
+
         try {
             $quote = QuoteAcceptance::accept(
                 $this->quote->fresh(),

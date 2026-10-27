@@ -15,6 +15,7 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Dashed\DashedEcommerceCore\Classes\PhoneNormalizer;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserPayload;
 use Dashed\DashedEcommerceCore\Services\Payments\PspStatusResolver;
+use Dashed\DashedEcommerceCore\Services\Payments\ReturnPaymentLookup;
 
 class ViewOrder extends Component
 {
@@ -25,24 +26,8 @@ class ViewOrder extends Component
 
     public function mount()
     {
-        $possibleIdValues = [
-            'orderId',
-            'order_id',
-            'paymentId',
-            'id',
-            'transactionid',
-        ];
-
-        $orderPayment = null;
-
-        foreach ($possibleIdValues as $possibleIdValue) {
-            if (! $orderPayment) {
-                $paymentId = request()->get($possibleIdValue);
-                if ($paymentId) {
-                    $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
-                }
-            }
-        }
+        // Op de hash van de betaling, psp_id alleen kort na het betalen.
+        $orderPayment = ReturnPaymentLookup::fromRequest(request());
 
         if (! $orderPayment) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));

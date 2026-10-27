@@ -6,6 +6,7 @@ use Livewire\WithFileUploads;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Classes\RateLimits;
 use Filament\Notifications\Notification;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
@@ -941,6 +942,11 @@ trait ProductCartActions
      */
     public function addToCart(?int $productId = null)
     {
+        // Een bundel telt één keer, in addBundleToCart().
+        if (! $this->addingBundle && ! $this->passesAddToCartRateLimit()) {
+            return;
+        }
+
         $product = $productId ? Product::find($productId) : $this->product;
 
         cartHelper()->setCartType($this->cartType);
@@ -987,6 +993,15 @@ trait ProductCartActions
                     if ($productValue) {
                         $productExtraOption = $productExtra->productExtraOptions->firstWhere('id', $productValue);
 
+                        // Een optie-id dat niet bij deze extra hoort komt uit
+                        // een gemanipuleerde staat: weigeren, anders telt het
+                        // als gekozen zonder meerprijs.
+                        if (! $productExtraOption) {
+                            return $this->checkCart('danger', Translation::get('select-option-for-product-extra', 'products', 'Select an option for :optionName:', 'text', [
+                                'optionName' => $productExtra->name,
+                            ]));
+                        }
+
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
                                 $productPrice += ($productExtraOption->priceForUser() / $this->quantity);
@@ -1017,6 +1032,12 @@ trait ProductCartActions
 
                 if ($productValue) {
                     $optionId = $this->extras[$extraKey]['product_extra_options'][0]['id'] ?? null;
+
+                    if ($optionId && ! $productExtra->productExtraOptions->firstWhere('id', $optionId)) {
+                        return $this->checkCart('danger', Translation::get('select-checkbox-for-product-extra', 'products', 'Select the checkbox for :optionName:', 'text', [
+                            'optionName' => $productExtra->name,
+                        ]));
+                    }
 
                     if ($optionId) {
                         $productExtraOption = $productExtra->productExtraOptions->firstWhere('id', $optionId);
@@ -1052,8 +1073,17 @@ trait ProductCartActions
                 if ($productValues) {
                     $customValues = [];
 
-                    foreach ($productValues as $productValue) {
+                    foreach ((array) $productValues as $productValue) {
                         $productExtraOption = $productExtra->productExtraOptions->firstWhere('id', $productValue);
+
+                        // Een numerieke waarde is een optie-id; een onbekend id
+                        // is geen eigen tekstwaarde maar een gemanipuleerde
+                        // keuze die anders gratis mee zou gaan.
+                        if (! $productExtraOption && (is_numeric($productValue) || ! is_string($productValue))) {
+                            return $this->checkCart('danger', Translation::get('select-multiple-for-product-extra', 'products', 'Select at least 1 option for :optionName:', 'text', [
+                                'optionName' => $productExtra->name,
+                            ]));
+                        }
 
                         if ($productExtraOption) {
                             if ($productExtraOption->calculate_only_1_quantity) {
@@ -1285,8 +1315,31 @@ trait ProductCartActions
      *
      * @param  array<int, array<string, mixed>>  $boxes
      */
+    /**
+     * Verzoeklimiet `dashed-cart` voor deze Livewire-actie, waar geen
+     * routemiddleware tussen zit.
+     */
+    protected function passesAddToCartRateLimit(): bool
+    {
+        $seconds = RateLimits::hit('dashed-cart', 'add-to-cart|'.(request()->ip() ?: 'unknown'));
+
+        if ($seconds === null) {
+            return true;
+        }
+
+        $this->checkCart('danger', Translation::get('too-many-attempts', 'cart', 'Te veel pogingen, probeer het over :seconds: seconden opnieuw.', 'text', [
+            'seconds' => $seconds,
+        ]));
+
+        return false;
+    }
+
     public function addBundleToCart(array $boxes)
     {
+        if (! $this->passesAddToCartRateLimit()) {
+            return;
+        }
+
         $boxes = array_values(array_filter($boxes, 'is_array'));
 
         if (! $boxes || count($boxes) > 100) {

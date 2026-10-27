@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 use Exception;
 use Carbon\Carbon;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Illuminate\Validation\Rule;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -106,8 +107,10 @@ class Checkout extends Component
 
     public string $taxId = '';
 
+    #[Locked]
     public array $customFields = [];
 
+    #[Locked]
     public array $customFieldRules = [];
 
     public array $customFieldValues = [];
@@ -206,19 +209,8 @@ class Checkout extends Component
         $this->phoneNumberRequired = Customsetting::get('checkout_form_phone_number_delivery_address', default: 0);
         $this->useDeliveryAddressAsInvoiceAddress = Customsetting::get('checkout_delivery_address_standard_invoice_address', default: 1) ?: 0;
 
-        $customFields = ecommerce()->builder('customOrderFields');
-        foreach ($customFields as $key => $customField) {
-            if (isset($customField['hideFromCheckout']) && $customField['hideFromCheckout'] === true) {
-                unset($customFields[$key]);
-            }
-        }
-
-        $this->customFields = $customFields;
-        $this->customFieldRules = collect($this->customFields)->mapWithKeys(function ($customField, $key) {
-            return [
-                'customFieldValues.'.$key => $customField['rules'],
-            ];
-        })->toArray();
+        $this->customFields = $this->checkoutCustomFields();
+        $this->customFieldRules = $this->checkoutCustomFieldRules();
 
         if ($this->accountRequired == 1 && auth()->guest()) {
             Notification::make()
@@ -569,6 +561,47 @@ class Checkout extends Component
         return $this->validateTaxIdWithVies();
     }
 
+    /**
+     * De extra ordervelden die de checkout toont. Altijd server-side
+     * opgebouwd: de publieke eigenschappen zijn alleen voor de view, want wat
+     * hier in staat bepaalt welke kolommen van de order de klant mag vullen.
+     */
+    protected function checkoutCustomFields(): array
+    {
+        return collect(ecommerce()->builder('customOrderFields'))
+            ->reject(fn ($customField) => ($customField['hideFromCheckout'] ?? false) === true)
+            ->all();
+    }
+
+    protected function checkoutCustomFieldRules(): array
+    {
+        return collect($this->checkoutCustomFields())->mapWithKeys(function ($customField, $key) {
+            return [
+                'customFieldValues.'.$key => $customField['rules'] ?? [],
+            ];
+        })->toArray();
+    }
+
+    /**
+     * Alleen velden die de checkout echt aanbiedt; anders kan een klant via
+     * de Livewire-staat elke kolom van de order zetten (status, total).
+     */
+    protected function fillCustomOrderFields(Order $order): void
+    {
+        $allowedCustomFields = array_keys($this->checkoutCustomFields());
+
+        foreach ($this->customFieldValues as $field => $value) {
+            if (! in_array($field, $allowedCustomFields, true)) {
+                continue;
+            }
+
+            if ($value) {
+                $field = str($field)->snake()->toString();
+                $order->$field = $value;
+            }
+        }
+    }
+
     public function rules()
     {
         return array_merge([
@@ -653,7 +686,7 @@ class Checkout extends Component
                 'required',
                 'max:255',
             ],
-        ], $this->customFieldRules);
+        ], $this->checkoutCustomFieldRules());
     }
 
     /**
@@ -972,12 +1005,7 @@ class Checkout extends Component
         $order->invoice_country = $this->invoiceCountry;
         $order->invoice_id = 'PROFORMA';
 
-        foreach ($this->customFieldValues as $field => $value) {
-            if ($value) {
-                $field = str($field)->snake()->toString();
-                $order->$field = $value;
-            }
-        }
+        $this->fillCustomOrderFields($order);
 
         $shippingCosts = cartHelper()->getShippingCosts();
         $paymentCosts = cartHelper()->getPaymentCosts();

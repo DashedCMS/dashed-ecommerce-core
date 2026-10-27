@@ -117,6 +117,21 @@ class CartSuggestions extends Component
             return;
         }
 
+        // Een verplichte extra kan hier niet worden ingevuld, ook niet als
+        // deze methode rechtstreeks wordt aangeroepen: dan via de modal of
+        // de productpagina.
+        if ($product->hasRequiredExtras()) {
+            if ($product->productGroup) {
+                $this->openQuickAdd($productId);
+
+                return;
+            }
+
+            $this->redirect($product->getUrl());
+
+            return;
+        }
+
         // Cart-math gebruikt altijd incl-prijzen; niet de accessor (die levert ex
         // op voor users met `show_prices_ex_vat`).
         $price = (float) $product->priceForUser();

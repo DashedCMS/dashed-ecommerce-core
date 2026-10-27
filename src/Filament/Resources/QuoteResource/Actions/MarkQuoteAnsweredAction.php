@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource\Actions;
 
+use InvalidArgumentException;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Toggle;
@@ -51,7 +52,13 @@ class MarkQuoteAnsweredAction
                     // De regels staan op wat de beheerder in het formulier heeft
                     // gezet; de klant koos niets op de pagina.
                     $chosen = $quote->lines->where('is_selected', true)->pluck('id')->all();
-                    QuoteAcceptance::accept($quote, $chosen, $data['name'], (string) request()->ip(), notifyCustomer: (bool) ($data['notify_customer'] ?? true));
+                    try {
+                        QuoteAcceptance::accept($quote, $chosen, $data['name'], (string) request()->ip(), notifyCustomer: (bool) ($data['notify_customer'] ?? true));
+                    } catch (InvalidArgumentException $e) {
+                        Notification::make()->title($e->getMessage())->danger()->send();
+
+                        return;
+                    }
                 } else {
                     QuoteAcceptance::reject($quote, $data['reason'], notifyCustomer: (bool) ($data['notify_customer'] ?? true));
                 }

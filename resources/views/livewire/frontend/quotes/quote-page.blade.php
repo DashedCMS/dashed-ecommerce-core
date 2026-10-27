@@ -290,6 +290,7 @@
                         <span>{{ Translation::get('agree-checkbox', 'quote', 'Ik ga akkoord met deze offerte') }}</span>
                     </label>
                     @error('acceptAgreed') <p class="dq-error">{{ $message }}</p> @enderror
+                    @error('selected') <p class="dq-error">{{ $message }}</p> @enderror
 
                     <button type="button" wire:click="accept" wire:loading.attr="disabled" wire:target="accept" class="dq-btn">
                         <span wire:loading.remove wire:target="accept">{{ Translation::get('accept', 'quote', 'Akkoord geven') }}</span>

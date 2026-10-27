@@ -26,6 +26,7 @@ use Dashed\DashedEcommerceCore\Livewire\Frontend\Orders\ViewOrder;
 use Dashed\DashedEcommerceCore\Services\Payments\PspStatusResolver;
 use Dashed\DashedEcommerceCore\Requests\Frontend\StartTransactionRequest;
 use Dashed\DashedEcommerceCore\Services\Payments\PaymentTransactionStarter;
+use Dashed\DashedEcommerceCore\Services\Payments\ReturnPaymentLookup;
 
 class TransactionController extends Controller
 {
@@ -342,24 +343,9 @@ class TransactionController extends Controller
 
     public function complete(Request $request)
     {
-        $possibleIdValues = [
-            'orderId',
-            'order_id',
-            'paymentId',
-            'id',
-            'transactionid',
-        ];
-
-        $orderPayment = null;
-
-        foreach ($possibleIdValues as $possibleIdValue) {
-            if (! $orderPayment) {
-                $paymentId = $request->get($possibleIdValue);
-                if ($paymentId) {
-                    $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
-                }
-            }
-        }
+        // Op de hash van de betaling, psp_id alleen kort na het betalen. Zie
+        // ReturnPaymentLookup; de exchange hieronder zoekt bewust breder.
+        $orderPayment = ReturnPaymentLookup::fromRequest($request);
 
         if (! $orderPayment) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));

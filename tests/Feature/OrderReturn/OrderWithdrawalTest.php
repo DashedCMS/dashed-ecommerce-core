@@ -116,12 +116,15 @@ it('rejects a confirm with a foundOrderId that does not match the supplied crede
     $victim = Order::create(['email' => 'victim@example.com', 'status' => 'paid', 'invoice_id' => 'VICT-1']);
 
     // Attacker supplies their own credentials but points foundOrderId at the victim order.
-    Livewire::test(OrderWithdrawal::class)
+    // foundOrderId is Locked: de browser kan hem niet meer zetten.
+    $component = Livewire::test(OrderWithdrawal::class)
         ->set('orderNumber', 'MINE-1')
-        ->set('email', 'me@example.com')
-        ->set('foundOrderId', $victim->id)
-        ->call('confirm')
-        ->assertSet('completed', false);
+        ->set('email', 'me@example.com');
+
+    expect(fn () => $component->set('foundOrderId', $victim->id))
+        ->toThrow(\Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException::class);
+
+    $component->call('confirm')->assertSet('completed', false);
 
     expect(OrderReturn::where('order_id', $victim->id)->count())->toBe(0);
 });
@@ -147,12 +150,15 @@ it('rejects a confirm when credentials match no order at all', function () {
     Mail::fake();
     $victim = Order::create(['email' => 'victim@example.com', 'status' => 'paid', 'invoice_id' => 'VICT-2']);
 
-    Livewire::test(OrderWithdrawal::class)
+    // foundOrderId is Locked: de browser kan hem niet meer zetten.
+    $component = Livewire::test(OrderWithdrawal::class)
         ->set('orderNumber', 'GUESS')
-        ->set('email', 'attacker@example.com')
-        ->set('foundOrderId', $victim->id)
-        ->call('confirm')
-        ->assertSet('completed', false);
+        ->set('email', 'attacker@example.com');
+
+    expect(fn () => $component->set('foundOrderId', $victim->id))
+        ->toThrow(\Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException::class);
+
+    $component->call('confirm')->assertSet('completed', false);
 
     expect(OrderReturn::where('order_id', $victim->id)->count())->toBe(0);
 });

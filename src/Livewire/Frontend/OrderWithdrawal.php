@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Livewire\Frontend;
 
 use Throwable;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Dashed\DashedCore\Classes\Mails;
@@ -32,12 +33,21 @@ class OrderWithdrawal extends Component
     public string $email = '';
     public string $customerNote = '';
 
+    // Alleen server-side gezet. Locked, anders kan een bezoeker via
+    // foundOrderId de bestelling (en adres) van een ander laten renderen.
+    #[Locked]
     public int $step = 1;
+    #[Locked]
     public ?int $foundOrderId = null;
+    #[Locked]
     public bool $notFound = false;
+    #[Locked]
     public bool $completed = false;
+    #[Locked]
     public ?string $completedAt = null;
+    #[Locked]
     public ?string $completedOrderLabel = null;
+    #[Locked]
     public ?string $rateLimitMessage = null;
 
     /**
@@ -45,12 +55,14 @@ class OrderWithdrawal extends Component
      * al goedgekeurd), dan wordt er niets aangemaakt of gewijzigd en wijst de
      * view de klant naar de statuspagina van die retour.
      */
+    #[Locked]
     public ?string $existingReturnStatusUrl = null;
 
     /** @var array<int, array{selected: bool, quantity: int, reason_id: int|null, note: string}> */
     public array $selectedLines = [];
 
     /** @var array<string, mixed> */
+    #[Locked]
     public array $blockData = [];
 
     public function mount(array $blockData = []): void

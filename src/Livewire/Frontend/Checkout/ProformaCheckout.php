@@ -3,6 +3,7 @@
 namespace Dashed\DashedEcommerceCore\Livewire\Frontend\Checkout;
 
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Dashed\DashedCore\Models\User;
@@ -68,7 +69,9 @@ class ProformaCheckout extends Component
     public int $useDeliveryAddressAsInvoiceAddress = 1;
 
     // Verzending (cartless)
+    #[Locked]
     public bool $shippingEnabled = false;
+    #[Locked]
     public array $shippingMethods = [];
     public ?string $shippingMethod = null;
 
@@ -253,6 +256,13 @@ class ProformaCheckout extends Component
 
     public function submit()
     {
+        // Kosten, btw en naam van de verzendmethode komen uit de lijst; die
+        // dus opnieuw opbouwen in plaats van de lijst uit de browser te
+        // vertrouwen.
+        if ($this->shippingEnabled) {
+            $this->retrieveShippingMethods();
+        }
+
         $this->validate();
 
         $order = $this->order;

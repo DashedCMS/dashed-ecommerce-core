@@ -21,7 +21,16 @@ class ShowProducts extends Component
     private $allProducts = null;
     private $filters = [];
     public ?ProductCategory $productCategory = null;
+    /**
+     * Komt uit de querystring en kan door een thema als keuzelijst gebonden
+     * zijn, dus nooit vertrouwen: perPage() begrenst hem.
+     */
     public ?string $pagination = null;
+
+    public const MAX_PER_PAGE = 100;
+
+    /** Bij infinite scroll: hooguit zoveel pagina's cumulatief in een keer. */
+    public const MAX_INFINITE_PAGES = 20;
     public ?string $orderBy = null;
     public ?string $order = null;
     public ?string $sortBy = null;
@@ -109,6 +118,24 @@ class ShowProducts extends Component
         return (bool) Customsetting::get('product_list_infinite_scroll', Sites::getActive(), false);
     }
 
+    /**
+     * Het aantal producten per pagina, tussen 1 en MAX_PER_PAGE (of de
+     * ingestelde standaard als die hoger ligt). Een waarde als 1000000 uit
+     * de browser of de URL zou anders de hele catalogus in een keer laden.
+     */
+    public function perPage(): int
+    {
+        $default = (int) Customsetting::get('product_default_amount_of_products', null, 12) ?: 12;
+        $max = max(self::MAX_PER_PAGE, $default);
+        $value = (int) $this->pagination;
+
+        if ($value < 1) {
+            return min($default, $max);
+        }
+
+        return min($value, $max);
+    }
+
     public function loadMore(): void
     {
         if (! $this->infiniteScrollEnabled()) {
@@ -148,11 +175,11 @@ class ShowProducts extends Component
         // Bij infinite scroll laden we cumulatief: altijd vanaf pagina 1 met een
         // groeiende perPage (pagination * page), zodat alle al-geladen producten
         // zichtbaar blijven terwijl er onderaan steeds meer bijkomen.
-        $perPage = (int) $this->pagination;
-        $page = (int) $this->page;
+        $perPage = $this->perPage();
+        $page = max(1, (int) $this->page);
 
         if ($this->infiniteScrollEnabled()) {
-            $perPage = (int) $this->pagination * max(1, (int) $this->page);
+            $perPage = $this->perPage() * min(self::MAX_INFINITE_PAGES, $page);
             $page = 1;
         }
 

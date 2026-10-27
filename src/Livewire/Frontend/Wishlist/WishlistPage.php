@@ -45,6 +45,13 @@ class WishlistPage extends Component
             return;
         }
 
+        // Verplichte extra's kunnen alleen op de productpagina worden ingevuld.
+        if ($item->product->hasRequiredExtras()) {
+            $this->redirect($item->product->getUrl());
+
+            return;
+        }
+
         cartHelper()->addToCart($productId, 1, []);
         $this->dispatch('refreshCart');
         $this->dispatch('productAddedToCart', product: $item->product);
