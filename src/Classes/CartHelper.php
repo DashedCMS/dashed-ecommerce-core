@@ -1951,6 +1951,18 @@ class CartHelper
      */
     public function getGiftcardPayableAmount(): float
     {
+        return max(0.0, round($this->getTotal() - $this->getGiftcardProductsTotal(), 2));
+    }
+
+    /**
+     * Wat de regels van bonproducten (te kopen cadeaubonnen) in het totaal
+     * wegen: na een procentuele kortingscode, net als in het totaal zelf.
+     * Een bon is geen betaalmiddel-saldo en geen product dat verzonden wordt
+     * op orderwaarde, dus deze regels tellen voor bonbetalingen en voor de
+     * keuze van verzendmethodes niet mee.
+     */
+    public function getGiftcardProductsTotal(): float
+    {
         $this->setCartItems();
         $this->preloadCartProducts();
 
@@ -1974,7 +1986,30 @@ class CartHelper
             $giftcardLines += $line;
         }
 
-        return max(0.0, round($this->getTotal() - $giftcardLines, 2));
+        return round($giftcardLines, 2);
+    }
+
+    /**
+     * Moet deze wagen verzonden worden? Alleen niet als elke regel een
+     * digitaal product is (bijv. een digitale cadeaubon). Een lege wagen of
+     * een regel zonder product (maatwerkregel) wordt wel verzonden.
+     */
+    public function requiresShipping(): bool
+    {
+        $this->setCartItems();
+        $this->preloadCartProducts(['productGroup']);
+
+        $cartItems = collect(static::$cartItems);
+
+        if ($cartItems->isEmpty()) {
+            return true;
+        }
+
+        return $cartItems->contains(function ($cartItem) {
+            $product = $this->getProductForCartItem($cartItem);
+
+            return ! $product || ! $product->isDigital();
+        });
     }
 
     /**

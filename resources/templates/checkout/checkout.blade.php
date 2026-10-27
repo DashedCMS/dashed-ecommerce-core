@@ -117,6 +117,8 @@
                                                     aria-label="Apply button">{{Translation::get('add-discount', 'cart', 'Add discount code')}}</button>
                                         </div>
 
+                                        {{-- Alleen digitale producten: geen afleveradres, alleen naam en e-mail. --}}
+                                        @if($requiresShipping)
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('shipping-information', 'checkout', 'Verzend informatie') }}
                                         </h2>
@@ -168,6 +170,7 @@
                                                 <option value="{{ $country }}">{{ $country }}</option>
                                             @endforeach
                                         </x-fields.select>
+                                        @endif
 
                                         @if($companyRequired != 0)
                                             @if($companyRequired == 2)
@@ -198,6 +201,7 @@
                                             @endif
                                         @endif
 
+                                        @if($requiresShipping)
                                         <div class="lg:col-span-2">
                                             <x-fields.checkbox
                                                 model="invoiceAddress"
@@ -249,6 +253,7 @@
                                                 :label="Translation::get('enter-country', 'checkout', 'Vul je land in')"
                                                 placeholder="{{Translation::get('country', 'checkout', 'Land')}}"
                                             />
+                                        @endif
                                         @endif
 
                                         <div class="lg:col-span-2">
@@ -357,6 +362,7 @@
                                             <p class="mt-2 text-sm text-gray-600">{{ $onAccountNotice }}</p>
                                         @endif
 
+                                        @if($requiresShipping)
                                         <h2 class="pt-4 mt-4 text-xl font-bold border-t lg:col-span-2 text-primary border-black/5">
                                             {{ Translation::get('shipping-method', 'checkout', 'Verzend methode') }}
                                         </h2>
@@ -387,6 +393,7 @@
                                             </div>
                                         @else
                                             <p class="bg-red-400 border-2 border-red-800 px-4 py-2 text-white">{{Translation::get('no-shipping-methods-available', 'checkout', 'Er zijn geen verzendmethodes beschikbaar, vul een land in.')}}</p>
+                                        @endif
                                         @endif
 
                                         @if($postpayPaymentMethod)

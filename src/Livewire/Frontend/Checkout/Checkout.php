@@ -105,6 +105,9 @@ class Checkout extends Component
 
     public string $invoiceCountry = '';
 
+    /** Alleen digitale producten in de wagen: geen adres en geen verzendmethode. */
+    public bool $requiresShipping = true;
+
     public string $company = '';
 
     public string $taxId = '';
@@ -302,6 +305,13 @@ class Checkout extends Component
 
     public function retrieveShippingMethods(): void
     {
+        if (! $this->requiresShipping) {
+            $this->shippingMethods = [];
+            $this->shippingMethod = null;
+
+            return;
+        }
+
         $shippingAddress = "$this->street $this->houseNr, $this->zipCode $this->city, $this->country";
 
         $this->shippingMethods = $this->country
@@ -518,6 +528,15 @@ class Checkout extends Component
         cartHelper()->initialize($this->cartType);
         cartHelper()->setCartType($this->cartType);
 
+        $this->requiresShipping = cartHelper()->requiresShipping();
+
+        if (! $this->requiresShipping) {
+            // Alleen digitale producten: geen afleveradres en geen
+            // verzendmethode. Het land voor btw en betaalmethodes is dan het
+            // factuurland, standaard Nederland.
+            $this->country = filled($this->invoiceCountry) ? $this->invoiceCountry : 'Nederland';
+        }
+
         $this->retrievePaymentMethods();
         $this->retrieveShippingMethods();
 
@@ -653,19 +672,19 @@ class Checkout extends Component
                 'same:password',
             ],
             'street' => [
-                'required',
+                Rule::requiredIf($this->requiresShipping),
                 'max:255',
             ],
             'houseNr' => [
-                'required',
+                Rule::requiredIf($this->requiresShipping),
                 'max:255',
             ],
             'zipCode' => [
-                'required',
+                Rule::requiredIf($this->requiresShipping),
                 'max:10',
             ],
             'city' => [
-                'required',
+                Rule::requiredIf($this->requiresShipping),
                 'max:255',
             ],
             'country' => [
@@ -708,7 +727,8 @@ class Checkout extends Component
                 $this->knownCountryRule(),
             ],
             'shippingMethod' => [
-                'required',
+                Rule::requiredIf($this->requiresShipping),
+                'nullable',
                 'max:255',
             ],
         ], $this->checkoutCustomFieldRules());
@@ -856,7 +876,7 @@ class Checkout extends Component
             return $this->dispatch('showAlert', 'error', $this->taxIdValidationMessage);
         }
 
-        foreach (ecommerce()->builder('fulfillmentProviders') as $fulfillmentProvider) {
+        foreach ($this->requiresShipping ? ecommerce()->builder('fulfillmentProviders') : [] as $fulfillmentProvider) {
             if ($fulfillmentProvider['class']::isConnected() && method_exists($fulfillmentProvider['class'], 'validateAddress')) {
                 $addressValid = $fulfillmentProvider['class']::validateAddress($this->street, $this->houseNr, $this->zipCode, $this->city, $this->country);
 
@@ -946,7 +966,7 @@ class Checkout extends Component
             }
         }
 
-        $shippingMethods = ShoppingCart::getAvailableShippingMethods($this->country);
+        $shippingMethods = $this->requiresShipping ? ShoppingCart::getAvailableShippingMethods($this->country) : [];
         $shippingMethod = '';
         foreach ($shippingMethods as $thisShippingMethod) {
             if ($thisShippingMethod['id'] == $this->shippingMethod) {
@@ -954,7 +974,7 @@ class Checkout extends Component
             }
         }
 
-        if (! $shippingMethod) {
+        if ($this->requiresShipping && ! $shippingMethod) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('no-valid-payment-method-chosen', 'cart', 'You did not choose a valid shipping method'))
@@ -1070,7 +1090,7 @@ class Checkout extends Component
             $order->discount_code_id = cartHelper()->getDiscountCode()->id;
         }
 
-        $order->shipping_method_id = $shippingMethod['id'];
+        $order->shipping_method_id = $shippingMethod ? $shippingMethod['id'] : null;
 
         // Bewaard voor een latere deelretour: zakt de order dan onder deze
         // drempel, dan mogen de verzendkosten alsnog verrekend worden.
@@ -1208,7 +1228,7 @@ class Checkout extends Component
             $orderProduct->save();
         }
 
-        if ($shippingCosts) {
+        if ($shippingCosts && $order->shipping_method_id) {
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = 1;
             $orderProduct->product_id = null;

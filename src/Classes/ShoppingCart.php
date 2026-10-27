@@ -250,6 +250,11 @@ class ShoppingCart
                         $total += cartHelper()->getDiscount();
                     }
 
+                    // Een gekochte cadeaubon wordt niet verzonden op
+                    // orderwaarde: hij telt niet mee voor de drempel van
+                    // gratis verzending of voor de goedkoopste methode.
+                    $total -= cartHelper()->getGiftcardProductsTotal();
+
                     $total = max(0.0, round((float) $total, 2));
 
                     if (static::$shippingOrderValueResolver) {
