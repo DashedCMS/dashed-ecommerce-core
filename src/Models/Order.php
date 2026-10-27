@@ -48,6 +48,7 @@ use Dashed\DashedEcommerceCore\Events\Orders\InvoiceCreatedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 use Dashed\DashedEcommerceCore\Jobs\SendAutomaticFulfillmentProductsJob;
@@ -1442,6 +1443,11 @@ class Order extends Model
     {
         $this->alignCreatedAtToFirstPayment();
 
+        // Verkochte cadeaubonnen waarmee deze order (deels) betaald is: de
+        // reservering wordt verbruik. Idempotent, dus ook veilig vanuit
+        // partially_paid of waiting_for_confirmation.
+        GiftcardLedger::commit($this);
+
         if ($this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid') {
             $this->status = 'paid';
             $this->save();
@@ -1581,6 +1587,13 @@ class Order extends Model
         } else {
             if ($refillDiscount) {
                 $this->refillGiftcard();
+
+                // Onbetaald vervallen (ook een verlopen betaling): het
+                // gereserveerde saldo van verkochte cadeaubonnen gaat terug.
+                // Zonder refillDiscount is dit een wijziging: de vervanger
+                // erft applied_gift_cards en de bonbetalingen, het saldo
+                // blijft dus gereserveerd.
+                GiftcardLedger::release($this);
             }
         }
 

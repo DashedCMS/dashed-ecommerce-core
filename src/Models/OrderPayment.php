@@ -187,7 +187,12 @@ class OrderPayment extends Model
                 return '';
             }
 
-            $others = $order?->orderPayments()->where('id', '!=', $this->id);
+            // Een betaling met een verkochte cadeaubon houdt de bestelling
+            // niet in leven: mislukt de rest bij de betaalprovider, dan
+            // vervalt de bestelling en gaat het saldo terug op de bon.
+            $others = $order?->orderPayments()
+                ->where('id', '!=', $this->id)
+                ->where(fn ($query) => $query->whereNull('psp')->orWhere('psp', '!=', 'giftcard'));
 
             if ($others && (clone $others)->whereIn('status', ['paid', 'pending'])->exists()) {
                 return '';

@@ -35,6 +35,7 @@ use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
+use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
@@ -282,11 +283,12 @@ class Checkout extends Component
 
     public function retrievePaymentMethods(): void
     {
-        $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country) : [];
+        $this->paymentMethods = $this->country ? ShoppingCart::getAvailablePaymentMethods($this->country, null, $this->paymentMethodsTotal()) : [];
         $this->onAccountNotice = OnAccount::unavailableNotice(auth()->user(), (float) cartHelper()->getTotal());
 
         if (
             Customsetting::get('first_payment_method_selected', null, true)
+            && ! $this->giftcardsCoverCart()
             && (
                 ! $this->paymentMethod
                 || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())
@@ -538,6 +540,21 @@ class Checkout extends Component
         $this->total = cartHelper()->getTotal();
         $this->giftcards = cartHelper()->getGiftcardRedemptions();
         $this->amountToPay = cartHelper()->getAmountToPay();
+
+        // Betalen de cadeaubonnen alles, dan is er geen betaalmethode nodig en
+        // horen er ook geen betaalkosten op de order.
+        if ($this->paymentMethod && $this->giftcardsCoverCart()) {
+            $this->paymentMethod = null;
+            cartHelper()->setPaymentMethod(null);
+            cartHelper()->updateData();
+
+            $this->subtotal = cartHelper()->getSubtotal();
+            $this->discount = cartHelper()->getDiscount();
+            $this->tax = cartHelper()->getTax();
+            $this->total = cartHelper()->getTotal();
+            $this->giftcards = cartHelper()->getGiftcardRedemptions();
+            $this->amountToPay = cartHelper()->getAmountToPay();
+        }
 
         $this->shippingCosts = cartHelper()->getShippingCosts();
         $this->paymentCosts = cartHelper()->getPaymentCosts();
@@ -885,15 +902,17 @@ class Checkout extends Component
             ? ProductExtraOption::whereIn('id', $extraOptionIds)->get()->keyBy('id')
             : collect();
 
-        $paymentMethods = ShoppingCart::getPaymentMethods();
+        $giftcardsCoverCart = $this->giftcardsCoverCart();
+
+        $paymentMethods = ShoppingCart::getPaymentMethods(total: $this->paymentMethodsTotal());
         $paymentMethod = '';
         foreach ($paymentMethods as $thisPaymentMethod) {
-            if ($thisPaymentMethod['id'] == $this->paymentMethod) {
+            if (! $giftcardsCoverCart && $thisPaymentMethod['id'] == $this->paymentMethod) {
                 $paymentMethod = $thisPaymentMethod;
             }
         }
 
-        $paymentMethodPresent = (bool) $paymentMethod;
+        $paymentMethodPresent = (bool) $paymentMethod || $giftcardsCoverCart;
         if (! $paymentMethodPresent) {
             foreach (ecommerce()->builder('paymentServiceProviders') as $psp) {
                 if ($psp['class']::isConnected()) {
@@ -932,7 +951,7 @@ class Checkout extends Component
             return $this->dispatch('showAlert', 'error', Translation::get('no-valid-shipping-method-chosen', 'cart', 'You did not choose a valid shipping method'));
         }
 
-        $depositAmount = cartHelper()->getDepositAmount();
+        $depositAmount = $giftcardsCoverCart ? 0.0 : cartHelper()->getDepositAmount();
         if ($depositAmount > 0.00) {
             $validator = Validator::make([
                 'depositPaymentMethod' => $this->depositPaymentMethod,
@@ -1044,7 +1063,7 @@ class Checkout extends Component
         $order->free_shipping_threshold = ($shippingMethod['sort'] ?? null) === 'free_delivery'
             ? (float) ($shippingMethod['minimum_order_value'] ?? 0)
             : null;
-        $order->payment_method_id = $paymentMethod['id'];
+        $order->payment_method_id = $paymentMethod ? $paymentMethod['id'] : null;
 
         if (auth()->check()) {
             $order->user_id = auth()->user()->id;
@@ -1195,8 +1214,44 @@ class Checkout extends Component
             $order->save();
         }
 
+        // Verkochte cadeaubonnen: elke bon wordt een betaling op de order en
+        // het saldo wordt gereserveerd. Wat er daarna openstaat gaat naar de
+        // betaalprovider; is dat niets, dan is de order hiermee betaald.
+        $giftcardPayment = $this->payWithGiftcards($order);
+
+        if ($giftcardPayment && $this->giftcardsCoverOrder($order)) {
+            $this->writeOrderCreatedLog($order);
+
+            OrderCreatedEvent::dispatch($order);
+
+            $order->changeStatus('paid');
+
+            return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$giftcardPayment->hash);
+        }
+
+        // De wagen liet zien dat de bonnen alles betaalden, maar intussen is
+        // er saldo elders gebruikt. Er is dan geen betaalmethode gekozen voor
+        // de rest: deze order laten vervallen (het saldo gaat terug op de bon)
+        // en de klant opnieuw laten kiezen.
+        if ($giftcardsCoverCart) {
+            $order->changeStatus('cancelled');
+
+            $this->fillPrices();
+
+            $message = Translation::get('giftcard-balance-changed', 'cart', 'Het saldo van je cadeaubon is gewijzigd. Kies een betaalmethode voor het restbedrag.');
+
+            Notification::make()
+                ->danger()
+                ->title($message)
+                ->send();
+
+            $this->recordAbandonment('giftcard_balance_changed');
+
+            return $this->dispatch('showAlert', 'error', $message);
+        }
+
         $orderPayment = new OrderPayment();
-        $orderPayment->amount = $order->total;
+        $orderPayment->amount = $this->amountForPaymentProvider($order);
         $orderPayment->order_id = $order->id;
 
         if ($paymentMethod) {
@@ -1249,17 +1304,7 @@ class Checkout extends Component
         $orderPayment->save();
         $orderPayment->refresh();
 
-        $orderLog = new OrderLog();
-        $orderLog->order_id = $order->id;
-        $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
-        $orderLog->tag = 'order.created';
-        $orderLog->save();
-
-        // Cancel any pending abandoned cart emails for this cart
-        $currentCart = CartHelper::$cart;
-        if ($currentCart) {
-            AbandonedCartEmail::cancelAllForCart($currentCart->id);
-        }
+        $this->writeOrderCreatedLog($order);
 
         OrderCreatedEvent::dispatch($order);
 
@@ -1300,6 +1345,99 @@ class Checkout extends Component
         }
 
         return redirect($transaction['redirectUrl'], 303);
+    }
+
+    protected function writeOrderCreatedLog(Order $order): void
+    {
+        $orderLog = new OrderLog();
+        $orderLog->order_id = $order->id;
+        $orderLog->user_id = auth()->check() ? auth()->user()->id : null;
+        $orderLog->tag = 'order.created';
+        $orderLog->save();
+
+        // Cancel any pending abandoned cart emails for this cart
+        $currentCart = CartHelper::$cart;
+        if ($currentCart) {
+            AbandonedCartEmail::cancelAllForCart($currentCart->id);
+        }
+    }
+
+    /**
+     * De verkochte cadeaubonnen op de wagen, met wat elke bon betaalt.
+     *
+     * @return array<int, array{code: string, discount_code_id: int, redeemed: float}>
+     */
+    protected function giftcardRedemptions(): array
+    {
+        return cartHelper()->getGiftcardRedemptions();
+    }
+
+    /**
+     * Betalen de verkochte cadeaubonnen op de wagen alles wat er te betalen is?
+     */
+    protected function giftcardsCoverCart(): bool
+    {
+        return cartHelper()->getGiftcardsTotal() > 0 && cartHelper()->getAmountToPay() <= 0;
+    }
+
+    /**
+     * Het bedrag waarop betaalmethodes (available_from_amount, op rekening)
+     * getoetst worden: met cadeaubonnen alleen wat er na de bonnen overblijft,
+     * anders null (dan geldt het totaal van de wagen, zoals altijd).
+     */
+    protected function paymentMethodsTotal(): ?float
+    {
+        return cartHelper()->getGiftcardsTotal() > 0 ? cartHelper()->getAmountToPay() : null;
+    }
+
+    /**
+     * Reserveert het saldo van de verkochte cadeaubonnen op de wagen en zet
+     * per bon een betaalde betaling op de order. Het totaal en de btw van de
+     * order blijven de volle bedragen. Heeft een bon intussen minder saldo dan
+     * de wagen liet zien, dan betaalt hij alleen dat en gaat de rest naar de
+     * betaalprovider. Geeft de laatste bonbetaling terug, of null.
+     */
+    protected function payWithGiftcards(Order $order): ?OrderPayment
+    {
+        $redemptions = $this->giftcardRedemptions();
+
+        if (! $redemptions) {
+            return null;
+        }
+
+        $payment = null;
+
+        foreach (GiftcardLedger::reserve($order, $redemptions) as $redemption) {
+            $payment = new OrderPayment();
+            $payment->order_id = $order->id;
+            $payment->amount = $redemption['redeemed'];
+            $payment->psp = 'giftcard';
+            $payment->payment_method_id = null;
+            $payment->payment_method = 'Cadeaubon '.$redemption['code'];
+            $payment->status = 'paid';
+            $payment->save();
+            $payment->refresh();
+        }
+
+        // De bonnen blijven op de wagen staan: die verdwijnt zodra de order
+        // betaald is. Mislukt de betaling, dan gaat het saldo bij het
+        // annuleren terug op de bon en kan de klant het opnieuw proberen.
+        return $payment;
+    }
+
+    protected function giftcardsCoverOrder(Order $order): bool
+    {
+        return $order->orderPayments()->where('psp', 'giftcard')->where('status', 'paid')->exists()
+            && $order->outstandingAmount() <= 0;
+    }
+
+    /**
+     * Wat er naar de betaalprovider gaat: het totaal min wat de cadeaubonnen
+     * al betaald hebben.
+     */
+    protected function amountForPaymentProvider(Order $order): float
+    {
+        return round($order->outstandingAmount(), 2);
     }
 
     protected function normalizeTaxId(?string $taxId): string

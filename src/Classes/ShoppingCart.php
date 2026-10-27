@@ -537,7 +537,9 @@ class ShoppingCart
 
         $paymentMethods = PaymentMethod::where('site_id', Sites::getActive())->where('active', 1)->where('type', $type);
         if (! $skipTotalCheck) {
-            $total = $total ?: cartHelper()->getTotal();
+            // Expliciet op null toetsen: 0 is een echt bedrag (cadeaubonnen
+            // betalen alles) en mag niet terugvallen op het wagentotaal.
+            $total = $total ?? cartHelper()->getTotal();
             $paymentMethods = $paymentMethods->where('available_from_amount', '<=', $total);
         }
         $paymentMethods = $paymentMethods->orderBy('order', 'asc')->get();

@@ -256,6 +256,19 @@ trait CreateManualOrderActions
             }
         }
 
+        // Een verkochte cadeaubon is een betaalmiddel. Een handmatige order
+        // maakt daar geen bonbetaling van, dus hier weigeren in plaats van de
+        // bon stil te negeren.
+        if ($this->discount_code && DiscountCode::query()->thisSite()->soldGiftcard()->where('code', trim((string) $this->discount_code))->exists()) {
+            cartHelper()->removeGiftcard((string) $this->discount_code);
+            $this->discount_code = null;
+
+            Notification::make()
+                ->title(__('Een verkochte cadeaubon kan hier niet gebruikt worden; reken hem af in de webshop of de kassa.'))
+                ->danger()
+                ->send();
+        }
+
         if (! $this->discount_code) {
             session(['discountCode' => '']);
             $this->activeDiscountCode = null;
