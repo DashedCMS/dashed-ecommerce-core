@@ -158,12 +158,18 @@ class GiftcardLedger
      * betaald is, de laatst gebruikte bon eerst, en nooit meer dan er per bon
      * van betaald is. Geeft terug wat er werkelijk teruggezet is; de rest
      * hoort via de betaalprovider terug.
+     *
+     * Alleen de order die de bonbetalingen (psp `giftcard`) draagt mag
+     * terugzetten. Na een orderwijziging staat dezelfde `used`-regel op de
+     * oude én de nieuwe order; de bonbetalingen staan maar op één van beide
+     * (bij een wijziging zonder factuur verhuizen ze naar de vervanger), zodat
+     * de bon nooit twee keer terugkrijgt.
      */
     public static function refund(Order $order, float $amount): float
     {
         $amount = round(max(0.0, $amount), 2);
 
-        if ($amount <= 0) {
+        if ($amount <= 0 || ! static::holdsGiftcardPayments($order)) {
             return 0.0;
         }
 
@@ -256,6 +262,19 @@ class GiftcardLedger
 
             return $changed;
         });
+    }
+
+    /**
+     * Of deze order betaalde bonbetalingen heeft en de bon dus terug mag
+     * krijgen.
+     */
+    public static function holdsGiftcardPayments(Order $order): bool
+    {
+        return $order->orderPayments()
+            ->where('psp', 'giftcard')
+            ->where('status', 'paid')
+            ->where('amount', '>', 0)
+            ->exists();
     }
 
     protected static function lockOrder(Order $order): Order

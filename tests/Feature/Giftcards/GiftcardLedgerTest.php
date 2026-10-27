@@ -48,6 +48,12 @@ function grootboekTellers(DiscountCode $code): array
     ];
 }
 
+/** De bonbetaling op de order: alleen de order die hem draagt mag terugzetten. */
+function grootboekBonbetaling(Order $order, float $bedrag): void
+{
+    $order->orderPayments()->create(['status' => 'paid', 'amount' => $bedrag, 'psp' => 'giftcard', 'payment_method' => 'Cadeaubon']);
+}
+
 function grootboekInwisseling(DiscountCode $code, float $bedrag): array
 {
     return ['code' => $code->code, 'discount_code_id' => $code->id, 'redeemed' => $bedrag];
@@ -115,6 +121,7 @@ it('zet bij een retour nooit meer terug dan er van de bon betaald is', function 
     $order = grootboekOrder();
     GiftcardLedger::reserve($order, [grootboekInwisseling($bon, 40)]);
     GiftcardLedger::commit($order);
+    grootboekBonbetaling($order, 40);
 
     $eerste = GiftcardLedger::refund($order->fresh(), 30);
     $tweede = GiftcardLedger::refund($order->fresh(), 30);
@@ -132,6 +139,7 @@ it('zet een retour eerst op de laatst gebruikte bon terug', function () {
     $order = grootboekOrder();
     GiftcardLedger::reserve($order, [grootboekInwisseling($eerste, 20), grootboekInwisseling($tweede, 15)]);
     GiftcardLedger::commit($order);
+    grootboekBonbetaling($order, 35);
 
     expect(GiftcardLedger::refund($order->fresh(), 25))->toBe(25.0)
         ->and(grootboekTellers($tweede)['saldo'])->toBe(20.0)

@@ -1335,6 +1335,51 @@ class Order extends Model
         }
     }
 
+    /**
+     * Zet tot $amount terug op de verkochte cadeaubonnen van deze order en
+     * boekt per bon een negatieve, betaalde bonbetaling op de creditorder.
+     * Geeft het teruggezette totaal terug.
+     */
+    public function refundSoldGiftcardsTo(Order $creditOrder, float $amount): float
+    {
+        $before = collect($this->applied_gift_cards ?: [])
+            ->mapWithKeys(fn ($entry) => [(int) ($entry['discount_code_id'] ?? 0) => (float) ($entry['refunded'] ?? 0)]);
+
+        $refunded = GiftcardLedger::refund($this, $amount);
+
+        if ($refunded <= 0) {
+            return 0.0;
+        }
+
+        foreach ($this->applied_gift_cards ?: [] as $entry) {
+            $cardId = (int) ($entry['discount_code_id'] ?? 0);
+            $back = round((float) ($entry['refunded'] ?? 0) - (float) ($before[$cardId] ?? 0), 2);
+
+            if ($back <= 0) {
+                continue;
+            }
+
+            $creditOrder->orderPayments()->create([
+                'status' => 'paid',
+                'amount' => 0 - $back,
+                'psp' => 'giftcard',
+                'payment_method' => 'Cadeaubon ' . ($entry['code'] ?? ''),
+                'attributes' => [
+                    'refund' => true,
+                    'discount_code_id' => $cardId,
+                ],
+            ]);
+        }
+
+        OrderLog::createLog(
+            orderId: $this->id,
+            tag: 'order.giftcard.refunded',
+            note: 'Teruggezet op cadeaubon: ' . number_format($refunded, 2, ',', '.'),
+        );
+
+        return $refunded;
+    }
+
     public function updateOrderProductsProductInformation()
     {
         foreach ($this->orderProducts as $orderProduct) {
@@ -1639,8 +1684,13 @@ class Order extends Model
      * erft en het bedrag dus verbruikt blijft.
      * $freeShippingReversalAmount (incl. btw) zet een positieve verzendregel op de creditorder,
      * voor een deelretour waarbij de rest onder de gratis-verzendingdrempel zakt.
+     * $refundSoldGiftcards zet het bonbedrag van verkochte cadeaubonnen
+     * (applied_gift_cards) terug op de bon, met een bonbetaling op de
+     * creditorder; alleen de rest wordt als geld terugbetaald. Dit staat los
+     * van $refillGiftcard (promobonnen via discount_code_id). Uit bij een
+     * orderwijziging: daar neemt de vervanger de bonbetaling over.
      */
-    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true, $freeShippingReversalAmount = null)
+    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true, $freeShippingReversalAmount = null, $refundSoldGiftcards = true)
     {
         $newOrder = $this->replicate();
         $newOrder->invoice_id = 'RETURN';
@@ -1824,11 +1874,20 @@ class Order extends Model
         $settled = \Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountSettlement::applyCredit($this, $newOrder);
         $refundAmount = round((float) $newOrder->total + $settled, 2);
 
-        // Alleen overslaan als de verrekening het hele restant al dekte; in
-        // elk ander geval (ook een gewone order met $refundAmount 0) blijft
-        // het oude gedrag staan: een terugbetaling aanmaken zodra er een
-        // betaalmethode gekozen is.
-        if ($paymentMethodId && ! ($settled > 0 && $refundAmount == 0.0)) {
+        // Verkochte cadeaubonnen: het bonbedrag gaat eerst terug op de bon
+        // (nooit meer dan ervan betaald is), alleen de rest wordt geld.
+        $giftcardRefunded = 0.0;
+        if ($refundSoldGiftcards && $refundAmount < 0) {
+            $giftcardRefunded = $this->refundSoldGiftcardsTo($newOrder, abs($refundAmount));
+            $refundAmount = round($refundAmount + $giftcardRefunded, 2);
+        }
+
+        // Alleen overslaan als de verrekening of de bon het hele restant al
+        // dekte; in elk ander geval (ook een gewone order met $refundAmount
+        // 0) blijft het oude gedrag staan: een terugbetaling aanmaken zodra
+        // er een betaalmethode gekozen is.
+        $coveredElsewhere = ($settled > 0 || $giftcardRefunded > 0) && $refundAmount == 0.0;
+        if ($paymentMethodId && ! $coveredElsewhere) {
             $newOrderPayment = $newOrder->orderPayments()->create([
                 'payment_method_id' => $paymentMethodId,
                 'payment_method' => PaymentMethod::find($paymentMethodId)->name,

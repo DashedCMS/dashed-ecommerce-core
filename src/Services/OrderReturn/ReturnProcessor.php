@@ -146,7 +146,13 @@ class ReturnProcessor
                 // onthouden dat het al gebeurd is. Bij een deelretour of een
                 // tweede retour zou de klant het volle bedrag opnieuw krijgen.
                 // De beheerder stort met de hand terug als dat aan de orde is.
+                // Dit geldt alleen voor promobonnen (discount_code_id).
                 refillGiftcard: false,
+                // Verkochte cadeaubonnen (applied_gift_cards) houden wel bij
+                // wat er al teruggezet is: het bonbedrag gaat automatisch terug
+                // op de bon, met een bonbetaling op de creditorder, en alleen
+                // de rest staat nog open voor RefundRegistrar.
+                refundSoldGiftcards: true,
                 freeShippingReversalAmount: $reversalAmount,
             );
 

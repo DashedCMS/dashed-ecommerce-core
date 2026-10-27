@@ -212,15 +212,28 @@ class OrderReturn extends Model
         }
 
         // Eerst het oude gedrag: een echte terugbetaling staat op de
-        // creditorder zelf.
+        // creditorder zelf. Een bonbetaling (bedrag terug op een verkochte
+        // cadeaubon) telt pas als hij de hele creditering dekt.
         $payment = OrderPayment::query()
             ->where('order_id', $this->credit_order_id)
             ->where('status', 'paid')
+            ->where(fn ($q) => $q->whereNull('psp')->orWhere('psp', '!=', 'giftcard'))
             ->orderBy('id')
             ->first();
 
         if ($payment) {
             return $payment;
+        }
+
+        $giftcardPayment = OrderPayment::query()
+            ->where('order_id', $this->credit_order_id)
+            ->where('status', 'paid')
+            ->where('psp', 'giftcard')
+            ->orderBy('id')
+            ->first();
+
+        if ($giftcardPayment && $this->refundableAmount() <= 0.004) {
+            return $giftcardPayment;
         }
 
         // Anders pas een verrekening (OnAccountSettlement) tellen, en dan
@@ -270,7 +283,15 @@ class OrderReturn extends Model
             ->where('status', 'paid')
             ->sum('amount');
 
-        return max(0.0, round($this->creditedAmount() - $settled, 2));
+        // Wat al op een verkochte cadeaubon teruggezet is (negatieve
+        // bonbetalingen op de creditorder) hoeft niet meer als geld terug.
+        $toGiftcards = abs((float) OrderPayment::query()
+            ->where('order_id', $this->credit_order_id)
+            ->where('psp', 'giftcard')
+            ->where('status', 'paid')
+            ->sum('amount'));
+
+        return max(0.0, round($this->creditedAmount() - $settled - $toGiftcards, 2));
     }
 
     /**

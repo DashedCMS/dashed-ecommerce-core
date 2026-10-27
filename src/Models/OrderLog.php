@@ -164,6 +164,8 @@ class OrderLog extends Model
             $string = 'heeft de retour gesloten zonder creditering.';
         } elseif ($this->tag == 'order.return-handled-by-cancellation') {
             $string = 'heeft de bestelling geannuleerd; de open retour is daarmee verwerkt.' . ($this->note ? ' ' . $this->note : '');
+        } elseif ($this->tag == 'order.giftcard.refunded') {
+            $string = 'heeft het cadeaubonbedrag teruggezet op de cadeaubon.' . ($this->note ? ' ' . $this->note : '');
         } elseif ($this->tag == 'order.return-refunded') {
             $string = 'heeft de terugbetaling van de retour geregistreerd.' . ($this->note ? ' ' . $this->note : '');
         } elseif ($this->tag == 'order.return-mail-skipped-bol') {

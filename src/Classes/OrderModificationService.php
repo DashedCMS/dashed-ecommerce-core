@@ -405,6 +405,10 @@ class OrderModificationService
             // De vervangende order erft dezelfde kortingscode, dus een cadeaubon
             // is nog steeds verbruikt en mag niet teruggestort worden.
             refillGiftcard: false,
+            // Idem voor verkochte cadeaubonnen: de verrekening hieronder
+            // neemt het hele betaalde bedrag, bonbetaling inbegrepen, mee
+            // naar de vervanger.
+            refundSoldGiftcards: false,
         );
 
         if ($paidAmount <= 0) {

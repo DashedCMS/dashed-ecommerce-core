@@ -34,7 +34,9 @@ class RefundRegistrar
             }
 
             $creditOrder = $locked->creditOrder;
-            if ($creditOrder->orderPayments()->where('status', 'paid')->exists()) {
+            // Een bonbetaling (bedrag terug op een verkochte cadeaubon) is
+            // geen terugbetaling van geld: de rest mag nog geregistreerd worden.
+            if ($creditOrder->orderPayments()->where('status', 'paid')->where(fn ($q) => $q->whereNull('psp')->orWhere('psp', '!=', 'giftcard'))->exists()) {
                 throw new InvalidArgumentException(__('Deze retour is al terugbetaald.'));
             }
 
