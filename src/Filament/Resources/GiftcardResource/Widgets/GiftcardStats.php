@@ -13,9 +13,22 @@ use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
  *  - totale waarde al uitgegeven (sum used_amount)
  *  - totale waarde nog te besteden (sum discount_amount op niet-verlopen
  *    kaarten met saldo)
+ *  - openstaand saldo van verkochte bonnen (discount_amount + reserved_amount),
+ *    de schuld aan klanten die een bon gekocht hebben
  */
 class GiftcardStats extends StatsOverviewWidget
 {
+    /**
+     * Openstaand saldo van verkochte cadeaubonnen: resterend plus gereserveerd
+     * (een lopende checkout houdt een deel apart). Verkochte bonnen verlopen niet.
+     */
+    public static function openSoldBalance(): float
+    {
+        return round((float) DiscountCode::soldGiftcard()
+            ->selectRaw('COALESCE(SUM(discount_amount + COALESCE(reserved_amount, 0)), 0) as balance')
+            ->value('balance'), 2);
+    }
+
     protected function getStats(): array
     {
         $base = DiscountCode::isGiftcard();
@@ -44,6 +57,9 @@ class GiftcardStats extends StatsOverviewWidget
             Stat::make('Waarde nog te besteden', CurrencyHelper::formatPrice($totalRemaining))
                 ->description(__('Som van resterend saldo op actieve kaarten'))
                 ->color('primary'),
+            Stat::make('Openstaand saldo verkochte bonnen', CurrencyHelper::formatPrice(static::openSoldBalance()))
+                ->description(__('Nog te besteden op gekochte cadeaubonnen, incl. gereserveerd'))
+                ->color('info'),
             Stat::make('Totaal uitgegeven', CurrencyHelper::formatPrice($totalSpent))
                 ->description(__('Som van reeds verzilverd bedrag'))
                 ->color('warning'),

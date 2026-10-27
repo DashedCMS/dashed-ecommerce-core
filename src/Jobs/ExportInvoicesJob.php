@@ -157,6 +157,7 @@ class ExportInvoicesJob implements ShouldQueue
                 }
             }
 
+            $orders->load(['orderProducts.product.productGroup', 'orderPayments']);
             $breakdown = VatBreakdown::calculate($orders);
 
             $view = View::make('dashed-ecommerce-core::invoices.combined-invoices', array_merge($breakdown, compact(

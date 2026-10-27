@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Added
+- **Verkochte cadeaubonnen in de verzamelfactuur.** Een cadeaubon die overal in de shop te besteden is, is een meervoudige voucher: geen btw bij de verkoop. `VatBreakdown::calculate()` haalt regels van producten met `isGiftcardProduct()` uit de btw-tarieven, de zones, OSS en ICP en geeft ze als `soldGiftcards`; `subTotal` (omzet excl. btw) telt ze niet mee, `total` blijft het ontvangen bedrag. Met een bon betaalde orders (`OrderPayment` met psp `giftcard`, status `paid`) houden hun volle omzet en btw; `redeemedGiftcards` toont ter informatie hoeveel met bonnen betaald is. De PDF toont beide als losse regel bij de totalen.
+- **Openstaand saldo verkochte bonnen** als kengetal op Webshop → Cadeaubonnen (`GiftcardStats::openSoldBalance()`: som van `discount_amount` + `reserved_amount` over `DiscountCode::soldGiftcard()`).
+
+### Changed
+- **Cadeaubonproducten staan niet in de productfeed.** `UpdateProductInformationJob` schrijft voor een product met `isGiftcardProduct()` geen rij in `dashed__product_feed_data` en verwijdert een bestaande, zodat Channable en de resellerfeed de bonnen niet doorsturen.
+
 ## v4.175.2 - 2026-10-28
 
 ### Fixed

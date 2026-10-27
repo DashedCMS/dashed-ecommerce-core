@@ -101,11 +101,19 @@
             <p class="total">{{ Translation::get('discount', 'invoice', 'Korting') . ': ' . CurrencyHelper::formatPriceForPDF($discount, 'EUR', true) }}</p>
         @endif
 
+        @if(abs($soldGiftcards ?? 0) >= 0.005)
+            <p class="total">{{ Translation::get('sold-giftcards', 'invoice', 'Verkochte cadeaubonnen (geen btw)') . ': ' . CurrencyHelper::formatPriceForPDF($soldGiftcards, 'EUR', true) }}</p>
+        @endif
+
         <p class="total">{{ Translation::get('subtotal', 'invoice', 'Subtotaal ex BTW') . ': ' . CurrencyHelper::formatPriceForPDF($subTotal, 'EUR', true) }}</p>
 
         <p class="total">{{ Translation::get('vat', 'invoice', 'BTW') . (count($vatPercentages ?? []) == 1 && ! $hasForeignVat ? ' ' . array_key_first($vatPercentages) . '%' : '') .  ': ' . CurrencyHelper::formatPriceForPDF($btw, 'EUR', true) }}</p>
 
         <p class="total">{{ Translation::get('total', 'invoice', 'Totaal') . ': ' . CurrencyHelper::formatPriceForPDF($total, 'EUR', true) }}</p>
+
+        @if(abs($redeemedGiftcards ?? 0) >= 0.005)
+            <p class="total">{{ Translation::get('redeemed-giftcards', 'invoice', 'Waarvan betaald met cadeaubon') . ': ' . CurrencyHelper::formatPriceForPDF($redeemedGiftcards, 'EUR', true) }}</p>
+        @endif
     </div>
 
     <div class="order">

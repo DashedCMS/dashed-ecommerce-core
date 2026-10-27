@@ -208,6 +208,14 @@ class UpdateProductInformationJob implements ShouldQueue
                 Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-no');
             }
 
+            // Cadeaubonnen horen niet in de productfeed (Channable, resellers):
+            // geen feedrij, en een eerder geschreven rij verdwijnt.
+            if ($product->isGiftcardProduct()) {
+                DB::table('dashed__product_feed_data')->where('product_id', $product->id)->delete();
+
+                continue;
+            }
+
             $originalLocale = App::getLocale();
             foreach (Locales::getLocalesArray() as $locale => $name) {
                 App::setLocale($locale);
