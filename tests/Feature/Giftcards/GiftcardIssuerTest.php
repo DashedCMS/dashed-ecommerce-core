@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Event;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -58,6 +59,7 @@ function giftcardIssuerOrder(array $orderAttrs = []): array
 }
 
 it('issues one giftcard per unit', function () {
+    Customsetting::set('giftcard_code_prefix', 'LOV-');
     [$order, $line] = giftcardIssuerOrder();
 
     $cards = app(GiftcardIssuer::class)->issueFor($order);
@@ -117,9 +119,14 @@ it('issues when an order transitions to paid', function () {
 });
 
 it('generates codes without confusable characters', function () {
+    Customsetting::set('giftcard_code_prefix', 'LOV-');
     for ($i = 0; $i < 200; $i++) {
         expect(GiftcardIssuer::newCode())->toMatch('/^LOV-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/');
     }
+});
+
+it('uses GC- as the default code prefix', function () {
+    expect(GiftcardIssuer::newCode())->toMatch('/^GC-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/');
 });
 
 it('does not re-issue a soft-deleted giftcard', function () {

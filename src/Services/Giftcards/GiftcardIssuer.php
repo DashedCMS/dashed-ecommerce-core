@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Services\Giftcards;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -14,6 +15,8 @@ use Dashed\DashedEcommerceCore\Events\GiftcardIssuedEvent;
 class GiftcardIssuer
 {
     private const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    public const DEFAULT_PREFIX = 'GC-';
 
     /**
      * Geeft per stuk van elke cadeaubonregel een verkochte bon uit.
@@ -201,10 +204,23 @@ class GiftcardIssuer
         });
     }
 
+    /**
+     * Voorvoegsel van een nieuwe boncode, per winkel in te stellen met de
+     * instelling `giftcard_code_prefix` (standaard `GC-`).
+     */
+    public static function codePrefix(): string
+    {
+        $prefix = trim((string) Customsetting::get('giftcard_code_prefix', null, self::DEFAULT_PREFIX));
+
+        return $prefix !== '' ? $prefix : self::DEFAULT_PREFIX;
+    }
+
     public static function newCode(): string
     {
+        $prefix = self::codePrefix();
+
         do {
-            $code = 'LOV-' . self::randomBlock() . '-' . self::randomBlock();
+            $code = $prefix . self::randomBlock() . '-' . self::randomBlock();
         } while (DiscountCode::withTrashed()->where('code', $code)->exists());
 
         return $code;

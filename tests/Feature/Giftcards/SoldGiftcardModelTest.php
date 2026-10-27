@@ -69,3 +69,28 @@ it('lets group flags flow to the product', function () {
     $product = $product->fresh();
     expect($product->isDigital())->toBeTrue()->and($product->isGiftcardProduct())->toBeTrue();
 });
+
+it('never gives a giftcard product a discount', function () {
+    $group = ProductGroup::create([
+        'name' => ['en' => 'Bon'],
+        'slug' => ['en' => 'bon-' . uniqid()],
+        'short_description' => ['en' => ''],
+        'description' => ['en' => ''],
+        'content' => ['en' => ''],
+        'search_terms' => ['en' => ''],
+        'site_ids' => ['default'],
+    ]);
+    $group->is_giftcard_product = true;
+    $group->save();
+
+    $product = Product::withoutEvents(fn () => Product::create([
+        'product_group_id' => $group->id,
+        'name' => ['en' => 'Bon 25'],
+        'slug' => ['en' => 'bon-25-' . uniqid()],
+        'site_ids' => ['default'],
+        'current_price' => 25,
+        'price' => 25,
+    ]));
+
+    expect($product->isExcludedFromDiscounts())->toBeTrue();
+});

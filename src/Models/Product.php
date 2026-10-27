@@ -1322,11 +1322,13 @@ class Product extends Model
      * Krijgt dit product nooit korting? Staat aan op het product zelf of op
      * zijn productgroep. Geldt voor kortingscodes, globale kortingen en
      * staffelkorting; een cadeaubon is betaalmiddel en blijft bruikbaar.
+     * Een te verkopen cadeaubon krijgt zelf nooit korting.
      */
     public function isExcludedFromDiscounts(): bool
     {
         return (bool) $this->exclude_from_discounts
-            || (bool) $this->productGroup?->exclude_from_discounts;
+            || (bool) $this->productGroup?->exclude_from_discounts
+            || $this->isGiftcardProduct();
     }
 
     /**
