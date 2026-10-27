@@ -36,6 +36,7 @@ class GiftcardIssuer
             Order::query()->whereKey($order->id)->lockForUpdate()->first();
 
             $lines = OrderProduct::query()->where('order_id', $order->id)->with('product')->get();
+            $predecessorLineIds = static::predecessorLineIds($order);
 
             foreach ($lines as $line) {
                 if (! $line->product || ! $line->product->isGiftcardProduct() || $line->quantity < 1) {
@@ -43,6 +44,19 @@ class GiftcardIssuer
                 }
 
                 $existing = DiscountCode::withTrashed()->where('source_order_product_id', $line->id)->count();
+
+                // Een vervanger (orderwijziging) neemt de bonnen van zijn
+                // voorgangers over in plaats van een tweede set uit te geven.
+                if ($existing < $line->quantity && $predecessorLineIds) {
+                    $sameProductLineIds = OrderProduct::withTrashed()
+                        ->whereIn('id', $predecessorLineIds)
+                        ->where('product_id', $line->product_id)
+                        ->pluck('id')
+                        ->all();
+
+                    $existing += static::moveCards($sameProductLineIds, $line, $line->quantity - $existing);
+                }
+
                 $amount = round((float) $line->price / $line->quantity, 2);
 
                 for ($i = $existing; $i < $line->quantity; $i++) {
@@ -73,6 +87,64 @@ class GiftcardIssuer
         }
 
         return $issued;
+    }
+
+    /**
+     * Hangt hoogstens $max bonnen van de regels $fromLineIds aan $toLine
+     * (oudste eerst). Vervallen bonnen gaan niet mee. Geeft het aantal terug.
+     *
+     * @param  array<int, int>  $fromLineIds
+     */
+    public static function moveCards(array $fromLineIds, OrderProduct $toLine, int $max): int
+    {
+        if ($max < 1 || ! $fromLineIds) {
+            return 0;
+        }
+
+        $cards = DiscountCode::withTrashed()
+            ->soldGiftcard()
+            ->whereIn('source_order_product_id', $fromLineIds)
+            ->where('source_order_product_id', '!=', $toLine->id)
+            ->where(fn ($query) => $query->whereNull('end_date')->orWhere('end_date', '>', now()))
+            ->orderBy('id')
+            ->limit($max)
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($cards as $card) {
+            $card->forceFill(['source_order_product_id' => $toLine->id])->save();
+            $card->createLog(tag: 'giftcard.moved', orderId: $toLine->order_id, oldAmount: (float) $card->discount_amount, newAmount: (float) $card->discount_amount);
+        }
+
+        return $cards->count();
+    }
+
+    /**
+     * Alle orderregels (ook verwijderde) van de orders die $order via
+     * replaced_by_order_id voorgingen.
+     *
+     * @return array<int, int>
+     */
+    protected static function predecessorLineIds(Order $order): array
+    {
+        $orderIds = [];
+        $current = $order;
+
+        for ($depth = 0; $depth < 25; $depth++) {
+            $current = Order::where('replaced_by_order_id', $current->id)->first();
+
+            if (! $current || in_array($current->id, $orderIds, true)) {
+                break;
+            }
+
+            $orderIds[] = $current->id;
+        }
+
+        if (! $orderIds) {
+            return [];
+        }
+
+        return OrderProduct::withTrashed()->whereIn('order_id', $orderIds)->pluck('id')->all();
     }
 
     public static function newCode(): string

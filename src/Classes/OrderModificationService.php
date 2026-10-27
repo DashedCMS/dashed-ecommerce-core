@@ -12,6 +12,7 @@ use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
+use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardIssuer;
 
 /**
  * Wijzigt de inhoud van een bestelling. Onbetaalde orders zonder echte factuur
@@ -465,6 +466,16 @@ class OrderModificationService
             ? OrderProduct::withTrashed()->whereIn('id', $sourceIds)->get()->keyBy('id')
             : collect();
 
+        // Verkochte cadeaubonnen hangen aan een orderregel. Die regels gaan
+        // hieronder weg; onthoud per product welke regels er waren, zodat de
+        // bonnen aan de nieuwe regel van hetzelfde product blijven hangen en
+        // de uitgifte geen tweede set maakt.
+        $previousLineIdsByProduct = $order->orderProducts()->withTrashed()
+            ->whereNotNull('product_id')
+            ->get(['id', 'product_id'])
+            ->groupBy('product_id')
+            ->map(fn ($group) => $group->pluck('id')->all());
+
         $order->orderProducts()->withTrashed()->forceDelete();
 
         foreach ($lines as $line) {
@@ -474,7 +485,7 @@ class OrderModificationService
             // het volgt dezelfde overname-regel als de sku.
             $inherited = self::lineFollowsSource($line, $source) ? $source : null;
 
-            $order->orderProducts()->create([
+            $newLine = $order->orderProducts()->create([
                 'product_id' => $line['product_id'] ?? null,
                 'name' => $line['name'] ?? 'Product',
                 'quantity' => (int) ($line['quantity'] ?? 1),
@@ -485,6 +496,11 @@ class OrderModificationService
                 'discount' => self::discountForLine($line, $source),
                 'is_pre_order' => $line['is_pre_order'] ?? $inherited?->is_pre_order ?? 0,
             ]);
+
+            $fromLineIds = $previousLineIdsByProduct->get($newLine->product_id);
+            if ($fromLineIds && $newLine->product?->isGiftcardProduct()) {
+                GiftcardIssuer::moveCards($fromLineIds, $newLine, (int) $newLine->quantity);
+            }
         }
 
         $order->load('orderProducts');
