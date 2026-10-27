@@ -130,7 +130,7 @@ class ProductGroupResource extends Resource
                     ->default(0),
                 Toggle::make('is_giftcard_product')
                     ->label(__('Is cadeaubon'))
-                    ->helperText(__('Alle producten in deze groep zijn cadeabonnen: na betaling wordt er per stuk een code aangemaakt en gemaild.'))
+                    ->helperText(__('Alle producten in deze groep zijn cadeaubonnen: na betaling wordt er per stuk een code aangemaakt en gemaild.'))
                     ->default(0),
                 Toggle::make('is_digital')
                     ->label(__('Digitaal (geen verzending)'))
