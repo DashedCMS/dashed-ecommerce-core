@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Services\Giftcards;
 
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
@@ -13,6 +12,8 @@ use Dashed\DashedEcommerceCore\Events\GiftcardIssuedEvent;
 
 class GiftcardIssuer
 {
+    private const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
     /**
      * Geeft per stuk van elke cadeaubonregel een verkochte bon uit.
      * Idempotent: een regel met al `quantity` bonnen krijgt er geen bij.
@@ -41,7 +42,7 @@ class GiftcardIssuer
                     continue;
                 }
 
-                $existing = DiscountCode::query()->where('source_order_product_id', $line->id)->count();
+                $existing = DiscountCode::withTrashed()->where('source_order_product_id', $line->id)->count();
                 $amount = round((float) $line->price / $line->quantity, 2);
 
                 for ($i = $existing; $i < $line->quantity; $i++) {
@@ -77,9 +78,19 @@ class GiftcardIssuer
     public static function newCode(): string
     {
         do {
-            $code = 'LOV-' . strtoupper(Str::random(4)) . '-' . strtoupper(Str::random(4));
-        } while (DiscountCode::query()->where('code', $code)->exists());
+            $code = 'LOV-' . self::randomBlock() . '-' . self::randomBlock();
+        } while (DiscountCode::withTrashed()->where('code', $code)->exists());
 
         return $code;
+    }
+
+    private static function randomBlock(): string
+    {
+        $block = '';
+        for ($i = 0; $i < 4; $i++) {
+            $block .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
+        }
+
+        return $block;
     }
 }

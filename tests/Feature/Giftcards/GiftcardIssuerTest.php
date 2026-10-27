@@ -71,7 +71,7 @@ it('issues one giftcard per unit', function () {
             ->and($card->source_order_product_id)->toBe($line->id)
             ->and($card->end_date)->toBeNull()
             ->and($card->name)->toBe('Cadeaubon order ' . $order->invoice_id)
-            ->and($card->code)->toMatch('/^LOV-[A-Z0-9]{4}-[A-Z0-9]{4}$/');
+            ->and($card->code)->toMatch('/^LOV-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/');
     }
 });
 
@@ -109,6 +109,30 @@ it('issues nothing for a marketplace order', function () {
 
 it('issues when an order transitions to paid', function () {
     [$order] = giftcardIssuerOrder(['status' => 'pending']);
+
+    $order->status = 'paid';
+    $order->save();
+
+    expect(DiscountCode::soldGiftcard()->count())->toBe(2);
+});
+
+it('generates codes without confusable characters', function () {
+    for ($i = 0; $i < 200; $i++) {
+        expect(GiftcardIssuer::newCode())->toMatch('/^LOV-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/');
+    }
+});
+
+it('does not re-issue a soft-deleted giftcard', function () {
+    [$order] = giftcardIssuerOrder();
+    $cards = app(GiftcardIssuer::class)->issueFor($order);
+    $cards->first()->delete();
+
+    expect(app(GiftcardIssuer::class)->issueFor($order))->toHaveCount(0)
+        ->and(DiscountCode::withTrashed()->where('is_giftcard', 1)->count())->toBe(2);
+});
+
+it('issues for a kassa order that becomes paid', function () {
+    [$order] = giftcardIssuerOrder(['status' => 'pending', 'order_origin' => 'pos']);
 
     $order->status = 'paid';
     $order->save();
