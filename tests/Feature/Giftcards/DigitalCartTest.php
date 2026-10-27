@@ -205,11 +205,22 @@ test('digital-only checkout has no shipping method and no address requirements',
         ->and(verplicht($probe, 'city'))->toBeFalse();
 });
 
-test('digital-only checkout uses the invoice country, Nederland by default', function () {
+test('digital-only checkout keeps the selected country for vat', function () {
     digitaleWagen(digitaalProduct(50, true, true));
 
     $probe = new DigitalCheckoutProbe();
     $probe->country = 'België';
+    $probe->fillPrices();
+
+    expect($probe->country)->toBe('België')
+        ->and(cartHelper()->getVatCountry())->toBe('België');
+});
+
+test('digital-only checkout falls back to Nederland without a country', function () {
+    digitaleWagen(digitaalProduct(50, true, true));
+
+    $probe = new DigitalCheckoutProbe();
+    $probe->country = '';
     $probe->fillPrices();
 
     expect($probe->country)->toBe('Nederland')
@@ -252,6 +263,11 @@ test('a digital-only order is created without shipping method and shipping line'
     $probe->lastName = 'Jansen';
     $probe->email = 'kim@example.com';
     $probe->generalCondition = true;
+    // Uit een ingelogd profiel of van een weggehaald fysiek product.
+    $probe->street = 'Dorpsstraat';
+    $probe->houseNr = '1';
+    $probe->zipCode = '1234AB';
+    $probe->city = 'Ergens';
     $probe->submit();
 
     $order = Order::latest('id')->first();
@@ -260,5 +276,17 @@ test('a digital-only order is created without shipping method and shipping line'
         ->and($order->shipping_method_id)->toBeNull()
         ->and($order->country)->toBe('Nederland')
         ->and($order->orderProducts()->where('sku', 'shipping_costs')->count())->toBe(0)
-        ->and((float) $order->total)->toBe(50.0);
+        ->and((float) $order->total)->toBe(50.0)
+        ->and($order->street)->toBeEmpty()
+        ->and($order->house_nr)->toBeEmpty()
+        ->and($order->zip_code)->toBeEmpty()
+        ->and($order->city)->toBeEmpty();
+
+    // De voorwaarde waarop Veloyd en MyParcel een betaalde order als pakket
+    // pushen (MarkOrderAsPushableListener): een straat, geen kassa, geen ophalen.
+    $pushbaar = $order->street
+        && $order->order_origin != 'pos'
+        && (! $order->shippingMethod || $order->shippingMethod->sort != 'take_away');
+
+    expect((bool) $pushbaar)->toBeFalse();
 });

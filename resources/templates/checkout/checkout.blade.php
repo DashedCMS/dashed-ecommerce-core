@@ -159,6 +159,9 @@
                                             placeholder="{{Translation::get('city', 'checkout', 'Stad')}}"
                                         />
 
+                                        @endif
+
+                                        {{-- Ook zonder verzending: het land bepaalt btw, OSS en verlegging. --}}
                                         <x-fields.select
                                             required
                                             model="country"
@@ -170,7 +173,6 @@
                                                 <option value="{{ $country }}">{{ $country }}</option>
                                             @endforeach
                                         </x-fields.select>
-                                        @endif
 
                                         @if($companyRequired != 0)
                                             @if($companyRequired == 2)

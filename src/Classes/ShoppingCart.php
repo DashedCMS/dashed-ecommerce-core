@@ -253,6 +253,10 @@ class ShoppingCart
                     // Een gekochte cadeaubon wordt niet verzonden op
                     // orderwaarde: hij telt niet mee voor de drempel van
                     // gratis verzending of voor de goedkoopste methode.
+                    // Let op: de teruggetelde korting hierboven kan het deel
+                    // van de bonregels bevatten. Onschadelijk zolang
+                    // bonproducten van korting zijn uitgesloten (zo staat het
+                    // in de webshops); anders telt dat deel hier dubbel mee.
                     $total -= cartHelper()->getGiftcardProductsTotal();
 
                     $total = max(0.0, round((float) $total, 2));

@@ -530,11 +530,11 @@ class Checkout extends Component
 
         $this->requiresShipping = cartHelper()->requiresShipping();
 
-        if (! $this->requiresShipping) {
+        if (! $this->requiresShipping && blank($this->country)) {
             // Alleen digitale producten: geen afleveradres en geen
-            // verzendmethode. Het land voor btw en betaalmethodes is dan het
-            // factuurland, standaard Nederland.
-            $this->country = filled($this->invoiceCountry) ? $this->invoiceCountry : 'Nederland';
+            // verzendmethode. Het land blijft zichtbaar en gekozen (btw, OSS,
+            // verlegging, betaalmethodes); leeg valt het terug op Nederland.
+            $this->country = 'Nederland';
         }
 
         $this->retrievePaymentMethods();
@@ -1057,6 +1057,17 @@ class Checkout extends Component
         $order->house_nr = $this->houseNr;
         $order->zip_code = $this->zipCode;
         $order->city = $this->city;
+
+        // Een digitale bestelling heeft geen afleveradres. Velden die nog uit
+        // het profiel of van een weggehaald fysiek product in de staat staan,
+        // gaan niet mee: een vervoerder (Veloyd, MyParcel) pusht een betaalde
+        // order met een straat en zonder verzendmethode anders als pakket.
+        if (! $this->requiresShipping) {
+            $order->street = null;
+            $order->house_nr = null;
+            $order->zip_code = null;
+            $order->city = null;
+        }
         $order->country = $this->country;
         $order->marketing = $this->marketing;
         $order->company_name = $this->company;
