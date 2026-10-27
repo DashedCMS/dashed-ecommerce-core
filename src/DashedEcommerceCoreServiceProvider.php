@@ -291,6 +291,10 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Observers\MetaPurchaseObserver::class
         );
 
+        \Dashed\DashedEcommerceCore\Models\Order::observe(
+            \Dashed\DashedEcommerceCore\Observers\GiftcardIssueObserver::class
+        );
+
         $this->registerPopupTemplates();
 
         cms()
