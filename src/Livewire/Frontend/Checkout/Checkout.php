@@ -848,7 +848,11 @@ class Checkout extends Component
 
         $cartItems = cartHelper()->getCartItems();
 
-        if (! $cartItems) {
+        // getCartItems() geeft een Collection, en een lege Collection is
+        // truthy: zo werd een lege winkelwagen een bestelling met alleen
+        // verzend- en betaalkosten. Regels zonder product slaat de lus
+        // hieronder over, dus die tellen hier ook niet mee.
+        if (collect($cartItems)->filter(fn ($cartItem) => $cartItem->model)->isEmpty()) {
             Notification::make()
                 ->danger()
                 ->title(Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'))
