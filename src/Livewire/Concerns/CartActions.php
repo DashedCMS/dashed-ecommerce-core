@@ -117,6 +117,13 @@ trait CartActions
         $this->fillPrices();
     }
 
+    public function removeGiftcard(string $code)
+    {
+        cartHelper()->removeGiftcard($code);
+        $this->checkCart('success', Translation::get('giftcard-removed', 'cart', 'Cadeaubon verwijderd.'));
+        $this->fillPrices();
+    }
+
     public function getSuggestedProducts()
     {
         $this->suggestedProducts = ShoppingCart::getCrossSellAndSuggestedProducts();

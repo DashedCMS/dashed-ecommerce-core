@@ -56,6 +56,21 @@
                                     <dt class="text-sm">{{Translation::get('total', 'cart', 'Totaal')}}</dt>
                                     <dd class="text-sm font-bold">{{ $total }}</dd>
                                 </div>
+                                @if($giftcards)
+                                    @foreach($giftcards as $giftcard)
+                                        <div class="flex items-center justify-between">
+                                            <dt class="text-sm">
+                                                {{Translation::get('giftcard', 'cart', 'Cadeaubon')}} {{ $giftcard['code'] }}
+                                                <button type="button" class="ml-2 underline" wire:click="removeGiftcard(@js($giftcard['code']))">{{Translation::get('remove-giftcard', 'cart', 'Verwijderen')}}</button>
+                                            </dt>
+                                            <dd class="text-sm font-bold">-{{ CurrencyHelper::formatPrice($giftcard['redeemed']) }}</dd>
+                                        </div>
+                                    @endforeach
+                                    <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                                        <dt class="text-sm">{{Translation::get('amount-to-pay', 'cart', 'Nog te betalen')}}</dt>
+                                        <dd class="text-sm font-bold">{{ $amountToPay }}</dd>
+                                    </div>
+                                @endif
                             </dl>
 
                             <div class="mt-6">

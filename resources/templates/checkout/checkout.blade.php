@@ -513,6 +513,21 @@
                                             <dt class="text-base font-bold">{{Translation::get('total', 'cart', 'Totaal')}}</dt>
                                             <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($total) }}</dd>
                                         </div>
+                                        @if($giftcards)
+                                            @foreach($giftcards as $giftcard)
+                                                <div class="flex items-center justify-between">
+                                                    <dt class="text-sm">
+                                                        {{Translation::get('giftcard', 'cart', 'Cadeaubon')}} {{ $giftcard['code'] }}
+                                                        <button type="button" class="ml-2 underline" wire:click="removeGiftcard(@js($giftcard['code']))">{{Translation::get('remove-giftcard', 'cart', 'Verwijderen')}}</button>
+                                                    </dt>
+                                                    <dd class="text-sm font-bold">-{{ CurrencyHelper::formatPrice($giftcard['redeemed']) }}</dd>
+                                                </div>
+                                            @endforeach
+                                            <div class="flex items-center justify-between border-t border-gray-200 pt-6">
+                                                <dt class="text-base font-bold">{{Translation::get('amount-to-pay', 'cart', 'Nog te betalen')}}</dt>
+                                                <dd class="text-base font-bold">{{ CurrencyHelper::formatPrice($amountToPay) }}</dd>
+                                            </div>
+                                        @endif
                                         @if($depositAmount > 0)
                                             <div class="flex items-center justify-between border-t border-gray-200 pt-6">
                                                 <dt class="text-base font-bold">{{Translation::get('pre-payment', 'cart', 'Aanbetaling')}}</dt>

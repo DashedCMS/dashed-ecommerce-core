@@ -18,6 +18,7 @@ use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedEcommerceCore\Services\Giftcards\CartGiftcards;
 use Dashed\DashedEcommerceCore\Models\CartItem as CartItemModel;
 use Dashed\DashedEcommerceCore\Models\ProductGroupVolumeDiscount;
 
@@ -123,6 +124,15 @@ class CartHelper
 
     public static bool $allPaymentMethodsInitialized = false;
 
+    /** @var array<int, array{code: string, discount_code_id: int, redeemed: float}> */
+    public static array $giftcardRedemptions = [];
+
+    public static float $giftcardsTotal = 0.0;
+
+    public static float $amountToPay = 0.0;
+
+    public static bool $giftcardsInitialized = false;
+
     /**
      * Reset alle computed flags zodat we weer vers kunnen rekenen.
      */
@@ -141,6 +151,7 @@ class CartHelper
         static::$depositPaymentMethodsInitialized = false;
         static::$depositAmountInitialized = false;
         static::$taxPercentagesInitialized = false;
+        static::$giftcardsInitialized = false;
         static::$vatReverseChargeInitialized = false;
         static::$vatCountryInitialized = false;
         static::$shippedByShippingMethod = [];
@@ -204,6 +215,7 @@ class CartHelper
         $this->setDiscount(true);
         $this->setSubtotal(true);
         $this->setTaxPercentages(true);
+        $this->setGiftcards(true);
     }
 
     // -------------------------------------------------------------------------
@@ -696,9 +708,14 @@ class CartHelper
             return;
         }
 
+        // Een verkochte cadeaubon wordt nooit de kortingscode van de wagen:
+        // die loopt via CartGiftcards als betaalmiddel.
         $discountCode = DiscountCode::usable()
             ->isNotGlobalDiscount()
             ->where('code', $code)
+            ->where(fn ($query) => $query->where('is_giftcard', 0)
+                ->orWhereNull('giftcard_type')
+                ->orWhere('giftcard_type', '!=', 'verkocht'))
             ->first();
 
         if (! $discountCode || ! $discountCode->isValidForCart(cartType: static::$cartType)) {
@@ -1851,6 +1868,21 @@ class CartHelper
             ];
         }
 
+        // Een verkochte cadeaubon is betaalmiddel, geen korting: hij komt
+        // naast een eventuele kortingscode in de wagen en raakt btw en
+        // totaal niet.
+        if ($this->isSoldGiftcardCode($code)) {
+            $result = CartGiftcards::apply($cart, $code);
+            $this->updateData();
+
+            CartActivityLogger::discountApplied($cart, $code, $result['success'] ? 'success' : 'danger');
+
+            return [
+                'status' => $result['success'] ? 'success' : 'danger',
+                'message' => $result['message'],
+            ];
+        }
+
         static::$discountCodeString = $code;
         $this->setDiscountCode(true, true);
         $this->updateData();
@@ -1870,6 +1902,111 @@ class CartHelper
             'status' => 'success',
             'message' => Translation::get('discount-code-applied', static::$cartType, 'The discount code has been applied and discount has been calculated'),
         ];
+    }
+
+    public function removeGiftcard(string $code): void
+    {
+        CartGiftcards::remove($this->getOrCreateCart(), $code);
+        $this->updateData();
+    }
+
+    protected function isSoldGiftcardCode(string $code): bool
+    {
+        return DiscountCode::query()
+            ->thisSite()
+            ->soldGiftcard()
+            ->where('code', trim($code))
+            ->exists();
+    }
+
+    // -------------------------------------------------------------------------
+    // Verkochte cadeaubonnen (betaalmiddel)
+    // -------------------------------------------------------------------------
+
+    private function setGiftcards(bool $force = false): void
+    {
+        if (static::$giftcardsInitialized && ! $force) {
+            return;
+        }
+
+        $total = $this->getTotal();
+        $cart = static::$cart ?? $this->getOrCreateCart();
+
+        $redemptions = CartGiftcards::applied($cart)
+            ? CartGiftcards::redemptions($cart, $this->getGiftcardPayableAmount())
+            : [];
+
+        $giftcardsTotal = round(array_sum(array_column($redemptions, 'redeemed')), 2);
+
+        static::$giftcardRedemptions = $redemptions;
+        static::$giftcardsTotal = $giftcardsTotal;
+        static::$amountToPay = (float) number_format(max(0.0, $total - $giftcardsTotal), 2, '.', '');
+        static::$giftcardsInitialized = true;
+    }
+
+    /**
+     * Het deel van het totaal dat met een cadeaubon betaald mag worden: alles
+     * behalve de regels van bonproducten (een bon betaalt nooit een bon).
+     */
+    public function getGiftcardPayableAmount(): float
+    {
+        $this->setCartItems();
+        $this->preloadCartProducts();
+
+        $discountCode = static::$discountCode?->type === 'percentage' ? static::$discountCode : null;
+        $giftcardLines = 0.0;
+
+        foreach (static::$cartItems as $cartItem) {
+            $product = $this->getProductForCartItem($cartItem);
+
+            if (! $product || ! $product->isGiftcardProduct()) {
+                continue;
+            }
+
+            $cartItem->model = $product;
+            $line = (float) Product::getShoppingCartItemPrice($cartItem, $discountCode);
+
+            if ($this->getVatReverseCharge() && static::$calculateInclusiveTax) {
+                $line = $this->convertGrossToNet($line, $this->getCartItemVatRate($cartItem));
+            }
+
+            $giftcardLines += $line;
+        }
+
+        return max(0.0, round($this->getTotal() - $giftcardLines, 2));
+    }
+
+    /**
+     * @return array<int, array{code: string, discount_code_id: int, redeemed: float}>
+     */
+    public function getGiftcardRedemptions(): array
+    {
+        if (! static::$giftcardsInitialized) {
+            $this->setGiftcards();
+        }
+
+        return static::$giftcardRedemptions;
+    }
+
+    public function getGiftcardsTotal(): float
+    {
+        if (! static::$giftcardsInitialized) {
+            $this->setGiftcards();
+        }
+
+        return static::$giftcardsTotal;
+    }
+
+    /**
+     * Wat de klant na verrekening van verkochte cadeaubonnen nog moet betalen.
+     */
+    public function getAmountToPay(): float
+    {
+        if (! static::$giftcardsInitialized) {
+            $this->setGiftcards();
+        }
+
+        return static::$amountToPay;
     }
 
     /**

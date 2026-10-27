@@ -133,6 +133,11 @@ class Checkout extends Component
 
     public $total;
 
+    /** @var array<int, array{code: string, discount_code_id: int, redeemed: float}> */
+    public array $giftcards = [];
+
+    public $amountToPay;
+
     public $paymentCosts;
 
     public $shippingCosts;
@@ -531,6 +536,8 @@ class Checkout extends Component
         $this->discount = cartHelper()->getDiscount();
         $this->tax = cartHelper()->getTax();
         $this->total = cartHelper()->getTotal();
+        $this->giftcards = cartHelper()->getGiftcardRedemptions();
+        $this->amountToPay = cartHelper()->getAmountToPay();
 
         $this->shippingCosts = cartHelper()->getShippingCosts();
         $this->paymentCosts = cartHelper()->getPaymentCosts();

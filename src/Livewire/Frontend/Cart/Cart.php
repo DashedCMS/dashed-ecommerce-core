@@ -17,6 +17,11 @@ class Cart extends Component
     public $tax;
     public $total;
 
+    /** @var array<int, array{code: string, discount_code_id: int, redeemed: float}> */
+    public array $giftcards = [];
+
+    public $amountToPay;
+
     public $cartType = 'default';
 
     protected $listeners = [
@@ -82,6 +87,8 @@ class Cart extends Component
 
         $this->tax = CurrencyHelper::formatPrice(cartHelper()->getTax());
         $this->total = CurrencyHelper::formatPrice(cartHelper()->getTotal());
+        $this->giftcards = cartHelper()->getGiftcardRedemptions();
+        $this->amountToPay = CurrencyHelper::formatPrice(cartHelper()->getAmountToPay());
 
         $this->getSuggestedProducts();
     }
