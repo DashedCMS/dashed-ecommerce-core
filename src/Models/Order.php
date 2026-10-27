@@ -49,6 +49,7 @@ use Dashed\DashedEcommerceCore\Events\Orders\OrderCancelledEvent;
 use Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
+use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardIssuer;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 use Dashed\DashedEcommerceCore\Jobs\SendAutomaticFulfillmentProductsJob;
@@ -1683,7 +1684,7 @@ class Order extends Model
      * van $refillGiftcard (promobonnen via discount_code_id). Uit bij een
      * orderwijziging: daar neemt de vervanger de bonbetaling over.
      */
-    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true, $freeShippingReversalAmount = null, $refundSoldGiftcards = true)
+    public function markAsCancelledWithCredit($sendCustomerEmail, $productsMustBeReturned, $restock, $refundDiscountCosts, $extraOrderLineName, $extraOrderLinePrice, $chosenOrderProducts, $fulfillmentStatus, $paymentMethodId, $sendAdminEmail = true, $refillGiftcard = true, $freeShippingReversalAmount = null, $refundSoldGiftcards = true, $voidSoldGiftcards = true)
     {
         $newOrder = $this->replicate();
         $newOrder->invoice_id = 'RETURN';
@@ -1857,6 +1858,19 @@ class Order extends Model
         $newOrder->refresh();
         if ($refillGiftcard) {
             $this->refillGiftcardFromPaidOrder();
+        }
+
+        // Gekochte cadeaubonnen die gecrediteerd worden, vervallen. Niet bij
+        // een orderwijziging: daar neemt de vervanger de bonnen over.
+        if ($voidSoldGiftcards) {
+            foreach ($chosenOrderProducts as $chosenOrderProduct) {
+                $quantity = (int) ($chosenOrderProduct['refundQuantity'] ?? 0);
+                $lineId = (int) ($chosenOrderProduct['id'] ?? 0);
+
+                if ($quantity > 0 && $lineId) {
+                    GiftcardIssuer::voidForLine($this, $lineId, $quantity);
+                }
+            }
         }
 
         // Een open bedrag op een order op rekening wordt verrekend met de

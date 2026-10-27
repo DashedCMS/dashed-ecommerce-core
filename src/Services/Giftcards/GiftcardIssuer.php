@@ -6,6 +6,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Events\GiftcardIssuedEvent;
@@ -145,6 +146,59 @@ class GiftcardIssuer
         }
 
         return OrderProduct::withTrashed()->whereIn('order_id', $orderIds)->pluck('id')->all();
+    }
+
+    /**
+     * Laat bij een creditering van een cadeaubonregel $quantity uitgegeven
+     * bonnen van die regel vervallen, de nieuwste eerst. Een ongebruikte bon
+     * gaat naar saldo 0; bij een (deels) gebruikte bon gaat het restsaldo naar
+     * 0 en krijgt de order een waarschuwing, de winkel beslist over de rest.
+     * Promobonnen blijven altijd ongemoeid. Geeft het aantal vervallen bonnen.
+     */
+    public static function voidForLine(Order $order, int $orderProductId, int $quantity): int
+    {
+        if ($quantity < 1) {
+            return 0;
+        }
+
+        return DB::transaction(function () use ($order, $orderProductId, $quantity) {
+            $cards = DiscountCode::query()
+                ->soldGiftcard()
+                ->where('source_order_product_id', $orderProductId)
+                ->where(fn ($query) => $query->whereNull('end_date')->orWhere('end_date', '>', now()))
+                ->orderByDesc('id')
+                ->limit($quantity)
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($cards as $card) {
+                $balance = round((float) $card->discount_amount, 2);
+                $initial = round((float) $card->initial_amount, 2);
+                $touched = $balance < $initial
+                    || (float) $card->used_amount > 0
+                    || (float) $card->reserved_amount > 0;
+
+                $card->forceFill([
+                    'discount_amount' => 0,
+                    'end_date' => now(),
+                ])->save();
+
+                $card->createLog(tag: 'giftcard.voided', orderId: $order->id, oldAmount: $balance, newAmount: 0);
+
+                if ($touched) {
+                    OrderLog::createLog(
+                        orderId: $order->id,
+                        tag: 'order.giftcard.voided-used',
+                        note: 'Cadeaubon ' . $card->code . ' was al (deels) gebruikt: '
+                            . number_format($initial - $balance, 2, ',', '.') . ' van '
+                            . number_format($initial, 2, ',', '.') . ' besteed, restsaldo '
+                            . number_format($balance, 2, ',', '.') . ' vervallen.',
+                    );
+                }
+            }
+
+            return $cards->count();
+        });
     }
 
     public static function newCode(): string

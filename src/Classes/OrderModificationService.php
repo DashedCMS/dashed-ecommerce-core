@@ -410,6 +410,8 @@ class OrderModificationService
             // neemt het hele betaalde bedrag, bonbetaling inbegrepen, mee
             // naar de vervanger.
             refundSoldGiftcards: false,
+            // Gekochte bonnen gaan mee naar de vervanger en blijven geldig.
+            voidSoldGiftcards: false,
         );
 
         if ($paidAmount <= 0) {

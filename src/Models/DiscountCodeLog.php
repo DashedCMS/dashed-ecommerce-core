@@ -57,6 +57,23 @@ class DiscountCodeLog extends Model
             $string = $userLabel . ' heeft het saldo van deze cadeaubon (' . CurrencyHelper::formatPrice($this->old_amount) . ') overgezet naar een andere cadeaubon bij het bundelen voor afrekenen.';
         } elseif ($this->tag == 'giftcard.merged_from_secondary') {
             $string = $userLabel . ' heeft saldo van andere cadeaubonnen op deze cadeaubon bijgeschreven (' . CurrencyHelper::formatPrice($this->old_amount) . ' → ' . CurrencyHelper::formatPrice($this->new_amount) . ') bij het bundelen voor afrekenen.';
+        } elseif ($this->tag == 'giftcard.voided') {
+            $string = $userLabel . ' heeft deze cadeaubon laten vervallen omdat de aankoop gecrediteerd is'
+                . ($orderLabel ? ' (bestelling ' . $orderLabel . ')' : '')
+                . ' (saldo: ' . CurrencyHelper::formatPrice($this->old_amount) . ' → ' . CurrencyHelper::formatPrice(0) . ').';
+        } elseif ($this->tag == 'giftcard.moved') {
+            $string = $userLabel . ' heeft deze cadeaubon overgezet naar de gewijzigde bestelling' . ($orderLabel ? ' ' . $orderLabel : '') . '.';
+        } elseif ($this->tag == 'giftcard.payment.reserved') {
+            $string = $userLabel . ' heeft ' . CurrencyHelper::formatPrice($this->old_amount - $this->new_amount) . ' gereserveerd'
+                . ($orderLabel ? ' voor bestelling ' . $orderLabel : '') . '.';
+        } elseif ($this->tag == 'giftcard.payment.completed') {
+            $string = 'De betaling met deze cadeaubon is afgerond' . ($orderLabel ? ' (bestelling ' . $orderLabel . ')' : '') . '.';
+        } elseif ($this->tag == 'giftcard.payment.released') {
+            $string = 'De reservering is vrijgegeven' . ($orderLabel ? ' (bestelling ' . $orderLabel . ')' : '')
+                . ' (saldo: ' . CurrencyHelper::formatPrice($this->old_amount) . ' → ' . CurrencyHelper::formatPrice($this->new_amount) . ').';
+        } elseif ($this->tag == 'giftcard.payment.refunded') {
+            $string = $userLabel . ' heeft ' . CurrencyHelper::formatPrice($this->new_amount - $this->old_amount) . ' teruggezet op deze cadeaubon'
+                . ($orderLabel ? ' (bestelling ' . $orderLabel . ')' : '') . '.';
         } elseif ($this->tag == 'discountcode.applied') {
             $string = $userLabel . ' heeft deze kortingscode toegepast'
                 . ($orderLabel ? ' op bestelling ' . $orderLabel : '')
