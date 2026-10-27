@@ -158,26 +158,47 @@ class GiftcardLedger
      * betaald is, de laatst gebruikte bon eerst, en nooit meer dan er per bon
      * van betaald is. Geeft terug wat er werkelijk teruggezet is; de rest
      * hoort via de betaalprovider terug.
-     *
-     * Alleen de order die de bonbetalingen (psp `giftcard`) draagt mag
-     * terugzetten. Na een orderwijziging staat dezelfde `used`-regel op de
-     * oude én de nieuwe order; de bonbetalingen staan maar op één van beide
-     * (bij een wijziging zonder factuur verhuizen ze naar de vervanger), zodat
-     * de bon nooit twee keer terugkrijgt.
      */
     public static function refund(Order $order, float $amount): float
     {
-        $amount = round(max(0.0, $amount), 2);
+        return static::refundDetailed($order, $amount)['total'];
+    }
 
-        if ($amount <= 0 || ! static::holdsGiftcardPayments($order)) {
-            return 0.0;
+    /**
+     * Als refund(), maar met per bonregel wat er teruggezet is:
+     * ['total' => float, 'cards' => [['code', 'discount_code_id', 'amount']]].
+     *
+     * Alleen de order die de bonbetalingen (psp `giftcard`) draagt houdt bij
+     * wat er teruggezet is. Na een orderwijziging staat dezelfde `used`-regel
+     * op de oude én de nieuwe order:
+     * - zonder factuur verhuizen de bonbetalingen naar de vervanger; de oude
+     *   order zet dan niets meer terug;
+     * - met factuur (creditorder) blijven ze op de oude order; een retour op
+     *   de vervanger volgt de keten replaced_by_order_id terug naar die oude
+     *   order en boekt op diens regels.
+     * Zo telt `refunded` maar op één plek en krijgt een bon nooit meer terug
+     * dan ervan betaald is.
+     */
+    public static function refundDetailed(Order $order, float $amount): array
+    {
+        $amount = round(max(0.0, $amount), 2);
+        $none = ['total' => 0.0, 'cards' => []];
+
+        if ($amount <= 0) {
+            return $none;
         }
 
-        return DB::transaction(function () use ($order, $amount) {
-            $lockedOrder = static::lockOrder($order);
+        $holder = static::paymentHolder($order);
+
+        if (! $holder) {
+            return $none;
+        }
+
+        return DB::transaction(function () use ($holder, $order, $amount) {
+            $lockedOrder = static::lockOrder($holder);
             $entries = static::entries($lockedOrder);
             $left = $amount;
-            $changed = false;
+            $cards = [];
 
             for ($i = count($entries) - 1; $i >= 0 && $left > 0; $i--) {
                 $entry = $entries[$i];
@@ -211,15 +232,39 @@ class GiftcardLedger
 
                 $entries[$i]['refunded'] = round((float) ($entry['refunded'] ?? 0) + $back, 2);
                 $left = round($left - $back, 2);
-                $changed = true;
+                $cards[] = [
+                    'code' => (string) ($entry['code'] ?? $card->code),
+                    'discount_code_id' => (int) $card->id,
+                    'amount' => $back,
+                ];
             }
 
-            if ($changed) {
-                static::store($order, $lockedOrder, $entries);
+            if ($cards) {
+                static::store($holder, $lockedOrder, $entries);
             }
 
-            return round($amount - $left, 2);
+            return ['total' => round($amount - $left, 2), 'cards' => $cards];
         });
+    }
+
+    /**
+     * De order die de bonbetalingen van $order draagt: $order zelf, of bij een
+     * vervanger de dichtstbijzijnde voorganger in de keten
+     * replaced_by_order_id die ze nog heeft. Null als geen van beide.
+     */
+    public static function paymentHolder(Order $order): ?Order
+    {
+        $current = $order;
+
+        for ($depth = 0; $current && $depth < 25; $depth++) {
+            if (static::holdsGiftcardPayments($current)) {
+                return $current;
+            }
+
+            $current = Order::where('replaced_by_order_id', $current->id)->first();
+        }
+
+        return null;
     }
 
     /**

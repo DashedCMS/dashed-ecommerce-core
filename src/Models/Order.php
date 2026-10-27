@@ -1342,31 +1342,24 @@ class Order extends Model
      */
     public function refundSoldGiftcardsTo(Order $creditOrder, float $amount): float
     {
-        $before = collect($this->applied_gift_cards ?: [])
-            ->mapWithKeys(fn ($entry) => [(int) ($entry['discount_code_id'] ?? 0) => (float) ($entry['refunded'] ?? 0)]);
-
-        $refunded = GiftcardLedger::refund($this, $amount);
+        $result = GiftcardLedger::refundDetailed($this, $amount);
+        $refunded = $result['total'];
 
         if ($refunded <= 0) {
             return 0.0;
         }
 
-        foreach ($this->applied_gift_cards ?: [] as $entry) {
-            $cardId = (int) ($entry['discount_code_id'] ?? 0);
-            $back = round((float) ($entry['refunded'] ?? 0) - (float) ($before[$cardId] ?? 0), 2);
-
-            if ($back <= 0) {
-                continue;
-            }
-
+        // Eén betaling per teruggezette bonregel, zoals de ledger hem
+        // rapporteert (ook bij twee regels voor dezelfde bon).
+        foreach ($result['cards'] as $card) {
             $creditOrder->orderPayments()->create([
                 'status' => 'paid',
-                'amount' => 0 - $back,
+                'amount' => 0 - $card['amount'],
                 'psp' => 'giftcard',
-                'payment_method' => 'Cadeaubon ' . ($entry['code'] ?? ''),
+                'payment_method' => 'Cadeaubon ' . $card['code'],
                 'attributes' => [
                     'refund' => true,
-                    'discount_code_id' => $cardId,
+                    'discount_code_id' => $card['discount_code_id'],
                 ],
             ]);
         }

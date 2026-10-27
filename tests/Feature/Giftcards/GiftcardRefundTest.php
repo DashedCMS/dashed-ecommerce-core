@@ -226,3 +226,40 @@ it('does not return the card when a modification credits the old order', functio
     expect((float) $bon->fresh()->discount_amount)->toBe(0.0)
         ->and((float) $bon->fresh()->used_amount)->toBe(50.0);
 });
+
+it('returns the card part on a return of the replacement after a modification with credit', function () {
+    $bon = retourBon(50);
+    ['order' => $order] = retourOrder($bon, 52.95, 50);
+
+    $nieuw = OrderModificationService::replaceWithNewOrder($order->fresh(), [
+        ['order_product_id' => null, 'product_id' => null, 'name' => 'Vaas', 'quantity' => 1, 'price' => 52.95, 'vat_rate' => 21, 'product_extras' => []],
+    ], ['credit_old_order' => true]);
+
+    // De bonbetaling bleef op de oude order staan.
+    expect($nieuw->orderPayments()->where('psp', 'giftcard')->exists())->toBeFalse()
+        ->and((float) $bon->fresh()->discount_amount)->toBe(0.0);
+
+    $credit = retourCrediteer($nieuw->fresh(), $nieuw->orderProducts()->first(), 1, retourBetaalmethode()->id);
+
+    expect((float) $bon->fresh()->discount_amount)->toBe(50.0)
+        ->and((float) $bon->fresh()->used_amount)->toBe(0.0)
+        ->and((float) $credit->orderPayments()->where('psp', 'giftcard')->sum('amount'))->toEqual(-50)
+        ->and((float) $credit->orderPayments()->where('psp', 'own')->sum('amount'))->toEqual(-2.95)
+        // Teruggezet op de regels van de order met de bonbetaling, dus nooit
+        // een tweede keer via de oude of de nieuwe order.
+        ->and((float) $order->fresh()->applied_gift_cards[0]['refunded'])->toBe(50.0)
+        ->and(GiftcardLedger::refund($order->fresh(), 50))->toBe(0.0)
+        ->and(GiftcardLedger::refund($nieuw->fresh(), 50))->toBe(0.0)
+        ->and((float) $bon->fresh()->discount_amount)->toBe(50.0);
+});
+
+it('creates no money refund when the card covers the whole credit', function () {
+    $bon = retourBon(50);
+    ['order' => $order, 'regel' => $regel] = retourOrder($bon, 40, 40);
+
+    $credit = retourCrediteer($order, $regel, 1, retourBetaalmethode()->id);
+
+    expect((float) $bon->fresh()->discount_amount)->toBe(50.0)
+        ->and((float) $credit->orderPayments()->where('psp', 'giftcard')->sum('amount'))->toEqual(-40)
+        ->and($credit->orderPayments()->where('psp', 'own')->exists())->toBeFalse();
+});
