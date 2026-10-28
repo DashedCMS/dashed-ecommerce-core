@@ -78,6 +78,33 @@ class Printer extends Model
     }
 
     /**
+     * Is er een leesbaar koppel-token? `plain_token` is encrypted-cast; een rij
+     * die ooit met een ander APP_KEY of nog onversleuteld is gepaird, gooit bij
+     * het decrypten een DecryptException. Dat mag de /printers-lijst in de app
+     * niet laten crashen (het CMS raakt het token niet aan, de app wel via
+     * `is_paired`), dus vangen we het af en behandelen zo'n rij als niet-gepaird.
+     */
+    public function isPaired(): bool
+    {
+        try {
+            return (bool) $this->plain_token;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Veilig het type lezen. Een onbekende waarde in de kolom zou bij de
+     * enum-cast een ValueError gooien en de hele lijst meenemen; dan liever null.
+     */
+    public function safeType(): ?PrinterType
+    {
+        $raw = $this->getRawOriginal('type');
+
+        return $raw !== null ? PrinterType::tryFrom((string) $raw) : null;
+    }
+
+    /**
      * Is er een actieve printer van dit type (of "beide")? De ENE plek voor
      * deze determinatie — gedeeld door `OrderController::print()`/
      * `printDocuments()` (via `activePrinterForType()`) en de

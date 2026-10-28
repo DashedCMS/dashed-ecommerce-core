@@ -18,14 +18,14 @@ class PrinterResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'cups_name' => $this->cups_name,
-            'type' => $this->type?->value,
-            'type_label' => $this->type?->label(),
+            'type' => $this->safeType()?->value,
+            'type_label' => $this->safeType()?->label(),
             'location' => $this->location,
             'is_active' => (bool) $this->is_active,
             'is_online' => $this->isOnline(),
             'pending_jobs' => $this->pendingJobsCount(),
             'last_ping_at' => $this->last_ping_at?->toIso8601String(),
-            'is_paired' => (bool) $this->plain_token,
+            'is_paired' => $this->isPaired(),
         ];
     }
 }

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.176.1 - 2026-10-28
+
+### Fixed
+- **Printers instellen in de app gaf een 500 (`GET /printers`).** De mobiele `PrinterResource` decryptte voor `is_paired` het `plain_token` (encrypted-cast) van elke printer; een rij met een niet te decrypten token (gepaird vóór de encrypted-cast of met een ander APP_KEY) liet de hele lijst crashen. Het CMS raakt het token niet aan, dus daar viel het niet op. `Printer::isPaired()` vangt de DecryptException nu af (niet-leesbaar → niet gepaird) en `Printer::safeType()` leest het type via `tryFrom` zodat een onbekende waarde de lijst ook niet meer breekt.
+
 ## v4.176.0 - 2026-10-28
 
 ### Added
