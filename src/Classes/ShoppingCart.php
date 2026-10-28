@@ -55,26 +55,6 @@ class ShoppingCart
             : $total;
     }
 
-    public static function getApplyDiscountCodeUrl()
-    {
-        return url(route('dashed.frontend.cart.apply-discount-code'));
-    }
-
-    public static function getAddToCartUrl(Product $product)
-    {
-        return url(route('dashed.frontend.cart.add-to-cart', ['product' => $product]));
-    }
-
-    public static function getRemoveFromCartUrl($item)
-    {
-        return url(route('dashed.frontend.cart.remove-from-cart', ['rowId' => $item->rowId]));
-    }
-
-    public static function getUpdateToCartUrl($item)
-    {
-        return url(route('dashed.frontend.cart.update-to-cart', ['rowId' => $item->rowId]));
-    }
-
     public static function getCartUrl()
     {
         $pageId = Customsetting::get('cart_page_id');
@@ -121,11 +101,6 @@ class ShoppingCart
         $page = Page::publicShowable()->where('id', $pageId)->first();
 
         return $page?->getUrl(native: false) ?? '#';
-    }
-
-    public static function getStartTransactionUrl()
-    {
-        return url(route('dashed.frontend.start-transaction'));
     }
 
     public static function cartItemsCount(): int

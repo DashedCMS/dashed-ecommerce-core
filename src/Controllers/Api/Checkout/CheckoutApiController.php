@@ -31,11 +31,4 @@ class CheckoutApiController extends Controller
             'paymentMethods' => $request->country ? ShoppingCart::getAvailablePaymentMethods($request->country, true) : [],
         ]);
     }
-
-    public function getCheckoutData(Request $request)
-    {
-        return response()->json(
-            ShoppingCart::getCheckoutData($request->shippingMethod, $request->paymentMethod),
-        );
-    }
 }

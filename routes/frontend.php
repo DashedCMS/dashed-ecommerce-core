@@ -98,17 +98,12 @@ Route::group(
         Route::post('/quote/{hash}/order', [QuoteController::class, 'order'])
             ->middleware('throttle:dashed-order-pages')
             ->name('dashed.frontend.quote-order');
-        Route::post('/apply-discount-code', [CartController::class, 'applyDiscountCode'])->middleware('throttle:dashed-discount-code')->name('dashed.frontend.cart.apply-discount-code');
-        Route::post('/add-to-cart/{product}', [CartController::class, 'addToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.add-to-cart');
-        Route::post('/update-to-cart/{rowId}', [CartController::class, 'updateToCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.update-to-cart');
-        Route::post('/remove-from-cart/{rowId}', [CartController::class, 'removeFromCart'])->middleware('throttle:dashed-cart')->name('dashed.frontend.cart.remove-from-cart');
     }
 );
 
 Route::middleware(['web'])->prefix(config('filament.path', 'dashed') . '/api')->group(function () {
     Route::get('/checkout/available-shipping-methods', [CheckoutApiController::class, 'availableShippingMethods'])->name('dashed.api.checkout.available-shipping-methods');
     Route::get('/checkout/available-payment-methods', [CheckoutApiController::class, 'availablePaymentMethods'])->name('dashed.api.checkout.available-payment-methods');
-    Route::get('/checkout/get-checkout-data', [CheckoutApiController::class, 'getCheckoutData'])->name('dashed.api.checkout.get-checkout-data');
 });
 
 Route::middleware(['web', AdminMiddleware::class, ...\Dashed\DashedEcommerceCore\Middleware\EnsurePointOfSaleAccess::stack()])->group(function () {
