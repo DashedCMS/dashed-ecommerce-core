@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Services\Giftcards;
 
 use Dashed\DashedEcommerceCore\Models\Cart;
-use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 
 /**

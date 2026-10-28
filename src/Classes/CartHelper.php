@@ -18,8 +18,8 @@ use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Models\Cart as CartModel;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
-use Dashed\DashedEcommerceCore\Services\Giftcards\CartGiftcards;
 use Dashed\DashedEcommerceCore\Models\CartItem as CartItemModel;
+use Dashed\DashedEcommerceCore\Services\Giftcards\CartGiftcards;
 use Dashed\DashedEcommerceCore\Models\ProductGroupVolumeDiscount;
 
 class CartHelper

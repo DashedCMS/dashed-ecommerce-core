@@ -10,9 +10,9 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Mail\OrderModifiedMail;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderModifiedEvent;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
-use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
 use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardIssuer;
+use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 /**
  * Wijzigt de inhoud van een bestelling. Onbetaalde orders zonder echte factuur

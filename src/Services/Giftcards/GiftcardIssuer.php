@@ -8,8 +8,8 @@ use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Events\GiftcardIssuedEvent;
 
 class GiftcardIssuer
