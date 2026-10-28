@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.175.2 - 2026-10-28
+
+### Fixed
+- **Oude formulierroutes voor de winkelwagen verwijderd.** Aanleiding: `Call to undefined method ShoppingCart::cartItems()` in `CartController.php`. Bij de cart-refactor van november 2025 verdwenen `ShoppingCart::cartItems()`, `removeInvalidItems()` en `getCheckoutData()`, maar `POST /add-to-cart/{product}`, `/update-to-cart/{rowId}`, `/remove-from-cart/{rowId}`, `/apply-discount-code` en `GET /dashed/api/checkout/get-checkout-data` riepen ze nog aan en gaven bij elk verzoek een 500. De winkelwagen loopt via Livewire; de routes geven nu een 404.
+  - Ook weg: `CartController::cart()`/`checkout()`, `TransactionController::startTransaction()`, `StartTransactionRequest` en de helpers `ShoppingCart::getAddToCartUrl()`, `getUpdateToCartUrl()`, `getRemoveFromCartUrl()`, `getApplyDiscountCodeUrl()` en `getStartTransactionUrl()`. Een thema dat zo'n helper nog aanroept, moet die aanroep weghalen (het formulier gaf al een 500).
+  - `available-shipping-methods`, `available-payment-methods`, `restore-cart` en de downloadroutes blijven.
+
 ## v4.174.0 - 2026-10-26
 
 ### Fixed
