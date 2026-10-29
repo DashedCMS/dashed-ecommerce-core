@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.177.1 - 2026-10-29
+
+### Fixed
+- **`Product::getUrl($locale, true)` gaf voor een andere taal dan die van het verzoek een kapotte URL.** Het pad van de overzichtspagina heeft de taalprefix al, maar ging daarna nog door `LaravelLocalization::localizeUrl()` met de taal van het huidige verzoek: op een Duitse pagina werd de Engelse URL `/de/en/producten/…` en de Nederlandse `/de/producten/…`. Omdat de uitkomst 5 minuten gecachet wordt per taal (niet per verzoektaal), kreeg elke volgende aanvraag (hreflang, sitemap, mails) die waarde mee. Nu is het `url()` van het al gelokaliseerde pad.
+
 ## v4.176.1 - 2026-10-28
 
 ### Fixed
