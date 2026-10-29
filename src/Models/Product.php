@@ -592,6 +592,7 @@ class Product extends Model
                     // absolute URL van het huidige verzoek zou daar winnen.
                     return $locale != config('app.locale') ? '/' . $locale . '/' : '/';
                 }
+
                 // De overzichtspagina geeft haar pad al met de taalprefix van
                 // $locale. Niet nog eens door localizeUrl(): die zette de taal
                 // van het huidige verzoek ervoor (/de/en/producten/…), en via
