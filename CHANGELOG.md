@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.178.1 - 2026-10-30
+
+### Fixed
+- **Prioriteit-orders staan in Openstaande bestellingen altijd bovenaan**, ook als je op een kolom sorteert (zoals de mobiele app al deed). Geldt voor de tab per orderregel, de gegroepeerde tabs (een groep met minstens één prioriteit-order gaat voor) en de Excel-export. `OpenOrderProductResource::priorityFirst()` en `PRIORITY_SQL` (gecorreleerde subquery, dus de sorteringen met eigen joins blijven werken).
+
 ## v4.178.0 - 2026-10-30
 
 ### Changed

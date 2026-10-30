@@ -63,6 +63,22 @@ class OpenOrderProductResource extends Resource
             ->with(['order', 'product']);
     }
 
+    /**
+     * Of de order van een regel prioriteit heeft (0/1), als SQL op
+     * dashed__order_products. Een gecorreleerde subquery i.p.v. een join,
+     * zodat de sorteringen met eigen joins en de groeperingstabs blijven werken.
+     */
+    public const PRIORITY_SQL = 'COALESCE((select dashed__orders.is_priority from dashed__orders where dashed__orders.id = dashed__order_products.order_id limit 1), 0)';
+
+    /**
+     * Prioriteit-orders altijd bovenaan, vóór elke sortering die Filament
+     * daarna toevoegt (zoals de mobiele API ook doet).
+     */
+    public static function priorityFirst(Builder $query): Builder
+    {
+        return $query->orderByRaw(static::PRIORITY_SQL . ' desc');
+    }
+
     public static function canCreate(): bool
     {
         return false;

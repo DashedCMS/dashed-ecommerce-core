@@ -24,7 +24,8 @@ class ListOpenOrderProducts extends ListRecords
     public function getTabs(): array
     {
         return [
-            'all' => Tab::make('Per orderregel'),
+            'all' => Tab::make('Per orderregel')
+                ->modifyQueryUsing(fn (Builder $query): Builder => OpenOrderProductResource::priorityFirst($query)),
             'grouped' => Tab::make('Gegroepeerd per product')
                 ->modifyQueryUsing(function (Builder $query): Builder {
                     // Subquery die de grouped MIN/SUM resultaten levert.
@@ -44,10 +45,12 @@ class ListOpenOrderProducts extends ListRecords
                         DB::raw('MIN(dashed__order_products.deleted_at) as deleted_at'),
                         DB::raw('MIN(dashed__order_products.created_at) as created_at'),
                         DB::raw('MAX(dashed__order_products.updated_at) as updated_at'),
+                        DB::raw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') as has_priority'),
                     ])->groupBy('dashed__order_products.product_id', 'dashed__order_products.sku');
 
                     return OrderProduct::query()
                         ->fromSub($inner, 'dashed__order_products')
+                        ->orderByDesc('dashed__order_products.has_priority')
                         ->with(['order', 'product']);
                 }),
             'grouped_product_group' => Tab::make('Gegroepeerd per productgroep')
@@ -93,10 +96,12 @@ class ListOpenOrderProducts extends ListRecords
                         DB::raw('MIN(dashed__order_products.deleted_at) as deleted_at'),
                         DB::raw('MIN(dashed__order_products.created_at) as created_at'),
                         DB::raw('MAX(dashed__order_products.updated_at) as updated_at'),
+                        DB::raw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') as has_priority'),
                     ])->groupBy('dashed__products.product_group_id', 'dashed__product_groups.name');
 
                     return OrderProduct::query()
                         ->fromSub($inner, 'dashed__order_products')
+                        ->orderByDesc('dashed__order_products.has_priority')
                         ->with(['order']);
                 }),
         ];

@@ -40,7 +40,7 @@ class OpenOrderProducts implements FromArray
 
     private function detailedRows(): array
     {
-        return OpenOrderProductResource::getEloquentQuery()
+        return OpenOrderProductResource::priorityFirst(OpenOrderProductResource::getEloquentQuery())
             ->with(['order', 'product'])
             ->orderByDesc('order_id')
             ->get()
@@ -68,7 +68,8 @@ class OpenOrderProducts implements FromArray
             'dashed__order_products.sku',
             DB::raw('MIN(dashed__order_products.name) as name'),
             DB::raw('SUM(dashed__order_products.quantity) as quantity'),
-        ])->groupBy('dashed__order_products.product_id', 'dashed__order_products.sku');
+        ])->groupBy('dashed__order_products.product_id', 'dashed__order_products.sku')
+            ->orderByRaw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') desc');
 
         return collect($base->get())
             ->map(fn ($r) => [
@@ -93,7 +94,8 @@ class OpenOrderProducts implements FromArray
         $base->select([
             DB::raw('dashed__products.product_group_id as product_group_id'),
             DB::raw('SUM(dashed__order_products.quantity) as quantity'),
-        ])->groupBy('dashed__products.product_group_id');
+        ])->groupBy('dashed__products.product_group_id')
+            ->orderByRaw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') desc');
 
         $rows = collect($base->get());
         $groupIds = $rows->pluck('product_group_id')->filter()->all();
