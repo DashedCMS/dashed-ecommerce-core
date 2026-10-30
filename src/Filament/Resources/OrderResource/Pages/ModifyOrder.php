@@ -284,10 +284,11 @@ class ModifyOrder extends Page implements HasSchemas
                     ->columnSpanFull(),
                 Section::make(__('Opties'))
                     ->schema([
-                        // De volgende velden horen alleen bij de vervangroute.
-                        // Blijven totaal, producten en aantallen gelijk, dan
-                        // wordt de bestelling zelf aangepast en is er geen oude
-                        // bestelling om iets mee te doen.
+                        // De volgende velden horen bij de vervangroute. Blijft
+                        // het totaal (vrijwel) gelijk, dan wordt de bestelling
+                        // zelf aangepast en is er geen oude bestelling om iets
+                        // mee te doen; de twee voorraadschakelaars gelden dan
+                        // nog wel als er een product of aantal verandert.
                         Toggle::make('credit_old_order')
                             ->label(__('Creditfactuur maken voor de oude bestelling'))
                             ->helperText(__('Standaard aan wanneer de bestelling een echt factuurnummer heeft'))
@@ -295,12 +296,12 @@ class ModifyOrder extends Page implements HasSchemas
                         Toggle::make('already_shipped')
                             ->label(__('De oude producten zijn al verzonden en komen niet terug'))
                             ->helperText(__('Hiermee blijft de voorraad van de oude regels afgeboekt'))
-                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get) || $this->routeMovesStock($get)),
                         Toggle::make('deduct_new_stock')
                             ->label(__('Voorraad van de nieuwe bestelling afboeken'))
                             ->helperText(__('Zet dit uit bij een administratieve correctie waarbij er niets nieuws verzonden wordt'))
                             ->default(true)
-                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
+                            ->visible(fn (Get $get) => ! $this->routeIsInPlace($get) || $this->routeMovesStock($get)),
                         Toggle::make('products_must_be_returned')
                             ->label(__('De producten moeten terugkomen van de klant'))
                             ->visible(fn (Get $get) => ! $this->routeIsInPlace($get)),
@@ -577,7 +578,11 @@ class ModifyOrder extends Page implements HasSchemas
         $paid = (float) $this->order->orderPayments()->where('status', 'paid')->sum('amount');
         $balance = round($newTotal - $paid, 2);
 
-        if ($balance > 0.005) {
+        if ($inPlace && ! OrderModificationService::canModifyInPlace($this->order) && abs($difference) >= 0.005) {
+            // De tweede in-plaats-route houdt het totaal gelijk aan het oude:
+            // het kleine verschil gaat van een regelprijs af.
+            $moneySentence = __('Het verschil van :bedrag wordt weggestreept, het totaal blijft gelijk. Er komt geen nieuwe betaling en de betaaldatum blijft staan.', ['bedrag' => CurrencyHelper::formatPrice(abs($difference))]);
+        } elseif ($balance > 0.005) {
             $moneySentence = __('Er blijft :bedrag te betalen over.', ['bedrag' => CurrencyHelper::formatPrice($balance)]);
         } elseif ($balance < -0.005) {
             $moneySentence = __('Er moet :bedrag terugbetaald worden.', ['bedrag' => CurrencyHelper::formatPrice(abs($balance))]);
@@ -699,6 +704,20 @@ class ModifyOrder extends Page implements HasSchemas
         $key = md5(serialize($lines));
 
         return $this->routeMemo[$key] ??= $this->willModifyInPlace(['lines' => $lines]);
+    }
+
+    /**
+     * Of een wijziging in plaats voorraad verplaatst: de bestelling is al
+     * afgeboekt en er verandert een product of aantal. Dan gelden de
+     * voorraadschakelaars ook op deze route.
+     */
+    protected function routeMovesStock(Get $get): bool
+    {
+        if (! in_array($this->order->status, ['paid', 'partially_paid', 'waiting_for_confirmation'], true)) {
+            return false;
+        }
+
+        return OrderModificationService::changesStock($this->order, $this->linesFromState(['lines' => $get('lines') ?? []]));
     }
 
     /**

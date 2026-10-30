@@ -691,6 +691,7 @@
     "Endpoint actief": "Endpoint actief",
     "Er blijft :bedrag te betalen over.": "Er blijft :bedrag te betalen over.",
     "Er hoeft niets (meer) betaald te worden.": "Er hoeft niets (meer) betaald te worden.",
+    "Het verschil van :bedrag wordt weggestreept, het totaal blijft gelijk. Er komt geen nieuwe betaling en de betaaldatum blijft staan.": "Het verschil van :bedrag wordt weggestreept, het totaal blijft gelijk. Er komt geen nieuwe betaling en de betaaldatum blijft staan.",
     "Er is :bedrag te veel betaald. Registreer hier wat je hebt teruggestort.": "Er is :bedrag te veel betaald. Registreer hier wat je hebt teruggestort.",
     "Er is al een bestelling aangemaakt, maar die is nog niet geplaatst; rond hem af vanuit de bestelling": "Er is al een bestelling aangemaakt, maar die is nog niet geplaatst; rond hem af vanuit de bestelling",
     "Er is al een creditorder voor deze bestelling": "Er is al een creditorder voor deze bestelling",

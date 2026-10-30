@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/../../Support/InvoiceHarness.php';
+
 use Illuminate\Support\Facades\Queue;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -13,6 +15,9 @@ use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 
 uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+
+// applyInPlace() maakt de factuur van een betaalde order opnieuw.
+beforeEach(fn () => bootInvoiceHarness());
 
 /**
  * Een betaalde bestelling met een echte factuur: de automatische in-plaats-route
@@ -113,39 +118,34 @@ it('weigert aanpassen in plaats zodra het totaal verandert', function () {
     expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, $lines))->toBeFalse();
 });
 
-it('weigert aanpassen in plaats zodra een aantal verandert', function () {
-    [$order, $line] = betaaldeOrderMetOptie();
-
-    // Prijs gelijk gehouden, alleen het aantal verandert: financieel neutraal,
-    // maar de voorraad is voor een ander aantal afgeboekt.
-    $lines = [regelUit($line, ['quantity' => 2])];
-
-    expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, $lines))->toBeFalse();
-});
-
-it('weigert aanpassen in plaats zodra er een ander product op de regel staat', function () {
+it('staat aanpassen in plaats toe bij een ander product met hetzelfde totaal', function () {
     [$order, $line] = betaaldeOrderMetOptie();
 
     $ander = optieProduct('Tafel');
-    $lines = [regelUit($line, ['product_id' => $ander->id])];
+    $lines = [regelUit($line, ['product_id' => $ander->id, 'name' => 'Tafel'])];
+
+    expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, $lines))->toBeTrue()
+        ->and(OrderModificationService::changesStock($order, $lines))->toBeTrue();
+});
+
+it('staat aanpassen in plaats toe bij een verschil onder de tien cent', function () {
+    [$order, $line] = betaaldeOrderMetOptie();
+
+    expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, [regelUit($line, ['price' => 100.09])]))->toBeTrue()
+        ->and(OrderModificationService::canModifyInPlaceKeepingTotals($order, [regelUit($line, ['price' => 99.91])]))->toBeTrue()
+        ->and(OrderModificationService::canModifyInPlaceKeepingTotals($order, [regelUit($line, ['price' => 100.10])]))->toBeFalse()
+        ->and(OrderModificationService::canModifyInPlaceKeepingTotals($order, [regelUit($line, ['price' => 99.90])]))->toBeFalse();
+});
+
+it('weigert twee regels die naar dezelfde bronregel wijzen', function () {
+    [$order, $line] = betaaldeOrderMetOptie();
+
+    $lines = [regelUit($line, ['price' => 50.0]), regelUit($line, ['price' => 50.0])];
 
     expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, $lines))->toBeFalse();
 });
 
-it('weigert aanpassen in plaats zodra een regel erbij komt of weggaat', function () {
-    [$order, $line] = betaaldeOrderMetOptie();
-
-    $splitsing = [
-        regelUit($line, ['price' => 60.0]),
-        ['order_product_id' => null, 'product_id' => null, 'name' => 'Toeslag', 'quantity' => 1, 'price' => 40.0, 'vat_rate' => 21, 'product_extras' => []],
-    ];
-
-    expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, $splitsing))->toBeFalse();
-});
-
-it('weigert aanpassen in plaats zodra de voorraadvlag van een optie omslaat', function () {
-    // Rood boekt voorraad af, blauw niet. Het bedrag blijft gelijk, maar de
-    // voorraad is wel afgeboekt en applyInPlace() boekt niets terug.
+it('ziet een omslaande voorraadvlag als voorraadwijziging', function () {
     [$order, $line, , , $blauw] = betaaldeOrderMetOptie();
     $blauw->update(['skip_stock' => true]);
 
@@ -153,7 +153,7 @@ it('weigert aanpassen in plaats zodra de voorraadvlag van een optie omslaat', fu
         ['id' => $blauw->id, 'name' => 'Kleur', 'value' => 'Blauw', 'path' => '', 'price' => 0.0],
     ]])];
 
-    expect(OrderModificationService::canModifyInPlaceKeepingTotals($order, $lines))->toBeFalse();
+    expect(OrderModificationService::changesStock($order, $lines))->toBeTrue();
 });
 
 it('weigert aanpassen in plaats op een al vervangen order', function () {
@@ -189,3 +189,49 @@ it('weigert doorvoeren wanneer de regels niet aan de voorwaarden voldoen', funct
 
     OrderModificationService::applyInPlace($order, [regelUit($line, ['price' => 120.0])]);
 })->throws(LogicException::class);
+
+it('ruilt een product met een cent verschil in plaats, zonder nieuwe betaling of betaaldatum', function () {
+    [$order, $line, $stoel] = betaaldeOrderMetOptie();
+    $stoel->update(['use_stock' => true, 'stock' => 5]);
+    $tafel = optieProduct('Tafel');
+    $tafel->update(['use_stock' => true, 'stock' => 5]);
+
+    $aangemaakt = $order->created_at;
+    $betalingen = $order->orderPayments()->get(['id', 'amount', 'updated_at'])->toArray();
+
+    OrderModificationService::applyInPlace(
+        $order,
+        [regelUit($line, ['product_id' => $tafel->id, 'name' => 'Tafel', 'price' => 100.01, 'product_extras' => []])],
+        ['send_customer_email' => false],
+    );
+
+    $order = $order->fresh();
+
+    expect($order->replaced_by_order_id)->toBeNull()
+        ->and(Order::count())->toBe(1)
+        ->and($order->status)->toBe('paid')
+        ->and(round((float) $order->total, 2))->toBe(100.0)
+        ->and($order->orderProducts[0]->product_id)->toBe($tafel->id)
+        ->and(round((float) $order->orderProducts[0]->price, 2))->toBe(100.0)
+        ->and($order->created_at->equalTo($aangemaakt))->toBeTrue()
+        ->and($order->orderPayments()->get(['id', 'amount', 'updated_at'])->toArray())->toBe($betalingen)
+        ->and($stoel->fresh()->stock)->toBe(6)
+        ->and($tafel->fresh()->stock)->toBe(4)
+        ->and($order->logs()->where('tag', 'order.modified.small-difference')->exists())->toBeTrue();
+});
+
+it('laat de oude voorraad staan als de producten al verzonden zijn', function () {
+    [$order, $line, $stoel] = betaaldeOrderMetOptie();
+    $stoel->update(['use_stock' => true, 'stock' => 5]);
+    $tafel = optieProduct('Tafel');
+    $tafel->update(['use_stock' => true, 'stock' => 5]);
+
+    OrderModificationService::applyInPlace(
+        $order,
+        [regelUit($line, ['product_id' => $tafel->id, 'name' => 'Tafel', 'product_extras' => []])],
+        ['send_customer_email' => false, 'already_shipped' => true],
+    );
+
+    expect($stoel->fresh()->stock)->toBe(5)
+        ->and($tafel->fresh()->stock)->toBe(4);
+});

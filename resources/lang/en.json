@@ -691,6 +691,7 @@
     "Endpoint actief": "Endpoint active",
     "Er blijft :bedrag te betalen over.": ":bedrag remains to be paid.",
     "Er hoeft niets (meer) betaald te worden.": "Nothing (more) needs to be paid.",
+    "Het verschil van :bedrag wordt weggestreept, het totaal blijft gelijk. Er komt geen nieuwe betaling en de betaaldatum blijft staan.": "The difference of :bedrag is written off, the total stays the same. No new payment is created and the payment date is kept.",
     "Er is :bedrag te veel betaald. Registreer hier wat je hebt teruggestort.": ":bedrag was overpaid. Register here what you have refunded.",
     "Er is al een bestelling aangemaakt, maar die is nog niet geplaatst; rond hem af vanuit de bestelling": "An order has already been created but not yet placed; complete it from the order",
     "Er is al een creditorder voor deze bestelling": "A credit order already exists for this order",

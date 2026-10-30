@@ -40,28 +40,27 @@ class OrderModificationService
     }
 
     /**
+     * Een totaal dat minder dan dit bedrag (in euro) afwijkt van het huidige
+     * telt als gelijk. Een product ruilen voor een product dat een cent meer of
+     * minder kost hoort geen vervangende bestelling, verrekenbetaling of
+     * verschoven betaaldatum op te leveren; dat centje wordt bij het wegschrijven
+     * weggestreept (zie absorbSmallDifference()).
+     */
+    public const SMALL_DIFFERENCE = 0.10;
+
+    /**
      * De tweede in-plaats-route: een bestelling die de gewone route niet haalt
-     * (betaald, of met een echte factuur) mag toch zichzelf aanpassen zolang de
-     * wijziging geen financiële en geen voorraadgevolgen heeft. Het geval
-     * waarvoor dit bestaat is een gekozen productoptie corrigeren: de klant
-     * krijgt een andere kleur, het bedrag blijft hetzelfde, en een vervangende
-     * bestelling met creditfactuur zou daar volstrekt buiten verhouding staan.
+     * (betaald, of met een echte factuur) mag toch zichzelf aanpassen zolang het
+     * totaal (vrijwel) gelijk blijft. Het geval waarvoor dit bestaat is een
+     * gekozen productoptie corrigeren of een product ruilen voor een even duur
+     * product: een vervangende bestelling met creditfactuur en verrekening zou
+     * daar volstrekt buiten verhouding staan.
      *
-     * Drie eisen, en de derde is de minst vanzelfsprekende.
-     *
-     * 1. Het nieuwe totaal is gelijk aan het huidige, uitgerekend met dezelfde
-     *    methode die het scherm in de bevestiging toont en die recalculate()
-     *    straks gebruikt.
-     * 2. Per regel blijven het product en het aantal gelijk, en er komt geen
-     *    regel bij of af. Een gelijk totaal zegt namelijk niets over voorraad:
-     *    product A inruilen voor een even duur product B laat de afgeboekte
-     *    voorraad stil verkeerd achter, want applyInPlace() boekt niets af of
-     *    terug. Bij een betaalde order is die voorraad al van de plank.
-     * 3. De uitkomst van resolveSkipStock() blijft per regel gelijk. Een optie
-     *    kan skip_stock dragen, en die vlag bepaalt of de regel überhaupt
-     *    meetelde bij het afboeken. Slaat hij om, dan klopt de voorraad na de
-     *    wijziging niet meer met wat er ooit is afgeboekt, ook al verandert er
-     *    geen cent.
+     * Het nieuwe totaal wordt uitgerekend met dezelfde methode die het scherm in
+     * de bevestiging toont en die recalculate() straks gebruikt, en mag minder
+     * dan SMALL_DIFFERENCE afwijken. Producten, aantallen en skip_stock mogen
+     * wel veranderen: applyInPlace() boekt in dat geval de voorraad van de oude
+     * regels terug en die van de nieuwe af (zie changesStock()).
      *
      * @param  array<int, array<string, mixed>>  $lines
      */
@@ -80,42 +79,121 @@ class OrderModificationService
 
         $sources = $order->orderProducts()->get();
 
-        if ($sources->count() !== count($lines)) {
+        // Elke bronregel mag hoogstens één keer voorkomen: twee regels die naar
+        // dezelfde bron wijzen erven allebei zijn sku en korting.
+        $sourceIds = array_filter(array_map(fn (array $line) => $line['order_product_id'] ?? null, $lines));
+        if (count($sourceIds) !== count(array_unique($sourceIds))) {
             return false;
-        }
-
-        $usedSourceIds = [];
-
-        foreach ($lines as $line) {
-            $sourceId = $line['order_product_id'] ?? null;
-            $source = $sourceId ? $sources->firstWhere('id', $sourceId) : null;
-
-            // Elke bronregel mag precies één keer voorkomen. Zonder deze check
-            // zou twee keer dezelfde regel plus een verdwenen regel op een
-            // gelijk aantal uitkomen terwijl de bestelling wel degelijk anders
-            // wordt.
-            if (! $source || in_array($source->id, $usedSourceIds, true)) {
-                return false;
-            }
-
-            $usedSourceIds[] = $source->id;
-
-            if ((int) ($line['product_id'] ?? 0) !== (int) ($source->product_id ?? 0)) {
-                return false;
-            }
-
-            if ((int) ($line['quantity'] ?? 0) !== (int) $source->quantity) {
-                return false;
-            }
-
-            if (self::skipStockForLine($line) !== (bool) $source->skip_stock) {
-                return false;
-            }
         }
 
         $total = OrderTotalsCalculator::breakdownForLines($order, self::linesWithDiscount($order, $lines, $sources))['total'];
 
-        return abs($total - (float) $order->total) < 0.005;
+        return abs($total - (float) $order->total) < self::SMALL_DIFFERENCE - 0.005;
+    }
+
+    /**
+     * Of deze regels de voorraad anders belasten dan de huidige: een ander
+     * product, een ander aantal, een andere skip_stock-uitkomst, of een regel
+     * erbij of eraf. Alleen dan boekt applyInPlace() voorraad terug en af.
+     *
+     * @param  array<int, array<string, mixed>>  $lines
+     */
+    public static function changesStock(Order $order, array $lines): bool
+    {
+        $current = $order->orderProducts()->get()
+            ->map(fn (OrderProduct $op) => [(int) $op->product_id, (int) $op->quantity, (bool) $op->skip_stock])
+            ->sort()->values()->all();
+
+        $new = collect($lines)
+            ->map(fn (array $line) => [(int) ($line['product_id'] ?? 0), (int) ($line['quantity'] ?? 0), self::skipStockForLine($line)])
+            ->sort()->values()->all();
+
+        return $current !== $new;
+    }
+
+    /**
+     * Of de voorraad van deze bestelling al is afgeboekt. Dat gebeurt in
+     * markAsPaid(), markAsPartiallyPaid() en markAsWaitingForConfirmation().
+     */
+    protected static function stockIsDeducted(Order $order): bool
+    {
+        return in_array($order->status, ['paid', 'partially_paid', 'waiting_for_confirmation'], true);
+    }
+
+    /**
+     * Streept een klein verschil weg (minder dan SMALL_DIFFERENCE) zodat het
+     * nieuwe totaal precies het oude blijft: de klant heeft dat bedrag betaald
+     * en een paar cent ernaast zou een openstaand bedrag of een terugbetaling
+     * van een cent opleveren. Het verschil gaat van de duurste regel af die
+     * door de wijziging nieuw of anders is, en anders van de duurste regel.
+     *
+     * @param  array<int, array<string, mixed>>  $lines
+     * @return array{0: array<int, array<string, mixed>>, 1: float, 2: ?string}
+     */
+    protected static function absorbSmallDifference(Order $order, array $lines): array
+    {
+        $sources = $order->orderProducts()->get();
+        $target = (float) $order->total;
+        $absorbed = 0.0;
+        $lineName = null;
+
+        // Een procentuele korting schaalt met de regelprijs mee, dus één
+        // correctie kan een fractie van een cent laten staan; een paar rondes
+        // zijn genoeg.
+        for ($round = 0; $round < 3; $round++) {
+            $total = OrderTotalsCalculator::breakdownForLines($order, self::linesWithDiscount($order, $lines, $sources))['total'];
+            $difference = round($total - $target, 2);
+
+            if (abs($difference) < 0.005) {
+                break;
+            }
+
+            $index = self::lineToAbsorbDifference($lines, $sources);
+            if ($index === null) {
+                break;
+            }
+
+            $lines[$index]['price'] = round((float) $lines[$index]['price'] - $difference, 2);
+            $absorbed = round($absorbed + $difference, 2);
+            $lineName = (string) ($lines[$index]['name'] ?? '');
+        }
+
+        return [$lines, $absorbed, $lineName];
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $lines
+     */
+    protected static function lineToAbsorbDifference(array $lines, $sources): ?int
+    {
+        $changed = [];
+        $all = [];
+
+        foreach ($lines as $index => $line) {
+            $price = (float) ($line['price'] ?? 0);
+            if ($price <= 0) {
+                continue;
+            }
+
+            $all[$index] = $price;
+
+            $source = ($line['order_product_id'] ?? null) ? $sources->firstWhere('id', $line['order_product_id']) : null;
+            if (! $source
+                || (int) ($line['product_id'] ?? 0) !== (int) $source->product_id
+                || (int) ($line['quantity'] ?? 0) !== (int) $source->quantity
+                || abs($price - (float) $source->price) >= 0.005) {
+                $changed[$index] = $price;
+            }
+        }
+
+        $pool = $changed ?: $all;
+        if (! $pool) {
+            return null;
+        }
+
+        arsort($pool);
+
+        return array_key_first($pool);
     }
 
     /**
@@ -155,10 +233,45 @@ class OrderModificationService
             throw new \LogicException('Deze bestelling kan niet in plaats aangepast worden.');
         }
 
-        return DB::transaction(function () use ($order, $lines, $options) {
+        // Alleen op de tweede route: een onbetaalde bestelling zonder echte
+        // factuur krijgt gewoon het nieuwe bedrag, daar staat nog niets tegenover.
+        $keepTotal = ! self::canModifyInPlace($order);
+
+        return DB::transaction(function () use ($order, $lines, $options, $keepTotal) {
+            $absorbed = 0.0;
+            $absorbedOn = null;
+
+            if ($keepTotal) {
+                [$lines, $absorbed, $absorbedOn] = self::absorbSmallDifference($order, $lines);
+            }
+
+            // Ander product of aantal op een bestelling waarvan de voorraad al
+            // is afgeboekt: de oude regels terug, de nieuwe af. Dezelfde
+            // schakelaars als de vervangroute: al verzonden laat de oude
+            // voorraad weg, deduct_new_stock uit boekt de nieuwe niet af.
+            $moveStock = self::stockIsDeducted($order) && self::changesStock($order, $lines);
+
+            if ($moveStock && ! ($options['already_shipped'] ?? false)) {
+                $order->load('orderProducts.product.parent');
+                $order->refillStock();
+            }
+
             self::writeLines($order, $lines);
 
+            if ($moveStock && ($options['deduct_new_stock'] ?? true)) {
+                $order->load('orderProducts.product.parent');
+                $order->deductStock();
+            }
+
             OrderTotalsCalculator::recalculate($order);
+
+            if (abs($absorbed) >= 0.005) {
+                OrderLog::createLog(
+                    orderId: $order->id,
+                    tag: 'order.modified.small-difference',
+                    note: 'Verschil van '.number_format($absorbed, 2, ',', '.').' weggestreept op regel '.$absorbedOn.', het totaal blijft gelijk aan wat er betaald is.',
+                );
+            }
 
             // De bestaande PDF wordt niet overschreven door createInvoice(),
             // dus eerst weg met het oude bestand. Maar alleen wanneer

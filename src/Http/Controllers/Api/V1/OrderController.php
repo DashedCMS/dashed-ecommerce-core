@@ -275,7 +275,8 @@ class OrderController extends Controller
 
         return response()->json([
             'breakdown' => $breakdown,
-            'in_place' => OrderModificationService::canModifyInPlace($model),
+            'in_place' => OrderModificationService::canModifyInPlace($model)
+                || OrderModificationService::canModifyInPlaceKeepingTotals($model, $lines),
             'is_modifiable' => $model->isModifiable(),
         ]);
     }
@@ -283,7 +284,7 @@ class OrderController extends Controller
     /**
      * Pas een productwijziging daadwerkelijk toe: in-place (regels overschrijven +
      * totalen herberekenen) wanneer `OrderModificationService::canModifyInPlace()`
-     * dat toestaat, anders een vervangende order met verrekening van het al
+     * of `canModifyInPlaceKeepingTotals()` dat toestaat, anders een vervangende order met verrekening van het al
      * betaalde bedrag (creditorder). Spiegelt `modifyPreview()` qua validatie,
      * maar muteert nu daadwerkelijk.
      *
@@ -308,7 +309,10 @@ class OrderController extends Controller
             'products_must_be_returned' => ['sometimes', 'boolean'],
         ]);
 
-        $inPlace = OrderModificationService::canModifyInPlace($model);
+        // Ook een betaalde bestelling past zichzelf aan zolang het totaal minder
+        // dan tien cent verschuift; zie canModifyInPlaceKeepingTotals().
+        $inPlace = OrderModificationService::canModifyInPlace($model)
+            || OrderModificationService::canModifyInPlaceKeepingTotals($model, $lines);
         $target = $inPlace
             ? OrderModificationService::applyInPlace($model, $lines, $options)
             : OrderModificationService::replaceWithNewOrder($model, $lines, $options);

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.178.0 - 2026-10-30
+
+### Changed
+- **Een kleine wijziging op een betaalde bestelling maakt geen vervangende bestelling meer.** Verschuift het totaal door een productwijziging met minder dan € 0,10 (`OrderModificationService::SMALL_DIFFERENCE`), dan past de bestelling zichzelf aan: geen vervangende order, geen creditfactuur, geen verrekenbetaling en de betaaldatum blijft staan. Het verschil wordt weggestreept op de duurste gewijzigde regel, zodat het totaal precies gelijk blijft aan wat er betaald is (orderlog `order.modified.small-difference`). Dat geldt ook bij een ander product, een ander aantal of een regel erbij of eraf; was de voorraad al afgeboekt, dan boekt `applyInPlace()` de oude regels terug en de nieuwe af, met dezelfde schakelaars als de vervangroute (`already_shipped`, `deduct_new_stock`, op het wijzigscherm zichtbaar zodra er voorraad verschuift). Nieuw: `OrderModificationService::changesStock()`. De mobiele API (`orders/{id}/modify` en de preview) volgt dezelfde regel.
+
 ## v4.177.1 - 2026-10-29
 
 ### Fixed
