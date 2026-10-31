@@ -657,7 +657,21 @@ class POSPage extends Component implements HasActions, HasSchemas
                             ->toArray();
                     })
                     ->getOptionLabelUsing(fn ($value) => optional(User::find($value))->name)
-                    ->suffixAction(
+                    ->suffixActions([
+                        Action::make('unlinkCustomerUser')
+                            ->label(__('Account ontkoppelen'))
+                            ->tooltip(__('Account ontkoppelen'))
+                            ->icon('heroicon-m-x-mark')
+                            ->color('danger')
+                            ->visible(fn (Get $get) => filled($get('customerUserId')))
+                            ->action(function () {
+                                $this->customerUserId = '';
+
+                                Notification::make()
+                                    ->title(__('Account ontkoppeld. Sla de klantgegevens op om het door te voeren.'))
+                                    ->success()
+                                    ->send();
+                            }),
                         Action::make('copyCostToPrice')
                             ->label(__('Gegevens invoeren'))
                             ->icon('heroicon-m-clipboard')
@@ -714,8 +728,8 @@ class POSPage extends Component implements HasActions, HasSchemas
                                         : __('Gegevens uit accountprofiel geladen (geen eerdere bestelling gevonden)'))
                                     ->success()
                                     ->send();
-                            })
-                    )
+                            }),
+                    ])
                     ->helperText(__('Selecteer een account om de bestelling aan te koppelen')),
 
                 Select::make('loadFromOrderId')
@@ -1005,6 +1019,36 @@ class POSPage extends Component implements HasActions, HasSchemas
         }
 
         $this->dispatch('saveCustomerData');
+    }
+
+    /**
+     * Haalt in één keer het gekoppelde account en alle klantgegevens van de
+     * bestelling af en slaat dat direct op.
+     */
+    public function clearCustomerData(): void
+    {
+        $this->customerUserId = '';
+        $this->loadFromOrderId = '';
+
+        foreach ([
+            'firstName', 'lastName', 'email', 'phoneNumber',
+            'street', 'houseNr', 'zipCode', 'city',
+            'company', 'btwId',
+            'invoiceStreet', 'invoiceHouseNr', 'invoiceZipCode', 'invoiceCity', 'invoiceCountry',
+            'note',
+        ] as $property) {
+            $this->{$property} = '';
+        }
+
+        $this->country = Countries::getAllSelectedCountries()[0] ?? 'NL';
+        $this->customFields = [];
+
+        $this->submitCustomerDataForm();
+
+        Notification::make()
+            ->title(__('Klantgegevens gewist'))
+            ->success()
+            ->send();
     }
 
     public function saveAsConceptAction(): Action

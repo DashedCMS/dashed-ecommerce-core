@@ -1088,6 +1088,14 @@
                                 Klantgegevens opslaan
                             </button>
                         </div>
+                        <div>
+                            <button type="button"
+                                    wire:click="clearCustomerData"
+                                    wire:confirm="Account loskoppelen en alle klantgegevens van deze bestelling wissen?"
+                                    class="px-4 py-2 text-lg uppercase rounded-lg border-2 border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-all ease-in-out duration-300 font-bold w-full">
+                                Alle klantgegevens wissen
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.178.2 - 2026-10-31
+
+### Added
+- **Kassa: klantaccount ontkoppelen en alle klantgegevens in één keer wissen.** In het venster Klantgegevens staat achter het veld Account een knop "Account ontkoppelen" (alleen als er een account gekoppeld is; de ingevulde gegevens blijven staan tot je opslaat). Onder "Klantgegevens opslaan" staat "Alle klantgegevens wissen": na bevestiging gaan het account, alle naam-, adres- en factuurvelden, de notitie en de extra velden van de bestelling af en wordt dat direct opgeslagen (`POSPage::clearCustomerData()`); het land gaat terug naar het standaardland en de prijsweergave volgt weer de regel zonder klant. In de klassieke en de moderne layout.
+
 ## v4.178.1 - 2026-10-30
 
 ### Fixed
