@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.178.4 - 2026-11-02
+
+### Fixed
+- **Productoverzichten gaven een 500 op servers zonder herkenning van functionele afhankelijkheid** (`SQLSTATE[42000] 1055 'pf.name' isn't in GROUP BY`). De filterquery in `ShowProducts::getFilters()` groepeerde alleen op `pf.id` en `pfo.id`; MySQL zonder primaire sleutel op de tabel en MariaDB weigeren dat onder `ONLY_FULL_GROUP_BY`. Alle geselecteerde kolommen staan nu in de `GROUP BY`; uitkomst ongewijzigd.
+
 ## v4.178.3 - 2026-11-02
 
 ### Fixed

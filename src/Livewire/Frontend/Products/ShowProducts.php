@@ -239,7 +239,17 @@ class ShowProducts extends Component
                 DB::raw('COUNT(dpf.product_id) as option_count')
             )
             ->where('pf.hide_filter_on_overview_page', 0)
-            ->groupBy('pf.id', 'pfo.id')
+            // Every selected column in the GROUP BY: MySQL without a primary key on the table, and MariaDB,
+            // do not see functional dependency and refuse the query under ONLY_FULL_GROUP_BY.
+            ->groupBy(
+                'pf.id',
+                'pf.name',
+                'pf.hide_filter_on_overview_page',
+                'pf.created_at',
+                'pfo.order',
+                'pfo.id',
+                'pfo.name'
+            )
             ->orderBy('pfo.order')
             ->get()
             ->groupBy('filter_id');
