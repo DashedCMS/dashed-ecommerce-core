@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.178.5 - 2026-11-02
+
+### Fixed
+- **ec-core vraagt nu minimaal dashed-core v4.95.** Zonder ondergrens werkte `composer update dashed/dashed-ecommerce-core` alleen ec-core bij, en dan startte een project met een oudere dashed-core niet meer (`Trait "Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels" not found`, `CMSManager::registerNavigationGroup()` onbekend). v4.95.0 is de laagste versie met alle klassen die ec-core gebruikt (`AnalyzeSeoAction` staat achter `class_exists`); getest met dashed-core v4.95.0.
+
 ## v4.178.4 - 2026-11-02
 
 ### Fixed
