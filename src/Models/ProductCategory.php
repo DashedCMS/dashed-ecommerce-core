@@ -119,6 +119,13 @@ class ProductCategory extends Model
             $parentCategory = $parentCategory->parent;
         }
 
+        // Zonder taalprefix was de Engelse URL van een categorie zonder subcategorieën /sd/s6 in plaats van
+        // /en/sd/s6: Google vond die als 404 of als redirect via de URL-geschiedenis.
+        $url = '/' . ltrim($url, '/');
+        if ($locale != Locales::getFirstLocale()['id'] && ! str($url)->startsWith("/{$locale}/")) {
+            $url = '/' . $locale . $url;
+        }
+
         return url($url);
     }
 

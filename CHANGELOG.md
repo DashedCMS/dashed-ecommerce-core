@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.178.3 - 2026-11-02
+
+### Fixed
+- **Een categorie zonder subcategorieën had in een andere taal dan de standaardtaal een URL zonder taalprefix.** `ProductCategory::getProductsUrl()` gaf `url('sd/s6')` in plaats van `/en/sd/s6`; die URL kwam via de URL-geschiedenis in redirects en bij Google terecht als 404 (`/sd/s6`, `/v/H`). De taalprefix gaat er nu voor, zoals in `getUrl()`.
+
 ## v4.178.2 - 2026-10-31
 
 ### Added
