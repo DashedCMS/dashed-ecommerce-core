@@ -1317,7 +1317,7 @@ class PointOfSaleApiController extends Controller
         // Zero-total kort-circuit: als de cadeaubonnen het hele bedrag dekken,
         // geen betaalmethode-keuze meer nodig — direct als betaald markeren.
         if ($orderOrigin === 'pos' && round((float) $order->total, 2) <= 0 && $hasGiftCards) {
-            POSHelper::finishPaidOrder($order, $posCart, 'paid', 'handled');
+            POSHelper::finishPaidOrder($order, $posCart);
         }
 
         $extraOptionCache = [];
@@ -1538,11 +1538,12 @@ class PointOfSaleApiController extends Controller
             // 'waiting_for_confirmation' expliciet mee (placeByAdmin() heeft
             // de order daar al op gezet, dit is dus een no-op op de status)
             // zodat een order op rekening niet alsnog op paid komt te staan.
-            // De klant heeft de goederen in de winkel meegenomen, dus
-            // fulfilment is wel meteen afgehandeld. finishPaidOrder() bewaakt
-            // zelf al pos_order_handled, dus een herhaalde aanroep hier doet
-            // de printjob en kassalade niet nog een keer.
-            POSHelper::finishPaidOrder($order->fresh(), $posCart, 'waiting_for_confirmation', 'handled');
+            // De fulfilmentstatus volgt de instelling "Bestellingen na
+            // betaling automatisch afhandelen", net als bij een gewone
+            // kassabetaling. finishPaidOrder() bewaakt zelf al
+            // pos_order_handled, dus een herhaalde aanroep hier doet de
+            // printjob en kassalade niet nog een keer.
+            POSHelper::finishPaidOrder($order->fresh(), $posCart, 'waiting_for_confirmation');
 
             return response()->json([
                 'success' => true,

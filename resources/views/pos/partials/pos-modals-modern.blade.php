@@ -481,6 +481,12 @@
                                 Bon printen
                             </button>
                         @endif
+                        <a x-bind:href="'{{ route('filament.dashed.resources.orders.view', ['record' => 'ORDER_ID']) }}'.replace('ORDER_ID', order.id)"
+                           target="_blank"
+                           x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
+                           class="px-4 py-4 text-lg uppercase rounded-xl transition-all ease-in-out duration-300 text-neutral-900 dark:text-white font-bold w-full text-center">
+                            Bestelling bekijken
+                        </a>
                         <button @click="resetPOS()"
                                 x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
                                 x-bind:disabled="loading"

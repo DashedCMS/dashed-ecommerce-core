@@ -10,8 +10,23 @@ use Dashed\DashedEcommerceCore\Jobs\OpenCashRegisterJob;
 
 class POSHelper
 {
-    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', string $fulfillmentStatus = 'handled'): array
+    /**
+     * De fulfilmentstatus voor een bestelling die in de kassa (of als
+     * handmatige bestelling in het CMS) betaald is. Standaard meteen
+     * afgehandeld, want de klant neemt de goederen mee. Een winkel die zulke
+     * bestellingen toch door de gewone afhandeling wil laten lopen zet
+     * "Bestellingen na betaling automatisch afhandelen" uit bij Instellingen,
+     * POS; de bestelling blijft dan op Niet afgehandeld staan.
+     */
+    public static function fulfillmentStatusAfterPayment(): string
     {
+        return Customsetting::get('pos_auto_handle_orders', null, true) ? 'handled' : 'unhandled';
+    }
+
+    public static function finishPaidOrder(Order $order, POSCart $posCart, string $orderStatus = 'paid', ?string $fulfillmentStatus = null): array
+    {
+        $fulfillmentStatus ??= self::fulfillmentStatusAfterPayment();
+
         $order->refresh();
 
         if ($order->pos_order_handled) {

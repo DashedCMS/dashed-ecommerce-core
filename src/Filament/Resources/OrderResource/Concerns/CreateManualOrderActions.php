@@ -16,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Dashed\DashedCore\Models\Customsetting;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Forms\Components\DateTimePicker;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -1232,7 +1233,7 @@ trait CreateManualOrderActions
     public function finishPaidOrder(Order $order)
     {
         $order->changeStatus('paid');
-        $order->changeFulfillmentStatus('handled');
+        $order->changeFulfillmentStatus(POSHelper::fulfillmentStatusAfterPayment());
 
         $this->printReceipt($order);
         $hasCashPayment = false;
