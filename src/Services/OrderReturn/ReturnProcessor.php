@@ -23,7 +23,7 @@ class ReturnProcessor
 {
     /**
      * @param  array<int, array{order_return_line_id: int, quantity: int}>  $lines  aantal 0 = niet crediteren
-     * @param  array{restock?: bool, refund_discount?: bool, note?: string|null, confirm_existing_credit?: bool, charge_shipping?: bool, charge_shipping_amount?: float|int|string|null}  $options
+     * @param  array{restock?: bool, refund_discount?: bool, note?: string|null, confirm_existing_credit?: bool, charge_shipping?: bool, charge_shipping_amount?: float|int|string|null, refund_shipping?: bool}  $options
      *
      * @throws ExistingCreditOrderException als de bestelling al een creditorder heeft en confirm_existing_credit niet aan staat
      */
@@ -39,7 +39,11 @@ class ReturnProcessor
             ? (float) $options['charge_shipping_amount']
             : null;
 
-        $creditOrder = DB::transaction(function () use ($return, $lines, $restock, $refundDiscount, $note, $confirmExistingCredit, $chargeShipping, $chargeShippingAmount) {
+        // Bij een volledige retour gaan de betaalde verzendkosten standaard
+        // mee terug (herroeping van de hele bestelling, art. 6:230r BW).
+        $refundShipping = (bool) ($options['refund_shipping'] ?? true);
+
+        $creditOrder = DB::transaction(function () use ($return, $lines, $restock, $refundDiscount, $note, $confirmExistingCredit, $chargeShipping, $chargeShippingAmount, $refundShipping) {
             // Lock op de retourregel en statuscheck binnen de lock: twee
             // beheerders die tegelijk verwerken leveren nooit twee creditorders op.
             $locked = OrderReturn::query()->whereKey($return->id)->lockForUpdate()->first();
@@ -115,6 +119,19 @@ class ReturnProcessor
                 // op het model; het is geen kolom, dus dit model nooit meer save()-en.
                 $orderProduct->refundQuantity = $quantity;
                 $chosen[] = $orderProduct;
+            }
+
+            // Binnen de lock, zodat twee verwerkingen tegelijk de verzendkosten
+            // niet allebei crediteren. linesToCredit() telt eerdere
+            // creditorders mee, dus een al gecrediteerde verzendregel komt er
+            // nooit een tweede keer op.
+            if ($refundShipping) {
+                $shippingRefund = app(ShippingCostsRefund::class);
+                if ($shippingRefund->isFullReturn($order, $perOrderProduct)) {
+                    foreach ($shippingRefund->linesToCredit($order) as $shippingLine) {
+                        $chosen[] = $shippingLine;
+                    }
+                }
             }
 
             // Binnen de lock uitgerekend, zodat twee verwerkingen tegelijk

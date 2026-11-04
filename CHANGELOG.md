@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.180.0 - 2026-11-04
+
+### Added
+- **Verzendkosten terug bij een volledige retour.** "Retour verwerken" crediteerde alleen de productregels, terwijl de klant bij een herroeping van de hele bestelling ook de betaalde verzendkosten terugkrijgt (art. 6:230r BW). Een terugbetaling bij de PSP inclusief verzendkosten paste daardoor op geen creditorder (Pay.nl-melding "niet gekoppeld"). Nieuw: `Services\OrderReturn\ShippingCostsRefund` (volledig terug? welke verzendregel staat nog open, eerdere creditorders tellen mee) en optie `refund_shipping` (standaard aan) in `ReturnProcessor`, in de verwerkmodal als schakelaar "Verzendkosten terugbetalen (€ x)" (alleen zichtbaar bij een volledige retour) en in de API. Een al gecrediteerde verzendregel komt er nooit een tweede keer op.
+- **Bestelling annuleren:** de verzendregel heet nu "Verzendkosten terugbetalen" en gaat vanzelf op het open aantal zodra alle producten op hun volle aantal staan (en terug op 0 als dat niet meer zo is); "Alles retourneren" slaat al gecrediteerde verzendkosten over.
+
 ## v4.178.5 - 2026-11-02
 
 ### Fixed

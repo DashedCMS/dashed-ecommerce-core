@@ -20,6 +20,7 @@ use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ShippingCostsRefund;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\CancellationReturnSettler;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversalProposal;
@@ -96,14 +97,24 @@ class CancelOrder extends Component implements HasSchemas, HasActions
             ->schema(function () {
                 $orderProductSchema = [];
                 foreach ($this->order->orderProducts as $orderProduct) {
+                    $isShipping = $orderProduct->sku === ShippingCostsRefund::SKU;
                     $orderProductSchema[] = \LaraZeus\Quantity\Components\Quantity::make("order_product_$orderProduct->id")
-                        ->label(__(':naam retourneren', ['naam' => $orderProduct->name]))
+                        ->label($isShipping
+                            ? __('Verzendkosten terugbetalen (:naam)', ['naam' => $orderProduct->name])
+                            : __(':naam retourneren', ['naam' => $orderProduct->name]))
                         ->numeric()
                         ->minValue(0)
                         ->default(0)
                         ->live(onBlur: true)
                         ->maxValue($orderProduct->quantity)
-                        ->helperText(__(':aantal x besteld voor :prijs', ['aantal' => $orderProduct->quantity, 'prijs' => CurrencyHelper::formatPrice($orderProduct->price)]));
+                        ->afterStateUpdated(function ($get, Set $set) use ($isShipping) {
+                            if (! $isShipping) {
+                                $this->syncShippingRefund($get, $set);
+                            }
+                        })
+                        ->helperText($isShipping
+                            ? __(':prijs. Gaat vanzelf aan zodra alle producten geannuleerd worden: bij een volledige annulering krijgt de klant de verzendkosten terug.', ['prijs' => CurrencyHelper::formatPrice($orderProduct->price)])
+                            : __(':aantal x besteld voor :prijs', ['aantal' => $orderProduct->quantity, 'prijs' => CurrencyHelper::formatPrice($orderProduct->price)]));
                 }
 
                 return [
@@ -126,8 +137,12 @@ class CancelOrder extends Component implements HasSchemas, HasActions
                             Action::make('returnAll')
                                 ->label(__('Alles retourneren'))
                                 ->action(function (Set $set) {
+                                    // Een al eerder gecrediteerde verzendregel niet nog eens.
+                                    $openShipping = app(ShippingCostsRefund::class)->linesToCredit($this->order)->keyBy('id');
                                     foreach ($this->order->orderProducts as $orderProduct) {
-                                        $set("order_product_$orderProduct->id", $orderProduct->quantity);
+                                        $set("order_product_$orderProduct->id", $orderProduct->sku === ShippingCostsRefund::SKU
+                                            ? (int) ($openShipping->get($orderProduct->id)?->refundQuantity ?? 0)
+                                            : $orderProduct->quantity);
                                     }
                                 }),
                         ])
@@ -293,6 +308,39 @@ class CancelOrder extends Component implements HasSchemas, HasActions
         $requested = (float) ($data['charge_shipping_amount'] ?? 0);
 
         return $requested > 0 ? min($proposal->amount, round($requested, 2)) : $proposal->amount;
+    }
+
+    /**
+     * Verzendkosten gaan altijd mee terug bij een volledige annulering: staan
+     * alle producten op hun volle aantal, dan komt de verzendregel op het nog
+     * niet gecrediteerde aantal; anders weer op 0. Alleen na een wijziging van
+     * een productregel, zodat de beheerder de verzendregel zelf kan overrulen.
+     */
+    protected function syncShippingRefund($get, Set $set): void
+    {
+        $service = app(ShippingCostsRefund::class);
+        $full = $service->isFullReturn($this->order, $this->quantitiesFrom($this->quantityState($get)));
+        $open = $service->linesToCredit($this->order)->keyBy('id');
+
+        foreach ($this->order->orderProducts as $orderProduct) {
+            if ($orderProduct->sku === ShippingCostsRefund::SKU) {
+                $set("order_product_$orderProduct->id", $full ? (int) ($open->get($orderProduct->id)?->refundQuantity ?? 0) : 0);
+            }
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<int, int>
+     */
+    protected function quantitiesFrom(array $data): array
+    {
+        $quantities = [];
+        foreach ($this->order->orderProducts as $orderProduct) {
+            $quantities[$orderProduct->id] = (int) ($data["order_product_$orderProduct->id"] ?? 0);
+        }
+
+        return $quantities;
     }
 
     /** @param  array<string, mixed>  $data */

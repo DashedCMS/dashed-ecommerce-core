@@ -96,6 +96,7 @@ class OrderReturnController extends Controller
             'note' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'confirm_existing_credit' => ['sometimes', 'boolean'],
             'charge_shipping' => ['sometimes', 'boolean'],
+            'refund_shipping' => ['sometimes', 'boolean'],
             'lines' => ['sometimes', 'array'],
             'lines.*.order_return_line_id' => ['required_with:lines', 'integer'],
             'lines.*.quantity' => ['required_with:lines', 'integer', 'min:0'],
@@ -109,6 +110,7 @@ class OrderReturnController extends Controller
             app(ReturnProcessor::class)->process($return, $lines, [
                 'restock' => (bool) ($data['restock'] ?? true),
                 'charge_shipping' => (bool) ($data['charge_shipping'] ?? true),
+                'refund_shipping' => (bool) ($data['refund_shipping'] ?? true),
                 'note' => $data['note'] ?? null,
                 'confirm_existing_credit' => (bool) ($data['confirm_existing_credit'] ?? false),
             ]);

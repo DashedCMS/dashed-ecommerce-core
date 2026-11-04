@@ -22,6 +22,7 @@ use Dashed\DashedEcommerceCore\Services\OrderReturn\RefundRegistrar;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnableLines;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\ReturnProcessor;
 use Dashed\DashedEcommerceCore\Mail\OrderReturn\OrderReturnCustomMail;
+use Dashed\DashedEcommerceCore\Services\OrderReturn\ShippingCostsRefund;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal;
 use Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversalProposal;
 
@@ -111,6 +112,15 @@ class ReturnActions
                         ->label(__('Korting verrekenen'))
                         ->helperText(__('Alleen bij een volledige retour: de vaste korting van de bestelling wordt dan van het creditbedrag afgetrokken, want de klant heeft die korting niet betaald. Bij een deelretour wordt dit geweigerd.'))
                         ->default(false),
+                    Toggle::make('refund_shipping')
+                        ->label(function () use ($record) {
+                            return __('Verzendkosten terugbetalen (:bedrag)', ['bedrag' => CurrencyHelper::formatPrice($record->order ? app(ShippingCostsRefund::class)->amount($record->order) : 0)]);
+                        })
+                        ->helperText(__('Alles komt terug: bij een herroeping van de hele bestelling krijgt de klant ook de betaalde verzendkosten terug. Ze komen als regel op de creditorder.'))
+                        ->visible(function (Get $get) use ($record) {
+                            return self::shippingRefundAvailable($record, (array) $get('lines'));
+                        })
+                        ->default(true),
                     Toggle::make('charge_shipping')
                         ->label(__('Verzendkosten inhouden'))
                         ->helperText(function (Get $get) use ($record) {
@@ -144,6 +154,7 @@ class ReturnActions
                         'refund_discount' => (bool) ($data['refund_discount'] ?? false),
                         'charge_shipping' => (bool) ($data['charge_shipping'] ?? true),
                         'charge_shipping_amount' => $data['charge_shipping_amount'] ?? null,
+                        'refund_shipping' => (bool) ($data['refund_shipping'] ?? true),
                         'note' => $data['note'] ?? null,
                         'confirm_existing_credit' => (bool) ($data['confirm_existing_credit'] ?? false),
                     ]);
@@ -160,6 +171,10 @@ class ReturnActions
                 if ($reversalLine) {
                     $body .= ' '.__('Verzendkosten ingehouden: :bedrag', ['bedrag' => CurrencyHelper::formatPrice($reversalLine->price)]);
                 }
+                $refundedShipping = abs((float) $credit->orderProducts()->where('sku', ShippingCostsRefund::SKU)->sum('price'));
+                if ($refundedShipping > 0) {
+                    $body .= ' '.__('Verzendkosten teruggegeven: :bedrag', ['bedrag' => CurrencyHelper::formatPrice($refundedShipping)]);
+                }
 
                 Notification::make()
                     ->success()
@@ -170,6 +185,34 @@ class ReturnActions
                     ])
                     ->send();
             });
+    }
+
+    /** @param  array<int|string, mixed>  $lineQuantities  order_return_line_id => aantal */
+    protected static function shippingRefundAvailable(OrderReturn $record, array $lineQuantities): bool
+    {
+        if (! $record->order) {
+            return false;
+        }
+
+        $service = app(ShippingCostsRefund::class);
+
+        return $service->amount($record->order) > 0
+            && $service->isFullReturn($record->order, self::perOrderProduct($record, $lineQuantities));
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $lineQuantities
+     * @return array<int, int>
+     */
+    protected static function perOrderProduct(OrderReturn $record, array $lineQuantities): array
+    {
+        $perOrderProduct = [];
+        foreach ($record->lines as $line) {
+            $quantity = (int) ($lineQuantities[$line->id] ?? 0);
+            $perOrderProduct[(int) $line->order_product_id] = ($perOrderProduct[(int) $line->order_product_id] ?? 0) + $quantity;
+        }
+
+        return $perOrderProduct;
     }
 
     /** @param  array<int|string, mixed>  $lineQuantities  order_return_line_id => aantal */
