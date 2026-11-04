@@ -17,6 +17,7 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobType;
 use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Http\Resources\PrintJobResource;
 use Dashed\DashedEcommerceCore\Http\Requests\MarkJobFailedRequest;
+use Dashed\DashedEcommerceCore\Classes\PrintQueue\LabelPdfOrientation;
 
 class PrintQueueController extends Controller
 {
@@ -98,7 +99,7 @@ class PrintQueueController extends Controller
             if ($job->printable_type && $job->printable_id && class_exists($job->printable_type)) {
                 $row = ($job->printable_type)::find($job->printable_id);
                 if ($row && ($path = $this->resolveLabelPdfPath($row))) {
-                    return Storage::disk('public')->response($path);
+                    return $this->labelResponse('public', $path);
                 }
             }
 
@@ -107,7 +108,7 @@ class PrintQueueController extends Controller
                     $mp = \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $job->order_id)
                         ->whereNotNull('shipment_id')->latest()->first();
                     if ($mp && ($path = $this->resolveLabelPdfPath($mp))) {
-                        return Storage::disk('public')->response($path);
+                        return $this->labelResponse('public', $path);
                     }
                 }
 
@@ -115,7 +116,7 @@ class PrintQueueController extends Controller
                     $v = \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $job->order_id)
                         ->whereNotNull('shipment_id')->latest()->first();
                     if ($v && ($path = $this->resolveLabelPdfPath($v))) {
-                        return Storage::disk('public')->response($path);
+                        return $this->labelResponse('public', $path);
                     }
                 }
             }
@@ -143,7 +144,25 @@ class PrintQueueController extends Controller
             'PDF ontbreekt'
         );
 
+        if ($job->type === PrintJobType::ShippingLabel) {
+            return $this->labelResponse($job->pdf_disk, $job->pdf_path);
+        }
+
         return Storage::disk($job->pdf_disk)->response($job->pdf_path);
+    }
+
+    /**
+     * Een verzendlabel gaat altijd staand naar de daemon, die zonder
+     * oriëntatieopties print; zie LabelPdfOrientation.
+     */
+    private function labelResponse(string $disk, string $path): Response
+    {
+        $pdf = LabelPdfOrientation::portrait((string) Storage::disk($disk)->get($path));
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+        ]);
     }
 
     public function ping(Request $request): JsonResponse

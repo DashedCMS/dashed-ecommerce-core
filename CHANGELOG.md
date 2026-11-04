@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.180.1 - 2026-11-04
+
+### Fixed
+- **Verzendlabels staand naar de printer.** Veloyd levert sinds 1 november liggende A6-labels aan (andere labelgenerator, ander PostNL-klantnummer), en de print-daemon print met een kaal `lp` zonder oriëntatieopties, dus labels die via de app naar een labelprinter gingen kwamen in het verkeerde formaat uit. `PrintQueueController::pdf()` stuurt elk verzendlabel nu door `Classes\PrintQueue\LabelPdfOrientation`, die liggende pagina's een kwartslag naar staand draait; staande labels (MyParcel, oudere Veloyd-labels) gaan byte voor byte ongewijzigd door. De meegeleverde TCPDI-parser roept `die()` aan bij een PDF die hij niet kan lezen, dus hij krijgt alleen een klassieke PDF met een liggende MediaBox en zonder rotatie te zien; mislukt het draaien, dan gaat het origineel door.
+
 ## v4.180.0 - 2026-11-04
 
 ### Added
