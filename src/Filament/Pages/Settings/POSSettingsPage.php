@@ -8,8 +8,6 @@ use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
-use Dashed\DashedEcommerceCore\Classes\Orders;
-use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\TextInput;
@@ -18,7 +16,9 @@ use Filament\Schemas\Components\Section;
 use Dashed\ReceiptPrinter\ReceiptPrinter;
 use Dashed\DashedCore\Models\Customsetting;
 use Filament\Infolists\Components\TextEntry;
+use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 
 class POSSettingsPage extends Page
