@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.182.0 - 2026-11-06
+
+### Changed
+- **Klantenscherm kassa veel lichter.** `x-init="init()"` bovenop Alpine's eigen `init()` startte twee timers: 2 verzoeken per seconde per scherm (De Maanvis: 7.200 per uur, 62% van de PHP-tijd). Het scherm ververst nu elke 3 seconden zolang er iets verandert en daarna elke 15, pauzeert op de achtergrond, en wacht op het vorige antwoord. De kassa in dezelfde browser meldt een wijziging direct via `BroadcastChannel`.
+- Het klantenscherm krijgt een eigen antwoord (`retrieveCustomerDisplay`) zonder betaalmethodes en verzendadvies, en past bij uitlezen geen kortingscode meer toe. De mobiele API houdt `retrieveCartForCustomer`.
+- `print-queue:retry-failed` start alleen nog een proces als er een mislukte printopdracht klaarstaat.
+
 ## v4.181.0 - 2026-11-06
 
 ### Added

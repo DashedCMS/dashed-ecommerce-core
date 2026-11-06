@@ -2,8 +2,7 @@
      x-data="POSData({
         endpoint: @js(route('api.point-of-sale.retrieve-cart-for-customer')),
         fallbackImage: @js('https://placehold.co/400x400/' . str(collect(collect(filament()->getPanels())->first()->getColors())->first())->replace('#', '') . '/fff?text=Aangepaste%20verkoop')
-     })"
-     x-init="init()">
+     })">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <div class="absolute top-4 right-4 z-20 flex gap-4">
@@ -117,7 +116,11 @@
 
         // state
         isFullscreen: false,
-        pollInterval: null,
+        pollTimer: null,
+        fetching: false,
+        lastPayload: null,
+        lastChangeAt: 0,
+        cartChannel: null,
 
         products: [],
         subtotal: '0',
@@ -127,9 +130,46 @@
         vat: '0',
         vatPercentages: {},
 
+        // Alpine roept init() zelf aan. Roep hem niet ook nog in de markup aan: dan loopt alles twee keer.
         init() {
-            this.fetchProducts();
-            this.pollInterval = setInterval(() => this.fetchProducts(), 1000);
+            this.refresh();
+
+            // De kassa in dezelfde browser meldt een wijziging meteen. Op een
+            // ander apparaat komt die binnen via het verversen hieronder.
+            if ('BroadcastChannel' in window) {
+                this.cartChannel = new BroadcastChannel('dashed-pos-cart');
+                this.cartChannel.onmessage = () => this.refresh();
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    this.refresh();
+                }
+            });
+        },
+
+        destroy() {
+            clearTimeout(this.pollTimer);
+            this.cartChannel?.close();
+        },
+
+        // 3 seconden zolang er iets verandert, daarna 15. Op de achtergrond
+        // niets, en nooit een tweede verzoek zolang het vorige nog loopt.
+        async refresh() {
+            clearTimeout(this.pollTimer);
+
+            if (!document.hidden && !this.fetching) {
+                this.fetching = true;
+                try {
+                    await this.fetchProducts();
+                } finally {
+                    this.fetching = false;
+                }
+            }
+
+            const active = Date.now() - this.lastChangeAt < 120000;
+            clearTimeout(this.pollTimer);
+            this.pollTimer = setTimeout(() => this.refresh(), active ? 3000 : 15000);
         },
 
         displayedProducts() {
@@ -171,6 +211,12 @@
                 }
 
                 const data = await response.json();
+
+                const payload = JSON.stringify(data);
+                if (payload !== this.lastPayload) {
+                    this.lastPayload = payload;
+                    this.lastChangeAt = Date.now();
+                }
 
                 this.products = data.products ?? [];
                 this.subtotal = data.subTotal ?? 0; // let op: subTotal

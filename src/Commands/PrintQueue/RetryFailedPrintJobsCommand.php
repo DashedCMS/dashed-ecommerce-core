@@ -14,6 +14,22 @@ class RetryFailedPrintJobsCommand extends Command
 
     protected $description = 'Promote failed PrintJobs back to pending wanneer cooldown verlopen en attempts < max_retries';
 
+    /**
+     * Snelle controle voor de scheduler: zonder werk start er geen eigen
+     * artisan-proces. Lukt de query niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(
+            fn () => PrintJob::query()
+                ->where('status', PrintJobStatus::Failed->value)
+                ->where('failed_at', '<', now()->subMinutes(2))
+                ->exists(),
+            true,
+            false,
+        );
+    }
+
     public function handle(): int
     {
         $cutoff = now()->subMinutes(2);

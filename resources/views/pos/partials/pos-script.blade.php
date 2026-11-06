@@ -1977,6 +1977,13 @@
         },
 
         init() {
+            // Het klantenscherm in dezelfde browser ververst hierop direct.
+            if ('BroadcastChannel' in window) {
+                const cartChannel = new BroadcastChannel('dashed-pos-cart');
+                this.$watch('products', () => cartChannel.postMessage('changed'));
+                this.$watch('total', () => cartChannel.postMessage('changed'));
+            }
+
             $wire.on('toggle', (variable) => {
                 this.toggle(variable[0]);
             })

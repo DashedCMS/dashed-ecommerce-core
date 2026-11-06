@@ -1656,6 +1656,7 @@ MARKDOWN,
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand::class)
                 ->everyMinute()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Commands\PrintQueue\RetryFailedPrintJobsCommand::hasWork())
                 ->withoutOverlapping();
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class)

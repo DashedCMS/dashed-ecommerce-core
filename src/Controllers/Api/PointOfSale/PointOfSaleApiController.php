@@ -2106,6 +2106,47 @@ class PointOfSaleApiController extends Controller
         ], 404);
     }
 
+    /**
+     * Wat het klantenscherm toont, en niets meer. Dit endpoint wordt continu
+     * opgevraagd: geen betaalmethodes of verzendadvies, en een uitlezing past
+     * nooit een kortingscode toe. De mobiele app houdt retrieveCartForCustomer.
+     */
+    public function retrieveCustomerDisplay(Request $request): JsonResponse
+    {
+        $posCart = POSCart::where('user_id', $request->input('userId'))->where('status', 'active')->first();
+
+        if (! $posCart) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Geen actieve winkelwagen gevonden voor deze klant',
+            ], 404);
+        }
+
+        $discountCodes = $posCart->appliedDiscountCodeRecords();
+        $totals = $this->calculatePosCartTotals($posCart, $discountCodes);
+
+        $shippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
+        $shippingCosts = $shippingMethod ? PosShippingAdvisor::costsFor($posCart, $shippingMethod) : 0.0;
+
+        $subtotalIncl = (float) ($totals['subtotal'] ?? 0);
+        $vatTotal = (float) ($totals['vat'] ?? 0);
+        $giftCardsTotal = (float) ($totals['giftCardsTotal'] ?? 0);
+        $vatPercentages = array_map(
+            fn ($value) => CurrencyHelper::formatPrice((float) $value),
+            $totals['vatPercentages'] ?? [],
+        );
+
+        return response()->json([
+            'products' => array_reverse(array_values($posCart->products ?? [])),
+            'activeDiscountCode' => (string) ($posCart->discount_code ?? ($discountCodes->first()->code ?? '')) ?: null,
+            'discount' => CurrencyHelper::formatPrice((float) ($totals['discount'] ?? 0)),
+            'vat' => CurrencyHelper::formatPrice($vatTotal),
+            'vatPercentages' => $vatPercentages,
+            'subTotal' => CurrencyHelper::formatPrice($posCart->prices_ex_vat ? $subtotalIncl - $vatTotal : $subtotalIncl),
+            'total' => CurrencyHelper::formatPrice(round(max(0, $subtotalIncl + (float) $shippingCosts - $giftCardsTotal), 2)),
+        ]);
+    }
+
     private function normalizePosCartItem(array $chosenProduct): object
     {
         $options = $chosenProduct['options'] ?? [];
