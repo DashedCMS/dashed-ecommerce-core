@@ -12,14 +12,21 @@ class POSHelper
 {
     /**
      * De fulfilmentstatus voor een bestelling die in de kassa (of als
-     * handmatige bestelling in het CMS) betaald is. Standaard meteen
-     * afgehandeld, want de klant neemt de goederen mee. Een winkel die zulke
-     * bestellingen toch door de gewone afhandeling wil laten lopen zet
-     * "Bestellingen na betaling automatisch afhandelen" uit bij Instellingen,
-     * POS; de bestelling blijft dan op Niet afgehandeld staan.
+     * handmatige bestelling in het CMS) betaald is. Standaard Afgehandeld,
+     * want de klant neemt de goederen mee; een winkel kiest bij Instellingen,
+     * POS een andere status. Zonder keuze geldt de oude schakelaar
+     * pos_auto_handle_orders nog, zodat een winkel die hem uit had gezet niet
+     * bij het bijwerken op Afgehandeld terechtkomt. Een status die niet meer
+     * bestaat telt als geen keuze.
      */
     public static function fulfillmentStatusAfterPayment(): string
     {
+        $status = Customsetting::get('pos_fulfillment_status_after_payment');
+
+        if (is_string($status) && array_key_exists($status, Orders::getFulfillmentStatusses())) {
+            return $status;
+        }
+
         return Customsetting::get('pos_auto_handle_orders', null, true) ? 'handled' : 'unhandled';
     }
 

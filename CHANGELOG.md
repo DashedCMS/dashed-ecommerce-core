@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.181.0 - 2026-11-06
+
+### Added
+- **Fulfilmentstatus na betaling in de kassa.** Bij Instellingen, POS kies je nu met "Fulfilmentstatus na betaling" (`pos_fulfillment_status_after_payment`) welke status een betaalde kassabestelling krijgt, standaard Afgehandeld. Dit vervangt de schakelaar "Bestellingen na betaling automatisch afhandelen"; zolang er niets is opgeslagen geldt die oude schakelaar nog, zodat een winkel die hem uit had staan niet op Afgehandeld terechtkomt.
+
 ## v4.180.1 - 2026-11-04
 
 ### Fixed

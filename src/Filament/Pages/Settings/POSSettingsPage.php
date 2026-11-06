@@ -8,6 +8,8 @@ use Filament\Pages\Page;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Classes\Orders;
+use Dashed\DashedEcommerceCore\Classes\POSHelper;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\TextInput;
@@ -42,7 +44,7 @@ class POSSettingsPage extends Page
         $formData["cash_register_track_cash_book"] = Customsetting::get('cash_register_track_cash_book', null, '');
         $formData["cash_register_amount"] = Customsetting::get('cash_register_amount', null, 0);
         $formData["pos_auto_print_receipt"] = Customsetting::get('pos_auto_print_receipt', null, true);
-        $formData["pos_auto_handle_orders"] = Customsetting::get('pos_auto_handle_orders', null, true);
+        $formData["pos_fulfillment_status_after_payment"] = POSHelper::fulfillmentStatusAfterPayment();
         $formData["pos_auto_print_other_orders"] = Customsetting::get('pos_auto_print_other_orders', null, false);
         $formData["pos_allow_proforma"] = Customsetting::get('pos_allow_proforma', null, false);
         $formData["pos_enabled"] = Customsetting::get('pos_enabled', null, false);
@@ -108,11 +110,13 @@ class POSSettingsPage extends Page
                 ->label(__('Automatisch een bon printen bestellingen buiten de kassa om'))
                 ->visible(fn (Get $get) => $get("pos_enabled"))
                 ->reactive(),
-            Toggle::make("pos_auto_handle_orders")
-                ->label(__('Bestellingen na betaling automatisch afhandelen'))
-                ->helperText(__('Staat dit uit, dan blijft een betaalde kassabestelling op Niet afgehandeld staan en loopt hij via de gewone afhandeling.'))
-                ->visible(fn (Get $get) => $get("pos_enabled"))
-                ->reactive(),
+            Select::make("pos_fulfillment_status_after_payment")
+                ->label(__('Fulfilmentstatus na betaling'))
+                ->helperText(__('De status die een betaalde kassabestelling krijgt. Kies Niet afgehandeld als kassabestellingen via de gewone afhandeling lopen.'))
+                ->options(fn () => array_map(fn (string $label) => __($label), Orders::getFulfillmentStatusses()))
+                ->selectablePlaceholder(false)
+                ->required(fn (Get $get) => $get("pos_enabled"))
+                ->visible(fn (Get $get) => $get("pos_enabled")),
             Toggle::make("pos_allow_proforma")
                 ->label(__('Proforma vanuit POS toestaan'))
                 ->visible(fn (Get $get) => $get("pos_enabled"))
@@ -185,7 +189,7 @@ class POSSettingsPage extends Page
                 Customsetting::set('receipt_printer_connector_type', $this->form->getState()["receipt_printer_connector_type"] ?? '', $site['id']);
                 Customsetting::set('receipt_printer_connector_descriptor', $this->form->getState()["receipt_printer_connector_descriptor"] ?? '', $site['id']);
                 Customsetting::set('pos_auto_print_receipt', $this->form->getState()["pos_auto_print_receipt"] ?? false, $site['id']);
-                Customsetting::set('pos_auto_handle_orders', $this->form->getState()["pos_auto_handle_orders"] ?? false, $site['id']);
+                Customsetting::set('pos_fulfillment_status_after_payment', $this->form->getState()["pos_fulfillment_status_after_payment"] ?? 'handled', $site['id']);
                 Customsetting::set('pos_auto_print_other_orders', $this->form->getState()["pos_auto_print_other_orders"] ?? false, $site['id']);
                 Customsetting::set('pos_allow_proforma', $this->form->getState()["pos_allow_proforma"] ?? false, $site['id']);
                 Customsetting::set('pos_layout', $this->form->getState()["pos_layout"] ?? 'classic', $site['id']);
