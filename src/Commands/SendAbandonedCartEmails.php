@@ -21,13 +21,27 @@ class SendAbandonedCartEmails extends Command
 
     protected $description = 'Send pending abandoned cart emails that are due';
 
-    public function handle(): void
+    /**
+     * Snelle controle voor de scheduler: zonder werk start er geen eigen
+     * artisan-proces. Lukt de controle niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
     {
-        $emails = AbandonedCartEmail::query()
-            ->with('flowStep.flow')
+        return rescue(fn () => self::dueEmails()->exists(), true, false);
+    }
+
+    private static function dueEmails()
+    {
+        return AbandonedCartEmail::query()
             ->whereNull('sent_at')
             ->whereNull('cancelled_at')
-            ->where('send_at', '<=', now())
+            ->where('send_at', '<=', now());
+    }
+
+    public function handle(): void
+    {
+        $emails = self::dueEmails()
+            ->with('flowStep.flow')
             ->get();
 
         foreach ($emails as $record) {

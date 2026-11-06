@@ -36,9 +36,24 @@ class SendOrderHandledFlowEmails extends Command
                     // poll-based verzender, of een bulk-import/backfill). Zonder
                     // dit filter blijven die permanent onzichtbaar en versturen
                     // ze nooit een mail. processEnrollment() herberekent
-                    // next_mail_at en verstuurt indien inmiddels verschuldigd,
-                    // of laat 'm met rust als er geen openstaande stap meer is.
-                    ->orWhereNull('next_mail_at');
+                    // next_mail_at en verstuurt indien inmiddels verschuldigd.
+                    //
+                    // Een afgeronde inschrijving heeft ook geen next_mail_at. Die
+                    // doet alleen nog mee als er sinds de laatste beoordeling een
+                    // stap is bijgekomen of aangepast, anders groeit deze ronde
+                    // met elke afgeronde inschrijving mee.
+                    ->orWhere(function ($query) {
+                        $query->whereNull('next_mail_at')
+                            ->whereExists(function ($steps) {
+                                $steps->from('dashed__order_handled_flow_steps as step')
+                                    ->whereColumn('step.flow_id', 'dashed__order_flow_enrollments.flow_id')
+                                    ->where('step.is_active', true)
+                                    ->where(function ($steps) {
+                                        $steps->whereNull('dashed__order_flow_enrollments.sent_steps')
+                                            ->orWhereColumn('step.updated_at', '>=', 'dashed__order_flow_enrollments.updated_at');
+                                    });
+                            });
+                    });
             })
             ->with(['order', 'flow.steps'])
             ->get();
@@ -176,8 +191,13 @@ class SendOrderHandledFlowEmails extends Command
             });
 
         if (! $dueStep) {
-            // Geen due stap meer; herrekenen voor UI en done.
+            // Geen due stap meer; herrekenen voor UI en done. Blijft er niets
+            // open, dan is deze stand beoordeeld en valt hij uit de volgende ronde.
             $enrollment->recomputeNextMailAt();
+
+            if ($enrollment->next_mail_at === null) {
+                $enrollment->touch();
+            }
 
             return false;
         }

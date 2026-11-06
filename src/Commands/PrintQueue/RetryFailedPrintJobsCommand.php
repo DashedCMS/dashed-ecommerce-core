@@ -16,14 +16,17 @@ class RetryFailedPrintJobsCommand extends Command
 
     /**
      * Snelle controle voor de scheduler: zonder werk start er geen eigen
-     * artisan-proces. Lukt de query niet, dan draait het commando gewoon.
+     * artisan-proces. Lukt de query niet, dan draait het commando gewoon. De
+     * limiet staat hier ook in, anders houdt een opgegeven job de poort open.
      */
     public static function hasWork(): bool
     {
         return rescue(
             fn () => PrintJob::query()
-                ->where('status', PrintJobStatus::Failed->value)
-                ->where('failed_at', '<', now()->subMinutes(2))
+                ->leftJoin('dashed__printers', 'dashed__printers.id', '=', 'dashed__print_jobs.printer_id')
+                ->where('dashed__print_jobs.status', PrintJobStatus::Failed->value)
+                ->where('dashed__print_jobs.failed_at', '<', now()->subMinutes(2))
+                ->whereRaw('dashed__print_jobs.attempts < COALESCE(dashed__printers.max_retries, 3)')
                 ->exists(),
             true,
             false,

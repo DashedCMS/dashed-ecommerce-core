@@ -1319,13 +1319,17 @@
                                 <p class="text-neutral-500 dark:text-white/40 uppercase text-sm">Voorraad</p>
                                 <div class="grid gap-2 bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 rounded-xl p-4">
                                     <div class="flex gap-4">
+                                        <button type="button" x-show="stockInfoFailed" @click="retryStockEnrich()"
+                                                class="px-4 py-2 rounded-lg bg-primary-500 hover:bg-primary-700 text-white font-bold">
+                                            Opnieuw proberen
+                                        </button>
                                         <form @submit.prevent="updateSelectedStockProduct()"
                                               class="ml-auto grow text-right flex items-center justify-start gap-2">
                                             <button
                                                 type="button"
                                                 @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock - 1)"
-                                                x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
-                                                x-bind:disabled="loading"
+                                                x-bind:class="loading || !stockInfoFresh ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
+                                                x-bind:disabled="loading || !stockInfoFresh"
                                                 class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-neutral-900 dark:text-white">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -1334,16 +1338,17 @@
 
                                             </button>
                                             <input x-model="selectedStockProduct.actual_stock"
+                                                   x-bind:disabled="loading || !stockInfoFresh"
                                                    :id="'product-stock-' + selectedStockProduct.id"
-                                                   x-bind:class="loading ? 'bg-neutral-100 dark:bg-white/5' : 'bg-neutral-200 dark:bg-white/10'"
+                                                   x-bind:class="loading || !stockInfoFresh ? 'bg-neutral-100 dark:bg-white/5' : 'bg-neutral-200 dark:bg-white/10'"
                                                    placeholder="Vul de voorraad in..."
                                                    type="number"
                                                    class="text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-xl px-1 py-1 text-xl max-w-[50px] placeholder:text-neutral-500 dark:placeholder:text-white/40 focus:ring-2 focus:ring-primary-500 outline-none">
                                             <button
                                                 type="button"
                                                 @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock + 1)"
-                                                x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
-                                                x-bind:disabled="loading"
+                                                x-bind:class="loading || !stockInfoFresh ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
+                                                x-bind:disabled="loading || !stockInfoFresh"
                                                 class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-neutral-900 dark:text-white">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">
@@ -1353,8 +1358,8 @@
 
                                             </button>
                                             <button
-                                                x-bind:class="loading ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
-                                                x-bind:disabled="loading"
+                                                x-bind:class="loading || !stockInfoFresh ? 'bg-primary-500/50' : 'bg-primary-500 hover:bg-primary-600'"
+                                                x-bind:disabled="loading || !stockInfoFresh"
                                                 class="text-left rounded-xl transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl text-neutral-900 dark:text-white">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                      stroke-width="1.5" stroke="currentColor" class="size-6">

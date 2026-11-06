@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Cache;
 
 class Countries
 {
+    private static ?array $countries = null;
+
     /**
      * Nederlandse en gangbare Engelse namen die countries.json niet kent. Het
      * factuurland in de checkout is een vrij tekstveld, en zonder deze lijst
@@ -103,7 +105,7 @@ class Countries
 
     public static function getCountries()
     {
-        return json_decode(file_get_contents(__DIR__ . '/countries.json'), true);
+        return self::$countries ??= json_decode(file_get_contents(__DIR__ . '/countries.json'), true);
     }
 
     public static function getAllSelectedCountryCodes(): array

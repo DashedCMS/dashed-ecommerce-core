@@ -39,7 +39,9 @@ class UpdateProductPricesJob implements ShouldQueue
      */
     public function handle(): void
     {
-        foreach ($this->productGroup->products as $product) {
+        $products = $this->productGroup->products;
+
+        foreach ($products as $product) {
             $product->calculatePrices();
 
             foreach (DB::table('dashed__product_bundle_products')->where('bundle_product_id', $product->id)->pluck('product_id') as $productId) {
@@ -49,10 +51,15 @@ class UpdateProductPricesJob implements ShouldQueue
                 }
             }
 
-            $this->productGroup->min_price = $this->productGroup->products->min('price');
-            $this->productGroup->max_price = $this->productGroup->products->max('price');
-            $this->productGroup->total_stock = $this->productGroup->products->sum('total_stock');
-            $this->productGroup->total_purchases = $this->productGroup->products->sum('total_purchases');
+        }
+
+        // calculatePrices() raakt geen van deze vier velden, dus één keer na de
+        // lus geeft dezelfde uitkomst. Een groep zonder producten blijft staan.
+        if ($products->isNotEmpty()) {
+            $this->productGroup->min_price = $products->min('price');
+            $this->productGroup->max_price = $products->max('price');
+            $this->productGroup->total_stock = $products->sum('total_stock');
+            $this->productGroup->total_purchases = $products->sum('total_purchases');
             $this->productGroup->saveQuietly();
 
             foreach ($this->productGroup->volumeDiscounts as $volumeDiscount) {

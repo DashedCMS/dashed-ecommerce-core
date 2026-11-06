@@ -65,8 +65,10 @@ Route::group(
             ->name('api.point-of-sale.close-payment');
         Route::post('/get-all-products', [PointOfSaleApiController::class, 'getAllProducts'])
             ->name('api.point-of-sale.get-all-products');
-        Route::post('/api.point-of-sale.update-product-info', [PointOfSaleApiController::class, 'updateProductInfo'])
+        Route::post('/update-product-info', [PointOfSaleApiController::class, 'updateProductInfo'])
             ->name('api.point-of-sale.update-product-info');
+        // Oud pad: kassatabbladen die nog open staan posten hier nog naartoe.
+        Route::post('/api.point-of-sale.update-product-info', [PointOfSaleApiController::class, 'updateProductInfo']);
         Route::post('/update-search-query-input-mode', [PointOfSaleApiController::class, 'updateSearchQueryInputmode'])
             ->name('api.point-of-sale.update-search-query-input-mode');
         Route::post('/retrieve-orders', [PointOfSaleApiController::class, 'retrieveOrders'])

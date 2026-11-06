@@ -1691,12 +1691,10 @@ class PointOfSaleApiController extends Controller
             ], 400);
         }
 
-        $posCart = POSCart::where('identifier', $posIdentifier)->first();
-
-        $order->refresh();
-
         if ($order->isPaidFor()) {
             if (! $order->pos_order_handled) {
+                $posCart = POSCart::where('identifier', $posIdentifier)->first();
+
                 POSHelper::finishPaidOrder($order, $posCart);
             }
 
@@ -1818,6 +1816,16 @@ class PointOfSaleApiController extends Controller
     public function updateProductInfo(Request $request): JsonResponse
     {
         $data = $request->all();
+
+        // De kassa stuurt alleen ids en voegt het antwoord zelf samen. De
+        // mobiele app stuurt products en houdt de volledige vorm hieronder.
+        if (is_array($data['ids'] ?? null)) {
+            return response()->json([
+                'success' => true,
+                'products' => $this->stockInfoForIds($data['ids']),
+            ]);
+        }
+
         $products = $data['products'] ?? null;
 
         foreach ($products as &$product) {
@@ -1831,6 +1839,32 @@ class PointOfSaleApiController extends Controller
             'success' => true,
             'products' => $products,
         ]);
+    }
+
+    /**
+     * Actuele voorraad per product in één query. Onbekende ids vallen weg.
+     *
+     * @return array<int, array{id: int, stock: mixed, actual_stock: mixed}>
+     */
+    private function stockInfoForIds(array $ids): array
+    {
+        $ids = collect($ids)
+            ->filter(fn ($id) => is_numeric($id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->take(500)
+            ->values();
+
+        return Product::query()
+            ->whereIn('id', $ids)
+            ->get(['id', 'stock', 'use_stock', 'stock_status', 'reserved_stock'])
+            ->map(fn (Product $product) => [
+                'id' => $product->id,
+                'stock' => $product->directSellableStock(),
+                'actual_stock' => $product->stock,
+            ])
+            ->values()
+            ->all();
     }
 
     public function updateProduct(Request $request): JsonResponse
@@ -2245,6 +2279,17 @@ class PointOfSaleApiController extends Controller
             }
         }
 
+        // Alle regels in één query, ook losse regels met een numeriek id: die
+        // werden per regel opgehaald en krijgen hetzelfde model als voorheen.
+        $lineProductIds = collect($products)
+            ->filter(fn ($p) => (int) ($p['quantity'] ?? 0) >= 1 && ! empty($p['id']) && is_numeric($p['id']))
+            ->map(fn ($p) => (int) $p['id'])
+            ->unique()
+            ->values();
+        $lineModels = $lineProductIds->isEmpty()
+            ? collect()
+            : Product::with(['volumeDiscounts', 'productCategories'])->whereIn('id', $lineProductIds)->get()->keyBy('id');
+
         foreach ($products as $chosenProduct) {
             $qty = (int) ($chosenProduct['quantity'] ?? 0);
             if ($qty < 1) {
@@ -2255,7 +2300,7 @@ class PointOfSaleApiController extends Controller
 
             $model = null;
             if (! empty($item->product_id) && is_numeric($item->product_id)) {
-                $model = Product::with(['volumeDiscounts', 'productCategories'])->find((int) $item->product_id);
+                $model = $lineModels->get((int) $item->product_id);
             }
             $item->model = $model;
 

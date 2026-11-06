@@ -49,6 +49,12 @@
         orderPayments: [],
         firstPaymentMethod: null,
         pinTerminalIntervalId: null,
+        pinPollToken: 0,
+        searchEnrichTimer: null,
+        searchEnrichController: null,
+        stockEnrichController: null,
+        stockInfoFresh: false,
+        stockInfoFailed: false,
         pinAttempt: 0,
         shippingMethods: [],
         shippingMethod: null,
@@ -1210,6 +1216,7 @@
                     message: data.message,
                 });
 
+                this.stopPinTerminalPolling();
                 this.isPinTerminalPayment = false;
                 this.order = null;
                 this.toggle('paymentPopup');
@@ -1288,26 +1295,42 @@
         },
 
         checkPinTerminalPayment() {
-            // Ruim een eventueel nog lopend interval op zodat er nooit twee
-            // pollers tegelijk draaien (orphan intervals blijven anders pollen).
+            // Eén keten tegelijk: de volgende controle start pas als de vorige
+            // klaar is. Stopt niet op een verborgen tabblad en heeft bewust geen
+            // maximale duur, want deze controle rondt de verkoop af.
             this.stopPinTerminalPolling();
+            this.schedulePinTerminalPoll(this.pinPollToken);
+        },
 
-            this.pinTerminalIntervalId = setInterval(() => {
-                if (this.isPinTerminalPayment && this.pinTerminalStatus == 'pending' && this.order) {
-                    console.log('Checking pin terminal payment status...');
-                    this.pollPinTerminalPayment();
-                } else {
-                    console.log('Stopping pin terminal payment status check.');
-                    this.stopPinTerminalPolling(); // Stop polling if condition changes
+        schedulePinTerminalPoll(token) {
+            this.pinTerminalIntervalId = setTimeout(async () => {
+                this.pinTerminalIntervalId = null;
+
+                if (token !== this.pinPollToken) {
+                    return;
                 }
-            }, 1000);
+
+                if (!(this.isPinTerminalPayment && this.pinTerminalStatus == 'pending' && this.order)) {
+                    console.log('Stopping pin terminal payment status check.');
+                    this.stopPinTerminalPolling();
+                    return;
+                }
+
+                try {
+                    console.log('Checking pin terminal payment status...');
+                    await this.pollPinTerminalPayment();
+                } finally {
+                    if (token === this.pinPollToken) {
+                        this.schedulePinTerminalPoll(token);
+                    }
+                }
+            }, 2000);
         },
 
         stopPinTerminalPolling() {
-            if (this.pinTerminalIntervalId) {
-                clearInterval(this.pinTerminalIntervalId);
-                this.pinTerminalIntervalId = null;
-            }
+            this.pinPollToken++;
+            clearTimeout(this.pinTerminalIntervalId);
+            this.pinTerminalIntervalId = null;
         },
 
         async pollPinTerminalPayment() {
@@ -1319,11 +1342,16 @@
             }
 
             const attempt = this.pinAttempt;
+            const token = this.pinPollToken;
+            // Een hangend verzoek mag de keten niet stilzetten.
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 15000);
 
             try {
                 console.log('Polling pin terminal payment status...');
                 let response = await fetch('{{ route('api.point-of-sale.check-pin-terminal-payment') }}', {
                     method: 'POST',
+                    signal: controller.signal,
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
@@ -1337,10 +1365,16 @@
 
                 let data = await response.json();
 
+                // Inmiddels gestopt of gereset? Dan mag een late reactie, ook
+                // 'paid', de nieuwe winkelwagen niet meer raken.
+                if (token !== this.pinPollToken) {
+                    return;
+                }
+
                 // Reactie van een oudere poging (er is inmiddels een nieuwe
-                // pinbetaling gestart)? Stop deze poller en negeer de reactie.
+                // pinbetaling gestart)? Negeer de reactie. Niet stoppen: de oude
+                // keten is al beëindigd en een stop raakt nu de nieuwe keten.
                 if (attempt !== this.pinAttempt) {
-                    this.stopPinTerminalPolling();
                     return;
                 }
 
@@ -1377,11 +1411,18 @@
                 }
 
             } catch (error) {
+                // Inmiddels gestopt of gereset: deze fout zegt niets meer.
+                if (token !== this.pinPollToken) {
+                    return;
+                }
+
                 console.log(error);
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De pin betaling kon niet worden gecontroleerd'
                 })
+            } finally {
+                clearTimeout(timeout);
             }
         },
 
@@ -1456,6 +1497,7 @@
             const query = this.searchProductQuery.trim().toLowerCase();
 
             if (query.length < 2) {
+                this.cancelSearchEnrich();
                 this.searchedProducts = [];
                 return;
             }
@@ -1496,25 +1538,48 @@
             this.searchedProducts = filtered;
             this.loadingSearchedProducts = false;
 
-            // Enrich stock/prices in background - merge when it arrives
-            const requestQuery = query;
-            this.enrichSearchedProducts(filtered, requestQuery);
+            this.scheduleSearchEnrich(filtered, query);
         },
 
-        async enrichSearchedProducts(products, requestQuery) {
+        cancelSearchEnrich() {
+            clearTimeout(this.searchEnrichTimer);
+            this.searchEnrichController?.abort();
+            this.searchEnrichController = null;
+        },
+
+        // Filteren gebeurt lokaal en direct; de voorraad komt pas als het typen stopt.
+        scheduleSearchEnrich(products, requestQuery) {
+            this.cancelSearchEnrich();
+
             if (!products.length) {
                 return;
             }
+
+            const ids = products.map(product => product.id);
+            this.searchEnrichTimer = setTimeout(() => this.enrichSearchedProducts(ids, requestQuery), 300);
+        },
+
+        mergeStockInfo(products, stockInfo) {
+            const byId = new Map((stockInfo || []).map(info => [info.id, info]));
+
+            return products.map(product => byId.has(product.id) ? {...product, ...byId.get(product.id)} : product);
+        },
+
+        async enrichSearchedProducts(ids, requestQuery) {
+            const controller = new AbortController();
+            this.searchEnrichController = controller;
+
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {
                     method: 'POST',
+                    signal: controller.signal,
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
                     },
                     body: JSON.stringify({
-                        products: products,
+                        ids: ids,
                         userId: this.userId,
                     })
                 });
@@ -1530,7 +1595,7 @@
                     return;
                 }
 
-                this.searchedProducts = data.products;
+                this.searchedProducts = this.mergeStockInfo(this.searchedProducts, data.products);
                 this.focus();
             } catch (error) {
                 // Silently ignore - the user already sees the client-side results
@@ -1541,6 +1606,7 @@
             const query = this.searchStockProductQuery.trim().toLowerCase();
 
             if (query.length < 2) {
+                this.cancelStockEnrich();
                 this.searchedStockProducts = [];
                 this.selectedStockProduct = null;
                 return;
@@ -1585,38 +1651,84 @@
             this.enrichStockSearchedProducts(filtered, query);
         },
 
-        async enrichStockSearchedProducts(products, requestQuery) {
+        cancelStockEnrich() {
+            this.stockEnrichController?.abort();
+            this.stockEnrichController = null;
+            this.stockInfoFresh = false;
+            this.stockInfoFailed = false;
+        },
+
+        retryStockEnrich() {
+            this.enrichStockSearchedProducts(this.searchedStockProducts, this.searchStockProductQuery.trim().toLowerCase());
+        },
+
+        // update-product schrijft een absolute voorraad. Daarom kan er pas
+        // opgeslagen worden als dit antwoord binnen is (stockInfoFresh).
+        async enrichStockSearchedProducts(products, requestQuery, attempt = 1) {
+            this.cancelStockEnrich();
+
             if (!products.length) {
                 return;
             }
+
+            const controller = new AbortController();
+            this.stockEnrichController = controller;
+            const timeout = setTimeout(() => controller.abort(), 10000);
+
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product-info') }}', {
                     method: 'POST',
+                    signal: controller.signal,
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
                     },
                     body: JSON.stringify({
-                        products: products,
+                        ids: products.map(product => product.id),
                         userId: this.userId,
                     })
                 });
 
                 if (!response.ok) {
-                    return;
+                    throw new Error('Stock info request failed');
                 }
 
                 let data = await response.json();
 
-                if (this.searchStockProductQuery.trim().toLowerCase() !== requestQuery) {
+                if (controller !== this.stockEnrichController || this.searchStockProductQuery.trim().toLowerCase() !== requestQuery) {
                     return;
                 }
 
-                this.searchedStockProducts = data.products;
-                this.selectedStockProduct = data.products?.length ? data.products[0] : null;
+                // Behoud de keuze als iemand al op een ander resultaat klikte.
+                const selectedId = this.selectedStockProduct?.id;
+                this.searchedStockProducts = this.mergeStockInfo(this.searchedStockProducts, data.products);
+                this.selectedStockProduct = this.searchedStockProducts.find(product => product.id === selectedId)
+                    ?? this.searchedStockProducts[0]
+                    ?? null;
+                this.stockInfoFresh = true;
             } catch (error) {
-                // Silently ignore - client-side results already shown
+                // Vervangen door een nieuwere zoekopdracht: niets te doen.
+                if (controller !== this.stockEnrichController) {
+                    return;
+                }
+
+                // Opslaan blijft geblokkeerd, dus nog een paar keer proberen.
+                if (attempt < 3) {
+                    setTimeout(() => {
+                        if (controller === this.stockEnrichController && this.searchStockProductQuery.trim().toLowerCase() === requestQuery) {
+                            this.enrichStockSearchedProducts(products, requestQuery, attempt + 1);
+                        }
+                    }, 2000);
+                } else {
+                    this.stockInfoFailed = true;
+                    $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: 'De voorraad kon niet worden opgehaald'
+                    });
+                }
+            } finally {
+                clearTimeout(timeout);
             }
         },
 
@@ -1712,6 +1824,10 @@
         },
 
         async updateSelectedStockProduct() {
+            if (!this.stockInfoFresh || !this.selectedStockProduct) {
+                return;
+            }
+
             this.loading = true;
             try {
                 let response = await fetch('{{ route('api.point-of-sale.update-product') }}', {
@@ -1977,11 +2093,17 @@
         },
 
         init() {
-            // Het klantenscherm in dezelfde browser ververst hierop direct.
+            // Het klantenscherm in dezelfde browser ververst hierop direct. Eén
+            // wijziging raakt products en total, en mag maar één bericht geven.
             if ('BroadcastChannel' in window) {
                 const cartChannel = new BroadcastChannel('dashed-pos-cart');
-                this.$watch('products', () => cartChannel.postMessage('changed'));
-                this.$watch('total', () => cartChannel.postMessage('changed'));
+                let cartChannelTimer = null;
+                const announceCartChange = () => {
+                    clearTimeout(cartChannelTimer);
+                    cartChannelTimer = setTimeout(() => cartChannel.postMessage('changed'), 150);
+                };
+                this.$watch('products', announceCartChange);
+                this.$watch('total', announceCartChange);
             }
 
             $wire.on('toggle', (variable) => {
@@ -2035,6 +2157,7 @@
                 if (value.length >= 2) {
                     this.getSearchedProducts();
                 } else {
+                    this.cancelSearchEnrich();
                     this.searchedProducts = [];
                 }
             });
@@ -2044,6 +2167,7 @@
                     this.selectedStockProduct = null;
                     this.getSearchedStockProducts();
                 } else {
+                    this.cancelStockEnrich();
                     this.searchedStockProducts = [];
                     this.selectedStockProduct = null;
                 }

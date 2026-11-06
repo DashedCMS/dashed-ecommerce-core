@@ -779,6 +779,11 @@ class Product extends Model
                 )
             "),
             ]);
+
+        // De regel hierboven leest current_price via de accessor, en die onthoudt
+        // de oude prijs op deze instance. Zonder dit schrijft dezelfde job de
+        // oude prijs nog in de feed.
+        $this->priceForUserMemo = [];
     }
 
     public function hasDirectSellableStock(): bool

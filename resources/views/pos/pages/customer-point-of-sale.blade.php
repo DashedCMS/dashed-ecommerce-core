@@ -118,6 +118,8 @@
         isFullscreen: false,
         pollTimer: null,
         fetching: false,
+        refetchPending: false,
+        destroyed: false,
         lastPayload: null,
         lastChangeAt: 0,
         cartChannel: null,
@@ -149,27 +151,51 @@
         },
 
         destroy() {
+            this.destroyed = true;
             clearTimeout(this.pollTimer);
             this.cartChannel?.close();
         },
 
         // 3 seconden zolang er iets verandert, daarna 15. Op de achtergrond
-        // niets, en nooit een tweede verzoek zolang het vorige nog loopt.
+        // niets, en nooit een tweede verzoek zolang het vorige nog loopt: een
+        // melding tijdens een verzoek haalt daarna één keer opnieuw op.
         async refresh() {
+            if (this.destroyed) {
+                return;
+            }
+
+            if (this.fetching) {
+                this.refetchPending = true;
+                return;
+            }
+
             clearTimeout(this.pollTimer);
 
-            if (!document.hidden && !this.fetching) {
+            let retry = false;
+            let refetch = false;
+
+            if (!document.hidden) {
                 this.fetching = true;
                 try {
-                    await this.fetchProducts();
+                    retry = await this.fetchProducts() === 'retry';
                 } finally {
                     this.fetching = false;
+                    refetch = this.refetchPending;
+                    this.refetchPending = false;
                 }
+            }
+
+            if (refetch) {
+                return this.refresh();
+            }
+
+            if (this.destroyed) {
+                return;
             }
 
             const active = Date.now() - this.lastChangeAt < 120000;
             clearTimeout(this.pollTimer);
-            this.pollTimer = setTimeout(() => this.refresh(), active ? 3000 : 15000);
+            this.pollTimer = setTimeout(() => this.refresh(), retry || active ? 3000 : 15000);
         },
 
         displayedProducts() {
@@ -184,10 +210,43 @@
             }, 0);
         },
 
+        clearDisplay() {
+            this.lastPayload = null;
+            this.products = [];
+            this.subtotal = '0';
+            this.total = '0';
+            this.discount = '0';
+            this.vat = '0';
+            this.activeDiscountCode = null;
+            this.vatPercentages = {};
+        },
+
+        // Sessie verlopen: één keer herladen, en niet vaker dan eens per 30 seconden.
+        reloadAfterSessionLoss() {
+            const key = 'dashed-pos-display-reload';
+
+            try {
+                if (Date.now() - Number(sessionStorage.getItem(key) || 0) < 30000) {
+                    return;
+                }
+                sessionStorage.setItem(key, String(Date.now()));
+            } catch (e) {
+                return;
+            }
+
+            location.reload();
+        },
+
+        // Geeft 'retry' terug als het verzoek mislukte. Alleen een 404 betekent
+        // een lege kassa; bij elke andere fout blijft het laatste beeld staan.
         async fetchProducts() {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 10000);
+
             try {
                 const response = await fetch(this.endpoint, {
                     method: 'POST',
+                    signal: controller.signal,
                     headers: {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
@@ -198,16 +257,19 @@
                     }),
                 });
 
+                if (response.status === 404) {
+                    this.clearDisplay();
+                    return 'empty';
+                }
+
+                if ([401, 403, 419].includes(response.status) || response.redirected) {
+                    this.reloadAfterSessionLoss();
+                    return 'retry';
+                }
+
                 if (!response.ok) {
-                    this.products = [];
-                    this.subtotal = '0';
-                    this.total = '0';
-                    this.discount = '0';
-                    this.vat = '0';
-                    this.activeDiscountCode = null;
-                    this.vatPercentages = {};
                     console.error('POS fetch error', response.status);
-                    return;
+                    return 'retry';
                 }
 
                 const data = await response.json();
@@ -225,16 +287,13 @@
                 this.vat = data.vat ?? 0;
                 this.activeDiscountCode = data.activeDiscountCode ?? null;
                 this.vatPercentages = data.vatPercentages ?? {};
-            } catch (e) {
-                this.products = [];
-                this.subtotal = '0';
-                this.total = '0';
-                this.discount = '0';
-                this.vat = '0';
-                this.activeDiscountCode = null;
-                this.vatPercentages = {};
 
+                return 'ok';
+            } catch (e) {
                 console.error('POS fetch exception', e);
+                return 'retry';
+            } finally {
+                clearTimeout(timeout);
             }
         },
 

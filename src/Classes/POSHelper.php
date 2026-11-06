@@ -42,6 +42,19 @@ class POSHelper
             ];
         }
 
+        // Atomair claimen: van twee gelijktijdige verzoeken mag er maar een
+        // afronden. De save hieronder houdt de model-events zoals ze waren.
+        $claimed = $order->newQueryWithoutScopes()
+            ->whereKey($order->getKey())
+            ->where(fn ($query) => $query->where('pos_order_handled', 0)->orWhereNull('pos_order_handled'))
+            ->update(['pos_order_handled' => 1]);
+
+        if (! $claimed) {
+            return [
+                'success' => true,
+            ];
+        }
+
         $order->pos_order_handled = 1;
         $order->save();
 

@@ -1607,31 +1607,37 @@ MARKDOWN,
                 ->dailyAt('04:15')
                 ->name('dashed:product-completeness');
             $schedule->command(CancelOldOrders::class)
-                ->everyFifteenMinutes();
+                ->everyFifteenMinutes()
+                ->when(fn () => CancelOldOrders::hasWork())
+                ->withoutOverlapping(60);
             $schedule->command(UpdateProductInformations::class)
                 ->daily()
                 ->withoutOverlapping();
             $schedule->command(UpdateExpiredGlobalDiscountCodes::class)
                 ->everyFiveMinutes()
+                ->when(fn () => UpdateExpiredGlobalDiscountCodes::hasWork())
                 ->withoutOverlapping();
             $schedule->command(ClearOldCarts::class)
-                ->hourly()
+                ->daily()
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class)
                 ->dailyAt('08:00')
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckLowStock::class)
                 ->hourly()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Commands\CheckLowStock::hasWork())
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class)
-                ->everyFifteenMinutes()
+                ->hourly()
                 ->withoutOverlapping();
             $schedule->command(SendAbandonedCartEmails::class)
                 ->everyFiveMinutes()
+                ->when(fn () => SendAbandonedCartEmails::hasWork())
                 ->withoutOverlapping();
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::class)
                 ->everyFiveMinutes()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Commands\RequeueStalePrintJobsCommand::hasWork())
                 ->withoutOverlapping();
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendOrderHandledFlowEmails::class)
@@ -1640,6 +1646,7 @@ MARKDOWN,
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class)
                 ->hourly()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::hasWork())
                 ->withoutOverlapping();
 
             // Recommendation co-purchase precompute. Default 03:00; allow
@@ -1651,6 +1658,7 @@ MARKDOWN,
 
             $schedule->job(new \Dashed\DashedEcommerceCore\Jobs\PrintQueue\SyncShippingLabelPrintJobsJob())
                 ->everyMinute()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Jobs\PrintQueue\SyncShippingLabelPrintJobsJob::hasWork())
                 ->withoutOverlapping()
                 ->name('print-queue:sync-shipping-labels');
 
@@ -1660,7 +1668,8 @@ MARKDOWN,
                 ->withoutOverlapping();
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::class)
-                ->everyFiveMinutes();
+                ->everyFiveMinutes()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Commands\PrintQueue\PrinterHealthCheckCommand::hasWork());
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendPaymentRemindersCommand::class)
                 ->dailyAt('09:00')
@@ -1670,6 +1679,7 @@ MARKDOWN,
             // normaal is meestal een kapotte checkout of betaalprovider.
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::class)
                 ->everyThirtyMinutes()
+                ->when(fn () => \Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::hasWork())
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\ExpireQuotesCommand::class)
                 ->dailyAt('00:30')

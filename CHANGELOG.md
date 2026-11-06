@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.183.0 - 2026-11-06
+
+### Changed
+- **Kassa.** Klassieke kassa meldt wijzigingen nu ook aan het klantenscherm. Zoeken verrijkt pas na 300 ms en vraagt één gebundelde query. Pincontrole wacht op het vorige antwoord, elke 2 seconden, en rondt een betaling atomair af. Klantenscherm houdt zijn gegevens bij een storing en herlaadt na een verlopen sessie. Nette route `/update-product-info`, de oude blijft werken. Minder queries in `calculatePosCartTotals`.
+- **Geplande taken.** `hasWork()` op verlopen globale kortingscodes, verlaten winkelwagens, printwachtrij, oude orders, automatiseringen, voorraadmelding en omzetalarm. Terug-op-voorraad elk uur, oude winkelwagens dagelijks, printlabeljob alleen met de instelling aan.
+- **Productjobs.** `UpdateProductInformationJob` is uniek per groep en schrijft een feedregel alleen als de inhoud veranderde, zodat de feed niet onnodig opnieuw wordt opgebouwd. `calculatePrices()` wist de prijsmemo. Flowmails laden afgeronde inschrijvingen niet meer elk uur.
+
 ## v4.182.0 - 2026-11-06
 
 ### Changed

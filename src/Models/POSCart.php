@@ -25,7 +25,10 @@ class POSCart extends Model
 
     public function getActivitylogOptions(): LogOptions
     {
-        return LogOptions::defaults()->logExcept(['products', 'custom_fields']);
+        return LogOptions::defaults()
+            ->logExcept(['products', 'custom_fields'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     public function user()

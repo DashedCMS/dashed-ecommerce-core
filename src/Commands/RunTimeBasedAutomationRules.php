@@ -35,6 +35,15 @@ class RunTimeBasedAutomationRules extends Command
 
     protected $description = 'Vuurt scan-gebaseerde automatiseringsregels (tijd- en voorraad-triggers) die nu verschuldigd zijn.';
 
+    /**
+     * Snelle controle voor de scheduler: zonder werk start er geen eigen
+     * artisan-proces. Lukt de controle niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(fn () => AutomationRule::query()->where('is_active', true)->exists(), true, false);
+    }
+
     public function handle(): int
     {
         $this->scanTimeRules();

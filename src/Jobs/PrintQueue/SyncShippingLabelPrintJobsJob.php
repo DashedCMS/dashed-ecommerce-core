@@ -26,6 +26,19 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
         $this->onQueue('ecommerce');
     }
 
+    /**
+     * Snelle controle voor de scheduler: met de instelling uit komt er geen
+     * job in de wachtrij. Lukt de controle niet, dan gaat de job gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(
+            fn () => (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, null),
+            true,
+            false,
+        );
+    }
+
     public function handle(): void
     {
         if (! (bool) Customsetting::get('print_queue.auto_print_label_on_generated', null, null)) {
@@ -39,10 +52,7 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
 
     private function syncSource(string $sourceModel): void
     {
-        $existingPrintableIds = PrintJob::query()
-            ->where('printable_type', $sourceModel)
-            ->pluck('printable_id')
-            ->all();
+        $sourceTable = (new $sourceModel())->getTable();
 
         // "Klaar om te printen" verschilt per vervoerder: MyParcel heeft een
         // shipment_id (PDF wordt on-demand gedownload), Veloyd heeft het PDF al op
@@ -55,7 +65,13 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
         $sourceModel::query()
             ->whereNotNull('shipment_id')
             ->where('created_at', '>=', now()->subDays(2))
-            ->whereNotIn('id', $existingPrintableIds)
+            // Per rij in het venster, dus zonder alle oude printable_ids te laden.
+            ->whereNotExists(
+                PrintJob::query()
+                    ->where('printable_type', $sourceModel)
+                    ->whereColumn('printable_id', "{$sourceTable}.id")
+                    ->toBase()
+            )
             ->chunkById(100, function ($shippingOrders) use ($sourceModel): void {
                 foreach ($shippingOrders as $shippingOrder) {
                     PrintJob::create([

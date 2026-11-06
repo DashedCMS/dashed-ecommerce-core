@@ -33,15 +33,29 @@ class CancelOldOrders extends Command
     }
 
     /**
+     * Snelle controle voor de scheduler: zonder werk start er geen eigen
+     * artisan-proces. Lukt de controle niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(fn () => self::oldOrders()->exists(), true, false);
+    }
+
+    /**
      * Execute the console command.
      *
      * @return int
      */
     public function handle()
     {
-        $orders = Order::thisSite()->where('created_at', '<', Carbon::now()->subHours(3))->where('status', 'pending')->get();
+        $orders = self::oldOrders()->get();
         foreach ($orders as $order) {
             $order->changeStatus('cancelled');
         }
+    }
+
+    private static function oldOrders()
+    {
+        return Order::thisSite()->where('created_at', '<', Carbon::now()->subHours(3))->where('status', 'pending');
     }
 }

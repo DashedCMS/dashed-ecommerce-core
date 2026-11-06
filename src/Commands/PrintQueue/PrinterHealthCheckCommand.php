@@ -17,16 +17,39 @@ class PrinterHealthCheckCommand extends Command
 
     protected $description = 'Stuur offline notificatie voor printers die >5 min niet hebben gepingd';
 
-    public function handle(): int
+    /**
+     * Snelle controle voor de scheduler: zonder werk start er geen eigen
+     * artisan-proces. Een printer die al gemeld is, slaat handle() ook over.
+     * Lukt de controle niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(
+            fn () => self::offlinePrinters()
+                ->pluck('ulid')
+                ->contains(fn ($ulid) => ! Cache::has(self::notifiedKey($ulid))),
+            true,
+            false,
+        );
+    }
+
+    private static function offlinePrinters()
     {
         $threshold = now()->subMinutes(5);
 
-        $offlinePrinters = Printer::active()
-            ->where(fn ($q) => $q->whereNull('last_ping_at')->orWhere('last_ping_at', '<', $threshold))
-            ->get();
+        return Printer::active()
+            ->where(fn ($q) => $q->whereNull('last_ping_at')->orWhere('last_ping_at', '<', $threshold));
+    }
 
-        foreach ($offlinePrinters as $printer) {
-            $cacheKey = "print-queue:printer-offline-notified:{$printer->ulid}";
+    private static function notifiedKey(string $ulid): string
+    {
+        return "print-queue:printer-offline-notified:{$ulid}";
+    }
+
+    public function handle(): int
+    {
+        foreach (self::offlinePrinters()->get() as $printer) {
+            $cacheKey = self::notifiedKey($printer->ulid);
             if (Cache::has($cacheKey)) {
                 continue;
             }

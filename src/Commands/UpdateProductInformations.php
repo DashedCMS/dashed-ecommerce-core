@@ -45,10 +45,12 @@ class UpdateProductInformations extends Command
         //        foreach ($productGroups as $productGroup) {
         //            UpdateProductInformationJob::dispatch($productGroup, false)->onQueue('ecommerce');
         //        }
-        $products = Product::get();
-        foreach ($products as $product) {
-            UpdateProductStockInformationJob::dispatch($product)
-                ->onQueue('ecommerce');
-        }
+        // De job haalt het product zelf vers op, dus alleen het id is nodig.
+        Product::query()->select('id')->chunkById(500, function ($products): void {
+            foreach ($products as $product) {
+                UpdateProductStockInformationJob::dispatch($product)
+                    ->onQueue('ecommerce');
+            }
+        });
     }
 }

@@ -15,6 +15,50 @@ class CheckLowStock extends Command
 
     protected $description = 'Controleert per site welke producten op of onder hun voorraaddrempel zitten en stuurt daarover een push (max 1x/24u per product). Herstelt het alert-vlaggetje zodra de voorraad weer boven de drempel komt.';
 
+    /**
+     * Snelle controle voor de scheduler: zonder werk start er geen eigen
+     * artisan-proces. Bewust zonder sitefilter, dus ruimer dan handle(). Lukt
+     * de controle niet, dan draait het commando gewoon.
+     */
+    public static function hasWork(): bool
+    {
+        return rescue(
+            fn () => self::recoverable(Product::query())->exists()
+                || self::dueForAlert(Product::query())->exists(),
+            true,
+            false,
+        );
+    }
+
+    private static function recoverable($query)
+    {
+        return $query
+            ->whereNotNull('low_stock_alerted_at')
+            ->where(function ($q): void {
+                $q->whereNull('low_stock_notification_limit')
+                    ->orWhere('use_stock', false)
+                    ->orWhere('out_of_stock_sellable', true)
+                    ->orWhere('low_stock_notification', false)
+                    ->orWhereColumn('stock', '>', 'low_stock_notification_limit');
+            });
+    }
+
+    private static function dueForAlert($query)
+    {
+        $threshold = now()->subDay();
+
+        return $query
+            ->where('use_stock', true)
+            ->where('out_of_stock_sellable', false)
+            ->where('low_stock_notification', true)
+            ->whereNotNull('low_stock_notification_limit')
+            ->whereColumn('stock', '<=', 'low_stock_notification_limit')
+            ->where(function ($q) use ($threshold): void {
+                $q->whereNull('low_stock_alerted_at')
+                    ->orWhere('low_stock_alerted_at', '<', $threshold);
+            });
+    }
+
     public function handle(): int
     {
         $center = '\Dashed\DashedMobileApi\Support\NotificationCenter';
@@ -33,31 +77,12 @@ class CheckLowStock extends Command
             // de drempel zitten → vlaggetje wissen zodat ze later opnieuw kunnen
             // alerten. Doet dit ongeacht low_stock_notification, zodat een
             // uitgezette melding het oude vlaggetje niet voor altijd blijft houden.
-            $recoveredTotal += Product::thisSite($siteId)
-                ->whereNotNull('low_stock_alerted_at')
-                ->where(function ($q): void {
-                    $q->whereNull('low_stock_notification_limit')
-                        ->orWhere('use_stock', false)
-                        ->orWhere('out_of_stock_sellable', true)
-                        ->orWhere('low_stock_notification', false)
-                        ->orWhereColumn('stock', '>', 'low_stock_notification_limit');
-                })
+            $recoveredTotal += self::recoverable(Product::thisSite($siteId))
                 ->update(['low_stock_alerted_at' => null]);
 
             // Producten die op of onder de drempel zitten en nog niet (recent)
             // gealarmeerd zijn.
-            $threshold = now()->subDay();
-            $products = Product::thisSite($siteId)
-                ->where('use_stock', true)
-                ->where('out_of_stock_sellable', false)
-                ->where('low_stock_notification', true)
-                ->whereNotNull('low_stock_notification_limit')
-                ->whereColumn('stock', '<=', 'low_stock_notification_limit')
-                ->where(function ($q) use ($threshold): void {
-                    $q->whereNull('low_stock_alerted_at')
-                        ->orWhere('low_stock_alerted_at', '<', $threshold);
-                })
-                ->get();
+            $products = self::dueForAlert(Product::thisSite($siteId))->get();
 
             if ($products->isEmpty()) {
                 continue;
