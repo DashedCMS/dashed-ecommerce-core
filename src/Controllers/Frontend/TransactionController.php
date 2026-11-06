@@ -93,14 +93,17 @@ class TransactionController extends Controller
             'paymentId',
             'id',
             'transactionid',
+            // Multicore van Pay. stuurt een JSON-body met de order onder
+            // "object"; het order-id staat dan genest.
+            'object.orderId',
         ];
 
         $orderPayment = null;
 
         foreach ($possibleIdValues as $possibleIdValue) {
             if (! $orderPayment) {
-                $paymentId = $request->get($possibleIdValue);
-                if ($paymentId) {
+                $paymentId = $request->input($possibleIdValue);
+                if (is_scalar($paymentId) && (string) $paymentId !== '') {
                     $orderPayment = OrderPayment::where('psp_id', $paymentId)->orWhere('hash', $paymentId)->first();
                 }
             }
