@@ -1892,7 +1892,7 @@
                                               class="ml-auto grow text-right flex items-center justify-start gap-2">
                                             <button
                                                 type="button"
-                                                @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock - 1)"
+                                                @click="adjustSelectedStockQuantity(-1)"
                                                 x-bind:class="loading || !stockInfoFresh ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                                 x-bind:disabled="loading || !stockInfoFresh"
                                                 class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">
@@ -1911,7 +1911,7 @@
                                                    class="text-black border-2 border-primary-500 rounded-lg px-1 py-1 text-xl max-w-[50px]">
                                             <button
                                                 type="button"
-                                                @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock + 1)"
+                                                @click="adjustSelectedStockQuantity(1)"
                                                 x-bind:class="loading || !stockInfoFresh ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                                 x-bind:disabled="loading || !stockInfoFresh"
                                                 class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">
@@ -1996,6 +1996,8 @@
         firstPaymentMethod: null,
         pinTerminalIntervalId: null,
         pinPollToken: 0,
+        pinPollFailures: 0,
+        pinPollStalled: false,
         searchEnrichTimer: null,
         searchEnrichController: null,
         stockEnrichController: null,
@@ -3235,7 +3237,7 @@
                     return;
                 }
 
-                if (!(this.isPinTerminalPayment && this.pinTerminalStatus == 'pending' && this.order)) {
+                if (!(this.isPinTerminalPayment && (this.pinTerminalStatus == 'pending' || this.pinPollStalled) && this.order)) {
                     console.log('Stopping pin terminal payment status check.');
                     this.stopPinTerminalPolling();
                     return;
@@ -3254,8 +3256,33 @@
 
         stopPinTerminalPolling() {
             this.pinPollToken++;
+            this.pinPollFailures = 0;
+            this.pinPollStalled = false;
             clearTimeout(this.pinTerminalIntervalId);
             this.pinTerminalIntervalId = null;
+        },
+
+        // Vijf keer op rij mislukt: één keer de foutstatus tonen en daarna geen
+        // meldingen meer. Wel doorpollen, een late 'paid' moet de verkoop afronden.
+        registerPinPollFailure(message) {
+            this.pinPollFailures++;
+
+            if (this.pinPollFailures < 5) {
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: message,
+                });
+            }
+
+            if (this.pinPollFailures === 5) {
+                // Geen foutstatus: daar hoort de knop om opnieuw te pinnen bij, terwijl
+                // de betaling op de terminal nog kan lukken.
+                this.pinPollStalled = true;
+                $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De status van de pinbetaling is niet op te halen. Kijk op de terminal en pin niet opnieuw voordat dit duidelijk is.',
+                });
+            }
         },
 
         async pollPinTerminalPayment() {
@@ -3300,11 +3327,13 @@
                 if (!response.ok) {
                     // 4xx: deze order is niet (meer) te controleren, dus stoppen.
                     // Bij 5xx doorgaan: de betaling kan intussen gewoon lukken.
-                    if (response.status < 500) {
-                        this.stopPinTerminalPolling();
-                        this.pinTerminalError = true;
-                        this.pinTerminalStatus = data.pinTerminalStatus || 'error';
+                    if (response.status >= 500) {
+                        return this.registerPinPollFailure(data.message);
                     }
+
+                    this.stopPinTerminalPolling();
+                    this.pinTerminalError = true;
+                    this.pinTerminalStatus = data.pinTerminalStatus || 'error';
 
                     return $wire.dispatch('notify', {
                         type: 'danger',
@@ -3312,6 +3341,8 @@
                     })
                 }
 
+                this.pinPollFailures = 0;
+                this.pinPollStalled = false;
                 this.pinTerminalStatus = data.pinTerminalStatus;
                 this.pinTerminalError = data.pinTerminalError;
                 this.pinTerminalErrorMessage = data.pinTerminalErrorMessage;
@@ -3336,10 +3367,7 @@
                 }
 
                 console.log(error);
-                return $wire.dispatch('notify', {
-                    type: 'danger',
-                    message: 'De pin betaling kon niet worden gecontroleerd'
-                })
+                return this.registerPinPollFailure('De pin betaling kon niet worden gecontroleerd');
             } finally {
                 clearTimeout(timeout);
             }
@@ -3759,6 +3787,7 @@
                     body: JSON.stringify({
                         userId: this.userId,
                         product: this.selectedStockProduct,
+                        expected_stock: this.selectedStockProduct.expected_stock,
                     })
                 });
 
@@ -3766,6 +3795,13 @@
 
                 if (!response.ok) {
                     this.loading = false;
+
+                    // Intussen verkocht of geteld: toon de echte voorraad.
+                    if (response.status === 409 && this.selectedStockProduct) {
+                        this.selectedStockProduct.actual_stock = data.current_stock;
+                        this.selectedStockProduct.expected_stock = data.current_stock;
+                    }
+
                     return $wire.dispatch('notify', {
                         type: 'danger',
                         message: data.message,
@@ -3842,6 +3878,11 @@
 
         async updateSelectedStockQuantity(quantity) {
             this.selectedStockProduct.actual_stock = quantity;
+        },
+
+        // Het invoerveld levert tekst of leeg, en "5" + 1 is "51".
+        adjustSelectedStockQuantity(delta) {
+            this.updateSelectedStockQuantity((Number(this.selectedStockProduct.actual_stock) || 0) + delta);
         },
 
         async refreshProducts() {

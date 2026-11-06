@@ -140,16 +140,44 @@ class AttributionTracker
     }
 
     /**
+     * Schema::hasColumn() maakt per aanroep een tijdelijke tabel op schijf aan.
+     * Onthoud per proces dat de kolom er is; alleen positief, zodat een worker
+     * een net gemigreerde kolom meteen ziet. In de container en niet in een
+     * static, want die overleeft de herstart tussen twee tests.
+     */
+    public static function hasAttributionColumns(string $table): bool
+    {
+        $key = "dashed.attribution-columns.{$table}";
+
+        if (app()->bound($key)) {
+            return true;
+        }
+
+        if (! Schema::hasColumn($table, 'utm_source')) {
+            return false;
+        }
+
+        app()->instance($key, true);
+
+        return true;
+    }
+
+    /**
      * Kopieert de sessie-attributie idempotent naar een Cart. Bestaande
      * waardes worden niet overschreven.
      */
     public static function attachToCart(Cart $cart): void
     {
-        if (! Schema::hasColumn($cart->getTable(), 'utm_source')) {
+        // Eerst de sessie: zonder touches (elke bot) is er geen schemacheck nodig.
+        $touches = self::pullFromSession();
+        if (empty($touches['first_touch']) && empty($touches['last_touch'])) {
             return;
         }
 
-        $touches = self::pullFromSession();
+        if (! self::hasAttributionColumns($cart->getTable())) {
+            return;
+        }
+
         self::applyTouches($cart, $touches);
     }
 
@@ -161,7 +189,7 @@ class AttributionTracker
      */
     public static function attachToOrder(Order $order, ?Cart $cart = null): void
     {
-        if (! Schema::hasColumn($order->getTable(), 'utm_source')) {
+        if (! self::hasAttributionColumns($order->getTable())) {
             return;
         }
 

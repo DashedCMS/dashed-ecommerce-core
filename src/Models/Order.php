@@ -15,7 +15,6 @@ use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
@@ -160,7 +159,7 @@ class Order extends Model
             // is idempotent (empty()-check per kolom) en merget cart + sessie,
             // zodat ook gedeeltelijke UTM-sets correct worden aangevuld.
             try {
-                if (Schema::hasColumn($order->getTable(), 'utm_source')) {
+                if (AttributionTracker::hasAttributionColumns($order->getTable())) {
                     $cart = $order->cart_id ? $order->cart : null;
                     AttributionTracker::attachToOrder($order, $cart);
                 }

@@ -1601,6 +1601,9 @@ MARKDOWN,
 
         $this->app->booted(function () {
             $schedule = app(Schedule::class);
+            // Oudere dashed-core zonder ScheduleSpread: de taken blijven op hun oude tijd.
+            $spreadAt = fn (string $time, string $task): string => class_exists(\Dashed\DashedCore\Classes\ScheduleSpread::class) ? \Dashed\DashedCore\Classes\ScheduleSpread::at($time, $task) : $time;
+            $spreadMinute = fn (string $task): int => class_exists(\Dashed\DashedCore\Classes\ScheduleSpread::class) ? \Dashed\DashedCore\Classes\ScheduleSpread::minute($task) : 0;
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
                 ->daily();
             $schedule->job(new \Dashed\DashedEcommerceCore\Jobs\StoreProductCompletenessJob())
@@ -1611,20 +1614,20 @@ MARKDOWN,
                 ->when(fn () => CancelOldOrders::hasWork())
                 ->withoutOverlapping(60);
             $schedule->command(UpdateProductInformations::class)
-                ->daily()
+                ->dailyAt($spreadAt('00:00', 'update-product-informations'))
                 ->withoutOverlapping();
             $schedule->command(UpdateExpiredGlobalDiscountCodes::class)
                 ->everyFiveMinutes()
                 ->when(fn () => UpdateExpiredGlobalDiscountCodes::hasWork())
                 ->withoutOverlapping();
             $schedule->command(ClearOldCarts::class)
-                ->daily()
+                ->dailyAt($spreadAt('00:00', 'clear-old-carts'))
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendDailyBriefingCommand::class)
                 ->dailyAt('08:00')
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckLowStock::class)
-                ->hourly()
+                ->hourlyAt($spreadMinute('check-low-stock'))
                 ->when(fn () => \Dashed\DashedEcommerceCore\Commands\CheckLowStock::hasWork())
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\NotifyBackInStockCommand::class)
@@ -1641,7 +1644,7 @@ MARKDOWN,
                 ->withoutOverlapping();
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendOrderHandledFlowEmails::class)
-                ->hourly()
+                ->hourlyAt($spreadMinute('send-order-handled-flow-emails'))
                 ->withoutOverlapping();
 
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::class)
@@ -1649,9 +1652,9 @@ MARKDOWN,
                 ->when(fn () => \Dashed\DashedEcommerceCore\Commands\RunTimeBasedAutomationRules::hasWork())
                 ->withoutOverlapping();
 
-            // Recommendation co-purchase precompute. Default 03:00; allow
+            // Recommendation co-purchase precompute. Default 03:xx per site; allow
             // site-specific override via Customsetting on high-volume stores.
-            $cron = (string) \Dashed\DashedCore\Models\Customsetting::get('recommendation_copurchase_recompute_cron', null, '0 3 * * *');
+            $cron = (string) \Dashed\DashedCore\Models\Customsetting::get('recommendation_copurchase_recompute_cron', null, $spreadMinute('recommendations-rebuild').' 3 * * *');
             $schedule->command('dashed:recommendations:rebuild')
                 ->cron($cron)
                 ->withoutOverlapping();

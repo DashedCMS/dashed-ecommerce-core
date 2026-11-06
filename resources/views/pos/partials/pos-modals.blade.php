@@ -1323,7 +1323,7 @@
                                               class="ml-auto grow text-right flex items-center justify-start gap-2">
                                             <button
                                                 type="button"
-                                                @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock - 1)"
+                                                @click="adjustSelectedStockQuantity(-1)"
                                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                                 x-bind:disabled="loading"
                                                 class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">
@@ -1341,7 +1341,7 @@
                                                    class="text-black border-2 border-primary-500 rounded-lg px-1 py-1 text-xl max-w-[50px]">
                                             <button
                                                 type="button"
-                                                @click="updateSelectedStockQuantity(selectedStockProduct.actual_stock + 1)"
+                                                @click="adjustSelectedStockQuantity(1)"
                                                 x-bind:class="loading ? 'bg-primary-900' : 'bg-primary-500 hover:bg-primary-700'"
                                                 x-bind:disabled="loading"
                                                 class="text-left rounded-lg transition-all duration-300 ease-in-out gap-8 flex flex-col justify-between p-2 font-medium text-xl">

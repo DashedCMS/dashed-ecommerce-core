@@ -22,6 +22,8 @@ class DiscountCode extends Model
     use SoftDeletes;
     use LogsActivity;
 
+    protected static bool $skipPriceUpdatesOnSave = false;
+
     protected static $logFillable = true;
 
     protected $table = 'dashed__discount_codes';
@@ -88,10 +90,13 @@ class DiscountCode extends Model
         });
 
         static::saved(function ($discountCode) {
-            // Alleen een pure verbruikstelling slaat de herberekening over. Een
-            // opslag zonder wijziging telt wel: Filament schrijft de gekoppelde
-            // producten en categorieën pas na dit event, en de jobs herrekenen
-            // de oude selectie, dus ook wat er net uit gehaald wordt.
+            // De Filament-pagina's herberekenen zelf na het opslaan van de
+            // koppelingen; dit event is er voor alles daarbuiten.
+            if (static::$skipPriceUpdatesOnSave) {
+                return;
+            }
+
+            // Alleen een pure verbruikstelling slaat de herberekening over.
             $changes = array_keys($discountCode->getChanges());
 
             if ($changes !== [] && array_diff($changes, ['stock_used', 'updated_at']) === []) {
@@ -106,26 +111,60 @@ class DiscountCode extends Model
         });
     }
 
-    public function updateProductPrices(): void
+    /**
+     * Zet de herberekening vanuit het saved-event uit, voor een aanroeper die
+     * hem zelf doet nadat de koppelingen zijn opgeslagen.
+     */
+    public static function withoutPriceUpdatesOnSave(callable $callback): mixed
     {
-        if ($this->is_global_discount) {
+        $previous = static::$skipPriceUpdatesOnSave;
+        static::$skipPriceUpdatesOnSave = true;
+
+        try {
+            return $callback();
+        } finally {
+            static::$skipPriceUpdatesOnSave = $previous;
+        }
+    }
+
+    /**
+     * De productgroepen waar deze code nu invloed op heeft.
+     *
+     * @return array<int, int>
+     */
+    public function productGroupIdsForPrices(): array
+    {
+        if (! $this->is_global_discount) {
+            return [];
+        }
+
+        $productGroups = ProductGroup::query();
+
+        if ($this->valid_for == 'categories') {
+            $productGroups->whereIn('id', Product::whereHas('productCategories', function ($query) {
+                $query->whereIn('product_category_id', $this->productCategories()->pluck('product_category_id'));
+            })->pluck('product_group_id'));
+        } elseif ($this->valid_for == 'products') {
+            $productGroups->whereIn('id', Product::whereIn('id', $this->products()->pluck('product_id'))->pluck('product_group_id'));
+        }
+
+        return $productGroups->pluck('id')->all();
+    }
+
+    /**
+     * @param  array<int, int>  $previousProductGroupIds  groepen van de vorige selectie
+     */
+    public function updateProductPrices(array $previousProductGroupIds = []): void
+    {
+        $productGroupIds = array_unique(array_merge($this->productGroupIdsForPrices(), $previousProductGroupIds));
+
+        foreach (array_chunk($productGroupIds, 500) as $chunk) {
             // De job haalt de groep zelf vers op, dus alleen het id is nodig.
-            $productGroups = ProductGroup::query()->select('id');
-
-            if ($this->valid_for == 'categories') {
-                $productGroups->whereIn('id', Product::whereHas('productCategories', function ($query) {
-                    $query->whereIn('product_category_id', $this->productCategories()->pluck('product_category_id'));
-                })->pluck('product_group_id'));
-            } elseif ($this->valid_for == 'products') {
-                $productGroups->whereIn('id', Product::whereIn('id', $this->products()->pluck('product_id'))->pluck('product_group_id'));
+            foreach (ProductGroup::query()->select('id')->whereIn('id', $chunk)->get() as $productGroup) {
+                UpdateProductPricesJob::dispatch($productGroup)
+                    ->onQueue('ecommerce')
+                    ->afterCommit();
             }
-
-            $productGroups->chunkById(500, function ($chunk): void {
-                foreach ($chunk as $productGroup) {
-                    UpdateProductPricesJob::dispatch($productGroup)
-                        ->onQueue('ecommerce');
-                }
-            });
         }
     }
 

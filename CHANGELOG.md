@@ -2,6 +2,17 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.184.0 - 2026-11-06
+
+### Fixed
+- **Kortingscodes.** Prijzen worden doorgerekend nadat Filament de gekoppelde producten en categorieën heeft opgeslagen, inclusief de oude selectie. Een nieuwe code voor gekozen producten kreeg anders geen korting op die producten.
+- **Voorraadpopup.** Opslaan stuurt de verwachte voorraad mee en krijgt een 409 als er intussen iets verkocht is.
+- **Pincontrole.** Blijft doorgaan bij een 5xx, meldt na vijf fouten om op de terminal te kijken en biedt dan geen knop om opnieuw te pinnen. Mislukt het afronden, dan wordt de claim teruggedraaid.
+- +/- op de voorraad telt op in plaats van tekst aan elkaar te plakken.
+
+### Changed
+- Filterquery zonder tijdelijke tabel op schijf. Indexen op `dashed__orders.email` en `order_origin`. Taken op een eigen tijdstip per site.
+
 ## v4.183.0 - 2026-11-06
 
 ### Changed

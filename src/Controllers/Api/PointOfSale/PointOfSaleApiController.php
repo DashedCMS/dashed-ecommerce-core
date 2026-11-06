@@ -9,8 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
@@ -1776,17 +1776,19 @@ class PointOfSaleApiController extends Controller
 
     public function getAllProducts(Request $request): JsonResponse
     {
-        $clearCache = $request->get('clearCache', false);
-        if ($clearCache) {
-            Cache::forget('pos_products');
-        }
-
         // Prijsweergave excl./incl. BTW (zoals de cart-modus prices_ex_vat).
         $exVat = (bool) $request->boolean('prices_ex_vat');
 
         $products = Product::handOrderShowable()
-            ->select(['id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'stock_status', 'vat_rate'])
-            ->get()
+            ->select(['id', 'product_group_id', 'name', 'images', 'price', 'ean', 'sku', 'current_price', 'discount_price', 'use_stock', 'stock', 'reserved_stock', 'stock_status', 'vat_rate'])
+            ->get();
+
+        // Alleen een product zonder eigen afbeelding valt terug op zijn groep.
+        $products
+            ->filter(fn (Product $product) => ! (is_array($product->images) && count($product->images)))
+            ->load('productGroup:id,images');
+
+        $products = $products
             ->map(function ($product) use ($exVat) {
                 $name = $product->getTranslation('name', app()->getLocale());
                 $currentPrice = (float) $product->currentPrice;
@@ -1862,6 +1864,8 @@ class PointOfSaleApiController extends Controller
                 'id' => $product->id,
                 'stock' => $product->directSellableStock(),
                 'actual_stock' => $product->stock,
+                // Waar de voorraadpopup tegen opslaat; actual_stock wordt daar bewerkt.
+                'expected_stock' => $product->stock,
             ])
             ->values()
             ->all();
@@ -1872,9 +1876,30 @@ class PointOfSaleApiController extends Controller
         $data = $request->all();
         $product = $data['product'] ?? null;
 
-        $thisProduct = Product::find($product['id']);
-        $thisProduct->stock = $product['actual_stock'];
-        $thisProduct->save();
+        $expectedStock = $data['expected_stock'] ?? null;
+
+        // Een open popup mag een verkoop van intussen niet wegschrijven. De
+        // mobiele app stuurt expected_stock niet en schrijft dus altijd.
+        $currentStock = DB::transaction(function () use ($product, $expectedStock) {
+            $thisProduct = Product::lockForUpdate()->findOrFail($product['id']);
+
+            if (filled($expectedStock) && (int) $expectedStock !== (int) $thisProduct->stock) {
+                return (int) $thisProduct->stock;
+            }
+
+            $thisProduct->stock = $product['actual_stock'];
+            $thisProduct->save();
+
+            return null;
+        });
+
+        if ($currentStock !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'De voorraad is intussen gewijzigd naar '.$currentStock.'. Controleer het aantal en sla opnieuw op.',
+                'current_stock' => $currentStock,
+            ], 409);
+        }
 
         return response()->json(['success' => true]);
     }

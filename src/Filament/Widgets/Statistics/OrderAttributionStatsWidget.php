@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Models\Order;
@@ -52,7 +51,7 @@ class OrderAttributionStatsWidget extends TableWidget
     protected function buildQuery(): Builder
     {
         // Als de attributie-kolommen nog niet bestaan, een lege query teruggeven.
-        if (! Schema::hasColumn('dashed__orders', 'utm_source')) {
+        if (! \Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker::hasAttributionColumns('dashed__orders')) {
             return Order::query()->whereRaw('1 = 0');
         }
 

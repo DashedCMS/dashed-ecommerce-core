@@ -35,14 +35,13 @@ class EnsurePointOfSaleAccess
      */
     public static function stack(): array
     {
-        $panelMiddleware = array_filter([
+        return [
+            static::class,
             EnsureCmsIpAllowed::class,
             EnsureCmsSessionIsActive::class,
             EnsureMfaIsSetUp::class,
             EnsureMfaIsFresh::class,
-        ], fn (string $class): bool => class_exists($class));
-
-        return [static::class, ...array_values($panelMiddleware)];
+        ];
     }
 
     public function handle(Request $request, Closure $next)

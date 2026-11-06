@@ -186,6 +186,9 @@ class Product extends Model
                 $product->bundleProducts()->detach();
             }
 
+            // removeInvalidImages() kan opslaan en wist dan de wijzigingen.
+            $stockChanged = $product->wasChanged('stock');
+
             $product->removeInvalidImages();
 
             ProductSavedEvent::dispatch($product);
@@ -196,12 +199,12 @@ class Product extends Model
             // ProductGroup-argument, bijvoorbeeld bij de voorraadafboeking
             // van een handmatige bestelling.
             if ($product->productGroup) {
-                UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+                UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce')->afterCommit();
             }
 
             // Sync stock to linked products when stock changes
-            if ($product->wasChanged('stock') && $product->stockSyncGroup()) {
-                SyncProductStockJob::dispatch($product)->onQueue('ecommerce');
+            if ($stockChanged && $product->stockSyncGroup()) {
+                SyncProductStockJob::dispatch($product)->onQueue('ecommerce')->afterCommit();
             }
 
             static::bumpSearchbarCacheVersion();
@@ -227,7 +230,7 @@ class Product extends Model
         static::deleted(function ($product) {
             // BUG-007, zie de saved-hook hierboven.
             if ($product->productGroup) {
-                UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce');
+                UpdateProductInformationJob::dispatch($product->productGroup)->onQueue('ecommerce')->afterCommit();
             }
             static::bumpSearchbarCacheVersion();
 

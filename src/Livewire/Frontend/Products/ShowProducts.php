@@ -225,32 +225,21 @@ class ShowProducts extends Component
 
     public function getFilters(): void
     {
+        // Eén rij per optie. Geen telling per optie: die werd nergens gelezen en
+        // kostte per lading een tijdelijke tabel op schijf door de JSON-namen in
+        // de GROUP BY. Welke opties actief zijn staat hieronder in $activeOptions.
         $filtersWithCounts = DB::table('dashed__product_filters as pf')
             ->join('dashed__product_filter_options as pfo', 'pf.id', '=', 'pfo.product_filter_id')
-            ->leftJoin('dashed__product_filter as dpf', 'pfo.id', '=', 'dpf.product_filter_option_id')
             ->select(
                 'pf.id as filter_id',
                 'pf.name as filter_name',
-                'pf.hide_filter_on_overview_page',
-                'pf.created_at',
-                'pfo.order as order',
                 'pfo.id as option_id',
                 'pfo.name as option_name',
-                DB::raw('COUNT(dpf.product_id) as option_count')
             )
             ->where('pf.hide_filter_on_overview_page', 0)
-            // Every selected column in the GROUP BY: MySQL without a primary key on the table, and MariaDB,
-            // do not see functional dependency and refuse the query under ONLY_FULL_GROUP_BY.
-            ->groupBy(
-                'pf.id',
-                'pf.name',
-                'pf.hide_filter_on_overview_page',
-                'pf.created_at',
-                'pfo.order',
-                'pfo.id',
-                'pfo.name'
-            )
             ->orderBy('pfo.order')
+            ->orderBy('pf.id')
+            ->orderBy('pfo.id')
             ->get()
             ->groupBy('filter_id');
 

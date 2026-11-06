@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\DiscountCodeResource\Pag
 use Illuminate\Support\Str;
 use Filament\Actions\Action;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Pages\CreateRecord;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
@@ -31,6 +32,12 @@ class CreateDiscountCode extends CreateRecord
         return $data;
     }
 
+    // Bij aanmaken schrijft Filament de koppelingen pas na het saved-event.
+    protected function handleRecordCreation(array $data): Model
+    {
+        return DiscountCode::withoutPriceUpdatesOnSave(fn () => parent::handleRecordCreation($data));
+    }
+
     public function generateRandomCode(): void
     {
         $this->data['code'] = Str::upper(Str::random(10));
@@ -42,6 +49,8 @@ class CreateDiscountCode extends CreateRecord
 
     public function afterCreate(): void
     {
+        $this->record->updateProductPrices();
+
         $code = $this->data['code'];
         if ($this->data['create_multiple_codes']) {
             $amountOfCodes = $this->data['amount_of_codes'] - 1;

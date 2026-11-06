@@ -55,30 +55,44 @@ class POSHelper
             ];
         }
 
-        $order->pos_order_handled = 1;
-        $order->save();
+        // Mislukt het afronden, dan geven we de claim terug, anders meldt de
+        // volgende poll 'paid' zonder bon en met een open winkelwagen. De bon
+        // staat als laatste: na die dispatch wordt er niets meer teruggedraaid,
+        // dus een herkansing print nooit een tweede bon.
+        try {
+            $order->pos_order_handled = 1;
+            $order->save();
 
-        $order->changeStatus($orderStatus);
-        $order->changeFulfillmentStatus($fulfillmentStatus);
+            $order->changeStatus($orderStatus);
+            $order->changeFulfillmentStatus($fulfillmentStatus);
 
-        if (Customsetting::get('pos_auto_print_receipt', null, true)) {
-            // Geen sync printer-I/O meer: dispatch naar de queue zodat de
-            // POS-request direct terugkomt. Een redis worker print de bon
-            // binnen ~1s.
-            PrintReceiptJob::dispatch($order);
-        }
-
-        $hasCashPayment = false;
-        foreach ($order->orderPayments as $orderPayment) {
-            // Cadeaubon-betalingen hebben geen payment_method_id (psp='giftcard');
-            // null-safe nodig zodat finalisatie niet crasht bij giftcard-betaling.
-            if ($orderPayment->paymentMethod?->is_cash_payment) {
-                $hasCashPayment = true;
+            $hasCashPayment = false;
+            foreach ($order->orderPayments as $orderPayment) {
+                // Cadeaubon-betalingen hebben geen payment_method_id (psp='giftcard');
+                // null-safe nodig zodat finalisatie niet crasht bij giftcard-betaling.
+                if ($orderPayment->paymentMethod?->is_cash_payment) {
+                    $hasCashPayment = true;
+                }
             }
-        }
 
-        $posCart->status = 'finished';
-        $posCart->save();
+            $posCart->status = 'finished';
+            $posCart->save();
+
+            if (Customsetting::get('pos_auto_print_receipt', null, true)) {
+                // Geen sync printer-I/O meer: dispatch naar de queue zodat de
+                // POS-request direct terugkomt. Een redis worker print de bon
+                // binnen ~1s.
+                PrintReceiptJob::dispatch($order);
+            }
+        } catch (\Throwable $exception) {
+            rescue(fn () => $order->newQueryWithoutScopes()
+                ->whereKey($order->getKey())
+                ->update(['pos_order_handled' => 0]), null, false);
+            $order->pos_order_handled = 0;
+            $order->syncOriginalAttribute('pos_order_handled');
+
+            throw $exception;
+        }
 
         if ($hasCashPayment) {
             OpenCashRegisterJob::dispatch();
