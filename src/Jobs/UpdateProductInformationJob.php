@@ -11,8 +11,6 @@ use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
@@ -20,6 +18,8 @@ use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Resources\ProductFeedResource;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Dashed\DashedEcommerceCore\Events\Products\ProductInformationUpdatedEvent;
 
 class UpdateProductInformationJob implements ShouldQueue, ShouldBeUniqueUntilProcessing
