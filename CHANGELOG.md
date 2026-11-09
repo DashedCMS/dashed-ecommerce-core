@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.185.1 - 2026-11-09
+
+### Fixed
+- **Kortingscode op een lege wagen bleef niet bewaard.** `dashed:clear-old-carts` gooide elke lege wagen na een dag weg, ook als er al een kortingscode op stond. Een popup zet zijn welkomstcode meestal op een nog lege wagen, dus wie later terugkwam had de code niet meer. Lege wagens met een kortingscode vallen nu onder de gewone regel van een maand.
+
 ## v4.185.0 - 2026-11-09
 
 ### Added

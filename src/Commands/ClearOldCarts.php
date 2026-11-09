@@ -39,8 +39,11 @@ class ClearOldCarts extends Command
      */
     public function handle()
     {
-        // Delete empty carts older than 1 day
+        // Delete empty carts older than 1 day. An empty cart with a discount
+        // code is kept (a popup applies its welcome code before anything is in
+        // the cart); it falls under the one-month rule below instead.
         Cart::whereDoesntHave('items')
+            ->whereNull('discount_code_id')
             ->where('updated_at', '<', Carbon::now()->subDay())
             ->delete();
 
