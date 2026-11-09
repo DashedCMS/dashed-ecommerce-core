@@ -47,6 +47,20 @@
     if ($triggerTikTok) {
         $shoppingCartTotal = cartHelper()->getTotal();
     }
+
+    // ViewContent via de Conversions API: de browser meldt de productweergave aan dit
+    // adres. Een relatief pad zonder token of ID, zodat het in gecachete HTML mag staan.
+    $metaViewContentUrl = null;
+    if ($facebookEnabled) {
+        try {
+            $metaCapiSettings = \Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings::cached(null);
+            if ($metaCapiSettings->enabled() && $metaCapiSettings->readyFor(\Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings::EVENT_VIEW_CONTENT)) {
+                $metaViewContentUrl = route('dashed.frontend.meta.view-content', [], false);
+            }
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
 @endphp
 
 <script>
@@ -58,10 +72,67 @@
             facebook: @json($facebookEnabled),
             gmcReviewSurvey: @json($googleReviewSurveyEnabled),
             gmcMerchantId: @json($googleMerchantCenterId),
+            metaViewContentUrl: @json($metaViewContentUrl),
+        };
+
+        // ViewContent voor de Conversions API. Het event-ID ontstaat hier in de browser en
+        // niet op de server: de productpagina kan uit de paginacache komen, en een ID in die
+        // HTML zou voor elke bezoeker hetzelfde zijn. Hetzelfde ID gaat naar de pixel en naar
+        // de server, zodat Meta de twee ontdubbelt.
+        const metaViewContentIds = {};
+        const metaViewContentId = (productId) => {
+            if (!tracking.metaViewContentUrl || !productId) {
+                return null;
+            }
+            if (!metaViewContentIds[productId]) {
+                const random = (window.crypto && typeof window.crypto.randomUUID === 'function')
+                    ? window.crypto.randomUUID()
+                    : (Date.now().toString(36) + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)).slice(0, 40).padEnd(24, '0');
+                metaViewContentIds[productId] = 'vc_' + random;
+                reportMetaViewContent(productId, metaViewContentIds[productId]);
+            }
+            return metaViewContentIds[productId];
+        };
+        const reportMetaViewContent = (productId, eventId) => {
+            let sent = false;
+            const send = (leaving) => {
+                if (sent) {
+                    return;
+                }
+                sent = true;
+                try {
+                    const body = new URLSearchParams({product_id: productId, event_id: eventId});
+                    if (leaving && navigator.sendBeacon) {
+                        navigator.sendBeacon(tracking.metaViewContentUrl, body);
+                        return;
+                    }
+                    fetch(tracking.metaViewContentUrl, {method: 'POST', body: body, credentials: 'same-origin', keepalive: true}).catch(() => {});
+                } catch (e) {
+                }
+            };
+            // De pixel laadt uitgesteld en zet dan pas zijn _fbp-cookie. Even wachten geeft
+            // de server dezelfde bezoeker-ID mee; wie eerder vertrekt, wordt bij het
+            // verlaten van de pagina gemeld.
+            let attempts = 0;
+            const wait = () => {
+                if (sent) {
+                    return;
+                }
+                if (document.cookie.indexOf('_fbp=') !== -1 || ++attempts > 10) {
+                    send(false);
+                    return;
+                }
+                setTimeout(wait, 500);
+            };
+            setTimeout(wait, 1000);
+            window.addEventListener('pagehide', () => send(true), {once: true});
         };
 
         Livewire.on('productAddedToCart', (event) => {
             const payload = event[0];
+            if (!payload || !payload.product) {
+                return;
+            }
 
             if (tracking.gtm && typeof dataLayer !== 'undefined') {
                 const unitPrice = parseFloat(payload.price) || 0;
@@ -91,15 +162,18 @@
                 const productId = payload.product && payload.product.id ? String(payload.product.id) : null;
                 const unitPrice = parseFloat(payload.price) || 0;
                 const qty = parseInt(payload.quantity) || 1;
+                // Hetzelfde event-ID en dezelfde waarde als het server-event (Conversions API),
+                // zodat Meta de twee ontdubbelt.
+                const atcOptions = payload.metaEventId ? {eventID: payload.metaEventId} : undefined;
                 fbq('track', 'AddToCart', {
                     content_type: 'product',
                     content_ids: productId ? [productId] : [],
                     content_name: payload.productName,
                     content_category: payload.category,
                     contents: productId ? [{id: productId, quantity: qty, item_price: unitPrice}] : [],
-                    value: unitPrice * qty,
+                    value: payload.metaValue !== undefined ? (parseFloat(payload.metaValue) || 0) : unitPrice * qty,
                     currency: 'EUR',
-                });
+                }, atcOptions);
             }
         });
 
@@ -138,14 +212,15 @@
                         quantity: parseInt(i.quantity) || 1,
                         item_price: parseFloat(i.price) || 0,
                     })).filter(i => i.id);
+                    const checkoutOptions = payload.metaEventId ? {eventID: payload.metaEventId} : undefined;
                     fbq('track', 'InitiateCheckout', {
                         content_type: 'product',
                         content_ids: fbContents.map(i => i.id),
                         contents: fbContents,
                         num_items: fbContents.reduce((n, i) => n + i.quantity, 0),
-                        value: parseFloat(payload.cartTotal) || 0,
+                        value: parseFloat(payload.metaValue ?? payload.cartTotal) || 0,
                         currency: 'EUR',
-                    });
+                    }, checkoutOptions);
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {
@@ -183,6 +258,17 @@
         Livewire.on('viewProduct', (event) => {
             const payload = event[0];
 
+            // Buiten de vertraging: de melding aan de server start meteen, ook als de
+            // bezoeker binnen een seconde weer weg is.
+            // Een fout hier mag de pixel, GTM en TikTok hieronder niet tegenhouden.
+            let viewContentEventId = null;
+            try {
+                viewContentEventId = tracking.facebook
+                    ? metaViewContentId(payload.product && payload.product.id ? String(payload.product.id) : null)
+                    : null;
+            } catch (e) {
+            }
+
             setTimeout(() => {
                 if (tracking.facebook && typeof fbq !== 'undefined') {
                     const productId = payload.product && payload.product.id ? String(payload.product.id) : null;
@@ -193,9 +279,9 @@
                         content_name: payload.productName,
                         content_category: payload.category,
                         contents: productId ? [{id: productId, quantity: 1, item_price: unitPrice}] : [],
-                        value: unitPrice,
+                        value: payload.metaValue !== undefined ? (parseFloat(payload.metaValue) || 0) : unitPrice,
                         currency: 'EUR',
-                    });
+                    }, viewContentEventId ? {eventID: viewContentEventId} : undefined);
                 }
 
                 if (tracking.gtm && typeof dataLayer !== 'undefined') {

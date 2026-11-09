@@ -8,6 +8,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\WishlistItem;
 use Dashed\DashedEcommerceCore\Mail\WishlistSavedMail;
+use Dashed\DashedEcommerceCore\Services\Meta\AddToCartPayload;
 use Dashed\DashedEcommerceCore\Services\Wishlist\WishlistSaveThrottle;
 
 class WishlistPage extends Component
@@ -54,7 +55,7 @@ class WishlistPage extends Component
 
         cartHelper()->addToCart($productId, 1, []);
         $this->dispatch('refreshCart');
-        $this->dispatch('productAddedToCart', product: $item->product);
+        $this->dispatch('productAddedToCart', AddToCartPayload::for($item->product, 1, (float) $item->product->priceForUser()));
     }
 
     public function addAllToCart(): void

@@ -2,6 +2,20 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.186.0 - 2026-11-10
+
+### Added
+- **Meta Conversions API: ViewContent, AddToCart en InitiateCheckout.** Naast de Purchase stuurt de server nu ook deze drie events, elk met een eigen schakelaar op Instellingen → Meta Conversions API (standaard aan zodra de Conversions API aan staat). De browserpixel krijgt hetzelfde event-ID mee (`fbq('track', …, {eventID})`), zodat Meta de twee ontdubbelt. Verzenden gaat altijd via `SendMetaEventJob` op queue `ecommerce`, met de klantsignalen van het verzoek zelf (`_fbp`, `_fbc` of fbclid, user agent, IP-adres, pagina-URL zonder querystring, en gehashte e-mail/klant-ID van een ingelogde klant of het adres dat al in de wagen staat). Een fout breekt nooit de wagen, de checkout of de productpagina.
+  - **AddToCart**: elk `productAddedToCart` vanuit de shop loopt via `Services\Meta\AddToCartPayload` (productpagina, wagen, wagensuggesties, verlanglijst); de payload krijgt achteraan `metaValue` en `metaEventId`. Kassa, API, Bol, een herstelde wagen en automatische toevoegingen sturen dit event niet en melden dus niets. Een shop met een eigen payload roept `app(MetaBrowserEvents::class)->addToCart($product, $aantal, $stukprijs)` aan en voegt de uitkomst achteraan toe.
+  - **InitiateCheckout**: vanuit `Checkout::mount()`, dus één keer per bezoek en niet bij een Livewire-update. Dezelfde wagen met dezelfde inhoud opnieuw openen binnen 30 minuten geeft hetzelfde event-ID terug zonder tweede server-event.
+  - **ViewContent**: het event-ID ontstaat in de browser, omdat een productpagina uit de paginacache kan komen. De browser meldt de weergave aan `POST /ecommerce/meta/view-content` (zonder CSRF-token, 120 per minuut per IP-adres); prijs en naam komen van de server. Bots worden overgeslagen op user agent en er gaat één event per bezoeker per product per 30 minuten.
+- **Dagtellers in plaats van logregels.** Deze drie events krijgen geen rij per stuk in `dashed__meta_capi_events`. De nieuwe tabel `dashed__meta_capi_event_counts` telt per site, dag en eventsoort hoeveel er verstuurd en mislukt zijn; de logpagina toont de laatste zeven dagen. Een mislukte verzending komt hoogstens één keer per uur per event en status in het log, zonder IP-adres en user agent. Na een storing bij Meta slaat de job twee minuten alles over, zodat de wachtrij niet volloopt.
+- De value mode geldt ook voor deze events: `metaValue` in de payloads van `productAddedToCart`, `checkoutInitiated` en `viewProduct` geeft de pixel hetzelfde bedrag als de server.
+- `MetaCapiSettings::cached()` (gewone instellingencache, voor veelvoorkomende webverzoeken) en `MetaCapiSettings::fresh()` (één directe query, voor jobs); `for()` blijft zonder cache lezen. `ConversionsApi::sendEvent()` neemt optioneel al gelezen instellingen aan.
+
+### Fixed
+- Toevoegen aan de wagen vanuit de wagensuggesties en de verlanglijst stuurde alleen het product mee, waardoor de pixel-, GTM- en TikTok-listener op een lege payload stukliep. Ze sturen nu de volledige payload.
+
 ## v4.185.1 - 2026-11-09
 
 ### Fixed

@@ -10,6 +10,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Notifications\Notification;
 use Filament\Tables\Filters\SelectFilter;
 use Dashed\DashedEcommerceCore\Models\MetaCapiEvent;
+use Dashed\DashedEcommerceCore\Filament\Widgets\MetaCapiEventCountsWidget;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource\Pages\ListMetaCapiEvents;
 
@@ -81,6 +82,13 @@ class MetaCapiEventResource extends Resource
                     MetaCapiEvent::STATUS_FAILED => MetaCapiEvent::statusLabel(MetaCapiEvent::STATUS_FAILED),
                     MetaCapiEvent::STATUS_SKIPPED => MetaCapiEvent::statusLabel(MetaCapiEvent::STATUS_SKIPPED),
                 ]),
+                SelectFilter::make('event_name')->label(__('Event'))->options([
+                    'Purchase' => 'Purchase',
+                    'ViewContent' => 'ViewContent',
+                    'AddToCart' => 'AddToCart',
+                    'InitiateCheckout' => 'InitiateCheckout',
+                    'Lead' => 'Lead',
+                ]),
                 SelectFilter::make('site_id')->label(__('Site'))
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->all()),
             ])
@@ -99,6 +107,11 @@ class MetaCapiEventResource extends Resource
                             ->send();
                     }),
             ]);
+    }
+
+    public static function getWidgets(): array
+    {
+        return [MetaCapiEventCountsWidget::class];
     }
 
     public static function getPages(): array

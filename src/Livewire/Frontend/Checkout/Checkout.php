@@ -37,6 +37,7 @@ use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
+use Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserEvents;
 use Dashed\DashedEcommerceCore\Services\Giftcards\GiftcardLedger;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountRefused;
 use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
@@ -272,11 +273,19 @@ class Checkout extends Component
 
         $cartTotal = cartHelper()->getTotal();
 
-        $this->dispatch('checkoutInitiated', [
+        // mount() draait één keer per bezoek aan de checkout, niet bij een Livewire-update.
+        // Het event-ID gaat naar de pixel en hetzelfde event gaat via de wachtrij naar Meta.
+        $this->dispatch('checkoutInitiated', array_merge([
             'cartTotal' => number_format($cartTotal, 2, '.', ''),
             'items' => $items,
             'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
-        ]);
+        ], app(MetaBrowserEvents::class)->initiateCheckout(
+            $items,
+            (float) $cartTotal,
+            rescue(fn () => cartHelper()->getCart(), null, false),
+            (float) rescue(fn () => cartHelper()->getTax(), 0, false),
+            (float) rescue(fn () => cartHelper()->getShippingCosts(), 0, false),
+        )));
     }
 
     public function getCartItemsProperty()

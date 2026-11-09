@@ -121,11 +121,14 @@ class ConversionsApi
 
     /**
      * @param  array<string,mixed>  $event
+     * @param  MetaCapiSettings|null  $settings  al gelezen instellingen; standaard een verse lezing
+     *   zonder cache. Jobs die vaak draaien geven MetaCapiSettings::fresh() mee, zodat niet elk
+     *   event de instellingencache van de site wist.
      * @return array{ok: bool, status: int, body: array<string,mixed>}
      */
-    public function sendEvent(string $siteId, array $event): array
+    public function sendEvent(string $siteId, array $event, ?MetaCapiSettings $settings = null): array
     {
-        $settings = MetaCapiSettings::for($siteId);
+        $settings ??= MetaCapiSettings::for($siteId);
         $pixelId = $settings->pixelId();
         $token = $settings->accessToken();
 

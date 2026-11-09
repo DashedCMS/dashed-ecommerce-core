@@ -15,6 +15,7 @@ use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedCore\Models\Customsetting;
+use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedCore\Traits\HasSettingsPermission;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
@@ -44,6 +45,10 @@ class MetaCapiSettingsPage extends Page implements HasSchemas
             $formData["meta_capi_access_token_{$id}"] = '';
             $formData["meta_capi_test_event_code_{$id}"] = $settings->testEventCode();
             $formData["meta_capi_value_mode_{$id}"] = $settings->valueMode();
+            foreach (MetaCapiSettings::BROWSER_EVENTS as $eventName => $key) {
+                // Nooit ingesteld telt als aan.
+                $formData["{$key}_{$id}"] = $settings->eventEnabled($eventName);
+            }
         }
 
         $this->form->fill($formData);
@@ -75,7 +80,20 @@ class MetaCapiSettingsPage extends Page implements HasSchemas
                         ->content($settings->pixelId() ?: __('Nog geen pixel-ID ingesteld bij Algemene instellingen.')),
                     Toggle::make("meta_capi_enabled_{$id}")
                         ->label(__('Conversions API inschakelen'))
+                        ->live()
                         ->helperText(__('Stuurt elke betaalde webshop-order ook vanaf de server naar Meta. De browserpixel blijft werken; Meta ontdubbelt de twee.')),
+                    Toggle::make("meta_capi_event_view_content_{$id}")
+                        ->label(__('Ook productweergaven versturen (ViewContent)'))
+                        ->visible(fn (Get $get) => (bool) $get("meta_capi_enabled_{$id}"))
+                        ->helperText(__('Eén event per bezoeker per product per half uur, zonder bots. De browser meldt de weergave met hetzelfde event-ID als de pixel.')),
+                    Toggle::make("meta_capi_event_add_to_cart_{$id}")
+                        ->label(__('Ook toevoegingen aan de winkelwagen versturen (AddToCart)'))
+                        ->visible(fn (Get $get) => (bool) $get("meta_capi_enabled_{$id}"))
+                        ->helperText(__('Elke toevoeging vanuit de webshop. Niet voor de kassa, koppelingen of een herstelde winkelwagen.')),
+                    Toggle::make("meta_capi_event_initiate_checkout_{$id}")
+                        ->label(__('Ook het openen van de checkout versturen (InitiateCheckout)'))
+                        ->visible(fn (Get $get) => (bool) $get("meta_capi_enabled_{$id}"))
+                        ->helperText(__('Eén keer per winkelwagen per bezoek aan de checkout. Deze drie events krijgen geen logregel per stuk; het log toont dagtellers en mislukte verzendingen.')),
                     TextInput::make("meta_capi_access_token_{$id}")
                         ->label(__('Toegangstoken'))
                         ->password()
@@ -112,6 +130,12 @@ class MetaCapiSettingsPage extends Page implements HasSchemas
             Customsetting::set('meta_capi_enabled', (bool) ($state["meta_capi_enabled_{$id}"] ?? false), $id);
             Customsetting::set('meta_capi_test_event_code', trim((string) ($state["meta_capi_test_event_code_{$id}"] ?? '')) ?: null, $id);
             Customsetting::set('meta_capi_value_mode', $state["meta_capi_value_mode_{$id}"] ?? MetaCapiSettings::VALUE_INCL_VAT, $id);
+            foreach (MetaCapiSettings::BROWSER_EVENTS as $key) {
+                // Verborgen (hoofdschakelaar uit) zit niet in de state: dan blijft de opgeslagen keuze staan.
+                if (array_key_exists("{$key}_{$id}", $state)) {
+                    Customsetting::set($key, (bool) $state["{$key}_{$id}"], $id);
+                }
+            }
             MetaCapiSettings::for($id)->storeAccessToken($state["meta_capi_access_token_{$id}"] ?? null);
         }
 

@@ -11,9 +11,9 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
-use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Services\Meta\AddToCartPayload;
 
 trait CartActions
 {
@@ -455,18 +455,8 @@ trait CartActions
 
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
-        $cartTotal = cartHelper()->getTotal();
-
-        $this->dispatch('productAddedToCart', [
-            'product' => $product,
-            'productName' => $product->name,
-            'quantity' => $quantity,
-            'price' => number_format($productPrice, 2, '.', ''),
-            'options' => $options,
-            'cartTotal' => number_format($cartTotal, 2, '.', ''),
-            'category' => $product->productCategories->first()?->name ?? null,
-            'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
-        ]);
+        // Eén payload voor pixel, GTM en TikTok, met het event-ID van het server-event (Conversions API).
+        $this->dispatch('productAddedToCart', AddToCartPayload::for($product, $quantity, (float) $productPrice, $options));
 
         session(['lastAddedProductInCart' => $product]);
         $this->fillPrices();

@@ -12,12 +12,22 @@ use Dashed\DashedEcommerceCore\Controllers\Frontend\CartController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\QuoteController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\AccountController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
+use Dashed\DashedEcommerceCore\Controllers\Frontend\MetaEventController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\TransactionController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\ReturnStatusController;
 use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 use Dashed\DashedEcommerceCore\Controllers\Api\Checkout\CheckoutApiController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\ProformaCheckoutController;
 use Dashed\DashedEcommerceCore\Controllers\Frontend\RemainderPaymentController;
+
+// De browser meldt een productweergave voor de Meta Conversions API, met het
+// event-ID dat hij ook aan de pixel gaf. Zonder CSRF-controle: de pagina kan
+// uit de paginacache komen en heeft dan geen geldig token. Het verzoek wijzigt
+// niets en is begrensd op IP-adres.
+Route::post('/ecommerce/meta/view-content', [MetaEventController::class, 'viewContent'])
+    ->middleware(['web', 'throttle:120,1'])
+    ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
+    ->name('dashed.frontend.meta.view-content');
 
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])

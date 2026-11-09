@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper;
+use Dashed\DashedEcommerceCore\Services\Meta\AddToCartPayload;
 use Dashed\DashedEcommerceCore\Services\CartSuggestions\CartProductSuggester;
 
 class CartSuggestions extends Component
@@ -150,7 +151,7 @@ class CartSuggestions extends Component
 
         $this->closeQuickAdd();
         $this->dispatch('refreshCart');
-        $this->dispatch('productAddedToCart', product: $product);
+        $this->dispatch('productAddedToCart', AddToCartPayload::for($product, 1, $price));
     }
 
     public function render()

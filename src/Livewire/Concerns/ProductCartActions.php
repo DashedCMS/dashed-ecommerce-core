@@ -24,6 +24,8 @@ use Illuminate\Support\Collection as SupportCollection;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraSelection;
+use Dashed\DashedEcommerceCore\Services\Meta\AddToCartPayload;
+use Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserEvents;
 
 trait ProductCartActions
 {
@@ -519,7 +521,9 @@ trait ProductCartActions
 
             // Alleen wat de pixels (Meta, GTM, TikTok) lezen: het hele model meesturen zette de
             // volledige productgroep met alle varianten en extra's in de HTML (meerdere MB's).
-            $this->dispatch('viewProduct', [
+            // Geen Meta-event-ID hier: deze payload staat in de HTML en die kan uit de
+            // paginacache komen. De browser maakt het ID zelf (zie body-extend).
+            $this->dispatch('viewProduct', array_merge([
                 'product' => [
                     'id' => $this->product->id,
                     'name' => $this->product->name,
@@ -532,7 +536,7 @@ trait ProductCartActions
                 'cartTotal' => number_format($cartTotal, 2, '.', ''),
                 'category' => $this->product->productCategories->first()?->name ?? null,
                 'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
-            ]);
+            ], app(MetaBrowserEvents::class)->viewContentPayload($this->product, (float) $this->price)));
         }
     }
 
@@ -1426,18 +1430,8 @@ trait ProductCartActions
     {
         $redirectChoice = Customsetting::get('add_to_cart_redirect_to', Sites::getActive(), 'same');
 
-        $cartTotal = cartHelper()->getTotal();
-
-        $this->dispatch('productAddedToCart', [
-            'product' => $product,
-            'productName' => $product->name,
-            'quantity' => $quantity,
-            'price' => number_format($productPrice, 2, '.', ''),
-            'options' => $options,
-            'cartTotal' => number_format($cartTotal, 2, '.', ''),
-            'category' => $product->productCategories->first()?->name ?? null,
-            'tiktokItems' => TikTokHelper::getShoppingCartItems($cartTotal),
-        ]);
+        // Eén payload voor pixel, GTM en TikTok, met het event-ID van het server-event (Conversions API).
+        $this->dispatch('productAddedToCart', AddToCartPayload::for($product, $quantity, (float) $productPrice, $options));
 
         session(['lastAddedProductInCart' => $product]);
         $this->notifyBackorders();
