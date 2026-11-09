@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.185.0 - 2026-11-09
+
+### Added
+- **Bestelling van € 0 zonder betaalprovider.** Kost de wagen niets (zonder cadeaubonnen, bijvoorbeeld een gratis pakket), dan vraagt de checkout geen betaalmethode, kiest er ook niet vanzelf een en weigert niet meer met "geen geldige betaalmethode". De order krijgt een betaalde `OrderPayment` van € 0 met psp `free` en betaalmethode Translation `free-order-payment-method` ("Gratis", tag `checkout`) en gaat direct op betaald. Nieuw: `Checkout::$isFreeOrder`, `cartIsFree()` en `orderIsFree()`.
+
 ## v4.184.0 - 2026-11-06
 
 ### Fixed

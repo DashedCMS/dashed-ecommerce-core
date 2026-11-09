@@ -142,6 +142,9 @@ class Checkout extends Component
 
     public $amountToPay;
 
+    /** Kost de wagen niets (zonder betaalkosten en zonder cadeaubonnen)? Dan is er geen betaalmethode nodig. */
+    public bool $isFreeOrder = false;
+
     public $paymentCosts;
 
     public $shippingCosts;
@@ -292,6 +295,7 @@ class Checkout extends Component
         if (
             Customsetting::get('first_payment_method_selected', null, true)
             && ! $this->giftcardsCoverCart()
+            && ! $this->cartIsFree()
             && (
                 ! $this->paymentMethod
                 || ! in_array($this->paymentMethod, collect($this->paymentMethods)->pluck('id')->toArray())
@@ -560,9 +564,11 @@ class Checkout extends Component
         $this->giftcards = cartHelper()->getGiftcardRedemptions();
         $this->amountToPay = cartHelper()->getAmountToPay();
 
-        // Betalen de cadeaubonnen alles, dan is er geen betaalmethode nodig en
-        // horen er ook geen betaalkosten op de order.
-        if ($this->paymentMethod && $this->giftcardsCoverCart()) {
+        // Betalen de cadeaubonnen alles, of kost de wagen niets, dan is er geen
+        // betaalmethode nodig en horen er ook geen betaalkosten op de order.
+        $this->isFreeOrder = $this->cartIsFree();
+
+        if ($this->paymentMethod && ($this->giftcardsCoverCart() || $this->isFreeOrder)) {
             $this->paymentMethod = null;
             cartHelper()->setPaymentMethod(null);
             cartHelper()->updateData();
@@ -935,7 +941,8 @@ class Checkout extends Component
             ? ProductExtraOption::whereIn('id', $extraOptionIds)->get()->keyBy('id')
             : collect();
 
-        $giftcardsCoverCart = $this->giftcardsCoverCart();
+        // Betalen de cadeaubonnen alles, of kost de wagen niets, dan hoort er geen betaalmethode (en geen aanbetaling) bij.
+        $giftcardsCoverCart = $this->giftcardsCoverCart() || $this->cartIsFree();
 
         $paymentMethods = ShoppingCart::getPaymentMethods(total: $this->paymentMethodsTotal());
         $paymentMethod = '';
@@ -1273,6 +1280,29 @@ class Checkout extends Component
             return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$giftcardPayment->hash);
         }
 
+        // Een bestelling van € 0 (bijvoorbeeld een gratis pakket): er valt
+        // niets af te rekenen bij een betaalprovider, die zou een bedrag van
+        // € 0 weigeren. Eén betaalde betaling van € 0 en de order is betaald.
+        if (! $giftcardPayment && $this->orderIsFree($order)) {
+            $freePayment = new OrderPayment();
+            $freePayment->order_id = $order->id;
+            $freePayment->amount = 0;
+            $freePayment->psp = 'free';
+            $freePayment->payment_method_id = null;
+            $freePayment->payment_method = Translation::get('free-order-payment-method', 'checkout', 'Gratis');
+            $freePayment->status = 'paid';
+            $freePayment->save();
+            $freePayment->refresh();
+
+            $this->writeOrderCreatedLog($order);
+
+            OrderCreatedEvent::dispatch($order);
+
+            $order->changeStatus('paid');
+
+            return redirect(url(ShoppingCart::getCompleteUrl()).'?paymentId='.$freePayment->hash);
+        }
+
         // Zonder gekozen betaalmethode gaat de rest naar een gekoppelde
         // betaalprovider, die zelf de methode laat kiezen. Dat gebeurt ook als
         // de wagen volledige dekking liet zien en het saldo pas tussen de
@@ -1453,6 +1483,29 @@ class Checkout extends Component
         // betaald is. Mislukt de betaling, dan gaat het saldo bij het
         // annuleren terug op de bon en kan de klant het opnieuw proberen.
         return $payment;
+    }
+
+    /**
+     * Kost de wagen niets? Telt zonder betaalkosten (die vallen weg zodra er
+     * geen betaalmethode meer gekozen is) en alleen zonder cadeaubonnen: die
+     * hebben hun eigen route. Een lege wagen is nooit gratis.
+     */
+    protected function cartIsFree(): bool
+    {
+        if (cartHelper()->getGiftcardsTotal() > 0) {
+            return false;
+        }
+
+        if (collect(cartHelper()->getCartItems())->filter(fn ($cartItem) => $cartItem->model ?? null)->isEmpty()) {
+            return false;
+        }
+
+        return round(cartHelper()->getTotal() - cartHelper()->getPaymentCosts(), 2) <= 0;
+    }
+
+    protected function orderIsFree(Order $order): bool
+    {
+        return round((float) $order->total, 2) <= 0 && $order->outstandingAmount() <= 0;
     }
 
     protected function giftcardsCoverOrder(Order $order): bool
