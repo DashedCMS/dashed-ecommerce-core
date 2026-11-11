@@ -87,15 +87,46 @@ class SendInvoiceJob implements ShouldQueue, ShouldBeUnique
             $channels = OrderOrigins::channelsFor($this->order->order_origin, $this->order->site_id);
 
             try {
-                foreach (Mails::getAdminNotificationEmails() as $notificationInvoiceEmail) {
+                $adminEmails = Mails::getAdminNotificationEmails();
+            } catch (\Throwable $e) {
+                $this->logAdminMailFailure($e, null);
+                $adminEmails = [];
+            }
+
+            // Per adres afvangen: een fout bij het ene adres mag de mail naar
+            // het andere niet tegenhouden. Niets wordt doorgegooid, want de
+            // klantmail is dan al verstuurd en een retry zou die herhalen.
+            foreach ($adminEmails as $notificationInvoiceEmail) {
+                try {
                     if ($this->order->contains_pre_orders) {
                         AdminNotifier::send(new AdminPreOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
                     } else {
                         AdminNotifier::send(new AdminOrderConfirmationMail($this->order), $notificationInvoiceEmail, $channels);
                     }
+                } catch (\Throwable $e) {
+                    $this->logAdminMailFailure($e, $notificationInvoiceEmail);
                 }
-            } catch (\Exception $e) {
             }
+        }
+    }
+
+    /**
+     * Een mislukte interne orderbevestiging werd hier voorheen stil
+     * ingeslikt, waardoor een site wekenlang zonder interne mail kon zitten
+     * zonder dat het ergens zichtbaar was.
+     */
+    private function logAdminMailFailure(\Throwable $e, ?string $email): void
+    {
+        report($e);
+
+        try {
+            \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                orderId: $this->order->id,
+                note: 'Error sending admin order confirmation' . ($email ? ' to ' . $email : '') . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine(),
+                isDebugLog: true,
+            );
+        } catch (\Throwable $logException) {
+            report($logException);
         }
     }
 }

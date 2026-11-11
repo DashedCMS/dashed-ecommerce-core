@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.186.1 - 2026-11-11
+
+### Fixed
+- **Mislukte interne orderbevestiging is niet langer onzichtbaar.** `SendInvoiceJob` slikte elke fout bij het versturen van `AdminOrderConfirmationMail`/`AdminPreOrderConfirmationMail` in met een lege `catch`, waardoor een site een maand zonder interne bestelmail (en zonder facturen naar de boekhouding) zat zonder enig spoor. De fout gaat nu naar de foutmelder en komt met bestand en regel als debugregel in het orderlogboek. Elk adres wordt apart afgevangen, zodat een fout bij het ene adres de mail naar het andere niet meer tegenhoudt. Er wordt nog steeds niets doorgegooid: de klantmail is dan al verstuurd.
+
 ## v4.186.0 - 2026-11-10
 
 ### Added
