@@ -2260,5 +2260,13 @@
     "Zo worden de codes verdeeld als je nu op Toewijzen klikt.": "This is how the codes will be distributed if you click Assign now.",
     "Account ontkoppelen": "Unlink account",
     "Account ontkoppeld. Sla de klantgegevens op om het door te voeren.": "Account unlinked. Save the customer details to apply it.",
-    "Klantgegevens gewist": "Customer details cleared"
+    "Klantgegevens gewist": "Customer details cleared",
+    "Naar kassa": "To POS",
+    "Winkelwagen naar kassa": "Cart to POS",
+    "Je kassa bevat al producten. Die worden vervangen door de inhoud van deze winkelwagen.": "Your POS already contains products. They will be replaced by the contents of this cart.",
+    "De producten uit deze winkelwagen worden in je kassa gezet. De winkelwagen van de klant blijft bestaan.": "The products in this cart are placed in your POS. The customer's cart stays as it is.",
+    "Klantgegevens meenemen": "Take customer details along",
+    "Het klantaccount en het e-mailadres van deze winkelwagen gaan mee naar de kassa": "The customer account and e-mail address of this cart go along to the POS",
+    "Kortingscode :code meenemen": "Take discount code :code along",
+    "Deze winkelwagen is leeg": "This cart is empty"
 }

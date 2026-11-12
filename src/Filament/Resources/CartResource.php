@@ -137,6 +137,7 @@ class CartResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
+                \Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Actions\CopyCartToPosAction::make(),
 
                 Action::make('empty')
                     ->label(__('Leeggooien'))

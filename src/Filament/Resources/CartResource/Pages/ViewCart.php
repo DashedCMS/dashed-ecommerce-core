@@ -4,10 +4,18 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Pages;
 
 use Filament\Resources\Pages\ViewRecord;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\CartResource\Actions\CopyCartToPosAction;
 
 class ViewCart extends ViewRecord
 {
     protected static string $resource = CartResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            CopyCartToPosAction::make(),
+        ];
+    }
 
     protected function mutateFormDataBeforeFill(array $data): array
     {

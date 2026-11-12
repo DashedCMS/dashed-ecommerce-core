@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.187.0 - 2026-11-12
+
+### Added
+- **Winkelwagen naar de kassa.** Op een webshop-winkelwagen in het CMS (Winkelwagens, zowel de lijst als de detailpagina) staat de knop "Naar kassa". Die zet de producten met aantallen en gekozen opties in de kassa van de ingelogde medewerker en opent de kassa, zodat een bestelling van een klant die belt of vastliep in de checkout daar afgemaakt kan worden. Het klantaccount, het e-mailadres en de kortingscode van de wagen gaan standaard mee (per stuk uit te vinken); cadeaubonnen niet. De prijs komt van de kassa zelf (catalogusprijs plus opties), een regel zonder bestaand product wordt een losse regel met de prijs uit de wagen. Een invulveld kent de kassa niet als extra: de meerprijs telt mee en de tekst komt in de regelnaam en de notitie. De wagen van de klant blijft bestaan; wat al in de kassa lag wordt na een bevestiging vervangen. Alleen zichtbaar met toegang tot de kassa, niet op kassawagens en lege wagens. Logica in `Classes\CartToPosService`.
+
 ## v4.186.1 - 2026-11-11
 
 ### Fixed

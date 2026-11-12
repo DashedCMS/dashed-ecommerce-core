@@ -2260,5 +2260,13 @@
     "Zo worden de codes verdeeld als je nu op Toewijzen klikt.": "Zo worden de codes verdeeld als je nu op Toewijzen klikt.",
     "Account ontkoppelen": "Account ontkoppelen",
     "Account ontkoppeld. Sla de klantgegevens op om het door te voeren.": "Account ontkoppeld. Sla de klantgegevens op om het door te voeren.",
-    "Klantgegevens gewist": "Klantgegevens gewist"
+    "Klantgegevens gewist": "Klantgegevens gewist",
+    "Naar kassa": "Naar kassa",
+    "Winkelwagen naar kassa": "Winkelwagen naar kassa",
+    "Je kassa bevat al producten. Die worden vervangen door de inhoud van deze winkelwagen.": "Je kassa bevat al producten. Die worden vervangen door de inhoud van deze winkelwagen.",
+    "De producten uit deze winkelwagen worden in je kassa gezet. De winkelwagen van de klant blijft bestaan.": "De producten uit deze winkelwagen worden in je kassa gezet. De winkelwagen van de klant blijft bestaan.",
+    "Klantgegevens meenemen": "Klantgegevens meenemen",
+    "Het klantaccount en het e-mailadres van deze winkelwagen gaan mee naar de kassa": "Het klantaccount en het e-mailadres van deze winkelwagen gaan mee naar de kassa",
+    "Kortingscode :code meenemen": "Kortingscode :code meenemen",
+    "Deze winkelwagen is leeg": "Deze winkelwagen is leeg"
 }
