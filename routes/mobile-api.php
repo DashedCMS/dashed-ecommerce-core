@@ -8,6 +8,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DiscountController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CheckoutAbandonmentController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrintJobController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
@@ -129,6 +130,9 @@ Route::prefix('api/v1')
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/accounts', [CustomerController::class, 'accounts'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
+
+        // Pre-order uitval / verlaten winkelmandjes (read-only overzicht).
+        Route::get('checkout-abandonments', [CheckoutAbandonmentController::class, 'index'])->middleware('ability:orders.read');
 
         // Verzend-hub: één overzicht van alle zendingen over de carriers heen.
         Route::get('shipments', [ShipmentController::class, 'index'])->middleware('ability:orders.read');
