@@ -7,7 +7,6 @@ use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\Locales;
-use Illuminate\Support\Facades\Storage;
 use Filament\Resources\Pages\EditRecord;
 use LaraZeus\SpatieTranslatable\Actions\LocaleSwitcher;
 use Dashed\DashedCore\Filament\Actions\AnalyzeSeoAction;
