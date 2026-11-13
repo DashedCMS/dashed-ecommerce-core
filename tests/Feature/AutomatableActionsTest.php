@@ -129,7 +129,9 @@ it('mark_packed sets packed_at, syncs the fulfilment status to packed and logs i
     $order->refresh();
     expect($order->packed_at)->not->toBeNull()
         ->and($order->fulfillment_status)->toBe('packed');
-    expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.packed')->exists())->toBeTrue();
+    // Eén regel: de statuswijziging, geen losse order.packed-regel ernaast.
+    expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.changed-fulfillment-status-to-packed')->count())->toBe(1);
+    expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.packed')->exists())->toBeFalse();
 });
 
 it('create_label calls Veloyd::createLabelForOrder when Veloyd is configured for the site', function () {

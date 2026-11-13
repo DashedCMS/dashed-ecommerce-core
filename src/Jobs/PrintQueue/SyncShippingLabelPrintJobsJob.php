@@ -80,6 +80,7 @@ class SyncShippingLabelPrintJobsJob implements ShouldQueue
                         'printable_type' => $sourceModel,
                         'printable_id' => $shippingOrder->id,
                         'status' => PrintJobStatus::Pending,
+                        'channel' => PrintJob::CHANNEL_AUTOMATIC,
                     ]);
                 }
             });

@@ -37,7 +37,7 @@ class OrderMarkedAsPaidEvent
 
         $printReceiptFromOrder = Customsetting::get('pos_auto_print_other_orders', null, false);
         if ($printReceiptFromOrder && $order->order_origin != 'pos') {
-            $this->order->printReceipt();
+            $this->order->printReceipt(channel: \Dashed\DashedEcommerceCore\Models\PrintJob::CHANNEL_AUTOMATIC);
         }
 
         $apis = Customsetting::get('apis', null, []) ?? [];

@@ -1441,10 +1441,11 @@ class Order extends Model
         // gebruiker is dit per definitie een systeemregel.
         $orderLog = new OrderLog();
         $orderLog->order_id = $this->id;
-        $orderLog->user_id = auth()->user()->id ?? null;
+        // Alleen een Dashed-gebruiker telt; de printer-API logt in als Printer.
+        $orderLog->user_id = OrderLog::currentUserId();
         $orderLog->tag = 'order.changed-fulfillment-status-to-' . $newStatus;
         $orderLog->note = $note;
-        $orderLog->is_system = auth()->guest();
+        $orderLog->is_system = $orderLog->user_id === null;
         $orderLog->save();
 
         // Trigger order-opvolg-flows op elke fulfillment-status-wijziging. De
@@ -2141,7 +2142,7 @@ class Order extends Model
         })->count();
     }
 
-    public function printReceipt($isCopy = false)
+    public function printReceipt($isCopy = false, ?string $channel = null)
     {
         $store_name = Customsetting::get('site_name');
         $store_address = Customsetting::get('company_street').' '.Customsetting::get('company_street_number').', '.Customsetting::get('company_postal_code').' '.Customsetting::get('company_city');
@@ -2161,6 +2162,28 @@ class Order extends Model
         $printer->setQRcode('order-'.$this->id);
         $printer->setLogo(public_path('/receipts/logo/logo.png'));
         $printer->printReceipt($isCopy);
+
+        $this->logDirectPrint($isCopy ? 'Kassabon (kopie)' : 'Kassabon', Customsetting::get('receipt_printer_connector_descriptor'), $channel ?? PrintJob::CHANNEL_POS);
+    }
+
+    /**
+     * Orderlog voor een document dat direct (zonder printwachtrij) naar een
+     * printer is gestuurd. Mag het printen nooit laten mislukken.
+     */
+    protected function logDirectPrint(string $document, ?string $printer, ?string $channel = null): void
+    {
+        if (! $this->id) {
+            return;
+        }
+
+        $channel ??= PrintJob::detectChannel();
+
+        rescue(fn () => OrderLog::createLog(
+            orderId: $this->id,
+            tag: 'order.print.queued',
+            note: OrderLog::printNote($document, $printer ?: null, PrintJob::channelLabel($channel)),
+            isSystem: $channel === PrintJob::CHANNEL_AUTOMATIC ? true : null,
+        ), report: true);
     }
 
     public function getDiscountTaxAttribute()
@@ -2260,6 +2283,8 @@ class Order extends Model
             // delete() verwacht een relatief pad; met het absolute pad werd nooit iets
             // verwijderd en bleef de factuur-PDF met klantgegevens publiek staan.
             Storage::disk('public')->delete($pdfPath);
+
+            $this->logDirectPrint('Factuur', $printerName);
         }
     }
 
@@ -2278,6 +2303,8 @@ class Order extends Model
 
             // Zie printInvoice(): verwijderen met het relatieve pad zodat de PDF niet publiek blijft staan.
             Storage::disk('public')->delete($pdfPath);
+
+            $this->logDirectPrint('Pakbon', $printerName);
         }
     }
 

@@ -209,16 +209,210 @@ class OrderLog extends Model
             $string = 'heeft de betaalherinneringen gepauzeerd.';
         } elseif ($this->tag == 'order.payment-reminders.resumed') {
             $string = 'heeft de betaalherinneringen hervat.';
+        } elseif ($this->tag == 'order.label.created') {
+            $string = 'heeft een verzendlabel aangemaakt.';
+        } elseif ($this->tag == 'order.label.downloaded') {
+            $string = 'heeft het verzendlabel gedownload.';
+        } elseif ($this->tag == 'order.label.deleted') {
+            $string = 'heeft een verzendlabel verwijderd.';
+        } elseif ($this->tag == 'order.label.requeued') {
+            $string = 'heeft het verzendlabel opnieuw klaargezet.';
+        } elseif ($this->tag == 'order.return-label.created') {
+            $string = 'heeft een retourlabel aangemaakt.';
+        } elseif ($this->tag == 'order.print.queued') {
+            $string = 'heeft ' . $this->printDocument() . ' naar de printer gestuurd.';
+        } elseif ($this->tag == 'order.print.done') {
+            $printer = $this->noteValue('Printer');
+
+            return ucfirst($this->printDocument()) . ' is geprint' . ($printer ? ' door ' . $printer : '') . '.';
+        } elseif ($this->tag == 'order.print.failed') {
+            $printer = $this->noteValue('Printer');
+
+            return 'Printen van ' . $this->printDocument() . ($printer ? ' op ' . $printer : '') . ' is mislukt.';
+        } elseif ($this->tag == 'order.print.retried') {
+            $string = 'heeft een printopdracht opnieuw in de wachtrij gezet.';
+        } elseif ($this->tag == 'order.print.cancelled') {
+            $string = 'heeft een printopdracht geannuleerd.';
+        } elseif ($this->tag == 'order.details.changed') {
+            $string = 'heeft de gegevens gewijzigd.';
+        } elseif ($this->tag == 'order.manual-payment.registered') {
+            $string = 'heeft een betaling geregistreerd.';
+        } elseif ($this->tag == 'order.invoice.regenerated') {
+            $string = 'heeft de factuur opnieuw gemaakt.';
+        } elseif ($this->tag == 'order.priority.changed') {
+            $string = str((string) $this->note)->lower()->contains('uit')
+                ? 'heeft de prioriteit uitgezet.'
+                : 'heeft de prioriteit aangezet.';
+        } elseif ($this->tag == 'order.sent-to-fulfillment') {
+            $string = 'heeft de bestelling naar de fulfillment-partijen gestuurd.';
         } elseif ($this->note) {
-            return $this->note;
+            // Onbekende tag met een notitie: de notitie is de tekst, met de
+            // actor ervoor zoals bij de bekende tags.
+            return $this->actorName() . ' ' . $this->note;
         } else {
             return 'ERROR tag niet gevonden: ' . $this->tag;
         }
 
-        return ($this->user ? $this->user->name : ($this->is_system ? 'Systeem' : $this->order->name)) . ' ' . $string;
+        return $this->actorName() . ' ' . $string;
     }
 
-    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false, ?bool $isSystem = null): void
+    /** Wie de regel heeft gemaakt: de gebruiker, anders "Systeem" of de klant. */
+    public function actorName(): string
+    {
+        if ($this->user) {
+            return (string) $this->user->name;
+        }
+
+        if ($this->is_system) {
+            return 'Systeem';
+        }
+
+        return (string) ($this->order->name ?? 'Systeem');
+    }
+
+    /**
+     * Waarde van een regel "Sleutel: waarde" in de notitie (printregels
+     * bewaren document, printer en kanaal zo, één per regel).
+     */
+    public function noteValue(string $key): ?string
+    {
+        foreach (preg_split('/\R/', (string) $this->note) ?: [] as $line) {
+            if (str_starts_with($line, $key . ': ')) {
+                $value = trim(substr($line, strlen($key) + 2));
+
+                return $value === '' ? null : $value;
+            }
+        }
+
+        return null;
+    }
+
+    /** Het geprinte document met lidwoord, bv. "de pakbon". */
+    protected function printDocument(): string
+    {
+        $document = $this->noteValue('Document');
+
+        if (! $document) {
+            return 'een document';
+        }
+
+        $document = mb_strtolower($document);
+
+        return (str_contains($document, 'label') ? 'het ' : 'de ') . $document;
+    }
+
+    /**
+     * Notitie voor een printregel: document, printer, kanaal en eventueel de
+     * foutmelding, elk op een eigen regel.
+     */
+    public static function printNote(string $document, ?string $printer = null, ?string $channel = null, ?string $error = null): string
+    {
+        $lines = ['Document: ' . $document];
+        if ($printer) {
+            $lines[] = 'Printer: ' . $printer;
+        }
+        if ($channel) {
+            $lines[] = 'Kanaal: ' . $channel;
+        }
+        if ($error) {
+            $lines[] = 'Fout: ' . str($error)->limit(500)->toString();
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /** Logt de huidige prioriteitsstand van de order (na het opslaan). */
+    public static function logPriorityChange(Order $order): void
+    {
+        self::createLog(
+            orderId: $order->id,
+            tag: 'order.priority.changed',
+            note: $order->is_priority ? 'Prioriteit aan' : 'Prioriteit uit',
+        );
+    }
+
+    /** Leesbare namen van de velden die order.details.changed bijhoudt. */
+    public const DETAIL_FIELDS = [
+        'first_name' => 'Voornaam',
+        'last_name' => 'Achternaam',
+        'email' => 'E-mail',
+        'phone_number' => 'Telefoonnummer',
+        'company_name' => 'Bedrijfsnaam',
+        'btw_id' => 'Btw-nummer',
+        'street' => 'Straat',
+        'house_nr' => 'Huisnummer',
+        'zip_code' => 'Postcode',
+        'city' => 'Plaats',
+        'country' => 'Land',
+        'invoice_street' => 'Factuur straat',
+        'invoice_house_nr' => 'Factuur huisnummer',
+        'invoice_zip_code' => 'Factuur postcode',
+        'invoice_city' => 'Factuur plaats',
+        'invoice_country' => 'Factuur land',
+        'note' => 'Notitie',
+    ];
+
+    /**
+     * Logt welke klant-, adres-, factuur- en notitievelden zijn gewijzigd
+     * ("Straat: A -> B, ..."). $original is de stand van vóór het opslaan
+     * (bv. $order->getOriginal() of getAttributes() vooraf). Geen regel als er
+     * niets is gewijzigd.
+     */
+    public static function logDetailChanges(Order $order, array $original): bool
+    {
+        // Ruwe waarden aan beide kanten vergelijken, zodat casts (datums)
+        // geen schijnwijziging geven.
+        $current = $order->getAttributes();
+        $changes = [];
+        foreach (self::DETAIL_FIELDS as $field => $label) {
+            if (! array_key_exists($field, $original) && ! array_key_exists($field, $current)) {
+                continue;
+            }
+
+            $old = self::detailValue($original[$field] ?? null);
+            $new = self::detailValue($current[$field] ?? null);
+
+            if ($old === $new) {
+                continue;
+            }
+
+            $changes[] = $label . ': ' . ($old === '' ? '(leeg)' : $old) . ' -> ' . ($new === '' ? '(leeg)' : $new);
+        }
+
+        if (! $changes) {
+            return false;
+        }
+
+        self::createLog(orderId: $order->id, tag: 'order.details.changed', note: implode(', ', $changes));
+
+        return true;
+    }
+
+    private static function detailValue(mixed $value): string
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('d-m-Y');
+        }
+
+        if (is_array($value)) {
+            return json_encode($value) ?: '';
+        }
+
+        return trim((string) $value);
+    }
+
+    /**
+     * Id van de ingelogde gebruiker, alleen als dat een Dashed-gebruiker is.
+     * De printer-API authenticeert als een Printer-model: dat id is geen user_id.
+     */
+    public static function currentUserId(): ?int
+    {
+        $user = auth()->user();
+
+        return $user instanceof User ? (int) $user->getKey() : null;
+    }
+
+    public static function createLog(int $orderId, string $tag = 'system.note.created', ?string $note = null, ?array $images = null, bool $publicForCustomer = false, bool $isDebugLog = false, ?bool $isSystem = null, ?int $userId = null): void
     {
         if ($isDebugLog && ! config('dashed-ecommerce-core.debug_logs_enabled', false)) {
             return;
@@ -226,7 +420,9 @@ class OrderLog extends Model
 
         $orderLog = new OrderLog();
         $orderLog->order_id = $orderId;
-        $orderLog->user_id = str($tag)->contains('system') ? null : (auth()->user()->id ?? null);
+        // Een expliciete systeemregel draagt geen gebruiker, ook als er
+        // toevallig iemand is ingelogd.
+        $orderLog->user_id = $userId ?? (($isSystem === true || str($tag)->contains('system')) ? null : self::currentUserId());
         $orderLog->tag = $tag;
         $orderLog->note = $note;
         $orderLog->images = $images;

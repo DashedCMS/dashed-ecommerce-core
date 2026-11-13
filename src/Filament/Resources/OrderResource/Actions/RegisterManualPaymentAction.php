@@ -51,6 +51,20 @@ class RegisterManualPaymentAction
             });
     }
 
+    /** "€ 12,50 via Contant" (plus de opmerking), voor het orderlogboek. */
+    public static function logNote(float $amount, string $method, ?string $remark = null): string
+    {
+        $label = [
+            'cash' => 'Contant',
+            'pin' => 'Pin',
+            'bank_transfer' => 'Overboeking',
+        ][$method] ?? ($method !== '' ? ucfirst($method) : 'onbekende methode');
+
+        $note = '€ ' . number_format($amount, 2, ',', '.') . ' via ' . $label;
+
+        return filled($remark) ? $note . ' (' . trim((string) $remark) . ')' : $note;
+    }
+
     public function handle(Order $order, array $data): void
     {
         $amount = (float) $data['amount'];
@@ -70,6 +84,13 @@ class RegisterManualPaymentAction
                 'manual' => true,
             ],
         ]);
+
+        // Altijd loggen, ook als de status daarna niet verandert.
+        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+            orderId: $order->id,
+            tag: 'order.manual-payment.registered',
+            note: self::logNote($amount, (string) $data['payment_method'], $data['note'] ?? null),
+        );
 
         if ($order->isConcept()) {
             $order->status = 'pending';

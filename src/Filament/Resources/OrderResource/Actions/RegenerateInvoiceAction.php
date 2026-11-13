@@ -39,5 +39,7 @@ class RegenerateInvoiceAction
         }
 
         $order->createNormalInvoice();
+
+        \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(orderId: $order->id, tag: 'order.invoice.regenerated');
     }
 }

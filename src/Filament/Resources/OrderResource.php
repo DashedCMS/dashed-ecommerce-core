@@ -620,6 +620,7 @@ class OrderResource extends Resource
                     ->action(function ($record) {
                         // forceFill: onafhankelijk van de mass-assignment-config van Order.
                         $record->forceFill(['is_priority' => ! $record->is_priority])->save();
+                        \Dashed\DashedEcommerceCore\Models\OrderLog::logPriorityChange($record);
                     }),
                 Action::make('deleteDraft')
                     ->label(__('Verwijderen'))
@@ -815,13 +816,17 @@ class OrderResource extends Resource
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel(__('Sluiten'))
                     ->action(function (Order $record, array $data): void {
+                        // Via de gewone weg, zodat elke wijziging in het
+                        // orderlogboek komt (en de fulfillment-mail/event vuurt).
                         if (isset($data['fulfillment_status'])) {
-                            $record->fulfillment_status = $data['fulfillment_status'];
+                            $record->changeFulfillmentStatus($data['fulfillment_status']);
                         }
-                        if (isset($data['retour_status'])) {
+                        if (isset($data['retour_status']) && $data['retour_status'] !== $record->retour_status) {
                             $record->retour_status = $data['retour_status'];
+                            $record->save();
+
+                            OrderLog::createLog(orderId: $record->id, tag: 'order.changed-retour-status-to-' . $data['retour_status']);
                         }
-                        $record->save();
                     }),
             ])
             ->toolbarActions([

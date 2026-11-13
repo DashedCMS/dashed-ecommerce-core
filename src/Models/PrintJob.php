@@ -36,7 +36,147 @@ class PrintJob extends Model
             if (! $job->ulid) {
                 $job->ulid = (string) Str::ulid();
             }
+
+            // Wie en via welk kanaal, voor het orderlogboek. De aanmaakplek mag
+            // het kanaal zelf meegeven; anders afleiden uit de context.
+            if (! self::hasLogColumns()) {
+                // Migratie nog niet gedraaid (bv. vlak na een deploy): niet
+                // in kolommen schrijven die er nog niet zijn.
+                unset($job->user_id, $job->channel);
+
+                return;
+            }
+            if (! $job->channel) {
+                $job->channel = self::detectChannel();
+            }
+            // Automatisch klaargezette opdrachten zijn van het systeem, ook als
+            // er toevallig iemand is ingelogd (bv. een listener bij betaald).
+            if (! $job->user_id && $job->channel !== self::CHANNEL_AUTOMATIC) {
+                $job->user_id = OrderLog::currentUserId();
+            }
         });
+
+        static::created(function (self $job): void {
+            if (! $job->order_id) {
+                return;
+            }
+
+            rescue(fn () => OrderLog::createLog(
+                orderId: (int) $job->order_id,
+                tag: 'order.print.queued',
+                note: OrderLog::printNote($job->documentLabel(), $job->printerName(), self::channelLabel($job->channel ?? self::detectChannel())),
+                isSystem: $job->getAttribute('user_id') ? null : true,
+                userId: $job->getAttribute('user_id') ? (int) $job->getAttribute('user_id') : null,
+            ), report: true);
+        });
+    }
+
+    private static ?bool $hasLogColumns = null;
+
+    /** Bestaan user_id en channel al (migratie 2026_11_13_100000)? */
+    public static function hasLogColumns(): bool
+    {
+        return self::$hasLogColumns ??= rescue(
+            fn () => \Illuminate\Support\Facades\Schema::hasColumns('dashed__print_jobs', ['user_id', 'channel']),
+            false,
+            false,
+        );
+    }
+
+    public const CHANNEL_CMS = 'cms';
+
+    public const CHANNEL_APP = 'app';
+
+    public const CHANNEL_AUTOMATIC = 'automatisch';
+
+    public const CHANNEL_POS = 'kassa';
+
+    /**
+     * Kanaal uit de context: een API-verzoek is de app, een ingelogde
+     * gebruiker op een gewone pagina het CMS, al het andere (wachtrij,
+     * console, listeners zonder gebruiker) automatisch.
+     */
+    public static function detectChannel(): string
+    {
+        if (! app()->runningInConsole() && app()->bound('request')) {
+            $request = request();
+            if ($request->is('api/v1/point-of-sale/*')) {
+                return self::CHANNEL_POS;
+            }
+            if ($request->is('api/*')) {
+                return self::CHANNEL_APP;
+            }
+
+            if (OrderLog::currentUserId()) {
+                return self::CHANNEL_CMS;
+            }
+        }
+
+        return self::CHANNEL_AUTOMATIC;
+    }
+
+    public static function channelLabel(?string $channel): ?string
+    {
+        return match ($channel) {
+            self::CHANNEL_CMS => 'CMS',
+            self::CHANNEL_APP => 'app',
+            self::CHANNEL_AUTOMATIC => 'automatisch',
+            self::CHANNEL_POS => 'kassa',
+            null, '' => null,
+            default => $channel,
+        };
+    }
+
+    /** Documentsoort in het Nederlands (verzendlabel, pakbon, factuur). */
+    public function documentLabel(): string
+    {
+        return $this->type instanceof PrintJobType ? $this->type->label() : (string) $this->type;
+    }
+
+    public function printerName(): ?string
+    {
+        if (! $this->printer_id) {
+            return null;
+        }
+
+        $printer = $this->relationLoaded('printer') ? $this->printer : Printer::find($this->printer_id);
+
+        return $printer?->name ?: null;
+    }
+
+    /**
+     * Systeemregel in het orderlogboek bij klaar of mislukt. Nooit laten
+     * falen: de printer-worker moet zijn status altijd kwijt kunnen.
+     */
+    private function logResult(string $tag, ?string $error = null): void
+    {
+        if (! $this->order_id) {
+            return;
+        }
+
+        rescue(fn () => OrderLog::createLog(
+            orderId: (int) $this->order_id,
+            tag: $tag,
+            note: OrderLog::printNote($this->documentLabel(), $this->printerName(), null, $error),
+            isSystem: true,
+        ), report: true);
+    }
+
+    /**
+     * Een handmatige actie op de printopdracht (opnieuw, annuleren) in het
+     * orderlogboek, door de ingelogde gebruiker.
+     */
+    public function logManualAction(string $tag): void
+    {
+        if (! $this->order_id) {
+            return;
+        }
+
+        rescue(fn () => OrderLog::createLog(
+            orderId: (int) $this->order_id,
+            tag: $tag,
+            note: OrderLog::printNote($this->documentLabel(), $this->printerName()),
+        ), report: true);
     }
 
     public function order(): BelongsTo
@@ -85,6 +225,8 @@ class PrintJob extends Model
             'status' => PrintJobStatus::Done,
             'printed_at' => now(),
         ]);
+
+        $this->logResult('order.print.done');
 
         if ($this->type !== PrintJobType::ShippingLabel) {
             return;
@@ -137,6 +279,8 @@ class PrintJob extends Model
             'error_message' => $errorMessage,
             'failed_at' => now(),
         ]);
+
+        $this->logResult('order.print.failed', $errorMessage);
     }
 
     public function retry(): void
@@ -148,6 +292,20 @@ class PrintJob extends Model
             'claimed_at' => null,
             'failed_at' => null,
         ]);
+    }
+
+    /** Opnieuw in de wachtrij door een gebruiker (CMS of app), met orderlog. */
+    public function retryByUser(): void
+    {
+        $this->retry();
+        $this->logManualAction('order.print.retried');
+    }
+
+    /** Geannuleerd door een gebruiker (CMS of app), met orderlog. */
+    public function cancelByUser(): void
+    {
+        $this->update(['status' => PrintJobStatus::Cancelled]);
+        $this->logManualAction('order.print.cancelled');
     }
 
     protected static function newFactory(): PrintJobFactory

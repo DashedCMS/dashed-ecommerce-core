@@ -74,8 +74,8 @@ class MobileOrderActions
                         'url' => $data['link'] ?? null,
                     ]);
                     $trackAndTrace->mailCustomer = array_key_exists('mail_customer', $data) ? (bool) $data['mail_customer'] : null;
+                    // De track & trace-observer logt dit al; geen tweede regel.
                     $trackAndTrace->save();
-                    OrderLog::createLog(orderId: $o->id, tag: 'order.track-and-trace-added', note: 'Track & trace toegevoegd via de app.');
                 },
             ],
             [
@@ -89,9 +89,12 @@ class MobileOrderActions
                 ],
                 'visible' => fn (Order $o) => true,
                 'handle' => function (Order $o, array $data): void {
+                    if ($o->retour_status === $data['retourStatus']) {
+                        return;
+                    }
                     $o->retour_status = $data['retourStatus'];
                     $o->save();
-                    OrderLog::createLog(orderId: $o->id, tag: 'order.retour-status-changed', note: 'Retourstatus gewijzigd via de app.');
+                    OrderLog::createLog(orderId: $o->id, tag: 'order.changed-retour-status-to-' . $data['retourStatus'], note: 'Via de app.');
                 },
             ],
             [
@@ -137,6 +140,7 @@ class MobileOrderActions
                 'visible' => fn (Order $o) => true,
                 'handle' => function (Order $o, array $data): void {
                     $o->createNormalInvoice();
+                    OrderLog::createLog(orderId: $o->id, tag: 'order.invoice.regenerated');
                 },
             ],
             [
@@ -195,8 +199,8 @@ class MobileOrderActions
                     // Zelfde kern als OrderController::packed() (packed=true-pad):
                     // packed_at zetten, fulfilment-status meesynchroniseren, loggen.
                     $o->forceFill(['packed_at' => now()])->save();
+                    // changeFulfillmentStatus logt de statuswijziging al.
                     $o->changeFulfillmentStatus('packed');
-                    OrderLog::createLog(orderId: $o->id, tag: 'order.packed');
                 },
             ],
             [

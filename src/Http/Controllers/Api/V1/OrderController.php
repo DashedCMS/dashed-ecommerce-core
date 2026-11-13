@@ -188,7 +188,9 @@ class OrderController extends Controller
             'invoice_country' => ['sometimes', 'nullable', 'string', 'max:255'],
         ]);
 
+        $original = $model->getAttributes();
         $model->fill($data)->save();
+        \Dashed\DashedEcommerceCore\Models\OrderLog::logDetailChanges($model, $original);
 
         activity()
             ->performedOn($model)
@@ -1082,6 +1084,12 @@ class OrderController extends Controller
                 $record->forceFill(['label_printed' => 1])->save();
             }
 
+            \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                orderId: (int) $record->order_id,
+                tag: 'order.label.downloaded',
+                note: 'Vervoerder: ' . ($carrier === 'myparcel' ? 'MyParcel' : ucfirst($carrier)) . ', via de app',
+            );
+
             return \Illuminate\Support\Facades\Storage::disk('public')->url($path);
         }
 
@@ -1241,6 +1249,7 @@ class OrderController extends Controller
             'printable_type' => $printableType,
             'printable_id' => $printableId,
             'status' => \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending,
+            'channel' => \Dashed\DashedEcommerceCore\Models\PrintJob::CHANNEL_APP,
         ]);
 
         activity()->performedOn($model)->causedBy($request->user())->withProperties($data)->log('mobile-api: ' . strtolower($jobType->label()) . ' geprint');
@@ -1275,16 +1284,22 @@ class OrderController extends Controller
             // 'unhandled', maar alléén als de order nog op 'packed' staat (zo
             // overschrijven we geen latere status zoals 'shipped'). changeFulfillmentStatus
             // is idempotent en verstuurt de geconfigureerde fulfillment-mail + event.
+            $statusBefore = $model->fulfillment_status;
             if ($packed) {
                 $model->changeFulfillmentStatus('packed');
             } elseif ($model->fulfillment_status === 'packed') {
                 $model->changeFulfillmentStatus('unhandled');
             }
 
-            \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
-                orderId: $model->id,
-                tag: $packed ? 'order.packed' : 'order.unpacked',
-            );
+            // changeFulfillmentStatus logt een statuswijziging al. Alleen als de
+            // status bleef staan (bv. inpakken ongedaan bij een verzonden
+            // order) een eigen regel, anders stond alles dubbel in het logboek.
+            if ($statusBefore === $model->fulfillment_status && ! ($packed && $statusBefore === 'packed')) {
+                \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                    orderId: $model->id,
+                    tag: $packed ? 'order.packed' : 'order.unpacked',
+                );
+            }
 
             activity()->performedOn($model)->causedBy($request->user())
                 ->log('mobile-api: order ' . ($packed ? 'ingepakt' : 'inpakken ongedaan gemaakt'));
@@ -1369,6 +1384,7 @@ class OrderController extends Controller
             'type' => $type,
             'order_id' => $model->id,
             'status' => \Dashed\DashedEcommerceCore\Enums\PrintJobStatus::Pending,
+            'channel' => \Dashed\DashedEcommerceCore\Models\PrintJob::CHANNEL_APP,
         ]);
 
         return true;
@@ -1593,7 +1609,11 @@ class OrderController extends Controller
     {
         $model = Order::thisSite()->findOrFail($order);
         $on = $request->has('on') ? $request->boolean('on') : ! $model->is_priority;
+        $wasPriority = (bool) $model->is_priority;
         $model->forceFill(['is_priority' => $on])->save();
+        if ($wasPriority !== $on) {
+            \Dashed\DashedEcommerceCore\Models\OrderLog::logPriorityChange($model);
+        }
 
         return response()->json(['data' => ['id' => $model->id, 'is_priority' => (bool) $model->is_priority]]);
     }

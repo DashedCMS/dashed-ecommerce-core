@@ -89,6 +89,7 @@ class ViewOrder extends ViewRecord
             'type' => $type,
             'order_id' => $this->record->id,
             'status' => PrintJobStatus::Pending,
+            'channel' => PrintJob::CHANNEL_CMS,
         ]);
 
         return true;
@@ -148,6 +149,7 @@ class ViewOrder extends ViewRecord
                 ->authorize($mayEdit)
                 ->action(function () {
                     $this->record->forceFill(['is_priority' => ! $this->record->is_priority])->save();
+                    \Dashed\DashedEcommerceCore\Models\OrderLog::logPriorityChange($this->record);
                     $this->record->refresh();
                 }),
             Action::make('Vorige bestelling')
@@ -307,7 +309,7 @@ class ViewOrder extends ViewRecord
                 ->modalDescription(__('De huidige bezorgstatus van de verzendlabels van deze bestelling wordt op de achtergrond opgehaald bij de vervoerder(s).'))
                 ->modalSubmitActionLabel(__('Bijwerken'))
                 ->action(function (): void {
-                    \Dashed\DashedEcommerceCore\Jobs\SyncOrderLabelStatusesJob::dispatch($this->record);
+                    \Dashed\DashedEcommerceCore\Jobs\SyncOrderLabelStatusesJob::dispatch($this->record, \Dashed\DashedEcommerceCore\Models\OrderLog::currentUserId());
 
                     Notification::make()
                         ->title(__('Bijwerken gestart'))

@@ -28,7 +28,7 @@ it('rendert elke retour- en terugbetaaltag zonder ERROR', function () {
     }
 });
 
-it('valt voor een onbekende tag terug op de notitie', function () {
+it('valt voor een onbekende tag terug op de notitie, met de actor ervoor', function () {
     $order = Order::create(['email' => 'a@b.nl', 'status' => 'paid', 'first_name' => 'Kim', 'last_name' => 'Jansen']);
     $log = new OrderLog();
     $log->order_id = $order->id;
@@ -36,5 +36,5 @@ it('valt voor een onbekende tag terug op de notitie', function () {
     $log->note = 'Vrije notitie';
     $log->save();
 
-    expect($log->fresh()->tag())->toBe('Vrije notitie');
+    expect($log->fresh()->tag())->toBe($order->name . ' Vrije notitie');
 });

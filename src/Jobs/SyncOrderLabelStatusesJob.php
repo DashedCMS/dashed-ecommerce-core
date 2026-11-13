@@ -22,7 +22,8 @@ class SyncOrderLabelStatusesJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public Order $order)
+    /** @param  int|null  $userId  wie de knop indrukte (de job zelf draait zonder login) */
+    public function __construct(public Order $order, public ?int $userId = null)
     {
         $this->onQueue('ecommerce');
     }
@@ -39,11 +40,16 @@ class SyncOrderLabelStatusesJob implements ShouldQueue
             }
         }
 
-        OrderLog::create([
-            'order_id' => $this->order->id,
-            'user_id' => null,
-            'tag' => 'order.labelstatus.synced',
-            'note' => "{$updated} labelstatussen bijgewerkt",
-        ]);
+        // ?? null: een job die vóór deze versie in de wachtrij kwam, kent
+        // de eigenschap nog niet.
+        $userId = $this->userId ?? null;
+
+        OrderLog::createLog(
+            orderId: $this->order->id,
+            tag: 'order.labelstatus.synced',
+            note: "{$updated} labelstatussen bijgewerkt",
+            isSystem: $userId ? null : true,
+            userId: $userId,
+        );
     }
 }

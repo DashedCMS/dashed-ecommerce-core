@@ -57,6 +57,7 @@ class CreatePackingSlipPrintJobListener implements ShouldQueue
             'type' => PrintJobType::PackingSlip,
             'order_id' => $event->order->id,
             'status' => PrintJobStatus::Pending,
+            'channel' => PrintJob::CHANNEL_AUTOMATIC,
         ]);
     }
 }

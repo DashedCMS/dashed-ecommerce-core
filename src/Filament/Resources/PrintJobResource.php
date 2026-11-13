@@ -75,11 +75,11 @@ class PrintJobResource extends Resource
                 Action::make('retry')
                     ->visible(fn (PrintJob $r) => $r->status === PrintJobStatus::Failed)
                     ->color('warning')
-                    ->action(fn (PrintJob $r) => $r->retry()),
+                    ->action(fn (PrintJob $r) => $r->retryByUser()),
                 Action::make('cancel')
                     ->visible(fn (PrintJob $r) => in_array($r->status, [PrintJobStatus::Pending, PrintJobStatus::Claimed], true))
                     ->color('danger')
-                    ->action(fn (PrintJob $r) => $r->update(['status' => PrintJobStatus::Cancelled])),
+                    ->action(fn (PrintJob $r) => $r->cancelByUser()),
                 Action::make('view_order')
                     ->visible(fn (PrintJob $r) => (bool) $r->order_id)
                     ->url(fn (PrintJob $r) => route('filament.dashed.resources.orders.view', $r->order_id)),
@@ -89,11 +89,11 @@ class PrintJobResource extends Resource
                     ->label(__('Opnieuw proberen'))
                     ->action(fn (Collection $records) => $records
                         ->filter(fn (PrintJob $j) => $j->status === PrintJobStatus::Failed)
-                        ->each(fn (PrintJob $j) => $j->retry())),
+                        ->each(fn (PrintJob $j) => $j->retryByUser())),
                 BulkAction::make('cancel_bulk')
                     ->label(__('Annuleren'))
                     ->action(fn (Collection $records) => $records->each(
-                        fn (PrintJob $j) => $j->update(['status' => PrintJobStatus::Cancelled])
+                        fn (PrintJob $j) => $j->cancelByUser()
                     )),
             ]);
     }

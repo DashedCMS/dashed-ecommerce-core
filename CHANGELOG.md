@@ -2,6 +2,21 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Added
+- **Elke orderactie in het orderlogboek.** Nieuwe tags met Nederlandse tekst in `OrderLog::tag()`: `order.label.created`, `order.label.downloaded`, `order.label.deleted`, `order.label.requeued`, `order.return-label.created`, `order.print.queued`, `order.print.done`, `order.print.failed`, `order.print.retried`, `order.print.cancelled`, `order.details.changed`, `order.manual-payment.registered`, `order.invoice.regenerated`, `order.priority.changed` en `order.sent-to-fulfillment`. Een onbekende tag met een notitie toont nu "<actor> <notitie>" in plaats van alleen de notitie.
+- **Printen.** Elke printopdracht met een order logt bij het aanmaken `order.print.queued` (document, printer, kanaal CMS/app/automatisch/kassa) en bij klaar of mislukt een systeemregel met printer en foutmelding. `dashed__print_jobs` krijgt `user_id` en `channel` (migratie `2026_11_13_100000`); het kanaal wordt per aanmaakplek meegegeven of uit de context afgeleid. Direct geprinte facturen, pakbonnen en kassabonnen (`Order::printInvoice/printPackingSlip/printReceipt`) loggen ook; `printReceipt()` neemt optioneel een kanaal. Opnieuw proberen en annuleren van een printopdracht (CMS en app) loggen via `PrintJob::retryByUser()`/`cancelByUser()`.
+- Verzendlabel ophalen via de app (`label-url`) logt `order.label.downloaded`.
+- Gegevens wijzigen (CMS "Gegevens wijzigen" en de app) logt `order.details.changed` met "Veld: oud -> nieuw" via `OrderLog::logDetailChanges()`; geen regel zonder wijziging.
+- Een handmatige betaling logt bedrag en methode (`order.manual-payment.registered`), ook als de status niet verandert. Factuur regenereren (CMS, app-endpoint en app-actie) logt `order.invoice.regenerated`. Prioriteit aan/uit (CMS-tabel, orderpagina en app) logt `order.priority.changed`.
+- `OrderLog::createLog()` neemt een optionele `$userId` die voorgaat; `SyncOrderLabelStatusesJob` krijgt het id van wie de knop indrukte.
+
+### Fixed
+- Het id van een ingelogde printer (de printer-API authenticeert als `Printer`) werd als `user_id` opgeslagen in orderlogs, track & trace-logs en fulfilment-statuslogs. Alleen een Dashed-gebruiker telt nu (`OrderLog::currentUserId()`); een expliciete systeemregel draagt nooit een gebruiker.
+- De app-actie "Verander retourstatus" logt de bekende tag `order.changed-retour-status-to-{status}` (was een onbekende tag) en niets als de status gelijk bleef. "Track & trace toevoegen" via de app en "Markeer als ingepakt" (app-actie en `packed`-endpoint) logden dubbel naast de track & trace- en statusregel.
+- De snelle acties in de ordertabel zetten fulfilment- en retourstatus nu via `changeFulfillmentStatus()` en met een retourstatuslog, in plaats van stil op te slaan.
+
 ## v4.187.0 - 2026-11-12
 
 ### Added

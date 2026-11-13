@@ -40,10 +40,10 @@ class OrderTrackAndTrace extends Model
             // (juist) de automatisch aangemaakte vanuit een labelkoppeling.
             $orderLog = new OrderLog();
             $orderLog->order_id = $trackAndTrace->order->id;
-            $orderLog->user_id = auth()->user()->id ?? null;
+            $orderLog->user_id = OrderLog::currentUserId();
             $orderLog->tag = 'order.track-and-trace.created';
             $orderLog->note = trim(($trackAndTrace->delivery_company ?: $trackAndTrace->supplier) . ': ' . $trackAndTrace->code);
-            $orderLog->is_system = auth()->guest();
+            $orderLog->is_system = $orderLog->user_id === null;
             $orderLog->save();
 
             if ($trackAndTrace->order->email && $trackAndTrace->shouldMailCustomer()) {

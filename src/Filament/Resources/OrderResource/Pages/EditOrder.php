@@ -5,12 +5,26 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Models\AbandonedCartEmail;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class EditOrder extends EditRecord
 {
     protected static string $resource = OrderResource::class;
+
+    /** Stand van de order vóór het opslaan, voor het orderlogboek. */
+    protected array $originalAttributes = [];
+
+    protected function beforeSave(): void
+    {
+        $this->originalAttributes = $this->record->getAttributes();
+    }
+
+    protected function afterSave(): void
+    {
+        OrderLog::logDetailChanges($this->record, $this->originalAttributes);
+    }
 
     protected function getHeaderActions(): array
     {

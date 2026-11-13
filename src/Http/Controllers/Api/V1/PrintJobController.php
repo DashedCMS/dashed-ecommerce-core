@@ -53,7 +53,7 @@ class PrintJobController extends Controller
     public function retry(int $id): JsonResponse
     {
         $job = PrintJob::findOrFail($id);
-        $job->retry();
+        $job->retryByUser();
 
         return response()->json(['data' => $this->payload($job->fresh(['order:id,invoice_id', 'printer:id,name']))]);
     }
@@ -62,7 +62,7 @@ class PrintJobController extends Controller
     public function cancel(int $id): JsonResponse
     {
         $job = PrintJob::findOrFail($id);
-        $job->update(['status' => PrintJobStatus::Cancelled]);
+        $job->cancelByUser();
 
         return response()->json(['data' => $this->payload($job->fresh(['order:id,invoice_id', 'printer:id,name']))]);
     }
