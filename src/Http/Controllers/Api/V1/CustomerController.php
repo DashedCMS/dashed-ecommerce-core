@@ -139,6 +139,9 @@ class CustomerController extends Controller
                 'recent_orders' => $recent->map(fn ($o) => $this->orderRow($o))->all(),
                 // Alias: oudere clients lezen `orders`.
                 'orders' => $recent->map(fn ($o) => $this->orderRow($o))->all(),
+                // Chronologische activiteitstijdlijn (plaatsingen + orderlogs) over
+                // de orders van deze klant. Oudere clients negeren dit veld simpelweg.
+                'timeline' => $this->buildTimeline($email),
             ],
         ]);
     }
@@ -153,6 +156,57 @@ class CustomerController extends Controller
             'fulfillment_status' => $o->fulfillment_status,
             'created_at' => optional($o->created_at)->toIso8601String(),
         ];
+    }
+
+    /**
+     * Bouwt een samengevoegde, aflopend-chronologische tijdlijn uit de orders van
+     * een klant: een "geplaatst"-event per order plus elk orderlog-event (status-
+     * wijzigingen, mails, notities, retouren — het log is de event-stroom). Puur
+     * read-only aggregatie binnen ec-core; geen schema-wijziging.
+     */
+    private function buildTimeline(string $email): array
+    {
+        $orders = Order::thisSite()
+            ->where('email', $email)
+            ->with('logs')
+            ->orderByDesc('created_at')
+            ->limit(25)
+            ->get();
+
+        $events = [];
+        foreach ($orders as $order) {
+            $ref = $order->invoice_id ?: ('#' . $order->id);
+
+            if ($order->created_at) {
+                $events[] = [
+                    'type' => 'order_placed',
+                    'order_id' => (int) $order->id,
+                    'order_ref' => $ref,
+                    'amount' => $order->total !== null ? (float) $order->total : null,
+                    'at' => $order->created_at->toIso8601String(),
+                ];
+            }
+
+            foreach ($order->logs as $log) {
+                $tag = trim((string) ($log->tag ?? ''));
+                $note = trim((string) ($log->note ?? ''));
+                if (($tag === '' && $note === '') || ! $log->created_at) {
+                    continue;
+                }
+                $events[] = [
+                    'type' => 'log',
+                    'order_id' => (int) $order->id,
+                    'order_ref' => $ref,
+                    'tag' => $tag !== '' ? $tag : null,
+                    'note' => $note !== '' ? $note : null,
+                    'at' => $log->created_at->toIso8601String(),
+                ];
+            }
+        }
+
+        usort($events, fn ($a, $b) => strcmp($b['at'], $a['at']));
+
+        return array_slice($events, 0, 60);
     }
 
     private function listRow($r): array
