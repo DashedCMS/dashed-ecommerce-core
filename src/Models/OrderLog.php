@@ -237,6 +237,8 @@ class OrderLog extends Model
             $string = 'heeft de gegevens gewijzigd.';
         } elseif ($this->tag == 'order.manual-payment.registered') {
             $string = 'heeft een betaling geregistreerd.';
+        } elseif ($this->tag == 'order.concept.activated') {
+            $string = 'heeft de conceptbestelling definitief gemaakt, wachten op betaling.';
         } elseif ($this->tag == 'order.invoice.regenerated') {
             $string = 'heeft de factuur opnieuw gemaakt.';
         } elseif ($this->tag == 'order.priority.changed') {

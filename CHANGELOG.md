@@ -15,6 +15,8 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ### Fixed
 - Het id van een ingelogde printer (de printer-API authenticeert als `Printer`) werd als `user_id` opgeslagen in orderlogs, track & trace-logs en fulfilment-statuslogs. Alleen een Dashed-gebruiker telt nu (`OrderLog::currentUserId()`); een expliciete systeemregel draagt nooit een gebruiker.
 - De app-actie "Verander retourstatus" logt de bekende tag `order.changed-retour-status-to-{status}` (was een onbekende tag) en niets als de status gelijk bleef. "Track & trace toevoegen" via de app en "Markeer als ingepakt" (app-actie en `packed`-endpoint) logden dubbel naast de track & trace- en statusregel.
+- De app-actie "Annuleer bestelling" negeerde het vinkje "Klant e-mailen over annulering": `Order::changeStatus('cancelled', true)` geeft de mailvlag nu door aan `markAsCancelled()`.
+- Een conceptbestelling die door een betaallink of handmatige betaling op "wacht op betaling" komt, logt dat nu (`order.concept.activated`).
 - De snelle acties in de ordertabel zetten fulfilment- en retourstatus nu via `changeFulfillmentStatus()` en met een retourstatuslog, in plaats van stil op te slaan.
 
 ## v4.187.0 - 2026-11-12

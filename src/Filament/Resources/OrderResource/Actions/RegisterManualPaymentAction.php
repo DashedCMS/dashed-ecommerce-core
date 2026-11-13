@@ -95,6 +95,11 @@ class RegisterManualPaymentAction
         if ($order->isConcept()) {
             $order->status = 'pending';
             $order->save();
+            \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                orderId: $order->id,
+                tag: 'order.concept.activated',
+                note: 'Bij het registreren van een betaling.',
+            );
         }
 
         if (abs($order->outstandingAmount()) < 0.001) {

@@ -1390,7 +1390,7 @@ class Order extends Model
             match ($newStatus) {
                 'paid' => $this->markAsPaid(),
                 'partially_paid' => $this->markAsPartiallyPaid(),
-                'cancelled' => $this->markAsCancelled(),
+                'cancelled' => $this->markAsCancelled((bool) $sendMail),
                 'waiting_for_confirmation' => $this->markAsWaitingForConfirmation(),
             };
         }

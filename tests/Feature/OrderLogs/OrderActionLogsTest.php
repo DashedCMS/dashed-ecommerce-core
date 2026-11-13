@@ -144,3 +144,21 @@ it('logt gewijzigde gegevens als "veld: oud -> nieuw" en niets zonder wijziging'
     expect(OrderLog::logDetailChanges($order, $order->getAttributes()))->toBeFalse();
     expect(OrderLog::where('order_id', $order->id)->where('tag', 'order.details.changed')->count())->toBe(1);
 });
+
+it('stuurt bij annuleren via changeStatus de annuleringsmail als daarom gevraagd wordt', function () {
+    $order = actionLogOrder(['status' => 'pending']);
+
+    $order->changeStatus('cancelled', true);
+
+    Mail::assertSent(\Dashed\DashedEcommerceCore\Mail\OrderCancelledMail::class);
+});
+
+it('logt het definitief maken van een concept bij een betaallink', function () {
+    $order = actionLogOrder(['status' => 'concept']);
+
+    rescue(fn () => (new \Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction())
+        ->handle($order, ['amount' => 10, 'email' => 'klant@example.com']), report: false);
+
+    expect($order->fresh()->status)->toBe('pending')
+        ->and(OrderLog::where('order_id', $order->id)->where('tag', 'order.concept.activated')->exists())->toBeTrue();
+});
