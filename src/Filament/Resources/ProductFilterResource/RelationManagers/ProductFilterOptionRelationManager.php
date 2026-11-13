@@ -10,7 +10,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
-use RalphJSmit\Filament\MediaLibrary\Filament\Tables\Columns\MediaColumn;
+use Dashed\DashedFiles\Filament\Tables\Columns\MediaImageColumn;
 
 class ProductFilterOptionRelationManager extends RelationManager
 {
@@ -34,7 +34,7 @@ class ProductFilterOptionRelationManager extends RelationManager
                     ->label(__('Naam'))
                     ->searchable()
                     ->sortable(),
-                MediaColumn::make('image')
+                MediaImageColumn::make('image')
                     ->label(__('Afbeelding')),
                 IconColumn::make('in_stock')
                     ->label(__('Op voorraad'))

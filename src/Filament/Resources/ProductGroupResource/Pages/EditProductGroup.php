@@ -32,6 +32,7 @@ class EditProductGroup extends EditRecord
 {
     use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
     use HasEditableCMSActions;
+    use \Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\AddsNewImages;
 
     protected static string $resource = ProductGroupResource::class;
 
@@ -129,12 +130,8 @@ class EditProductGroup extends EditRecord
         //        unset($data['productCharacteristics']);
         unset($data['productExtras']);
 
-        foreach ($data['new_images'] ?? [] as $key => $image) {
-            $url = Storage::disk('dashed')->url($image);
-
-            $data['images'][] = mediaHelper()->uploadFromPath($url, 'producten', true);
-
-            Storage::disk('dashed')->delete($image);
+        foreach ($this->addNewImages((array) ($data['new_images'] ?? [])) as $imageId) {
+            $data['images'][] = $imageId;
         }
 
         unset($data['new_images']);

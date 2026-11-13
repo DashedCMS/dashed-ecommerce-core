@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedEcommerceCore\Models\Product;
@@ -402,6 +403,23 @@ class ProductController extends Controller
 
         foreach ($request->file('images', []) as $file) {
             if (! $file instanceof UploadedFile) {
+                continue;
+            }
+
+            // Rechtstreeks de inname in, zonder tussenstop op de publieke
+            // schijf. Een oudere dashed-files kent de inname nog niet.
+            if (class_exists(\Dashed\DashedFiles\Classes\Ingest\IncomingMedia::class) && method_exists(\Dashed\DashedFiles\Classes\MediaLibrary::class, 'ingest')) {
+                try {
+                    $incoming = \Dashed\DashedFiles\Classes\Ingest\IncomingMedia::fromUploadedFile($file, 'api', mediaHelper()->getFolderId('producten'));
+
+                    $ids[] = (int) app(\Dashed\DashedFiles\Classes\MediaLibrary::class)->ingest($incoming)->item->id;
+                } catch (\Dashed\DashedFiles\Classes\Ingest\MediaRejectedException $exception) {
+                    Log::warning('Productfoto via de API geweigerd', ['name' => $file->getClientOriginalName(), 'reason' => $exception->getMessage()]);
+                } catch (\Throwable $exception) {
+                    // Eén mislukte foto mag het verzoek niet halverwege afbreken: de foto's ervoor zijn al opgeslagen.
+                    report($exception);
+                }
+
                 continue;
             }
 

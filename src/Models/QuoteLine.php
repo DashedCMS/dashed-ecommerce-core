@@ -17,7 +17,7 @@ class QuoteLine extends Model
     public const PDF_IMAGE_CONVERSION = 'small';
 
     /** Het bibliotheek-item achter een media-id (dashed-files); geen dependency van dit pakket. */
-    private const MEDIA_ITEM_CLASS = 'RalphJSmit\\Filament\\MediaLibrary\\Models\\MediaLibraryItem';
+    private const MEDIA_ITEM_CLASS = 'Dashed\\DashedFiles\\Models\\MediaItem';
 
     protected $table = 'dashed__quote_lines';
 
