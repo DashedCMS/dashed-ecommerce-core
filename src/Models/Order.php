@@ -369,6 +369,11 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to_user_id');
+    }
+
     public function cart(): BelongsTo
     {
         return $this->belongsTo(Cart::class);

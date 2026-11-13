@@ -138,7 +138,19 @@ class OrderController extends Controller
     /** Laadt de relaties die de detail-resource nodig heeft. */
     private function detail(Order $model): OrderResource
     {
-        return new OrderResource($model->fresh()->load(['orderProducts.product', 'orderPayments', 'trackAndTraces']));
+        return new OrderResource($model->fresh()->load(['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser']));
+    }
+
+    /** Wijst de bestelling toe aan een medewerker (User), of maakt de toewijzing leeg. */
+    public function assign(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $data = $request->validate([
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+        $model->forceFill(['assigned_to_user_id' => $data['user_id'] ?? null])->save();
+
+        return $this->detail($model);
     }
 
     public function update(Request $request, int $order): OrderResource
