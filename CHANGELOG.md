@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.188.0 - 2026-11-13
 
 ### Added
 - **Elke orderactie in het orderlogboek.** Nieuwe tags met Nederlandse tekst in `OrderLog::tag()`: `order.label.created`, `order.label.downloaded`, `order.label.deleted`, `order.label.requeued`, `order.return-label.created`, `order.print.queued`, `order.print.done`, `order.print.failed`, `order.print.retried`, `order.print.cancelled`, `order.details.changed`, `order.manual-payment.registered`, `order.invoice.regenerated`, `order.priority.changed` en `order.sent-to-fulfillment`. Een onbekende tag met een notitie toont nu "<actor> <notitie>" in plaats van alleen de notitie.
