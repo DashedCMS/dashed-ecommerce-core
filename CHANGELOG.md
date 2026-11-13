@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.191.0 - 2026-11-13
+
+### Added
+- **Omzet per kanaal in de app.** Nieuw read-only endpoint `GET statistics/channel-breakdown` (`ability:dashboard.read`): betaalde omzet + aantal orders per `order_origin` per periode (default deze maand), site-gescoped. Voedt de sectie "Omzet per kanaal" op het inzichten-scherm.
+- **Order toewijzen aan een medewerker.** Migratie `add_assigned_to_user_id_to_orders` (nullable, geen foreign key), relatie `Order::assignedUser()`, `assigned_user` in de mobiele `OrderResource`, en `POST orders/{order}/assign` (`ability:orders.write`) om een order aan een gebruiker te koppelen of de toewijzing te wissen.
+
 ## v4.189.0 - 2026-11-13
 
 ### Added
