@@ -101,6 +101,7 @@ Route::prefix('api/v1')
         Route::get('products/{product}/activity', [ProductController::class, 'activity'])->middleware('ability:products.read');
 
         Route::get('statistics/sales-analysis', [SalesAnalysisController::class, 'index'])->middleware('ability:dashboard.read');
+        Route::get('statistics/channel-breakdown', [SalesAnalysisController::class, 'channelBreakdown'])->middleware('ability:dashboard.read');
 
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
 
