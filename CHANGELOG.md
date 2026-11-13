@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.189.0 - 2026-11-13
+
+### Added
+- **Klant-tijdlijn in de app.** Het mobiele `customers/profile`-endpoint geeft nu een read-only `timeline`: een aflopend-chronologische samenvoeging van order-plaatsingen en orderlog-events over de bestellingen van de klant (max 60). Read-only aggregatie, geen schema-wijziging.
+- **Verlaten winkelmandjes / pre-order-uitval.** Nieuw read-only endpoint `GET checkout-abandonments` (`ability:orders.read`): site-gescoped, gepagineerd overzicht van afgebroken checkouts uit `CheckoutAbandonment` (e-mailadres, reden, mandjewaarde, cart-id, tijd), optioneel op `reason` gefilterd.
+
 ## v4.188.0 - 2026-11-13
 
 ### Added
