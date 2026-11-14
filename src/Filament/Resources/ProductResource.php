@@ -565,7 +565,7 @@ class ProductResource extends Resource
                     ->label(__('Nieuwe afbeeldingen'))
                     ->visible(fn ($livewire) => $livewire instanceof EditProduct)
                     ->helperText(__('Deze afbeeldingen worden toegevoegd aan de product groep en achter de rest van de afbeeldingen geplaatst. Deze worden opgeslagen in de map: producten'))
-                    ->directory(\Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Concerns\AddsNewImages::NEW_IMAGES_DIRECTORY)
+                    ->directory(\Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Pages\EditProduct::NEW_IMAGES_DIRECTORY)
                     ->image()
                     ->preserveFilenames()
                     ->multiple()

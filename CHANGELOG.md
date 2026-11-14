@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.195.1 - 2026-11-14
+
+### Fixed
+- **Product en productgroep bewerken gaf een 500** ("Cannot access trait constant AddsNewImages::NEW_IMAGES_DIRECTORY directly"): het uploadveld "Nieuwe afbeeldingen" las de constante via de trait, wat PHP niet toestaat. Leest hem nu via `EditProduct`.
+
+
 ## v4.195.0 - 2026-11-14
 
 ### Changed
