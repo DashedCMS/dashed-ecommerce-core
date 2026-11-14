@@ -45,8 +45,9 @@ class OrderController extends Controller
 
     public function index(Request $request): AnonymousResourceCollection
     {
-        // orderProducts eager-loaden voor de inline product-preview in de lijst.
-        $query = Order::thisSite()->with('orderProducts:id,order_id,name,quantity');
+        // orderProducts + toegewezen medewerker eager-loaden voor de inline
+        // product-preview en de assignee-badge in de lijst.
+        $query = Order::thisSite()->with(['orderProducts:id,order_id,name,quantity', 'assignedUser:id,name']);
 
         // Dashboard-shortcut: alleen onafgehandelde orders.
         if ($request->boolean('unhandled')) {
@@ -56,6 +57,14 @@ class OrderController extends Controller
         // Alleen prioriteit-orders (handmatige markering, zie ook Filament-filter).
         if ($request->boolean('priority')) {
             $query->where('is_priority', true);
+        }
+
+        // Toewijzing: aan mij (ingelogde gebruiker) of aan een specifieke
+        // medewerker. `assigned_to_me` wint van een losse user-id.
+        if ($request->boolean('assigned_to_me')) {
+            $query->where('assigned_to_user_id', $request->user()->id);
+        } elseif ($assignedTo = (int) $request->query('assigned_to_user_id')) {
+            $query->where('assigned_to_user_id', $assignedTo);
         }
 
         $this->applyArrayFilter($query, 'status', $request->query('status'));
