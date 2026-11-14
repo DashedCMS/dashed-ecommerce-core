@@ -20,6 +20,9 @@ class OrderSummaryResource extends JsonResource
             'status' => $this->status,
             'fulfillment_status' => $this->fulfillment_status,
             'is_priority' => (bool) $this->is_priority,
+            'assigned_user' => $this->assigned_to_user_id
+                ? ['id' => (int) $this->assigned_to_user_id, 'name' => optional($this->assignedUser)->name]
+                : null,
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             'created_at' => optional($this->created_at)->toIso8601String(),
