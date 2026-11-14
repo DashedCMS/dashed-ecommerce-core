@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.192.0 - 2026-11-14
+
+### Added
+- **Orders filteren op toegewezen medewerker.** `OrderController@index` accepteert `assigned_to_me` (de ingelogde gebruiker) en `assigned_to_user_id`; `OrderSummaryResource` geeft `assigned_user` terug (eager-loaded `assignedUser:id,name`), zodat de app-lijst een assignee-badge toont en op "aan mij toegewezen" kan filteren.
+
 ## v4.191.0 - 2026-11-13
 
 ### Added
