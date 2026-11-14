@@ -87,6 +87,19 @@ class Order extends Model
         'order.waiting_for_confirmation',
     ];
 
+    /**
+     * Fulfilmentstatussen waarvoor de verzenddeadline niet meer telt.
+     */
+    public const DEADLINE_DONE_FULFILLMENT_STATUSES = ['packed', 'handled', 'shipped', 'ready_for_pickup'];
+
+    /**
+     * App-resolver voor de verzenddeadline. Krijgt de order en geeft null of
+     * ['ship_by' => ?CarbonInterface, 'deliver_by' => ?CarbonInterface, 'source' => string].
+     *
+     * @var (\Closure(self): ?array)|null
+     */
+    protected static ?\Closure $shippingDeadlineResolver = null;
+
     protected static $logFillable = true;
 
     protected $table = 'dashed__orders';
@@ -108,6 +121,8 @@ class Order extends Model
         'proforma_sent_at' => 'datetime',
         'payment_due_at' => 'datetime',
         'payment_reminders_paused_at' => 'datetime',
+        'ship_by_date' => 'date',
+        'deliver_by_date' => 'date',
     ];
 
     protected $appends = [
@@ -168,6 +183,18 @@ class Order extends Model
             }
         });
 
+        static::saved(function ($order) {
+            if ($order->status !== 'paid' || (! $order->wasRecentlyCreated && ! $order->wasChanged('status'))) {
+                return;
+            }
+
+            try {
+                $order->applyShippingDeadline();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        });
+
         static::created(function ($order) {
             if ($order->discountCode && $order->discount > 0) {
                 if ($order->discountCode->is_giftcard) {
@@ -179,6 +206,137 @@ class Order extends Model
                 }
             }
         });
+    }
+
+    public static function resolveShippingDeadlineUsing(?\Closure $resolver): void
+    {
+        static::$shippingDeadlineResolver = $resolver;
+    }
+
+    /**
+     * Zet de verzenddeadline via de resolver. Geeft true als er iets gezet is.
+     */
+    public function applyShippingDeadline(bool $force = false): bool
+    {
+        if ($this->deadline_source === 'handmatig') {
+            return false;
+        }
+
+        if (! $force && $this->effectiveDeadline()) {
+            return false;
+        }
+
+        if (! static::$shippingDeadlineResolver) {
+            return false;
+        }
+
+        $result = (static::$shippingDeadlineResolver)($this);
+
+        if (! is_array($result)) {
+            return false;
+        }
+
+        $shipBy = $result['ship_by'] ?? null;
+        $deliverBy = $result['deliver_by'] ?? null;
+
+        if (! $shipBy && ! $deliverBy) {
+            return false;
+        }
+
+        $this->setShippingDeadline($shipBy, $deliverBy, (string) ($result['source'] ?? 'webshop'));
+
+        return true;
+    }
+
+    /**
+     * Zet de deadlinekolommen. Een handmatige deadline wordt alleen door een
+     * andere handmatige wijziging overschreven.
+     */
+    public function setShippingDeadline(?\Carbon\CarbonInterface $shipBy, ?\Carbon\CarbonInterface $deliverBy, string $source, bool $quietly = true): void
+    {
+        if ($this->deadline_source === 'handmatig' && $source !== 'handmatig') {
+            return;
+        }
+
+        $this->ship_by_date = $shipBy?->copy()->startOfDay();
+        $this->deliver_by_date = $deliverBy?->copy()->startOfDay();
+        $this->deadline_source = ($shipBy || $deliverBy) ? $source : null;
+
+        $quietly ? $this->saveQuietly() : $this->save();
+    }
+
+    public function effectiveDeadline(): ?Carbon
+    {
+        $date = $this->ship_by_date ?? $this->deliver_by_date;
+
+        return $date ? Carbon::instance($date)->startOfDay() : null;
+    }
+
+    public function deadlineIsDone(): bool
+    {
+        return ! in_array($this->status, ['paid', 'partially_paid'], true)
+            || in_array($this->fulfillment_status, self::DEADLINE_DONE_FULFILLMENT_STATUSES, true);
+    }
+
+    public function deadlineUrgency(?\Carbon\CarbonInterface $now = null): ?string
+    {
+        $deadline = $this->effectiveDeadline();
+
+        if (! $deadline || $this->deadlineIsDone()) {
+            return null;
+        }
+
+        $today = Carbon::instance($now ?? now())->startOfDay();
+
+        if ($deadline->lt($today)) {
+            return 'late';
+        }
+
+        if ($deadline->eq($today)) {
+            return 'today';
+        }
+
+        if ($deadline->eq($today->copy()->addDay())) {
+            return 'tomorrow';
+        }
+
+        return 'later';
+    }
+
+    public function deadlineLabel(): ?string
+    {
+        $deadline = $this->effectiveDeadline();
+
+        if (! $deadline) {
+            return null;
+        }
+
+        if ($this->deadline_source === 'bol') {
+            return __('Bol: uiterlijk geleverd :date', ['date' => $deadline->format('d-m-Y')]);
+        }
+
+        return __('Verzenden vóór :date', ['date' => $deadline->format('d-m-Y')]);
+    }
+
+    public function scopeDeadlineOpen(Builder $query): Builder
+    {
+        return $query->whereIn($this->getTable().'.status', ['paid', 'partially_paid'])
+            ->where(function ($q) {
+                $q->whereNull($this->getTable().'.fulfillment_status')
+                    ->orWhereNotIn($this->getTable().'.fulfillment_status', self::DEADLINE_DONE_FULFILLMENT_STATUSES);
+            })
+            ->where(function ($q) {
+                $q->whereNotNull($this->getTable().'.ship_by_date')
+                    ->orWhereNotNull($this->getTable().'.deliver_by_date');
+            });
+    }
+
+    public function scopeOrderByDeadline(Builder $query, string $direction = 'asc'): Builder
+    {
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+        $table = $this->getTable();
+
+        return $query->orderByRaw("COALESCE({$table}.ship_by_date, {$table}.deliver_by_date) {$direction}");
     }
 
     public function getActivitylogOptions(): LogOptions
