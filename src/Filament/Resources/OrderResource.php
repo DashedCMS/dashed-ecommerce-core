@@ -484,7 +484,7 @@ class OrderResource extends Resource
                         }
 
                         $table = $query->getModel()->getTable();
-                        $expr = "COALESCE({$table}.ship_by_date, {$table}.deliver_by_date)";
+                        $expr = "COALESCE({$table}.deliver_by_date, {$table}.ship_by_date)";
                         $today = now()->toDateString();
                         $query->deadlineOpen();
 

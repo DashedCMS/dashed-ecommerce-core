@@ -331,7 +331,8 @@ class Order extends Model
 
     public function effectiveDeadline(): ?Carbon
     {
-        $date = $this->ship_by_date ?? $this->deliver_by_date;
+        // De leverdatum is leidend; alleen zonder leverdatum (Etsy) telt de verzenddatum.
+        $date = $this->deliver_by_date ?? $this->ship_by_date;
 
         return $date ? Carbon::instance($date)->startOfDay() : null;
     }
@@ -375,11 +376,15 @@ class Order extends Model
             return null;
         }
 
+        if (! $this->deliver_by_date) {
+            return __('Verzenden vóór :date', ['date' => $deadline->format('d-m-Y')]);
+        }
+
         if ($this->deadline_source === 'bol') {
             return __('Bol: uiterlijk geleverd :date', ['date' => $deadline->format('d-m-Y')]);
         }
 
-        return __('Verzenden vóór :date', ['date' => $deadline->format('d-m-Y')]);
+        return __('Uiterlijk geleverd :date', ['date' => $deadline->format('d-m-Y')]);
     }
 
     public function scopeDeadlineOpen(Builder $query): Builder
@@ -400,7 +405,7 @@ class Order extends Model
         $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
         $table = $this->getTable();
 
-        $expr = "COALESCE({$table}.ship_by_date, {$table}.deliver_by_date)";
+        $expr = "COALESCE({$table}.deliver_by_date, {$table}.ship_by_date)";
 
         return $query->orderByRaw("CASE WHEN {$expr} IS NULL THEN 1 ELSE 0 END")
             ->orderByRaw("{$expr} {$direction}");

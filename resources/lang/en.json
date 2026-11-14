@@ -2370,5 +2370,6 @@
     "Verzenden vóór": "Ship by",
     "Uiterlijk geleverd": "Deliver by",
     "Deadline aangepast": "Deadline updated",
-    "(handmatig)": "(manual)"
+    "(handmatig)": "(manual)",
+    "Uiterlijk geleverd :date": "Delivered by :date"
 }

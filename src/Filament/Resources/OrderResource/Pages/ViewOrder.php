@@ -166,8 +166,8 @@ class ViewOrder extends ViewRecord
                     'deliver_by_date' => $this->record->deliver_by_date?->toDateString(),
                 ])
                 ->schema([
-                    DatePicker::make('ship_by_date')->label(__('Verzenden vóór')),
                     DatePicker::make('deliver_by_date')->label(__('Uiterlijk geleverd')),
+                    DatePicker::make('ship_by_date')->label(__('Verzenden vóór')),
                 ])
                 ->action(function (array $data) {
                     $order = $this->record;

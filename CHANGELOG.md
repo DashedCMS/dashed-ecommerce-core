@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.195.0 - 2026-11-14
+
+### Changed
+- **Leverdatum is leidend in de deadline.** Heeft een order een uiterste leverdatum, dan tonen orderlijst, orderdetail, pakbon en app die ("Uiterlijk geleverd …"); de verzenddatum alleen als er geen leverdatum is (Etsy). Sorteren en filteren volgen dezelfde datum.
+
+
 ## v4.194.0 - 2026-11-14
 
 ### Changed
