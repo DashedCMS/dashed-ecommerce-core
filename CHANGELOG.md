@@ -2,6 +2,24 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.194.0 - 2026-11-14
+
+### Changed
+- **Vaste korting en promobon: één kortingsbedrag met 21% btw eraf.** Een kortingscode met een vast bedrag en een promobon (cadeaubon die niet verkocht is) werden naar verhouding van de omzet over alle btw-tarieven verdeeld, waardoor een bon die tegen 21% verkocht was deels tegen 9% werd weggerekend. Nu haalt het gebruikte bedrag 21% btw van de order af (onder OSS het standaardtarief van het land); de btw van de producten blijft staan. Geldt in de webshop (`CartHelper`), de kassa (de korting wordt niet meer over de regels verdeeld), order wijzigen (`OrderTotalsCalculator`), `OssVat::recalculateOrderVat()`, creditorders, de verzamelfactuur (`VatBreakdown`) en de financiële rapportage. Een negatieve btw (korting op alleen 9%-producten) blijft staan in plaats van naar 0 te klemmen. Verkochte cadeaubonnen blijven betaalmiddel zonder btw-effect. `DiscountCode::AMOUNT_DISCOUNT_VAT_RATE` en `DiscountCode::amountDiscountVat()`.
+- **Verzendkosten-btw naar verhouding van de omzet per tarief** (nieuw: `Classes\ShippingVat`), in plaats van een gemiddeld tarief per stuk. Webshop, kassa (was vast 21%), proforma (was vast 21%), order wijzigen, OSS-herberekening, creditorders (ook de inhoudingsregel bij gratis verzending) en de verzamelfactuur rekenen hetzelfde; er ontstaat geen niet-bestaand tarief (bijv. 15%) meer in de uitsplitsing. `getVatRateForShippingMethod()` geeft het gemiddelde tarief alleen nog ter informatie voor de verzendregel.
+- **Btw-totaal = som van de afgeronde bedragen per tarief** op de order, de kassaorder, proforma's en creditorders (nieuw: `Classes\OrderVat`), zodat factuur en boekhouding nooit een cent verschillen.
+- **Nieuwe kolom `dashed__orders.vat_calculation`** (migratie): met welke rekenregels een order is gemaakt (`Order::VAT_CALCULATION`, `usesCurrentVatCalculation()`). Orders van vóór deze versie houden in de verzamelfactuur, bij creditering en in de rapportage hun oude verdeling, zodat een al aangegeven periode bij opnieuw exporteren niet verandert. Een creditorder neemt de versie van zijn originele order over; `OrderTotalsCalculator` zet een herberekende order op de huidige versie.
+
+### Fixed
+- `CartHelper::setTaxPercentages()` trok bij een vaste korting en gemengde tarieven de volle korting van élk tarief af (dubbele loop) en gaf elk tarief de volle verzendkosten-btw: de uitsplitsing telde dan niet op tot het btw-totaal.
+- Prijzen exclusief btw: de btw over een vaste korting ging twee keer van het totaal af.
+- `Order::getDiscountTaxAttribute()` gaf door een rekenfout de volledige btw van de order terug; de bruto omzet in de financiële rapportage (ook de `PrintController` van webshops die hem gebruiken) was bij orders met korting te laag.
+- Creditorders: `number_format()` in de btw-uitsplitsing gaf vanaf € 1000 een string met duizendtalscheiding; de teruggedraaide korting werd tegen een gemiddeld tarief per stuk gerekend en de uitsplitsing naar aantallen herverdeeld.
+- `OrderTotalsCalculator` rondde tarieven af op hele getallen (OSS 25,5% werd 26%).
+- Een conceptorder uit de kassa kreeg geen btw-uitsplitsing per tarief mee; een betaalde proforma had alleen de verzendkosten in zijn uitsplitsing.
+- Kassa: een verkochte bon en een promobon werden bij het afrekenen samengevoegd, waardoor saldo van de ene soort als de andere ging tellen. Alleen bonnen van dezelfde soort gaan nog samen; elke bon wordt afgeboekt.
+- Verzamelfactuur: een in de kassa verzilverde verkochte bon (die de kassa van het ordertotaal aftrekt) telt weer als omzet in de btw-tarieven en niet als korting.
+
 ## v4.193.0 - 2026-11-14
 
 ### Added
