@@ -3,7 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Classes\InvoiceExport;
 
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\OssVat;
+use Dashed\DashedEcommerceCore\Classes\OrderVat;
+use Dashed\DashedEcommerceCore\Classes\ShippingVat;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 /**
@@ -34,13 +37,20 @@ class VatBreakdown
         $redeemedGiftcards = 0.0;
 
         foreach ($orders as $order) {
-            $discount += (float) $order->discount;
+            // De kassa trekt een verzilverde verkochte bon van het ordertotaal af
+            // in plaats van hem als betaling te boeken (en zet hem bij alleen
+            // bonnen in discount). Het is een betaling, dus omzet en geen korting.
+            // Alleen voor orders met de huidige rekenregels, zodat een al
+            // aangegeven periode niet verandert.
+            $posSold = $order->usesCurrentVatCalculation() ? static::posSoldGiftcardRedemptions($order) : 0.0;
+
+            $discount += (float) $order->discount - ($posSold > 0 && $order->discountCode?->isSoldGiftcard() ? (float) $order->discount : 0.0);
             $total += (float) $order->total;
 
             $soldOnOrder = static::giftcardSales($order);
             $soldGiftcards += $soldOnOrder;
-            $redeemedGiftcards += static::giftcardRedemptions($order);
-            $revenueIncl = (float) $order->total - $soldOnOrder;
+            $redeemedGiftcards += static::giftcardRedemptions($order) + $posSold;
+            $revenueIncl = (float) $order->total - $soldOnOrder + $posSold;
 
             $shippingZone = $order->shippingMethod?->shippingZone;
             if (! $shippingZone) {
@@ -194,6 +204,32 @@ class VatBreakdown
             ->sum('amount');
     }
 
+    /**
+     * Wat er in de kassa met verkochte cadeaubonnen is betaald. De kassa boekt
+     * dat niet als betaling maar trekt het van order->total af (applied_gift_cards);
+     * een verkochte bon is een meervoudige voucher, dus het blijft gewoon omzet.
+     */
+    public static function posSoldGiftcardRedemptions(Order $order): float
+    {
+        $sum = 0.0;
+
+        foreach ((array) ($order->applied_gift_cards ?? []) as $redemption) {
+            $redeemed = (float) ($redemption['redeemed'] ?? 0);
+
+            if ($redeemed <= 0) {
+                continue;
+            }
+
+            $card = DiscountCode::find((int) ($redemption['discount_code_id'] ?? 0));
+
+            if ($card && $card->isSoldGiftcard()) {
+                $sum += $redeemed;
+            }
+        }
+
+        return $sum;
+    }
+
     protected static function isGiftcardLine($orderProduct): bool
     {
         return (bool) $orderProduct->product?->isGiftcardProduct();
@@ -206,9 +242,21 @@ class VatBreakdown
 
     /**
      * Inclusieve omzet per btw-tarief op basis van de orderregels (elke regel
-     * heeft een eigen vat_rate), geschaald naar order->total zodat een
-     * lump-korting evenredig over de tarieven wordt verdeeld. Regels van
-     * verkochte cadeaubonnen tellen niet mee; zij gaan van het ordertotaal af.
+     * heeft een eigen vat_rate). Dezelfde regels als OrderVat:
+     *
+     * - de verzendregel wordt naar verhouding van de productomzet per tarief
+     *   verdeeld (zijn eigen vat_rate is maar een gemiddelde);
+     * - een korting op orderniveau (vast bedrag, promobon, handmatig) gaat
+     *   volledig van het 21%-tarief af (onder OSS het landtarief), niet
+     *   evenredig over alle tarieven.
+     *
+     * Wat er dan nog verschilt met order->total (afronding, of in de kassa een
+     * verzilverde verkochte bon) wordt geschaald. Regels van verkochte
+     * cadeaubonnen tellen niet mee; zij gaan van het ordertotaal af.
+     *
+     * Een order van vóór deze regels (Order::usesCurrentVatCalculation()) houdt
+     * de oude verdeling: verzendregel tegen zijn eigen tarief en een korting
+     * evenredig geschaald, passend bij de btw die toen op de order is gezet.
      *
      * @return array<string|int, float> tariefsleutel (OssVat::rateKey) → incl
      */
@@ -216,6 +264,10 @@ class VatBreakdown
     {
         $perRate = [];
         $sumLines = 0.0;
+        $shipping = 0.0;
+        // Orders van vóór de huidige rekenregels houden de oude verdeling, zodat
+        // een al aangegeven periode bij opnieuw exporteren niet verandert.
+        $currentRules = $order->usesCurrentVatCalculation();
 
         $giftcardSales = 0.0;
 
@@ -226,12 +278,42 @@ class VatBreakdown
                 continue;
             }
 
+            if ($currentRules && $orderProduct->sku === 'shipping_costs') {
+                $shipping += (float) $orderProduct->price;
+                $sumLines += (float) $orderProduct->price;
+
+                continue;
+            }
+
             $rate = OssVat::rateKey((float) ($orderProduct->vat_rate ?? 21));
             $perRate[$rate] = ($perRate[$rate] ?? 0.0) + (float) $orderProduct->price;
             $sumLines += (float) $orderProduct->price;
         }
 
-        $totalIncl = (float) $order->total - $giftcardSales;
+        if (abs($shipping) >= 0.005) {
+            $base = array_filter($perRate, fn ($amount) => $amount > 0);
+            $baseTotal = array_sum($base);
+
+            if ($baseTotal <= 0) {
+                $base = [OssVat::rateKey(OssVat::rateForOrder($order, (float) ShippingVat::FALLBACK_RATE)) => 1.0];
+                $baseTotal = 1.0;
+            }
+
+            foreach ($base as $rate => $amount) {
+                $perRate[$rate] = ($perRate[$rate] ?? 0.0) + $shipping * ($amount / $baseTotal);
+            }
+        }
+
+        $orderDiscount = $currentRules ? OrderVat::vatBearingOrderDiscount($order) : 0.0;
+
+        if ($orderDiscount >= 0.005) {
+            $discountRate = OssVat::rateKey(OrderVat::orderDiscountRate($order));
+            $perRate[$discountRate] = ($perRate[$discountRate] ?? 0.0) - $orderDiscount;
+            $sumLines -= $orderDiscount;
+        }
+
+        $totalIncl = (float) $order->total - $giftcardSales
+            + ($currentRules ? static::posSoldGiftcardRedemptions($order) : 0.0);
 
         if (abs($sumLines) < 0.005) {
             // Geen regels om op te splitsen: val terug op het enige btw-tarief

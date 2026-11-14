@@ -26,6 +26,14 @@ class DiscountCode extends Model
 
     protected static $logFillable = true;
 
+    /**
+     * Een vast kortingsbedrag (en een promobon die als korting werkt) staat als
+     * één bedrag op de order en haalt 21% btw over het gebruikte bedrag van de
+     * btw af, ongeacht tegen welk tarief de producten vallen. Verkochte
+     * cadeaubonnen vallen hier niet onder: dat is een betaalmiddel.
+     */
+    public const AMOUNT_DISCOUNT_VAT_RATE = 21;
+
     protected $table = 'dashed__discount_codes';
 
     protected $fillable = [
@@ -59,6 +67,20 @@ class DiscountCode extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
+
+    /**
+     * De btw die in een gebruikt kortingsbedrag (incl. btw) zit. $rate is het
+     * tarief waartegen het weggerekend wordt: 21%, of onder OSS het
+     * standaardtarief van het bestemmingsland.
+     */
+    public static function amountDiscountVat(float $appliedAmount, float $rate = self::AMOUNT_DISCOUNT_VAT_RATE): float
+    {
+        if ($appliedAmount <= 0 || $rate <= 0) {
+            return 0.0;
+        }
+
+        return $appliedAmount / (100 + $rate) * $rate;
+    }
 
     public static function boot()
     {

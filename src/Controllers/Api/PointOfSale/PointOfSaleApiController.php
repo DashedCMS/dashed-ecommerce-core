@@ -15,6 +15,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Classes\OssVat;
+use Dashed\DashedEcommerceCore\Classes\ShippingVat;
 use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
@@ -189,7 +190,9 @@ class PointOfSaleApiController extends Controller
         $isExVat = (bool) ($posCart->prices_ex_vat ?? false);
         $mode = $isExVat ? 'ex' : 'incl';
 
-        $vatPercentages = $totals['vatPercentages'] ?? [];
+        $giftCardsVat = (float) ($totals['giftCardsVat'] ?? 0);
+
+        $vatPercentages = $this->applyGiftCardVat((array) ($totals['vatPercentages'] ?? []), $giftCardsVat);
         foreach ($vatPercentages as $key => $value) {
             $vatPercentages[$key] = CurrencyHelper::formatPrice((float) $value);
         }
@@ -197,6 +200,7 @@ class PointOfSaleApiController extends Controller
         $subtotalIncl = (float) ($totals['subtotal'] ?? 0);
         $vatTotal = (float) ($totals['vat'] ?? 0);
         $subtotalEx = $subtotalIncl - $vatTotal;
+        $vatTotal = round($vatTotal - $giftCardsVat, 2);
 
         $products = $posCart->products ?? [];
         foreach ($products as &$product) {
@@ -226,7 +230,7 @@ class PointOfSaleApiController extends Controller
             'activeDiscountCode' => $discountCodeString ?: null,
 
             'discount' => CurrencyHelper::formatPrice((float) ($totals['discount'] ?? 0)),
-            'vat' => CurrencyHelper::formatPrice((float) ($totals['vat'] ?? 0)),
+            'vat' => CurrencyHelper::formatPrice($vatTotal),
             'vatPercentages' => $vatPercentages,
 
             'isExVat' => $isExVat,
@@ -1089,10 +1093,20 @@ class PointOfSaleApiController extends Controller
             if ($primaryCard && $primaryCard->is_giftcard) {
                 $primaryOldBalance = round((float) ($primaryCard->discount_amount ?? 0), 2);
                 $consolidatedBalance = $primaryOldBalance;
+                // Een verkochte bon (meervoudige voucher, betaalmiddel) en een
+                // promobon (korting, 21% btw eraf) mogen niet in elkaar opgaan:
+                // dan verandert de btw-behandeling van het saldo. Een bon van de
+                // andere soort blijft los op de bestelling staan.
+                $keptSeparately = [];
 
                 foreach (array_slice($appliedGiftCards, 1) as $entry) {
                     $secondary = DiscountCode::find((int) ($entry['discount_code_id'] ?? 0));
                     if (! $secondary || ! $secondary->is_giftcard) {
+                        continue;
+                    }
+                    if ($secondary->isSoldGiftcard() !== $primaryCard->isSoldGiftcard()) {
+                        $keptSeparately[] = $entry;
+
                         continue;
                     }
                     $secondaryOld = round((float) ($secondary->discount_amount ?? 0), 2);
@@ -1124,12 +1138,13 @@ class PointOfSaleApiController extends Controller
                     );
                 }
 
-                // Cart aanpassen: alleen primary kaart met gebundeld saldo.
-                $appliedGiftCards = [[
+                // Cart aanpassen: de primary kaart met gebundeld saldo, plus de
+                // bonnen van de andere soort die los blijven.
+                $appliedGiftCards = array_merge([[
                     'code' => $primaryCard->code,
                     'discount_code_id' => $primaryCard->id,
                     'balance' => $consolidatedBalance,
-                ]];
+                ]], $keptSeparately);
                 $posCart->applied_gift_cards = $appliedGiftCards;
                 $posCart->save();
             }
@@ -1203,22 +1218,27 @@ class PointOfSaleApiController extends Controller
         // Verzend-BTW hoort ook in de header-btw. calculatePosCartTotals()
         // berekent 'vat'/'vatPercentages' uitsluitend over de productregels,
         // terwijl $total de verzendkosten wél bevat (regel: subtotal + shipping).
-        // Zonder deze correctie mist de header-btw de verzend-BTW terwijl de
-        // aparte verzendregel die btw wél draagt -> order->btw is dan te laag.
-        // De verzendregel wordt hieronder altijd tegen 21% aangemaakt.
-        $shippingVat = $shippingCosts > 0
-            ? round($this->calculateVatFromGross((float) $shippingCosts, 21), 2)
-            : 0.0;
+        // De verzendkosten-btw volgt de omzet per tarief (zie ShippingVat).
+        $shippingVatPerRate = $shippingCosts > 0
+            ? ShippingVat::split((float) $shippingCosts, $this->amountPerRateFromPosLines($totals['lines'] ?? []), true)
+            : [];
+        $shippingVat = round(array_sum($shippingVatPerRate), 2);
+
+        // Verzilverde promobonnen halen 21% btw over het gebruikte bedrag eraf;
+        // verkochte bonnen zijn betaalmiddel. Het bedrag komt uit de
+        // verzilvering hierboven, die ook de verzendkosten meetelt.
+        $giftCardsVat = round($this->promoGiftCardVat($giftCardRedemptions), 2);
 
         $order->subtotal = (float) ($totals['subtotal'] ?? 0);
         $order->discount = (float) ($totals['discount'] ?? 0);
-        $order->btw = round((float) ($totals['vat'] ?? 0) + $shippingVat, 2);
 
         $vatPercentages = (array) ($totals['vatPercentages'] ?? []);
-        if ($shippingVat > 0) {
-            $vatPercentages['21'] = round((float) ($vatPercentages['21'] ?? 0) + $shippingVat, 2);
+        foreach ($shippingVatPerRate as $rate => $vat) {
+            $vatPercentages[$rate] = round((float) ($vatPercentages[$rate] ?? 0) + $vat, 2);
         }
-        $order->vat_percentages = $vatPercentages;
+        $order->vat_percentages = $this->applyGiftCardVat($vatPercentages, $giftCardsVat);
+        // Btw-totaal = som van de afgeronde bedragen per tarief.
+        $order->btw = round(array_sum($order->vat_percentages), 2);
         $order->total = $total;
 
         $order->status = 'pending';
@@ -1286,8 +1306,15 @@ class PointOfSaleApiController extends Controller
         //      afboeken (saldo + log). Geen OrderPayment per cadeaubon: de
         //      cadeaubon vermindert al order->total, dus paid-amount-check
         //      werkt zonder extra payment-regel.
-        if ($orderOrigin === 'pos' && $hasGiftCards && ! $giftCardOnlyDiscount) {
+        //   Bij alleen cadeaubonnen kan er naast de gekoppelde bon nog een bon
+        //   van de andere soort (verkocht / promo) staan; die boeken we hier
+        //   af, de gekoppelde niet nog een keer.
+        if ($orderOrigin === 'pos' && $hasGiftCards) {
             foreach ($giftCardRedemptions as $redemption) {
+                if ($giftCardOnlyDiscount && (int) ($redemption['discount_code_id'] ?? 0) === (int) $order->discount_code_id) {
+                    continue;
+                }
+
                 $card = DiscountCode::find($redemption['discount_code_id'] ?? 0);
                 if (! $card || ! $card->is_giftcard) {
                     continue;
@@ -1368,8 +1395,8 @@ class PointOfSaleApiController extends Controller
             $shippingLine->order_id = $order->id;
             $shippingLine->name = $shippingMethod?->name ?? 'Verzendkosten';
             $shippingLine->price = $shippingCosts;
-            $shippingLine->btw = $this->calculateVatFromGross($shippingCosts, 21);
-            $shippingLine->vat_rate = 21;
+            $shippingLine->btw = $shippingVat;
+            $shippingLine->vat_rate = ShippingVat::effectiveRate((float) $shippingCosts, $shippingVatPerRate, true);
             $shippingLine->discount = 0;
             $shippingLine->product_extras = [];
             $shippingLine->sku = 'shipping_costs';
@@ -2188,11 +2215,12 @@ class PointOfSaleApiController extends Controller
         $shippingCosts = $shippingMethod ? PosShippingAdvisor::costsFor($posCart, $shippingMethod) : 0.0;
 
         $subtotalIncl = (float) ($totals['subtotal'] ?? 0);
-        $vatTotal = (float) ($totals['vat'] ?? 0);
+        $giftCardsVat = (float) ($totals['giftCardsVat'] ?? 0);
+        $vatTotal = round((float) ($totals['vat'] ?? 0) - $giftCardsVat, 2);
         $giftCardsTotal = (float) ($totals['giftCardsTotal'] ?? 0);
         $vatPercentages = array_map(
             fn ($value) => CurrencyHelper::formatPrice((float) $value),
-            $totals['vatPercentages'] ?? [],
+            $this->applyGiftCardVat((array) ($totals['vatPercentages'] ?? []), $giftCardsVat),
         );
 
         return response()->json([
@@ -2201,7 +2229,7 @@ class PointOfSaleApiController extends Controller
             'discount' => CurrencyHelper::formatPrice((float) ($totals['discount'] ?? 0)),
             'vat' => CurrencyHelper::formatPrice($vatTotal),
             'vatPercentages' => $vatPercentages,
-            'subTotal' => CurrencyHelper::formatPrice($posCart->prices_ex_vat ? $subtotalIncl - $vatTotal : $subtotalIncl),
+            'subTotal' => CurrencyHelper::formatPrice($posCart->prices_ex_vat ? $subtotalIncl - (float) ($totals['vat'] ?? 0) : $subtotalIncl),
             'total' => CurrencyHelper::formatPrice(round(max(0, $subtotalIncl + (float) $shippingCosts - $giftCardsTotal), 2)),
         ]);
     }
@@ -2243,6 +2271,69 @@ class PointOfSaleApiController extends Controller
             'options' => $options,
             'model' => null,
         ];
+    }
+
+    /**
+     * Omzet per btw-tarief uit de regels van calculatePosCartTotals(), als
+     * basis voor de verdeling van de verzendkosten-btw.
+     *
+     * @return array<string, float>
+     */
+    private function amountPerRateFromPosLines(array $lines): array
+    {
+        $amounts = [];
+
+        foreach ($lines as $line) {
+            $key = OssVat::rateKey((float) ($line['vat_rate'] ?? 0));
+            $amounts[$key] = ($amounts[$key] ?? 0.0) + (float) ($line['line_total'] ?? 0);
+        }
+
+        return $amounts;
+    }
+
+    /**
+     * De btw die verzilverde promobonnen van de btw afhalen: 21% over het
+     * gebruikte bedrag. Een verkochte bon (DiscountCode::isSoldGiftcard()) is
+     * een meervoudige voucher en dus betaalmiddel zonder btw-effect.
+     *
+     * @param  array<int, array{discount_code_id?: int, redeemed?: float}>  $redemptions
+     */
+    private function promoGiftCardVat(array $redemptions): float
+    {
+        $vat = 0.0;
+
+        foreach ($redemptions as $redemption) {
+            $redeemed = (float) ($redemption['redeemed'] ?? 0);
+
+            if ($redeemed <= 0) {
+                continue;
+            }
+
+            $card = DiscountCode::find((int) ($redemption['discount_code_id'] ?? 0));
+
+            if ($card && $card->isSoldGiftcard()) {
+                continue;
+            }
+
+            $vat += DiscountCode::amountDiscountVat($redeemed);
+        }
+
+        return $vat;
+    }
+
+    /**
+     * Trekt de promobon-btw af van het 21%-tarief in een btw-uitsplitsing.
+     */
+    private function applyGiftCardVat(array $vatPercentages, float $giftCardsVat): array
+    {
+        if ($giftCardsVat <= 0) {
+            return $vatPercentages;
+        }
+
+        $rate = OssVat::rateKey((float) DiscountCode::AMOUNT_DISCOUNT_VAT_RATE);
+        $vatPercentages[$rate] = round((float) ($vatPercentages[$rate] ?? 0) - $giftCardsVat, 2);
+
+        return $vatPercentages;
     }
 
     private function calculateVatFromGross(float $gross, float $vatRate): float
@@ -2403,6 +2494,8 @@ class PointOfSaleApiController extends Controller
             ];
         }
 
+        $fixedDiscountVat = 0.0;
+
         foreach ($amountDiscounts as $amountDiscount) {
             $fixedDiscount = min($subtotal, (float) ($amountDiscount->discount_amount ?? 0));
 
@@ -2415,40 +2508,20 @@ class PointOfSaleApiController extends Controller
                 'applied_amount' => round($fixedDiscount, 2),
             ];
 
-            if ($fixedDiscount > 0 && $subtotal > 0 && count($lines)) {
-                $baseSubtotalForDistribution = $subtotal;
-
-                foreach ($lines as $index => &$line) {
-                    $ratio = $baseSubtotalForDistribution > 0 ? ($line['line_total'] / $baseSubtotalForDistribution) : 0;
-                    $lineDiscountPart = round($fixedDiscount * $ratio, 2);
-
-                    $line['discount'] = round($line['discount'] + $lineDiscountPart, 2);
-                    $line['line_total'] = round(max(0, $line['line_total'] - $lineDiscountPart), 2);
-                }
-                unset($line);
-
-                $distributedTotal = round(array_sum(array_column($lines, 'line_total')), 2);
-                $expectedSubtotal = round($subtotal - $fixedDiscount, 2);
-                $roundingDifference = round($expectedSubtotal - $distributedTotal, 2);
-
-                if ($roundingDifference != 0.0) {
-                    $lastIndex = array_key_last($lines);
-                    $lines[$lastIndex]['line_total'] = round(max(0, $lines[$lastIndex]['line_total'] + $roundingDifference), 2);
-                    $lines[$lastIndex]['discount'] = round(max(0, $lines[$lastIndex]['line_total_without_discount'] - $lines[$lastIndex]['line_total']), 2);
-                }
-
-                $subtotal = round($expectedSubtotal, 2);
+            // Eén kortingsbedrag op de bon, niet verdeeld over de regels. De btw
+            // van de regels blijft staan; de korting haalt 21% btw over het
+            // gebruikte bedrag eraf (DiscountCode::AMOUNT_DISCOUNT_VAT_RATE).
+            if ($fixedDiscount > 0) {
+                $subtotal = round($subtotal - $fixedDiscount, 2);
                 $discount = round($discount + $fixedDiscount, 2);
-
-                $vatTotal = 0.0;
-                $vatPercentages = [];
-
-                foreach ($lines as $line) {
-                    $lineVat = $this->calculateVatFromGross((float) $line['line_total'], (float) $line['vat_rate']);
-                    $vatTotal += $lineVat;
-                    $vatPercentages[(string) $line['vat_rate']] = ($vatPercentages[(string) $line['vat_rate']] ?? 0) + $lineVat;
-                }
+                $fixedDiscountVat += DiscountCode::amountDiscountVat($fixedDiscount);
             }
+        }
+
+        if ($fixedDiscountVat > 0) {
+            $rate = OssVat::rateKey((float) DiscountCode::AMOUNT_DISCOUNT_VAT_RATE);
+            $vatTotal -= $fixedDiscountVat;
+            $vatPercentages[$rate] = ($vatPercentages[$rate] ?? 0) - $fixedDiscountVat;
         }
 
         $vatPercentages = collect($vatPercentages)
@@ -2494,10 +2567,17 @@ class PointOfSaleApiController extends Controller
             'subtotalWithoutDiscount' => round(max(0, $subtotalWithoutDiscount), 2),
             'discount' => round(max(0, $discount), 2),
             'discountCodes' => $discountCodeBreakdown,
-            'vat' => round(max(0, $vatTotal), 2),
+            // Kan negatief zijn (korting op alleen 9%-producten); bewust niet
+            // geklemd, zodat het zo in de boekhouding komt.
+            'vat' => round($vatTotal, 2),
             'vatPercentages' => $vatPercentages,
             'giftCards' => $giftCardLines,
             'giftCardsTotal' => $giftCardRedemptionTotal,
+            // De btw die verzilverde promobonnen eraf halen (21%). Zit bewust
+            // NIET in 'vat'/'vatPercentages' (een concept bewaart die zonder
+            // bonnen); afreken- en weergavecode trekken dit er zelf vanaf.
+            // Verkochte bonnen zijn betaalmiddel en tellen hier niet mee.
+            'giftCardsVat' => round($this->promoGiftCardVat($giftCardLines), 2),
             'totalAfterGiftCards' => round(max(0, $subtotal - $giftCardRedemptionTotal), 2),
         ];
     }

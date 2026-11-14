@@ -63,6 +63,9 @@ class ConceptOrderService
             $order->subtotal = $totals['subtotal'];
             $order->total = $totals['subtotal'];
             $order->btw = $totals['vat'];
+            // Uitsplitsing per tarief mee, anders heeft een betaalde proforma
+            // straks alleen de verzendkosten in zijn btw-uitsplitsing.
+            $order->vat_percentages = $totals['vatPercentages'] ?? [];
             $order->discount = $totals['discount'];
             $order->applied_discount_codes = ($totals['discountCodes'] ?? []) ?: null;
             $order->invoice_id = null;

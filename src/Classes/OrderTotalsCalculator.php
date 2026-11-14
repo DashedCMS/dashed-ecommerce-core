@@ -32,44 +32,38 @@ class OrderTotalsCalculator
     {
         $inclusive = (bool) Customsetting::get('taxes_prices_include_taxes');
 
-        $vatPerRate = [];
         $lines = [];
 
         // Bewust via de query en niet via de eager-geladen relatie: die kan
         // verouderd zijn nadat regels net herschreven zijn.
         foreach ($order->orderProducts()->get() as $line) {
-            $price = (float) $line->price;
-            $rate = (float) ($line->vat_rate ?? 0);
-
-            $vat = $inclusive
-                ? $price / (100 + $rate) * $rate
-                : $price / 100 * $rate;
-
-            $key = (string) (int) round($rate);
-            $vatPerRate[$key] = ($vatPerRate[$key] ?? 0.0) + $vat;
-
             $lines[] = [
-                'price' => $price,
+                'price' => (float) $line->price,
                 'discount' => (float) ($line->discount ?? 0),
             ];
         }
 
         $breakdown = self::breakdownForLines($order, $lines);
 
-        // De btw hoort te gaan over wat de klant betaalt. Een regelkorting zit
-        // al in de regelprijs verwerkt en is hierboven dus al verrekend; alleen
-        // een vaste korting op orderniveau drukt de btw nog, en die drukt hem
-        // proportioneel, ook bij gemengde tarieven.
-        $factor = $breakdown['net'] > 0 ? $breakdown['total'] / $breakdown['net'] : 1.0;
-
         $order->subtotal = $breakdown['subtotal'];
         $order->discount = $breakdown['discount'];
         $order->total = $breakdown['total'];
-        $order->btw = round(array_sum($vatPerRate) * $factor, 2);
-        $order->vat_percentages = array_map(
-            fn (float $amount): float => round($amount * $factor, 2),
-            $vatPerRate
-        );
+
+        // Regels tegen hun eigen tarief, de verzendregel naar verhouding en de
+        // korting op orderniveau (vast bedrag, promobon, handmatig) met 21%
+        // eraf. Zie OrderVat. Voorheen drukte die korting de btw proportioneel
+        // en telde de verzendregel tegen zijn gemiddelde tarief.
+        $vat = OrderVat::calculate($order, $breakdown['net'] - $breakdown['total'], $inclusive);
+
+        $order->vat_percentages = $vat['per_rate'];
+        $order->btw = $vat['total'];
+
+        // De btw is nu met de huidige regels uitgerekend; de verzamelfactuur
+        // moet hem dan ook zo verdelen.
+        if (Order::hasVatCalculationColumn()) {
+            $order->vat_calculation = Order::VAT_CALCULATION;
+        }
+
         $order->save();
 
         // Een afgetopte korting laat geld verdwijnen: bij een cadeaubon staat er
