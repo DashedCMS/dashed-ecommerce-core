@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.193.0 - 2026-11-14
 
 ### Added
 - **Verzenddeadline op orders.** Kolom Deadline (sorteerbaar, filter te laat/vandaag/morgen) in de orderlijst, deadline in de kop van de order met de actie "Deadline aanpassen" (handmatig, wordt nooit automatisch overschreven), op de pakbon en in de mobiele API (`ship_by_date`, `deliver_by_date`, `deadline_source`, `deadline_label`, `deadline_urgency`).
