@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Classes\InvoiceExport;
 
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\OssVat;
 use Dashed\DashedEcommerceCore\Classes\OrderVat;
 use Dashed\DashedEcommerceCore\Classes\ShippingVat;
+use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 
 /**
