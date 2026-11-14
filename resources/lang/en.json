@@ -2361,5 +2361,14 @@
     "Zou nu vuren voor": "Would fire now for",
     "Zo worden de codes verdeeld als je nu op Toewijzen klikt.": "This is how the codes will be distributed if you click Assign now.",
     "Bol: uiterlijk geleverd :date": "Bol: deliver by :date",
-    "Verzenden vóór :date": "Ship by :date"
+    "Verzenden vóór :date": "Ship by :date",
+    "Deadline": "Deadline",
+    "Te laat": "Overdue",
+    "Morgen": "Tomorrow",
+    "Vandaag of eerder": "Today or earlier",
+    "Deadline aanpassen": "Adjust deadline",
+    "Verzenden vóór": "Ship by",
+    "Uiterlijk geleverd": "Deliver by",
+    "Deadline aangepast": "Deadline updated",
+    "(handmatig)": "(manual)"
 }

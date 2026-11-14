@@ -371,6 +371,26 @@ class OrderResource extends Resource
                         'warning' => fn ($state): bool => ($state === 'Ingepakt'),
                         'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden' || $state == 'Klaar om opgehaald te worden'),
                     ]),
+                TextColumn::make('deadline')
+                    ->label(__('Deadline'))
+                    ->toggleable()
+                    ->badge()
+                    ->getStateUsing(function ($record) {
+                        $deadline = $record->effectiveDeadline();
+
+                        if (! $deadline) {
+                            return '-';
+                        }
+
+                        return ($record->deadline_source === 'bol' ? 'Bol ' : '') . $deadline->format('d-m');
+                    })
+                    ->color(fn ($record): string => match ($record->deadlineUrgency()) {
+                        'late', 'today' => 'danger',
+                        'tomorrow' => 'warning',
+                        default => 'gray',
+                    })
+                    ->tooltip(fn ($record): ?string => $record->deadlineLabel())
+                    ->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderByDeadline($direction)),
                 TextColumn::make('name')
                     ->label(__('Klant'))
                     ->toggleable()
@@ -448,6 +468,34 @@ class OrderResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                SelectFilter::make('deadline')
+                    ->label(__('Deadline'))
+                    ->options([
+                        'late' => __('Te laat'),
+                        'today' => __('Vandaag'),
+                        'tomorrow' => __('Morgen'),
+                        'today_or_earlier' => __('Vandaag of eerder'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+
+                        if (! $value) {
+                            return $query;
+                        }
+
+                        $table = $query->getModel()->getTable();
+                        $expr = "COALESCE({$table}.ship_by_date, {$table}.deliver_by_date)";
+                        $today = now()->toDateString();
+                        $query->deadlineOpen();
+
+                        return match ($value) {
+                            'late' => $query->whereRaw("{$expr} < ?", [$today]),
+                            'today' => $query->whereRaw("{$expr} = ?", [$today]),
+                            'tomorrow' => $query->whereRaw("{$expr} = ?", [now()->addDay()->toDateString()]),
+                            'today_or_earlier' => $query->whereRaw("{$expr} <= ?", [$today]),
+                            default => $query,
+                        };
+                    }),
                 Filter::make('is_priority')
                     ->toggle()
                     ->label(__('Alleen prioriteit'))

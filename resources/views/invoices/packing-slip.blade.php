@@ -81,6 +81,9 @@
             <th>{{ Translation::get('invoice-date', 'invoice', 'Factuur datum') }}</th>
             <th>{{ Translation::get('payment-method', 'invoice', 'Betaal methode') }}</th>
             <th>{{ Translation::get('shipping-method', 'invoice', 'Verzend methode') }}</th>
+            @if($order->deadlineLabel())
+                <th>{{ Translation::get('deadline', 'invoice', 'Deadline') }}</th>
+            @endif
         </tr>
 
         <tr>
@@ -88,6 +91,9 @@
             <td>{{ $order->created_at->format('d-m-Y') }}</td>
             <td>{{ $order->paymentMethod ?: Translation::get('payment-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
             <td>{{ $order->shippingMethod->name ?? Translation::get('shipping-method-not-chosen', 'invoice', 'niet gekozen') }}</td>
+            @if($order->deadlineLabel())
+                <td>{{ $order->deadlineLabel() }}</td>
+            @endif
         </tr>
     </table>
 

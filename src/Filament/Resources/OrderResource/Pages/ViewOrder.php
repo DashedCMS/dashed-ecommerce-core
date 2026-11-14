@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\DatePicker;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Filament\Forms\Components\Checkbox;
@@ -151,6 +152,39 @@ class ViewOrder extends ViewRecord
                     $this->record->forceFill(['is_priority' => ! $this->record->is_priority])->save();
                     \Dashed\DashedEcommerceCore\Models\OrderLog::logPriorityChange($this->record);
                     $this->record->refresh();
+                }),
+            Action::make('adjustDeadline')
+                ->iconButton()
+                ->icon('heroicon-o-calendar-days')
+                ->label(__('Deadline aanpassen'))
+                ->tooltip(__('Deadline aanpassen'))
+                ->color('gray')
+                ->authorize($mayEdit)
+                ->modalHeading(__('Deadline aanpassen'))
+                ->fillForm(fn () => [
+                    'ship_by_date' => $this->record->ship_by_date?->toDateString(),
+                    'deliver_by_date' => $this->record->deliver_by_date?->toDateString(),
+                ])
+                ->schema([
+                    DatePicker::make('ship_by_date')->label(__('Verzenden vóór')),
+                    DatePicker::make('deliver_by_date')->label(__('Uiterlijk geleverd')),
+                ])
+                ->action(function (array $data) {
+                    $order = $this->record;
+                    $old = $order->deadlineLabel() ?: '-';
+                    $shipBy = ! empty($data['ship_by_date']) ? \Carbon\Carbon::parse($data['ship_by_date']) : null;
+                    $deliverBy = ! empty($data['deliver_by_date']) ? \Carbon\Carbon::parse($data['deliver_by_date']) : null;
+
+                    $order->setShippingDeadline($shipBy, $deliverBy, 'handmatig');
+                    $order->refresh();
+
+                    \Dashed\DashedEcommerceCore\Models\OrderLog::createLog(
+                        orderId: $order->id,
+                        tag: 'order.deadline.changed',
+                        note: 'Deadline: ' . $old . ' -> ' . ($order->deadlineLabel() ?: '-'),
+                    );
+
+                    Notification::make()->title(__('Deadline aangepast'))->success()->send();
                 }),
             Action::make('Vorige bestelling')
                 ->hiddenLabel()
@@ -511,6 +545,9 @@ class ViewOrder extends ViewRecord
             $this->record->name,
             $this->record->created_at?->format('d-m-Y H:i'),
             $this->record->order_origin,
+            $this->record->deadlineLabel()
+                ? $this->record->deadlineLabel() . ($this->record->deadline_source === 'handmatig' ? ' ' . __('(handmatig)') : '')
+                : null,
             $method ? __(':bedrag via :methode', ['bedrag' => $total, 'methode' => $method]) : $total,
         ]));
     }

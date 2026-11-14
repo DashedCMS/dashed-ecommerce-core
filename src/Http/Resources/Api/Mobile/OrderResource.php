@@ -32,6 +32,11 @@ class OrderResource extends JsonResource
             'email' => $this->email,
             'order_origin' => $this->order_origin,
             'is_priority' => (bool) $this->is_priority,
+            'ship_by_date' => $this->ship_by_date?->toDateString(),
+            'deliver_by_date' => $this->deliver_by_date?->toDateString(),
+            'deadline_source' => $this->deadline_source,
+            'deadline_label' => $this->deadlineLabel(),
+            'deadline_urgency' => $this->deadlineUrgency(),
             'assigned_user' => $this->assigned_to_user_id
                 ? ['id' => (int) $this->assigned_to_user_id, 'name' => optional($this->assignedUser)->name]
                 : null,
