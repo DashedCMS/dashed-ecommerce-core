@@ -184,7 +184,11 @@ class Order extends Model
         });
 
         static::saved(function ($order) {
-            if ($order->status !== 'paid' || (! $order->wasRecentlyCreated && ! $order->wasChanged('status'))) {
+            // On insert Eloquent does not fill getChanges() yet, so the creating save is
+            // recognised by wasRecentlyCreated plus a still-dirty status.
+            $statusJustSet = $order->wasChanged('status') || ($order->wasRecentlyCreated && $order->isDirty('status'));
+
+            if ($order->status !== 'paid' || ! $statusJustSet) {
                 return;
             }
 
@@ -258,9 +262,32 @@ class Order extends Model
             return;
         }
 
-        $this->ship_by_date = $shipBy?->copy()->startOfDay();
-        $this->deliver_by_date = $deliverBy?->copy()->startOfDay();
-        $this->deadline_source = ($shipBy || $deliverBy) ? $source : null;
+        $values = [
+            'ship_by_date' => $shipBy?->copy()->startOfDay(),
+            'deliver_by_date' => $deliverBy?->copy()->startOfDay(),
+            'deadline_source' => ($shipBy || $deliverBy) ? $source : null,
+        ];
+
+        if ($quietly && $this->exists) {
+            // Direct query: no events, and the outer save's change tracking
+            // (wasChanged('status')) stays intact.
+            static::query()->whereKey($this->getKey())->update([
+                'ship_by_date' => $values['ship_by_date']?->toDateString(),
+                'deliver_by_date' => $values['deliver_by_date']?->toDateString(),
+                'deadline_source' => $values['deadline_source'],
+            ]);
+
+            foreach ($values as $key => $value) {
+                $this->setAttribute($key, $value);
+                $this->syncOriginalAttribute($key);
+            }
+
+            return;
+        }
+
+        foreach ($values as $key => $value) {
+            $this->setAttribute($key, $value);
+        }
 
         $quietly ? $this->saveQuietly() : $this->save();
     }
@@ -336,7 +363,10 @@ class Order extends Model
         $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
         $table = $this->getTable();
 
-        return $query->orderByRaw("COALESCE({$table}.ship_by_date, {$table}.deliver_by_date) {$direction}");
+        $expr = "COALESCE({$table}.ship_by_date, {$table}.deliver_by_date)";
+
+        return $query->orderByRaw("CASE WHEN {$expr} IS NULL THEN 1 ELSE 0 END")
+            ->orderByRaw("{$expr} {$direction}");
     }
 
     public function getActivitylogOptions(): LogOptions
