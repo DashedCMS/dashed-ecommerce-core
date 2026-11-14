@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.196.0 - 2026-11-14
+
+### Changed
+- **Verlaten-wagen-flows: één actieve flow per trigger.** Er kunnen nu meerdere flows tegelijk aan staan, zolang ze geen trigger delen. Activeren (knop "Activeren", aanmaken of opslaan met "Actieve flow" aan, `AbandonedCartFlow::activate()`, `createDefault()`) zet alleen andere actieve flows uit die minstens één trigger delen (`deactivateOverlappingFlows()`); daarvoor ging elke andere flow uit. De engine kiest per trigger de actieve flow met `AbandonedCartFlow::getActiveFor($trigger)` (wagen met e-mail, geannuleerde bestelling, verlanglijst, "Toepassen op bestaande"); staan er door oude data twee aan voor dezelfde trigger, dan schrijft alleen de oudste in. `getActive()` blijft bestaan (eerste actieve flow). De standaardflow krijgt trigger `cart_with_email`. Helptekst en tip aangepast.
+
+
 ## v4.195.1 - 2026-11-14
 
 ### Fixed

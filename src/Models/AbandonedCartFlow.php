@@ -109,21 +109,70 @@ class AbandonedCartFlow extends Model
         return round($hours->avg(), 1);
     }
 
+    /**
+     * Eerste actieve flow, ongeacht de trigger. Alleen voor achterwaartse
+     * compatibiliteit: sinds er per trigger een eigen flow actief kan zijn,
+     * kies je een flow met getActiveFor().
+     */
     public static function getActive(): ?self
     {
-        return static::where('is_active', true)->first();
+        return static::where('is_active', true)->orderBy('id')->first();
+    }
+
+    /**
+     * De actieve flow voor een trigger. Per trigger kan één flow actief zijn;
+     * staan er (bijv. door oude data) meer aan, dan wint de oudste.
+     */
+    public static function getActiveFor(string $trigger): ?self
+    {
+        return static::where('is_active', true)
+            ->orderBy('id')
+            ->get()
+            ->first(fn (self $flow) => $flow->hasTrigger($trigger));
     }
 
     public function activate(): void
     {
-        static::where('id', '!=', $this->id)->update(['is_active' => false]);
         $this->update(['is_active' => true]);
+        $this->deactivateOverlappingFlows();
+    }
+
+    /**
+     * Zet andere actieve flows uit die minstens één trigger met deze flow delen.
+     * Flows met andere triggers blijven aan.
+     *
+     * @return int aantal uitgezette flows
+     */
+    public function deactivateOverlappingFlows(): int
+    {
+        $triggers = $this->triggers ?? [];
+
+        if ($triggers === []) {
+            return 0;
+        }
+
+        $ids = static::where('is_active', true)
+            ->where('id', '!=', $this->id)
+            ->get()
+            ->filter(fn (self $flow) => array_intersect($triggers, $flow->triggers ?? []) !== [])
+            ->pluck('id');
+
+        if ($ids->isEmpty()) {
+            return 0;
+        }
+
+        return static::whereIn('id', $ids)->update(['is_active' => false]);
     }
 
     public static function createDefault(): self
     {
-        $flow = static::create(['name' => 'Standaard flow', 'is_active' => true, 'discount_prefix' => 'TERUG']);
-        static::where('id', '!=', $flow->id)->update(['is_active' => false]);
+        $flow = static::create([
+            'name' => 'Standaard flow',
+            'is_active' => true,
+            'discount_prefix' => 'TERUG',
+            'triggers' => ['cart_with_email'],
+        ]);
+        $flow->deactivateOverlappingFlows();
 
         $steps = [
             [

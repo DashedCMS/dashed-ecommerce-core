@@ -30,9 +30,8 @@ class ScheduleAbandonedCartEmailsForCartJob implements ShouldQueue
 
         AbandonedCartEmail::cancelAllForCart($this->cartId);
 
-        $flows = AbandonedCartFlow::where('is_active', true)
-            ->get()
-            ->filter(fn (AbandonedCartFlow $flow) => $flow->hasTrigger('cart_with_email'));
+        // Per trigger is er één actieve flow (sinds v4.196.0).
+        $flows = collect([AbandonedCartFlow::getActiveFor('cart_with_email')])->filter();
 
         if ($flows->isEmpty()) {
             return;

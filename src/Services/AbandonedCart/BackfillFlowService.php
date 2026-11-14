@@ -43,7 +43,7 @@ class BackfillFlowService
         $stepIds = $steps->pluck('id')->all();
         $since = Carbon::now()->subDays(max(1, $sinceDays))->startOfDay();
 
-        if ($flow->hasTrigger('cart_with_email')) {
+        if ($this->isActiveFlowFor($flow, 'cart_with_email')) {
             $carts = Cart::query()
                 ->whereNotNull('abandoned_email')
                 ->where('abandoned_email', '!=', '')
@@ -63,7 +63,7 @@ class BackfillFlowService
             }
         }
 
-        if ($flow->hasTrigger('cancelled_order')) {
+        if ($this->isActiveFlowFor($flow, 'cancelled_order')) {
             $orders = Order::query()
                 ->where('status', 'cancelled')
                 ->whereNotNull('email')
@@ -154,7 +154,16 @@ class BackfillFlowService
         }
     }
 
-    private function delayInHours(AbandonedCartFlowStep $step): int
+    /**
+     * Alleen de actieve flow van een trigger mag inschrijven (één per trigger).
+     */
+    private function isActiveFlowFor(AbandonedCartFlow $flow, string $trigger): bool
+    {
+        return $flow->hasTrigger($trigger)
+            && AbandonedCartFlow::getActiveFor($trigger)?->is($flow) === true;
+    }
+
+        private function delayInHours(AbandonedCartFlowStep $step): int
     {
         if (isset($step->delay_unit) && $step->delay_unit === 'days') {
             return (int) ($step->delay_value ?? 0) * 24;

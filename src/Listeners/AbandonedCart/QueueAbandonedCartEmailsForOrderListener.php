@@ -28,10 +28,7 @@ class QueueAbandonedCartEmailsForOrderListener
 
         $now = now();
 
-        AbandonedCartFlow::where('is_active', true)->get()->each(function (AbandonedCartFlow $flow) use ($order, $now) {
-            if (! $flow->hasTrigger('cancelled_order')) {
-                return;
-            }
+        collect([AbandonedCartFlow::getActiveFor('cancelled_order')])->filter()->each(function (AbandonedCartFlow $flow) use ($order, $now) {
 
             $cumulativeHours = 0;
 

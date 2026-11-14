@@ -402,7 +402,7 @@ MARKDOWN,
                 ],
             ],
             tips: [
-                'Slechts één flow kan tegelijk actief zijn. Activeer je een nieuwe flow, dan wordt de vorige automatisch uitgezet.',
+                'Per trigger kan één flow actief zijn; flows met verschillende triggers kunnen tegelijk aan. Activeer je een flow, dan gaan andere flows met dezelfde trigger automatisch uit.',
                 'Gebruik :firstName: of :customerName: in onderwerp en tekst om de mail persoonlijker te maken.',
                 'Met de cooldown sla je de mail over wanneer dezelfde klant net een nieuwe bestelling heeft geplaatst, zo voorkom je dat een review-verzoek vlak na een nieuwe aankoop binnenkomt.',
             ],

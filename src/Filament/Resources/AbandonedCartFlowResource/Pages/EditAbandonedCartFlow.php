@@ -70,7 +70,7 @@ class EditAbandonedCartFlow extends EditRecord
     protected function afterSave(): void
     {
         if ($this->record->is_active) {
-            AbandonedCartFlow::where('id', '!=', $this->record->id)->update(['is_active' => false]);
+            $this->record->deactivateOverlappingFlows();
         }
     }
 }

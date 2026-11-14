@@ -53,7 +53,7 @@ class AbandonedCartFlowResource extends Resource
 
             Toggle::make('is_active')
                 ->label(__('Actieve flow'))
-                ->helperText(__('Slechts één flow kan actief zijn tegelijk.')),
+                ->helperText(__('Per trigger kan één flow actief zijn; flows met verschillende triggers kunnen tegelijk aan.')),
 
             CheckboxList::make('triggers')
                 ->label(__('Triggers'))

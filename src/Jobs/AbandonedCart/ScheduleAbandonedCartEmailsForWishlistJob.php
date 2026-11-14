@@ -58,8 +58,7 @@ class ScheduleAbandonedCartEmailsForWishlistJob implements ShouldQueue
             return;
         }
 
-        $flows = AbandonedCartFlow::where('is_active', true)->get()
-            ->filter(fn (AbandonedCartFlow $flow) => $flow->hasTrigger('wishlist'));
+        $flows = collect([AbandonedCartFlow::getActiveFor('wishlist')])->filter();
 
         foreach ($flows as $flow) {
             $steps = $flow->steps()->where('enabled', true)->orderBy('sort_order')->get();
