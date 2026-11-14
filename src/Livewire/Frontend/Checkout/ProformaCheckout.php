@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\OssVat;
+use Dashed\DashedEcommerceCore\Classes\ShippingVat;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -353,18 +354,27 @@ class ProformaCheckout extends Component
             // manier waarop ConceptOrderService::saveAsConcept de bedragen zet: de
             // (btw-inclusieve) prijs telt op bij total en subtotal, het btw-deel bij btw.
             $shippingCost = 0.0;
-            $shippingVatRate = 21.0;
+            $shippingVatPerRate = [];
             if ($selectedShipping && ($selectedShipping['costs'] ?? 0) > 0) {
                 $shippingCost = (float) $selectedShipping['costs'];
-                $shippingVatRate = (float) ($selectedShipping['vat_rate'] ?? 21);
 
-                $shippingVat = $shippingVatRate > 0
-                    ? $shippingCost - ($shippingCost / (1 + $shippingVatRate / 100))
-                    : 0.0;
+                // Verzendkosten-btw naar verhouding van de omzet per tarief
+                // (zie ShippingVat). Proforma-prijzen komen uit de kassa: incl. btw.
+                $shippingVatPerRate = ShippingVat::split(
+                    $shippingCost,
+                    ShippingVat::amountPerRateFromOrderProducts($order->orderProducts()->get()),
+                    true
+                );
+
+                $vatPercentages = (array) ($order->vat_percentages ?? []);
+                foreach ($shippingVatPerRate as $rate => $vat) {
+                    $vatPercentages[$rate] = round((float) ($vatPercentages[$rate] ?? 0) + $vat, 2);
+                }
 
                 $order->total = (float) $order->total + $shippingCost;
                 $order->subtotal = (float) $order->subtotal + $shippingCost;
-                $order->btw = round((float) $order->btw + $shippingVat, 2);
+                $order->vat_percentages = $vatPercentages;
+                $order->btw = round(array_sum($vatPercentages), 2);
             }
 
             $order->save();
@@ -378,7 +388,8 @@ class ProformaCheckout extends Component
                 $orderProduct->order_id = $order->id;
                 $orderProduct->name = $selectedShipping['correctName'] ?? ($selectedShipping['name'] ?? 'Verzendkosten');
                 $orderProduct->price = $shippingCost;
-                $orderProduct->vat_rate = $shippingVatRate;
+                $orderProduct->btw = round(array_sum($shippingVatPerRate), 2);
+                $orderProduct->vat_rate = ShippingVat::effectiveRate($shippingCost, $shippingVatPerRate, true);
                 $orderProduct->discount = 0;
                 $orderProduct->product_extras = [];
                 $orderProduct->sku = 'shipping_costs';

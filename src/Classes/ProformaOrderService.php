@@ -41,16 +41,26 @@ class ProformaOrderService
             $shippingCosts = $posShippingCosts;
         }
 
+        $shippingVatPerRate = [];
+
         if ($shippingCosts > 0) {
-            $shippingVat = round($shippingCosts - ($shippingCosts / 1.21), 2);
+            // Verzendkosten-btw naar verhouding van de omzet per tarief, net als
+            // in de kassa zelf (zie ShippingVat). Kassaprijzen zijn incl. btw.
+            $shippingVatPerRate = ShippingVat::split(
+                (float) $shippingCosts,
+                ShippingVat::amountPerRateFromOrderProducts($order->orderProducts()->get()),
+                true
+            );
 
             $order->subtotal = round((float) $order->subtotal + $shippingCosts, 2);
             $order->total = round((float) $order->total + $shippingCosts, 2);
-            $order->btw = round((float) $order->btw + $shippingVat, 2);
 
             $vatPercentages = (array) ($order->vat_percentages ?? []);
-            $vatPercentages['21'] = round((float) ($vatPercentages['21'] ?? 0) + $shippingVat, 2);
+            foreach ($shippingVatPerRate as $rate => $vat) {
+                $vatPercentages[$rate] = round((float) ($vatPercentages[$rate] ?? 0) + $vat, 2);
+            }
             $order->vat_percentages = $vatPercentages;
+            $order->btw = round(array_sum($vatPercentages), 2);
         }
 
         $order->save();
@@ -62,7 +72,8 @@ class ProformaOrderService
             $shippingLine->order_id = $order->id;
             $shippingLine->name = $shippingMethod->name ?? 'Verzendkosten';
             $shippingLine->price = $shippingCosts;
-            $shippingLine->vat_rate = 21;
+            $shippingLine->btw = round(array_sum($shippingVatPerRate), 2);
+            $shippingLine->vat_rate = ShippingVat::effectiveRate((float) $shippingCosts, $shippingVatPerRate, true);
             $shippingLine->discount = 0;
             $shippingLine->product_extras = [];
             $shippingLine->sku = 'shipping_costs';

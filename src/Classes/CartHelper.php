@@ -50,6 +50,15 @@ class CartHelper
 
     public static ?array $vatPercentageOfTotals = [];
 
+    /** Productbedrag (na procentuele korting) zoals in de btw-basis meegeteld. */
+    public static float $productsTotalForVat = 0.0;
+
+    /** Omzet per btw-tarief (incl. 0%) waarnaar de verzendkosten-btw verdeeld wordt. */
+    public static array $amountPerRateForShipping = [];
+
+    /** De btw die een vast kortingsbedrag of promobon van de btw afhaalt. */
+    public static float $amountDiscountVat = 0.0;
+
     public static float $vatRates = 0;
 
     public static array $taxPercentages = [];
@@ -242,31 +251,49 @@ class CartHelper
         return $price / (100 + $vatRate) * 100;
     }
 
+    /**
+     * Btw over de verzendkosten. Zonder tarief: het totaal; met tarief: alleen
+     * het deel dat onder dat tarief valt. De verdeling over de tarieven volgt
+     * de omzet per tarief (zie ShippingVat).
+     */
     protected function getRawShippingVat(?float $vatRate = null): float
     {
-        if (! static::$shippingMethod) {
-            return 0.0;
+        $perRate = $this->getRawShippingVatPerRate();
+
+        if ($vatRate === null) {
+            return round(array_sum($perRate), 2);
         }
 
-        if (! $vatRate) {
-            $vatRate = $this->averageVatRate();
+        return (float) ($perRate[OssVat::rateKey($vatRate)] ?? 0.0);
+    }
+
+    /**
+     * @return array<string, float> verzendkosten-btw per tarief
+     */
+    protected function getRawShippingVatPerRate(): array
+    {
+        if (! static::$shippingMethod) {
+            return [];
         }
 
         $shippingMethod = ShippingMethod::find(static::$shippingMethod);
         if (! $shippingMethod) {
-            return 0.0;
+            return [];
         }
 
-        $baseCosts = $shippingMethod->costsForCart(static::$shippingZone);
-        if ($baseCosts <= 0 || $vatRate <= 0) {
-            return 0.0;
+        $baseCosts = (float) $shippingMethod->costsForCart(static::$shippingZone);
+        if ($baseCosts <= 0) {
+            return [];
         }
 
-        if (static::$calculateInclusiveTax) {
-            return round($baseCosts / (100 + $vatRate) * $vatRate, 2);
-        }
+        $this->setVatBaseInfoForCalculation();
 
-        return round($baseCosts / 100 * $vatRate, 2);
+        return ShippingVat::split(
+            $baseCosts,
+            static::$amountPerRateForShipping,
+            static::$calculateInclusiveTax,
+            $this->vatRateFor((float) ShippingVat::FALLBACK_RATE)
+        );
     }
 
     protected function getRawPaymentVat(): float
@@ -328,18 +355,9 @@ class CartHelper
                 }
             }
         } elseif (static::$discountCode->type == 'amount') {
+            // Een vast bedrag is incl. 21% btw (zie DiscountCode::amountDiscountVat()).
             $grossDiscount = $this->getAmountDiscount();
-            $vatPartOfDiscount = 0.0;
-
-            foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-                if (! $vatPercentageOfTotal) {
-                    continue;
-                }
-
-                $vatPartOfDiscount += (($grossDiscount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
-            }
-
-            $totalDiscount = $grossDiscount - $vatPartOfDiscount;
+            $totalDiscount = $grossDiscount - DiscountCode::amountDiscountVat($grossDiscount);
         }
 
         return (float) number_format(max($totalDiscount, 0), 2, '.', '');
@@ -650,6 +668,11 @@ class CartHelper
         return min($amount, round($eligible, 2));
     }
 
+    protected function isAmountDiscount(): bool
+    {
+        return static::$discountCode && static::$discountCode->type == 'amount';
+    }
+
     public function getProductForCartItem($cartItem): ?Product
     {
         $id = $cartItem->id; // product_id
@@ -754,6 +777,7 @@ class CartHelper
         $vatRates = 0;
         $vatRatesCount = 0;
         $totalAmountForVats = [];
+        $amountPerRateForShipping = [];
         $totalPriceForProducts = 0;
 
         foreach (static::$cartItems as $cartItem) {
@@ -778,6 +802,9 @@ class CartHelper
                     $totalPriceForProducts += $price;
 
                     $vatRate = $this->vatRateFor((float) ($cartProduct->options['vat_rate'] ?? $cartProduct->vat_rate ?? 0));
+
+                    $shippingKey = OssVat::rateKey($vatRate);
+                    $amountPerRateForShipping[$shippingKey] = ($amountPerRateForShipping[$shippingKey] ?? 0) + $price;
 
                     if (static::$calculateInclusiveTax) {
                         $price = $price / (100 + $vatRate) * $vatRate;
@@ -842,6 +869,8 @@ class CartHelper
                 : 0;
         }
 
+        static::$productsTotalForVat = (float) $totalPriceForProducts;
+        static::$amountPerRateForShipping = $amountPerRateForShipping;
         static::$totalAmountForVats = $totalAmountForVats;
         static::$totalVatPerPercentage = $totalVatPerPercentage;
         static::$vatPercentageOfTotals = $vatPercentageOfTotals;
@@ -853,17 +882,21 @@ class CartHelper
         static::$vatBaseInitialized = true;
     }
 
+    /**
+     * Het gemiddelde tarief voor de verzendregel op de order. Alleen ter
+     * informatie: de btw zelf wordt per tarief verdeeld (zie ShippingVat), en
+     * OrderTotalsCalculator verdeelt de verzendregel bij herberekenen opnieuw.
+     */
     public function getVatRateForShippingMethod(): float
     {
-        if ($this->getVatReverseCharge()) {
+        if ($this->getVatReverseCharge() || ! static::$shippingMethod) {
             return 0.0;
         }
 
-        if (static::$shippingMethod && static::$vatRatesCount) {
-            return $this->averageVatRate();
-        }
+        $shippingMethod = ShippingMethod::find(static::$shippingMethod);
+        $costs = $shippingMethod ? (float) $shippingMethod->costsForCart(static::$shippingZone) : 0.0;
 
-        return 0.0;
+        return ShippingVat::effectiveRate($costs, $this->getRawShippingVatPerRate(), static::$calculateInclusiveTax);
     }
 
     /**
@@ -918,34 +951,43 @@ class CartHelper
 
         $tax = static::$tax;
         $taxWithoutDiscount = static::$taxWithoutDiscount;
-
-        if (static::$discountCode && static::$discountCode->type == 'amount') {
-            $discountAmount = $this->getAmountDiscount();
-
-            if (static::$calculateInclusiveTax) {
-                foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-                    if ($vatPercentageOfTotal) {
-                        $tax -= (($discountAmount * ($vatPercentageOfTotal / 100)) / (100 + $percentage) * $percentage);
-                    }
-                }
-            } else {
-                foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-                    if ($vatPercentageOfTotal) {
-                        $tax -= (($discountAmount * ($vatPercentageOfTotal / 100)) / 100 * $percentage);
-                    }
-                }
-            }
-        }
+        static::$amountDiscountVat = 0.0;
 
         $shippingVat = $this->getVatForShippingMethod();
         $paymentVat = $this->getVatForPaymentMethod();
 
+        if ($this->isAmountDiscount()) {
+            // Een vast kortingsbedrag (of promobon) is één bedrag op de order:
+            // de btw van de producten blijft staan en er gaat 21% btw over het
+            // werkelijk gebruikte bedrag af, ongeacht de tarieven van de
+            // producten. Verkochte cadeaubonnen lopen hier niet langs: dat zijn
+            // betalingen (CartGiftcards) zonder invloed op de btw.
+            $this->setShippingCosts();
+            $this->setPaymentMethodCosts();
+
+            $grossTotal = static::$productsTotalForVat
+                + (static::$shippingMethod ? static::$shippingCosts : 0)
+                + (static::$paymentMethod ? static::$paymentCosts : 0);
+
+            if (! static::$calculateInclusiveTax) {
+                $grossTotal += $tax + $shippingVat + $paymentVat;
+            }
+
+            // Zelfde aftopping als setDiscount(): nooit meer dan het totaal min een cent.
+            $amount = $this->getAmountDiscount();
+            $applied = $amount > $grossTotal ? max($grossTotal - 0.01, 0) : $amount;
+
+            static::$amountDiscountVat = DiscountCode::amountDiscountVat($applied, $this->vatRateFor((float) DiscountCode::AMOUNT_DISCOUNT_VAT_RATE));
+
+            $tax -= static::$amountDiscountVat;
+        }
+
         $tax += $shippingVat + $paymentVat;
         $taxWithoutDiscount += $shippingVat + $paymentVat;
 
-        if ($tax < 0) {
-            $tax = 0;
-        }
+        // Een negatief btw-bedrag wordt bewust niet naar 0 geklemd: bij een
+        // korting op alleen 9%-producten kan de 21%-correctie groter zijn dan
+        // de productbtw, en dat moet zo in de boekhouding terechtkomen.
         if ($taxWithoutDiscount < 0) {
             $taxWithoutDiscount = 0;
         }
@@ -1083,7 +1125,10 @@ class CartHelper
 
         if (! static::$calculateInclusiveTax) {
             $this->setTax();
-            $total += static::$tax;
+            // Het vaste kortingsbedrag gaat in setDiscount() als bedrag incl. btw
+            // van het totaal af. De btw die het van de btw afhaalt hoort hier dus
+            // nog in het totaal vóór korting, anders gaat die btw er twee keer af.
+            $total += static::$tax + static::$amountDiscountVat;
         }
 
         if (static::$shippingMethod) {
@@ -1287,33 +1332,11 @@ class CartHelper
 
         $totalVatPerPercentage = static::$totalVatPerPercentage;
 
-        if (static::$discountCode && static::$discountCode->type == 'amount') {
-            $discount = $this->getAmountDiscount();
-
-            if (static::$calculateInclusiveTax) {
-                foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-                    if ($vatPercentageOfTotal) {
-                        foreach ($totalVatPerPercentage as $p => $value) {
-                            $totalVatPerPercentage[$p] -= (($discount * ($vatPercentageOfTotal / 100)) / (100 + $p) * $p);
-                        }
-                    }
-                }
-            } else {
-                foreach (static::$vatPercentageOfTotals as $percentage => $vatPercentageOfTotal) {
-                    if ($vatPercentageOfTotal) {
-                        foreach ($totalVatPerPercentage as $p => $value) {
-                            $totalVatPerPercentage[$p] -= (($discount * ($vatPercentageOfTotal / 100)) / 100 * $p);
-                        }
-                    }
-                }
-            }
-        }
-
-        if (static::$shippingMethod) {
-            foreach ($totalVatPerPercentage as $percentage => $value) {
-                $result = $this->getVatForShippingMethod((float) $percentage);
-                $totalVatPerPercentage[$percentage] += $result;
-            }
+        // Verzendkosten-btw naar verhouding van de omzet per tarief. Voorheen
+        // kreeg elk tarief hier de volle verzendkosten, waardoor de uitsplitsing
+        // bij gemengde tarieven hoger uitkwam dan het btw-totaal.
+        foreach ($this->getRawShippingVatPerRate() as $percentage => $shippingVat) {
+            $totalVatPerPercentage[$percentage] = ($totalVatPerPercentage[$percentage] ?? 0) + $shippingVat;
         }
 
         if (static::$paymentMethod) {
@@ -1326,15 +1349,22 @@ class CartHelper
             $totalVatPerPercentage[$percentage] = round($value, 2);
         }
 
-        // Houd de BTW-uitsplitsing consistent met setTax(): die klemt een negatief
-        // BTW-totaal (bv. bij een korting/cadeaubon groter dan de productwaarde) naar 0.
-        // Zonder deze klem kan vat_percentages negatief blijven terwijl order->btw 0 is,
-        // waardoor de "BTW :percentage:%"-regel en het BTW-totaal op de (verzamel)factuur
-        // niet meer met elkaar overeenkomen.
-        if (array_sum($totalVatPerPercentage) < 0) {
-            foreach ($totalVatPerPercentage as $percentage => $value) {
-                $totalVatPerPercentage[$percentage] = 0.0;
-            }
+        // Vast kortingsbedrag / promobon: hetzelfde bedrag dat setTax() eraf
+        // haalt, volledig op het 21%-tarief (of het OSS-standaardtarief). Een
+        // negatieve uitkomst blijft staan (zie setTax()).
+        if ($this->isAmountDiscount()) {
+            $this->setTax();
+
+            $rate = OssVat::rateKey($this->vatRateFor((float) DiscountCode::AMOUNT_DISCOUNT_VAT_RATE));
+            $totalVatPerPercentage[$rate] = round(($totalVatPerPercentage[$rate] ?? 0) - static::$amountDiscountVat, 2);
+        }
+
+        // Bij prijzen incl. btw hangt het totaal niet van de btw af. Dan maken we
+        // het btw-totaal gelijk aan de som van de afgeronde bedragen per tarief,
+        // zodat factuur en boekhouding nooit een cent verschillen.
+        if (static::$calculateInclusiveTax) {
+            $this->setTax();
+            static::$tax = round(array_sum($totalVatPerPercentage), 2);
         }
 
         static::$taxPercentages = $totalVatPerPercentage;

@@ -168,8 +168,9 @@ class OssVat
     }
 
     /**
-     * Zet order->btw en vat_percentages gelijk aan de som van de regels. Voor
-     * importen en de kassa, die de order-btw vóór de regels met 21% uitrekenen.
+     * Rekent order->btw en vat_percentages opnieuw uit de regels uit (OrderVat).
+     * Voor importen en de kassa, die de order-btw vóór de regels met het eigen
+     * tarief uitrekenen.
      */
     public static function recalculateOrderVat(Order $order): void
     {
@@ -184,21 +185,18 @@ class OssVat
             return;
         }
 
-        $btw = 0.0;
-        $perRate = [];
+        // Regels tegen hun (land)tarief, de verzendregel naar verhouding en een
+        // korting op orderniveau met het standaardtarief van het land eraf
+        // (zie OrderVat). OSS werkt alleen met prijzen incl. btw.
+        $breakdown = OrderTotalsCalculator::breakdownForLines($order, $lines->map(fn ($line) => [
+            'price' => (float) $line->price,
+            'discount' => (float) ($line->discount ?? 0),
+        ])->all());
 
-        foreach ($lines as $line) {
-            $lineVat = (float) $line->btw;
-            $btw += $lineVat;
+        $vat = OrderVat::calculate($order, $breakdown['net'] - $breakdown['total'], true);
 
-            $key = static::rateKey((float) ($line->vat_rate ?? 0));
-            if ($key !== '0') {
-                $perRate[$key] = ($perRate[$key] ?? 0.0) + $lineVat;
-            }
-        }
-
-        $order->btw = round($btw, 2);
-        $order->vat_percentages = array_map(fn ($amount) => round($amount, 2), $perRate);
+        $order->btw = $vat['total'];
+        $order->vat_percentages = $vat['per_rate'];
         $order->saveQuietly();
     }
 

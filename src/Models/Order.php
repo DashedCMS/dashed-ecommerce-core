@@ -29,6 +29,9 @@ use Dashed\DashedCore\Traits\HasDynamicRelation;
 use Dashed\DashedEcommerceCore\Classes\Printing;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\OssVat;
+use Dashed\DashedEcommerceCore\Classes\OrderVat;
+use Dashed\DashedEcommerceCore\Classes\ShippingVat;
 use Dashed\DashedCore\Notifications\AdminNotifier;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
@@ -68,6 +71,18 @@ class Order extends Model
     use SoftDeletes;
 
     public const STATUS_CONCEPT = 'concept';
+
+    /**
+     * Versie van de btw-rekenregels waarmee een order is gemaakt (kolom
+     * vat_calculation). 2: verzendkosten-btw naar verhouding van de omzet per
+     * tarief, een korting op orderniveau (vast bedrag, promobon) met 21% eraf
+     * (zie OrderVat). null: een order van daarvoor; die houdt in de
+     * verzamelfactuur en bij creditering de oude berekening, zodat een al
+     * aangegeven periode niet verandert.
+     */
+    public const VAT_CALCULATION = 2;
+
+    protected static ?bool $hasVatCalculationColumn = null;
 
     /**
      * Statussen waaruit een order later betaald kan worden zonder al omzet
@@ -143,11 +158,33 @@ class Order extends Model
         return OrderFactory::new();
     }
 
+    public static function hasVatCalculationColumn(): bool
+    {
+        return static::$hasVatCalculationColumn ??= \Illuminate\Support\Facades\Schema::hasColumn('dashed__orders', 'vat_calculation');
+    }
+
+    /**
+     * Of deze order met de huidige btw-rekenregels is gemaakt (zie VAT_CALCULATION).
+     */
+    public function usesCurrentVatCalculation(): bool
+    {
+        return (int) ($this->vat_calculation ?? 0) >= static::VAT_CALCULATION;
+    }
+
     public static function boot()
     {
         parent::boot();
 
         static::creating(function ($order) {
+            // Een creditorder rekent zoals zijn originele order; elke andere
+            // nieuwe order met de huidige regels. Alleen als de kolom er al is,
+            // zodat een order tussen deploy en migratie niet faalt.
+            if ($order->vat_calculation === null && static::hasVatCalculationColumn()) {
+                $order->vat_calculation = $order->credit_for_order_id
+                    ? static::query()->whereKey($order->credit_for_order_id)->value('vat_calculation')
+                    : static::VAT_CALCULATION;
+            }
+
             $order->ip = request()->ip();
             $order->hash = Str::random(32);
             $order->locale = app()->getLocale();
@@ -1909,10 +1946,11 @@ class Order extends Model
         $discountToGet = $this->discount;
         $discountToSave = 0;
 
-        $vatPercentages = 0;
-        $vatPercentageCount = 0;
         $vatPercentagesForOrder = [];
-        $vatPercentagesCount = [];
+        // Gecrediteerde productomzet per tarief: de basis voor de verdeling van
+        // verzendkosten-btw (zie ShippingVat).
+        $creditedAmountPerRate = [];
+        $originalAmountPerRate = ShippingVat::amountPerRateFromOrderProducts($this->orderProducts()->get());
 
         foreach ($chosenOrderProducts as $chosenOrderProduct) {
             if ($chosenOrderProduct['refundQuantity'] > 0) {
@@ -1930,30 +1968,33 @@ class Order extends Model
 
                 $discountToGet -= $chosenOrderProduct['discount'];
                 $discountToSave += $chosenOrderProduct['discount'];
-                $vatPercentages += ($orderProduct->vat_rate * $chosenOrderProduct['refundQuantity']);
-                $vatPercentageCount += $chosenOrderProduct['refundQuantity'];
 
                 $price = $orderProduct->price;
 
                 $newOrder->total += $price;
 
-                if ($calculateInclusiveTax) {
-                    $taxPrice = $price / (100 + $orderProduct->vat_rate) * $orderProduct->vat_rate;
+                if ($orderProduct->sku === 'shipping_costs' && $this->usesCurrentVatCalculation()) {
+                    // Verzendkosten volgen de omzet per tarief van de
+                    // oorspronkelijke order, net als bij het afrekenen. Een order
+                    // van vóór die regels crediteert tegen het tarief op de regel.
+                    $taxPerRate = ShippingVat::split((float) $price, $originalAmountPerRate, (bool) $calculateInclusiveTax);
                 } else {
-                    $taxPrice = $price / 100 * $orderProduct->vat_rate;
+                    $rateKey = OssVat::rateKey((float) $orderProduct->vat_rate);
+                    $taxPerRate = [$rateKey => $calculateInclusiveTax
+                        ? $price / (100 + $orderProduct->vat_rate) * $orderProduct->vat_rate
+                        : $price / 100 * $orderProduct->vat_rate];
+
+                    if ($orderProduct->sku !== 'payment_costs') {
+                        $creditedAmountPerRate[$rateKey] = ($creditedAmountPerRate[$rateKey] ?? 0) + abs((float) $price);
+                    }
                 }
 
-                $newOrder->btw += $taxPrice;
-
-                $vatRate = number_format($orderProduct->vat_rate, 0);
-                if (! isset($vatPercentagesForOrder[$vatRate])) {
-                    $vatPercentagesForOrder[$vatRate] = 0;
+                foreach ($taxPerRate as $vatRate => $taxPrice) {
+                    $newOrder->btw += $taxPrice;
+                    // round() i.p.v. number_format(): dat gaf vanaf 1000 een
+                    // string met duizendtalscheiding die niet op te tellen is.
+                    $vatPercentagesForOrder[$vatRate] = ($vatPercentagesForOrder[$vatRate] ?? 0) + round($taxPrice, 2);
                 }
-                $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
-                if (! isset($vatPercentagesCount[$vatRate])) {
-                    $vatPercentagesCount[$vatRate] = 0;
-                }
-                $vatPercentagesCount[$vatRate] += $chosenOrderProduct['refundQuantity'];
             }
         }
 
@@ -1981,15 +2022,8 @@ class Order extends Model
 
             $newOrder->btw += $taxPrice;
 
-            $vatRate = 21; // Hardcoded BTW percentage
-            if (! isset($vatPercentagesForOrder[$vatRate])) {
-                $vatPercentagesForOrder[$vatRate] = 0;
-            }
-            $vatPercentagesForOrder[$vatRate] += number_format($taxPrice, 2);
-            if (! isset($vatPercentagesCount[$vatRate])) {
-                $vatPercentagesCount[$vatRate] = 0;
-            }
-            $vatPercentagesCount[$vatRate] += 1;
+            $vatRate = '21'; // Hardcoded BTW percentage
+            $vatPercentagesForOrder[$vatRate] = ($vatPercentagesForOrder[$vatRate] ?? 0) + round($taxPrice, 2);
         }
 
         if ($freeShippingReversalAmount !== null && round((float) $freeShippingReversalAmount, 2) > 0) {
@@ -2003,49 +2037,74 @@ class Order extends Model
             $orderProduct->discount = 0;
             $orderProduct->order_id = $newOrder->id;
             $orderProduct->sku = \Dashed\DashedEcommerceCore\Services\OrderReturn\FreeShippingReversal::SKU;
-            // Het tarief volgt de gecrediteerde regels (gewogen gemiddelde, zoals
-            // bij 'korting terugvorderen'), zodat OSS en verlegde btw kloppen.
-            // Een creditorderregel houdt een meegegeven tarief in de hook.
-            $reversalVatRate = $vatPercentageCount > 0 ? round($vatPercentages / $vatPercentageCount, 2) : 21;
-            $orderProduct->vat_rate = $reversalVatRate;
+            // Verzendkosten: de btw volgt de omzet per tarief van de gecrediteerde
+            // regels (zie ShippingVat), zodat OSS en gemengde tarieven kloppen.
+            // Zonder gecrediteerde productregels valt hij terug op de hele order.
+            // Het tarief op de regel is het gemiddelde, alleen ter informatie;
+            // een creditorderregel houdt een meegegeven tarief in de hook.
+            $reversalVatPerRate = ShippingVat::split(
+                (float) $orderProduct->price,
+                $creditedAmountPerRate ?: $originalAmountPerRate,
+                (bool) $calculateInclusiveTax,
+                OssVat::rateForOrder($this, (float) ShippingVat::FALLBACK_RATE)
+            );
+            $orderProduct->vat_rate = ShippingVat::effectiveRate((float) $orderProduct->price, $reversalVatPerRate, (bool) $calculateInclusiveTax);
+            $orderProduct->btw = round(array_sum($reversalVatPerRate), 2);
             $orderProduct->save();
 
-            $price = $orderProduct->price;
+            $newOrder->total += $orderProduct->price;
 
-            $newOrder->total += $price;
-
-            $taxPrice = $calculateInclusiveTax
-                ? $price / (100 + $reversalVatRate) * $reversalVatRate
-                : $price / 100 * $reversalVatRate;
-
-            $newOrder->btw += $taxPrice;
-
-            $vatRate = number_format($reversalVatRate, 0);
-            $vatPercentagesForOrder[$vatRate] = ($vatPercentagesForOrder[$vatRate] ?? 0) + number_format($taxPrice, 2);
-            $vatPercentagesCount[$vatRate] = $vatPercentagesCount[$vatRate] ?? 0;
+            foreach ($reversalVatPerRate as $vatRate => $taxPrice) {
+                $newOrder->btw += $taxPrice;
+                $vatPercentagesForOrder[$vatRate] = ($vatPercentagesForOrder[$vatRate] ?? 0) + $taxPrice;
+            }
         }
 
         $newOrder->subtotal = $newOrder->total;
 
         if ($refundDiscountCosts && $discountToGet > 0.00) {
-            if ($calculateInclusiveTax) {
-                $newOrder->btw += ($discountToGet / (100 + ($vatPercentages / $vatPercentageCount)) * ($vatPercentages / $vatPercentageCount));
+            // De korting op orderniveau haalde 21% btw van de order af (zie
+            // OrderVat); de creditorder draait precies dat bedrag terug, op
+            // hetzelfde tarief. Een verkochte cadeaubon is betaalmiddel en
+            // raakte de btw niet, dus dan ook geen btw-correctie.
+            if ($this->discountCode?->isSoldGiftcard()) {
+                // Betaalmiddel: geen btw-correctie.
+            } elseif ($this->usesCurrentVatCalculation()) {
+                $discountRate = OrderVat::orderDiscountRate($this);
+                $discountVat = DiscountCode::amountDiscountVat((float) $discountToGet, $discountRate);
+                $discountRateKey = OssVat::rateKey($discountRate);
+
+                $newOrder->btw += $discountVat;
+                $vatPercentagesForOrder[$discountRateKey] = ($vatPercentagesForOrder[$discountRateKey] ?? 0) + round($discountVat, 2);
             } else {
-                $newOrder->btw += ($discountToGet / 100 * ($vatPercentages / $vatPercentageCount));
+                // Een order van vóór de huidige regels drukte de korting naar
+                // verhouding van de omzet per tarief; de creditorder draait dat
+                // op dezelfde manier terug.
+                $revenue = array_filter($originalAmountPerRate, fn ($amount) => $amount > 0);
+                $revenueTotal = array_sum($revenue);
+
+                foreach ($revenue as $rateKey => $amount) {
+                    $rate = (float) $rateKey;
+                    if ($rate <= 0 || $revenueTotal <= 0) {
+                        continue;
+                    }
+
+                    $share = $discountToGet * ($amount / $revenueTotal);
+                    $discountVat = $calculateInclusiveTax ? $share / (100 + $rate) * $rate : $share / 100 * $rate;
+
+                    $newOrder->btw += $discountVat;
+                    $vatPercentagesForOrder[$rateKey] = ($vatPercentagesForOrder[$rateKey] ?? 0) + round($discountVat, 2);
+                }
             }
 
             $newOrder->total += $discountToGet;
             $discountToSave += $discountToGet;
-
-            $totalVatBeforeDiscount = array_sum($vatPercentagesForOrder);
-
-            foreach ($vatPercentagesForOrder as $vatRate => $vatPrice) {
-                $vatPercentagesForOrder[$vatRate] = $newOrder->btw / 100 * (100 * ($vatPercentagesCount[$vatRate] / array_sum($vatPercentagesCount)));
-            }
         }
 
         $newOrder->discount = 0 - $discountToSave;
-        $newOrder->vat_percentages = $vatPercentagesForOrder;
+        $newOrder->vat_percentages = array_map(fn ($amount) => round((float) $amount, 2), $vatPercentagesForOrder);
+        // Btw-totaal = som van de afgeronde bedragen per tarief.
+        $newOrder->btw = round(array_sum($newOrder->vat_percentages), 2);
 
         $newOrder->save();
         $newOrder->refresh();
@@ -2379,19 +2438,68 @@ class Order extends Model
         ), report: true);
     }
 
+    /**
+     * De btw die in de korting van deze order zit.
+     *
+     * Een regelkorting (procentuele code) gaat van de regel af en draagt dus
+     * het tarief van die regel. Wat er dan nog van `discount` over is, is een
+     * korting op orderniveau (vast bedrag, promobon, handmatig) en die draagt
+     * 21% (zie OrderVat); een verkochte cadeaubon is betaalmiddel en draagt
+     * geen btw. Een order van vóór die regels verdeelt de korting naar
+     * verhouding van de omzet, zoals toen ook de btw is berekend.
+     *
+     * Voorheen kwam hier door een rekenfout de volledige btw van de order uit,
+     * waardoor de bruto omzet in de financiële rapportage te laag was.
+     */
     public function getDiscountTaxAttribute()
     {
-        $discountTax = 0.00;
+        $discount = (float) $this->discount;
 
-        if ($this->discount > 0.00) {
-            $totalPriceBeforeDiscount = $this->total + $this->discount;
-            $percentageDiscountOfTotalPrice = $this->discount / $totalPriceBeforeDiscount * 100;
-            foreach ($this->vat_percentages as $vatPercentage => $amount) {
-                $discountTax += ($amount * (100 / $percentageDiscountOfTotalPrice)) / 100 * $percentageDiscountOfTotalPrice;
-            }
+        if ($discount <= 0.00) {
+            return 0.00;
         }
 
-        return $discountTax;
+        $inclusive = (bool) Customsetting::get('taxes_prices_include_taxes');
+        $lineDiscount = 0.0;
+        $lineDiscountTax = 0.0;
+
+        foreach ($this->orderProducts as $orderProduct) {
+            $lineAmount = (float) ($orderProduct->discount ?? 0);
+            $rate = (float) ($orderProduct->vat_rate ?? 0);
+
+            if ($lineAmount <= 0) {
+                continue;
+            }
+
+            $lineDiscount += $lineAmount;
+            $lineDiscountTax += $inclusive
+                ? $lineAmount / (100 + $rate) * $rate
+                : $lineAmount / 100 * $rate;
+        }
+
+        $orderLevelDiscount = $this->discountCode?->isSoldGiftcard() ? 0.0 : max(0.0, $discount - $lineDiscount);
+
+        if ($this->usesCurrentVatCalculation()) {
+            return round($lineDiscountTax + DiscountCode::amountDiscountVat($orderLevelDiscount, OrderVat::orderDiscountRate($this)), 2);
+        }
+
+        // Een order van vóór de huidige regels drukte de korting naar
+        // verhouding van de omzet per tarief.
+        $revenue = array_filter(ShippingVat::amountPerRateFromOrderProducts($this->orderProducts), fn ($amount) => $amount > 0);
+        $revenueTotal = array_sum($revenue);
+        $orderLevelTax = 0.0;
+
+        foreach ($revenue as $rateKey => $amount) {
+            $rate = (float) $rateKey;
+            if ($rate <= 0 || $revenueTotal <= 0) {
+                continue;
+            }
+
+            $share = $orderLevelDiscount * ($amount / $revenueTotal);
+            $orderLevelTax += $inclusive ? $share / (100 + $rate) * $rate : $share / 100 * $rate;
+        }
+
+        return round($lineDiscountTax + $orderLevelTax, 2);
     }
 
     public function getDiscountWithoutTaxAttribute()
