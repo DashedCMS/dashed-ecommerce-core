@@ -163,7 +163,7 @@ class BackfillFlowService
             && AbandonedCartFlow::getActiveFor($trigger)?->is($flow) === true;
     }
 
-        private function delayInHours(AbandonedCartFlowStep $step): int
+    private function delayInHours(AbandonedCartFlowStep $step): int
     {
         if (isset($step->delay_unit) && $step->delay_unit === 'days') {
             return (int) ($step->delay_value ?? 0) * 24;
