@@ -23,6 +23,7 @@ use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
+use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 
 class OrderController extends Controller
 {
@@ -1174,6 +1175,40 @@ class OrderController extends Controller
                 // Mail-fout mag het opslaan van de notitie niet blokkeren.
             }
         }
+
+        return $this->detail($model);
+    }
+
+    /**
+     * Stuur de klant een betaallink/-herinnering voor het openstaande bedrag.
+     * Hergebruikt de Filament SendPaymentLinkAction zodat concept-activatie +
+     * factuur identiek zijn aan het CMS. Standaard het volledige openstaande
+     * bedrag + het order-e-mailadres; beide optioneel te overschrijven.
+     */
+    public function sendPaymentLink(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        $data = $request->validate([
+            'amount' => ['sometimes', 'nullable', 'numeric', 'min:0.01'],
+            'email' => ['sometimes', 'nullable', 'email'],
+        ]);
+
+        $outstanding = (float) $model->outstandingAmount();
+        abort_if($outstanding <= 0, 422, 'Deze bestelling heeft geen openstaand bedrag.');
+
+        $amount = isset($data['amount']) && $data['amount'] !== null ? (float) $data['amount'] : $outstanding;
+        $email = ! empty($data['email']) ? (string) $data['email'] : (string) $model->email;
+        abort_if($email === '', 422, 'Geen e-mailadres bekend voor deze bestelling.');
+
+        (new SendPaymentLinkAction())->handle($model, ['amount' => $amount, 'email' => $email]);
+
+        OrderLog::createLog(
+            orderId: $model->id,
+            tag: 'order.payment_link.sent',
+            note: 'Betaallink verstuurd naar ' . $email . ' (€ ' . number_format($amount, 2, ',', '.') . ') via de app.',
+            userId: auth()->id(),
+        );
 
         return $this->detail($model);
     }

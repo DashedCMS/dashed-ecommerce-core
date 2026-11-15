@@ -171,6 +171,7 @@ Route::prefix('api/v1')
         Route::get('orders/{order}/label-options', [OrderController::class, 'labelOptions'])->middleware('ability:orders.read');
         Route::post('orders/{order}/create-label', [OrderController::class, 'createLabel'])->middleware('ability:orders.write');
         Route::post('orders/{order}/notes', [OrderController::class, 'addNote'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/payment-link', [OrderController::class, 'sendPaymentLink'])->middleware('ability:orders.write');
         Route::post('orders/{order}/print', [OrderController::class, 'print'])->middleware('ability:orders.write');
         Route::post('orders/{order}/print-documents', [OrderController::class, 'printDocuments'])->middleware('ability:orders.write');
         Route::get('orders/{order}/print-jobs', [OrderController::class, 'printJobs'])->middleware('ability:orders.read');
