@@ -17,6 +17,32 @@ use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 
 class OpenOrderProductsTable
 {
+    /** Deadline van de order van een regel (leverdatum leidend), als gecorreleerde subquery. */
+    public const DEADLINE_SQL = '(select COALESCE(deadline_orders.deliver_by_date, deadline_orders.ship_by_date) from dashed__orders as deadline_orders where deadline_orders.id = dashed__order_products.order_id limit 1)';
+
+    /** Sorteer op deadline; regels zonder deadline altijd onderaan. */
+    public static function orderByDeadline(Builder $query, string $direction): Builder
+    {
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+
+        return $query->orderByRaw(static::DEADLINE_SQL . ' is null')
+            ->orderByRaw(static::DEADLINE_SQL . ' ' . $direction);
+    }
+
+    /** Filter op deadline: late, today, tomorrow of today_or_earlier. */
+    public static function filterDeadline(Builder $query, ?string $value): Builder
+    {
+        $today = now()->toDateString();
+
+        return match ($value) {
+            'late' => $query->whereRaw(static::DEADLINE_SQL . ' < ?', [$today]),
+            'today' => $query->whereRaw(static::DEADLINE_SQL . ' = ?', [$today]),
+            'tomorrow' => $query->whereRaw(static::DEADLINE_SQL . ' = ?', [now()->addDay()->toDateString()]),
+            'today_or_earlier' => $query->whereRaw(static::DEADLINE_SQL . ' <= ?', [$today]),
+            default => $query,
+        };
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -149,6 +175,28 @@ class OpenOrderProductsTable
                         'shipped' => 'primary',
                         default => 'gray',
                     }),
+                TextColumn::make('deadline')
+                    ->label(__('Deadline'))
+                    ->toggleable()
+                    ->badge()
+                    ->getStateUsing(function ($record) {
+                        $deadline = $record->order?->effectiveDeadline();
+
+                        if (! $deadline) {
+                            return '-';
+                        }
+
+                        return ($record->order->deadline_source === 'bol' ? 'Bol ' : '') . $deadline->format('d-m');
+                    })
+                    ->color(fn ($record): string => match ($record->order?->deadlineUrgency()) {
+                        'late', 'today' => 'danger',
+                        'tomorrow' => 'warning',
+                        default => 'gray',
+                    })
+                    ->tooltip(fn ($record): ?string => $record->order?->deadlineLabel())
+                    ->sortable(query: fn (Builder $q, string $dir) => static::orderByDeadline($q, $dir))
+                    // Een gegroepeerde regel bundelt meerdere orders, dus geen eigen deadline.
+                    ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
                 TextColumn::make('order.name')
                     ->label(__('Klant'))
                     ->toggleable()
@@ -162,6 +210,16 @@ class OpenOrderProductsTable
             ])
             ->defaultSort('order_id', 'desc')
             ->filters([
+                SelectFilter::make('deadline')
+                    ->label(__('Deadline'))
+                    ->options([
+                        'late' => __('Te laat'),
+                        'today' => __('Vandaag'),
+                        'tomorrow' => __('Morgen'),
+                        'today_or_earlier' => __('Vandaag of eerder'),
+                    ])
+                    ->query(fn (Builder $query, array $data): Builder => static::filterDeadline($query, $data['value'] ?? null)),
+
                 SelectFilter::make('fulfillment_status')
                     ->label(__('Fulfillment status'))
                     ->options(Orders::getFulfillmentStatusses())

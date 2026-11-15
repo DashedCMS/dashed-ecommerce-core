@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.197.0 - 2026-11-15
+
+### Added
+- **Openstaande bestellingen: deadline.** Kolom "Deadline" (zelfde badge, kleur en tooltip als in de orderlijst, "Bol " ervoor bij een Bol-deadline), sorteerbaar met regels zonder deadline onderaan, en filter Deadline (te laat, vandaag, morgen, vandaag of eerder). Niet zichtbaar op de gegroepeerde tabbladen. `OpenOrderProductsTable::orderByDeadline()` en `filterDeadline()` werken via een gecorreleerde subquery (`DEADLINE_SQL`), zodat tabs met eigen joins blijven werken.
+
+
 ## v4.196.0 - 2026-11-14
 
 ### Changed
