@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.198.1 - 2026-11-15
+
+### Added
+- **Contact via de Conversions API.** Elk verstuurd dashed-forms-formulier (`FormSubmitted`) gaat als `Contact` naar Meta, met alleen het gehashte e-mailadres en de formuliernaam. Het event-ID gaat via de Livewire-payload naar de pixel voor ontdubbeling. Schakelaar per site `meta_capi_event_contact` (standaard aan zodra de Conversions API aan staat, net als de andere browser-events). Vereist dashed-forms >= 4.12.5 en dashed-core >= 4.107.1 voor de ontdubbeling.
+
 ## v4.198.0 - 2026-11-15
 
 ### Added

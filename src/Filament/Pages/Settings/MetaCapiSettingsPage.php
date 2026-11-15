@@ -94,6 +94,10 @@ class MetaCapiSettingsPage extends Page implements HasSchemas
                         ->label(__('Ook het openen van de checkout versturen (InitiateCheckout)'))
                         ->visible(fn (Get $get) => (bool) $get("meta_capi_enabled_{$id}"))
                         ->helperText(__('Eén keer per winkelwagen per bezoek aan de checkout. Deze drie events krijgen geen logregel per stuk; het log toont dagtellers en mislukte verzendingen.')),
+                    Toggle::make("meta_capi_event_contact_{$id}")
+                        ->label(__('Ook verstuurde formulieren versturen (Contact)'))
+                        ->visible(fn (Get $get) => (bool) $get("meta_capi_enabled_{$id}"))
+                        ->helperText(__('Elk formulier van dashed-forms (en eigen formulieren die FormSubmitted afvuren). Alleen het e-mailadres gaat gehasht mee; de pixel krijgt hetzelfde event-ID.')),
                     TextInput::make("meta_capi_access_token_{$id}")
                         ->label(__('Toegangstoken'))
                         ->password()

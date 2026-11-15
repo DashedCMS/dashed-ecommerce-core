@@ -2372,5 +2372,7 @@
     "Uiterlijk geleverd": "Deliver by",
     "Deadline aangepast": "Deadline updated",
     "(handmatig)": "(manual)",
-    "Uiterlijk geleverd :date": "Delivered by :date"
+    "Uiterlijk geleverd :date": "Delivered by :date",
+    "Ook verstuurde formulieren versturen (Contact)": "Also send submitted forms (Contact)",
+    "Elk formulier van dashed-forms (en eigen formulieren die FormSubmitted afvuren). Alleen het e-mailadres gaat gehasht mee; de pixel krijgt hetzelfde event-ID.": "Every dashed-forms form (and custom forms that fire FormSubmitted). Only the email address is sent, hashed; the pixel gets the same event ID."
 }

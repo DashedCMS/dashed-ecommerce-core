@@ -193,6 +193,23 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             __DIR__ . '/../resources/views/component-fallbacks'
         );
 
+        // Contact naar de Conversions API bij elk verstuurd formulier (dashed-forms).
+        // Synchroon: het event-ID moet nog in de Livewire-payload voor de pixel.
+        if (class_exists(\Dashed\DashedForms\Events\FormSubmitted::class)) {
+            \Illuminate\Support\Facades\Event::listen(
+                \Dashed\DashedForms\Events\FormSubmitted::class,
+                function (\Dashed\DashedForms\Events\FormSubmitted $event): void {
+                    if ($event->meta_event_id !== null || app()->runningInConsole()) {
+                        return;
+                    }
+
+                    $formName = rescue(fn () => \Dashed\DashedForms\Models\Form::find($event->form_id)?->name, null, false);
+                    $result = app(\Dashed\DashedEcommerceCore\Services\Meta\MetaBrowserEvents::class)->contact($event->email, is_string($formName) ? $formName : null);
+                    $event->meta_event_id = $result['metaEventId'] ?? null;
+                }
+            );
+        }
+
         // Elke verzonden order-mail (klant of beheerder, ongeacht CMS/app/command/job)
         // wordt via deze listener bij de order gelogd. De order wordt afgeleid uit de
         // publieke mailable-properties (order/orderReturn/trackAndTrace).

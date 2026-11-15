@@ -41,12 +41,14 @@ class MetaCapiSettings
     public const EVENT_ADD_TO_CART = 'AddToCart';
     public const EVENT_INITIATE_CHECKOUT = 'InitiateCheckout';
     public const EVENT_VIEW_CONTENT = 'ViewContent';
+    public const EVENT_CONTACT = 'Contact';
 
     /** De browser-events met een eigen schakelaar, met de naam van hun instelling. */
     public const BROWSER_EVENTS = [
         self::EVENT_ADD_TO_CART => 'meta_capi_event_add_to_cart',
         self::EVENT_INITIATE_CHECKOUT => 'meta_capi_event_initiate_checkout',
         self::EVENT_VIEW_CONTENT => 'meta_capi_event_view_content',
+        self::EVENT_CONTACT => 'meta_capi_event_contact',
     ];
 
     public const KEYS = [
@@ -57,6 +59,7 @@ class MetaCapiSettings
         'meta_capi_event_add_to_cart',
         'meta_capi_event_initiate_checkout',
         'meta_capi_event_view_content',
+        'meta_capi_event_contact',
         'facebook_pixel_conversion_id',
         'facebook_pixel_site_id',
     ];

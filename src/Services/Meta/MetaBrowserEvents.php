@@ -175,6 +175,35 @@ class MetaBrowserEvents
     }
 
     /**
+     * Contact bij een verstuurd formulier (dashed-forms, FormSubmitted). Het
+     * event-ID gaat via de Livewire-payload `formSubmitted` naar de pixel.
+     * Ook zonder pixel (adblocker, redirect na verzenden) komt het server-event
+     * bij Meta aan. Alleen het e-mailadres gaat gehasht mee, nooit de inhoud.
+     *
+     * @return array{metaEventId?: string}
+     */
+    public function contact(?string $email = null, ?string $formName = null): array
+    {
+        try {
+            $settings = $this->settingsFor(MetaCapiSettings::EVENT_CONTACT);
+            if (! $settings) {
+                return [];
+            }
+
+            $eventId = 'ct_' . Str::uuid();
+            $queued = $this->queue($settings, MetaCapiSettings::EVENT_CONTACT, $eventId, array_filter([
+                'content_name' => $this->plainName($formName),
+            ], fn ($value) => $value !== null && $value !== ''), is_string($email) && filter_var(trim($email), FILTER_VALIDATE_EMAIL) ? trim($email) : null);
+
+            return $queued ? ['metaEventId' => $eventId] : [];
+        } catch (Throwable $e) {
+            report($e);
+
+            return [];
+        }
+    }
+
+    /**
      * Voor de payload van `viewProduct`: alleen de waarde volgens de value
      * mode. Geen event-ID: dat maakt de browser zelf (paginacache).
      *
