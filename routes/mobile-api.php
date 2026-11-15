@@ -131,6 +131,8 @@ Route::prefix('api/v1')
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
         Route::get('customers/accounts', [CustomerController::class, 'accounts'])->middleware('ability:orders.read');
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
+        Route::get('customers/annotation', [CustomerController::class, 'annotation'])->middleware('ability:orders.read');
+        Route::put('customers/annotation', [CustomerController::class, 'saveAnnotation'])->middleware('ability:orders.write');
 
         // Pre-order uitval / verlaten winkelmandjes (read-only overzicht).
         Route::get('checkout-abandonments', [CheckoutAbandonmentController::class, 'index'])->middleware('ability:orders.read');

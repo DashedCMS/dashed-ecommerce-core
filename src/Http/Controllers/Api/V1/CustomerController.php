@@ -7,10 +7,12 @@ namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Routing\Controller;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
+use Dashed\DashedEcommerceCore\Models\CustomerAnnotation;
 use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 
 /**
@@ -142,8 +144,118 @@ class CustomerController extends Controller
                 // Chronologische activiteitstijdlijn (plaatsingen + orderlogs) over
                 // de orders van deze klant. Oudere clients negeren dit veld simpelweg.
                 'timeline' => $this->buildTimeline($email),
+                // Notitie + vrije-tekst tags van deze klant. Oudere clients negeren dit.
+                'annotation' => $this->annotationPayload($email),
             ],
         ]);
+    }
+
+    /**
+     * Haal de notitie + tags van één klant op (los endpoint, zodat het
+     * annotatie-paneel ook buiten het volledige profiel te laden is).
+     */
+    public function annotation(Request $request): JsonResponse
+    {
+        $email = trim((string) $request->query('email', ''));
+        abort_if($email === '', 404, 'Geen e-mailadres opgegeven');
+
+        return response()->json(['data' => $this->annotationPayload($email)]);
+    }
+
+    /**
+     * Sla de notitie + tags van één klant op (upsert op site_id + email). Een
+     * lege notitie en geen tags verwijderen de annotatie weer.
+     */
+    public function saveAnnotation(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'notes' => ['nullable', 'string', 'max:5000'],
+            'tags' => ['nullable', 'array', 'max:40'],
+            'tags.*' => ['string', 'max:60'],
+        ]);
+
+        $email = trim((string) $data['email']);
+        $notes = isset($data['notes']) ? trim((string) $data['notes']) : '';
+        $tags = $this->cleanTags($data['tags'] ?? []);
+        $siteId = (string) Sites::getActive();
+
+        if ($notes === '' && $tags === []) {
+            CustomerAnnotation::query()
+                ->where('site_id', $siteId)
+                ->where('email', $email)
+                ->delete();
+
+            return response()->json(['data' => $this->annotationPayload($email)]);
+        }
+
+        CustomerAnnotation::query()->updateOrCreate(
+            ['site_id' => $siteId, 'email' => $email],
+            ['notes' => $notes !== '' ? $notes : null, 'tags' => $tags ?: null],
+        );
+
+        return response()->json(['data' => $this->annotationPayload($email)]);
+    }
+
+    /**
+     * Notitie + tags van deze klant, plus eerder gebruikte tags op deze site als
+     * suggesties voor de invoer.
+     */
+    private function annotationPayload(string $email): array
+    {
+        $siteId = (string) Sites::getActive();
+
+        $annotation = CustomerAnnotation::query()
+            ->where('site_id', $siteId)
+            ->where('email', $email)
+            ->first();
+
+        return [
+            'email' => $email,
+            'notes' => $annotation?->notes,
+            'tags' => array_values((array) ($annotation?->tags ?? [])),
+            'updated_at' => optional($annotation?->updated_at)->toIso8601String(),
+            'tag_suggestions' => $this->tagSuggestions($siteId),
+        ];
+    }
+
+    /** Distinct, alfabetisch gesorteerde tags die op deze site al eens gebruikt zijn. */
+    private function tagSuggestions(string $siteId): array
+    {
+        $all = CustomerAnnotation::query()
+            ->where('site_id', $siteId)
+            ->whereNotNull('tags')
+            ->pluck('tags')
+            ->flatMap(fn ($tags) => (array) $tags)
+            ->map(fn ($tag) => trim((string) $tag))
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        return array_slice($all, 0, 50);
+    }
+
+    /** Trim, ontdubbel (case-insensitief) en verwijder lege tags. */
+    private function cleanTags(array $tags): array
+    {
+        $seen = [];
+        $clean = [];
+        foreach ($tags as $tag) {
+            $tag = trim((string) $tag);
+            if ($tag === '') {
+                continue;
+            }
+            $key = mb_strtolower($tag);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+            $clean[] = $tag;
+        }
+
+        return $clean;
     }
 
     private function orderRow(Order $o): array
