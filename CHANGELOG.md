@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.199.0 - 2026-11-15
+
+- `ProductCartActions::acceptsGuestUpload()`: met de uploadpoort van dashed-core mogen bezoekers alleen uploaden naar `files.{extraId}.value` van een product-extra van het type bestand.
+
 ## v4.198.1 - 2026-11-15
 
 ### Added

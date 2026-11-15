@@ -206,6 +206,22 @@ trait ProductCartActions
         return $filters;
     }
 
+
+    /**
+     * Uploadpoort van dashed-core (Security\Uploads\UploadGate): bezoekers
+     * mogen alleen uploaden naar `files.{extraId}.value` van een product-extra
+     * van het type "file" van dit product.
+     */
+    public function acceptsGuestUpload(string $property): bool
+    {
+        if (! preg_match('/^files\.(\d+)(\.value)?$/', $property, $match)) {
+            return false;
+        }
+
+        $extras = $this->productExtras ?: ($this->product?->allProductExtras() ?? collect());
+
+        return collect($extras)->contains(fn ($extra) => (int) ($extra->id ?? 0) === (int) $match[1] && ($extra->type ?? null) === 'file');
+    }
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
