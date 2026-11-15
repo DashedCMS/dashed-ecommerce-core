@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.198.0 - 2026-11-15
+
+### Added
+- **Klantnotities + vrije-tekst tags (mobiele API).** Klanten zijn een aggregatie van bestellingen op e-mailadres (geen los klant-model), dus een notitie + tags hangen aan `(site_id, email)` in de nieuwe tabel `dashed__customer_annotations` (los model `CustomerAnnotation`). `CustomerController` krijgt `annotation()` / `saveAnnotation()`, en `profile()` levert de annotatie mee. Routes `customers/annotation` (GET `orders.read`, PUT `orders.write`). Tags zijn vrije tekst met suggesties uit eerder gebruikte tags.
+- **Betaallink/-herinnering sturen (mobiele API).** Nieuw endpoint `POST orders/{order}/payment-link` (`orders.write`) dat de klant een betaallink mailt voor het openstaande bedrag. Hergebruikt de Filament `SendPaymentLinkAction` (concept-activatie + factuur identiek aan het CMS) en legt een orderlog vast. Bedrag + e-mailadres zijn optioneel te overschrijven.
+
+
 ## v4.197.1 - 2026-11-15
 
 ### Fixed
