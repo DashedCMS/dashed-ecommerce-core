@@ -142,27 +142,27 @@ class OpenOrderProductsTable
 
                         return 'success';
                     })
-                    ->sortable(query: fn (Builder $q, string $dir) => $q
+                    ->sortable(query: fn (Builder $query, string $direction) => $query
                         ->leftJoin(
                             'dashed__products as voorraad_join',
                             'voorraad_join.id',
                             '=',
                             'dashed__order_products.product_id'
                         )
-                        ->orderBy('voorraad_join.stock', $dir)
+                        ->orderBy('voorraad_join.stock', $direction)
                         ->select('dashed__order_products.*')),
                 TextColumn::make('order.order_origin')
                     ->label(__('Order origin'))
                     ->badge()
                     ->formatStateUsing(fn ($state) => $state ? ucfirst($state) : '-')
-                    ->sortable(query: fn (Builder $q, string $dir) => $q
+                    ->sortable(query: fn (Builder $query, string $direction) => $query
                         ->leftJoin(
                             'dashed__orders as order_origin_join',
                             'order_origin_join.id',
                             '=',
                             'dashed__order_products.order_id'
                         )
-                        ->orderBy('order_origin_join.order_origin', $dir)
+                        ->orderBy('order_origin_join.order_origin', $direction)
                         ->select('dashed__order_products.*')),
                 TextColumn::make('order.fulfillment_status')
                     ->label(__('Fulfillment status'))
@@ -194,7 +194,7 @@ class OpenOrderProductsTable
                         default => 'gray',
                     })
                     ->tooltip(fn ($record): ?string => $record->order?->deadlineLabel())
-                    ->sortable(query: fn (Builder $q, string $dir) => static::orderByDeadline($q, $dir))
+                    ->sortable(query: fn (Builder $query, string $direction) => static::orderByDeadline($query, $direction))
                     // Een gegroepeerde regel bundelt meerdere orders, dus geen eigen deadline.
                     ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
                 TextColumn::make('order.name')

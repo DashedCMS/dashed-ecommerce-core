@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.197.1 - 2026-11-15
+
+### Fixed
+- **Openstaande bestellingen: sorteren op Deadline, Voorraad en Order origin gaf een fout.** De sorteer-closures vroegen `$dir`, terwijl Filament de richting als `$direction` doorgeeft ("[$dir] was unresolvable").
+
+
 ## v4.197.0 - 2026-11-15
 
 ### Added
