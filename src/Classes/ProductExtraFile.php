@@ -2,7 +2,6 @@
 
 namespace Dashed\DashedEcommerceCore\Classes;
 
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Dashed\DashedCore\Rules\SafeUploadedFile;
@@ -10,8 +9,10 @@ use Dashed\DashedCore\Rules\SafeUploadedFile;
 /**
  * Opslag van klant-uploads bij product-extra's van het type "file".
  *
- * Deze uploads komen ongeauthenticeerd vanaf de front-end en landen op de
- * media-disk, die in de projecten publiek staat. Daarom: een vaste allowlist
+ * Deze uploads komen ongeauthenticeerd vanaf de front-end. Sinds v4.200 gaan
+ * ze via dashed-core PrivateUploads: privé op de DigitalOcean/S3-disk van de
+ * site (of lokaal buiten public/), op te halen via een tijdelijke, gesigneerde
+ * link. Oude bestanden in dashed/product-extras blijven werken. Verder: een vaste allowlist
  * van extensies (afgeleid van de inhoud, niet van de client-naam), een
  * servergegenereerde bestandsnaam zonder de client-naam erin, het object
  * prive weggeschreven met een tijdelijke URL voor de beheerder, en bij een
@@ -51,6 +52,10 @@ class ProductExtraFile
      */
     public static function adminUrl(string $path, int $minutes = 30): string
     {
+        if (\Dashed\DashedCore\Security\Uploads\PrivateUploads::isPrivate($path)) {
+            return \Dashed\DashedCore\Security\Uploads\PrivateUploads::temporaryUrl($path, $minutes);
+        }
+
         $disk = Storage::disk(static::DISK);
 
         if ($disk->providesTemporaryUrls()) {
@@ -63,6 +68,18 @@ class ProductExtraFile
     protected static function resolveExistingPath(string $path): ?array
     {
         $path = ltrim($path, '/');
+
+        // Nieuwe, privé opgeslagen bestanden: alleen uit de eigen map.
+        if (\Dashed\DashedCore\Security\Uploads\PrivateUploads::isPrivate($path)) {
+            if (! str_starts_with($path, \Dashed\DashedCore\Security\Uploads\PrivateUploads::PREFIX . 'product-extras/') || ! \Dashed\DashedCore\Security\Uploads\PrivateUploads::disk()->exists($path)) {
+                return null;
+            }
+
+            return [
+                'value' => basename($path),
+                'path' => $path,
+            ];
+        }
 
         if (str_contains($path, '..') || ! str_starts_with($path, static::DIRECTORY . '/')) {
             return null;
@@ -105,17 +122,13 @@ class ProductExtraFile
             return null;
         }
 
-        // Prive op de media-disk: de bucket zelf staat op public, dus expliciet
-        // private zetten; de beheerder krijgt een tijdelijke, ondertekende URL.
-        $name = Str::uuid() . '.' . $extension;
-        $path = $file->storeAs(static::DIRECTORY, $name, [
-            'disk' => static::DISK,
-            'visibility' => 'private',
-        ]);
+        $path = \Dashed\DashedCore\Security\Uploads\PrivateUploads::store($file, 'product-extras', static::ALLOWED_EXTENSIONS);
 
         if (! $path) {
             return null;
         }
+
+        $name = basename($path);
 
         return [
             'value' => $name,

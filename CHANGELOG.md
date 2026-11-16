@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.200.0 - 2026-11-16
+
+- Bestanden bij product-extra's gaan privé via dashed-core `PrivateUploads` (DigitalOcean-disk waar die er is). `ProductExtraFile::adminUrl()` geeft een tijdelijke gesigneerde link. Vereist dashed-core ^4.109.
+
 ## v4.199.0 - 2026-11-15
 
 - `ProductCartActions::acceptsGuestUpload()`: met de uploadpoort van dashed-core mogen bezoekers alleen uploaden naar `files.{extraId}.value` van een product-extra van het type bestand.

@@ -18,7 +18,7 @@
     "require": {
         "php": "^8.4",
         "dashed/dashed-ai": "*",
-        "dashed/dashed-core": "^4.95",
+        "dashed/dashed-core": "^4.109",
         "dashed/dashed-files": "^4.8",
         "barryvdh/laravel-dompdf": "^3.1",
         "daltcore/lara-pdf-merger": "^2.0",
