@@ -11,8 +11,8 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedCore\Security\Uploads\PrivateUploads;
+use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 
 /**
  * Verhuist bestanden bij product-extra's in orderregels (dashed/product-extras
