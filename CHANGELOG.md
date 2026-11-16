@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.201.0 - 2026-11-16
+
+- Migratie `privatize_product_extra_files`: verhuist bij de deploy (queued job, alleen in productie) bestanden bij product-extra's in orders naar de privé opslag. Handmatig: `php artisan dashed-ecommerce:privatize-product-extra-files [--now]`. Vereist dashed-core ^4.110.
+
 ## v4.200.0 - 2026-11-16
 
 - Bestanden bij product-extra's gaan privé via dashed-core `PrivateUploads` (DigitalOcean-disk waar die er is). `ProductExtraFile::adminUrl()` geeft een tijdelijke gesigneerde link. Vereist dashed-core ^4.109.

@@ -2841,6 +2841,7 @@ MARKDOWN,
             ])
             ->hasViews()
             ->hasCommands([
+                \Dashed\DashedEcommerceCore\Commands\PrivatizeProductExtraFilesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\DisableOwnPaymentMethodsCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\MetaCapiTestCommand::class,
                 CheckPastDuePreorderDatesForProductsWithoutStockCommand::class,
