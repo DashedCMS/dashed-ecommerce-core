@@ -2,12 +2,14 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Throwable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 
 /**
  * Zet elke bestaande factuur en pakbon op de schijf op prive. Nieuwe bestanden
@@ -25,13 +27,33 @@ class PrivatizeInvoicesJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public const TASK_TYPE = 'privatize-invoices';
+
     public int $timeout = 3600;
 
     public const DIRECTORIES = ['dashed/invoices', 'dashed/packing-slips'];
 
     public function handle(): int
     {
-        return static::run();
+        $task = BackgroundTasks::start(self::TASK_TYPE, __('Facturen en pakbonnen op privé zetten'));
+
+        // Zonder totaal: de schijf telt de bestanden pas tijdens het lopen.
+        $done = 0;
+        $count = static::run(function () use ($task, &$done) {
+            $done++;
+            if ($done % 100 === 0) {
+                $task?->progress($done);
+            }
+        });
+
+        $task?->finish(__(':aantal bestanden op privé gezet.', ['aantal' => $count]));
+
+        return $count;
+    }
+
+    public function failed(Throwable $e): void
+    {
+        BackgroundTasks::fail(self::TASK_TYPE, $e);
     }
 
     /**

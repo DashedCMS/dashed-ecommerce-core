@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Throwable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Locales;
@@ -11,9 +12,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
 use Dashed\DashedEcommerceCore\Classes\ProductVariationNaming;
 use Dashed\DashedEcommerceCore\Classes\VariationPriceSuggester;
+use Dashed\DashedEcommerceCore\Filament\Resources\ProductGroupResource;
 
 class CreateMissingProductVariationsJob implements ShouldQueue
 {
@@ -21,6 +24,8 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
     use SerializesModels;
+
+    public const TASK_TYPE = 'product-variations';
 
     public $tries = 5;
     public $timeout = 1200;
@@ -43,13 +48,19 @@ class CreateMissingProductVariationsJob implements ShouldQueue
     public array $prices = [];
 
     /**
+     * De beheerder die de variaties liet aanmaken, voor het takenicoon.
+     */
+    public ?int $startedByUserId = null;
+
+    /**
      * Create a new job instance.
      */
-    public function __construct(ProductGroup $productGroup, ?array $variations = null, array $prices = [])
+    public function __construct(ProductGroup $productGroup, ?array $variations = null, array $prices = [], ?int $startedByUserId = null)
     {
         $this->productGroup = $productGroup;
         $this->variations = $variations;
         $this->prices = $prices;
+        $this->startedByUserId = $startedByUserId;
     }
 
     /**
@@ -66,6 +77,18 @@ class CreateMissingProductVariationsJob implements ShouldQueue
         }
 
         ProductVariationNaming::flushOptionCache();
+
+        // Een enkele variatie is zo klaar en krijgt geen taak.
+        $task = count($missingVariations) > 1
+            ? BackgroundTasks::start(
+                self::TASK_TYPE,
+                __('Variaties aanmaken: :naam', ['naam' => $this->productGroup->name]),
+                count($missingVariations),
+                $this->startedByUserId,
+                $this->job?->uuid(),
+            )
+            : null;
+        $created = 0;
 
         foreach ($missingVariations as $missingVariation) {
             $optionIds = array_values($missingVariation);
@@ -94,8 +117,24 @@ class CreateMissingProductVariationsJob implements ShouldQueue
                     'product_filter_option_id' => $optionId,
                 ]);
             }
+
+            $created++;
+            if ($created % 5 === 0) {
+                $task?->progress($created);
+            }
         }
 
         UpdateProductInformationJob::dispatch($this->productGroup, false);
+
+        $task?->finish(
+            __(':aantal variaties aangemaakt.', ['aantal' => $created]),
+            rescue(fn () => ProductGroupResource::getUrl('edit', ['record' => $this->productGroup]), null, false),
+            __('Productgroep bekijken'),
+        );
+    }
+
+    public function failed(Throwable $e): void
+    {
+        BackgroundTasks::fail(self::TASK_TYPE, $e, $this->job?->uuid(), $this->startedByUserId);
     }
 }

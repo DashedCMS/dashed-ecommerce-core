@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Jobs;
 
+use Throwable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Queue\SerializesModels;
@@ -10,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 class UpdateProductStockInformationJob implements ShouldQueue
@@ -26,11 +28,19 @@ class UpdateProductStockInformationJob implements ShouldQueue
     public Product $product;
 
     /**
+     * De taak in het takenicoon van de nachtelijke ronde waar deze job bij
+     * hoort. Met een standaardwaarde, zodat een job die al in de wachtrij
+     * stond hem ook heeft.
+     */
+    public ?int $backgroundTaskId = null;
+
+    /**
      * Create a new job instance.
      */
-    public function __construct(Product $product)
+    public function __construct(Product $product, ?int $backgroundTaskId = null)
     {
         $this->product = $product;
+        $this->backgroundTaskId = $backgroundTaskId;
     }
 
     /**
@@ -66,5 +76,29 @@ class UpdateProductStockInformationJob implements ShouldQueue
         if (class_exists(CacheInvalidator::class)) {
             CacheInvalidator::flushSite();
         }
+
+        $this->advanceBackgroundTask();
+    }
+
+    /**
+     * Na de laatste poging: het product telt mee als mislukt, anders blijft
+     * de taak van de ronde op "Bezig" staan.
+     */
+    public function failed(Throwable $e): void
+    {
+        $this->advanceBackgroundTask(failed: true);
+
+        $this->reportFailure($e);
+    }
+
+    protected function advanceBackgroundTask(bool $failed = false): void
+    {
+        BackgroundTasks::advanceBatch(
+            $this->backgroundTaskId,
+            fn (int $done, int $failedCount): string => $failedCount > 0
+                ? __(':aantal producten bijgewerkt, :mislukt mislukt.', ['aantal' => $done, 'mislukt' => $failedCount])
+                : __(':aantal producten bijgewerkt.', ['aantal' => $done]),
+            $failed,
+        );
     }
 }

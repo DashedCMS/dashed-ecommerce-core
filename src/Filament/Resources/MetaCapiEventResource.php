@@ -82,13 +82,7 @@ class MetaCapiEventResource extends Resource
                     MetaCapiEvent::STATUS_FAILED => MetaCapiEvent::statusLabel(MetaCapiEvent::STATUS_FAILED),
                     MetaCapiEvent::STATUS_SKIPPED => MetaCapiEvent::statusLabel(MetaCapiEvent::STATUS_SKIPPED),
                 ]),
-                SelectFilter::make('event_name')->label(__('Event'))->options([
-                    'Purchase' => 'Purchase',
-                    'ViewContent' => 'ViewContent',
-                    'AddToCart' => 'AddToCart',
-                    'InitiateCheckout' => 'InitiateCheckout',
-                    'Lead' => 'Lead',
-                ]),
+                SelectFilter::make('event_name')->label(__('Event'))->options(array_combine(MetaCapiEvent::EVENT_NAMES, MetaCapiEvent::EVENT_NAMES)),
                 SelectFilter::make('site_id')->label(__('Site'))
                     ->options(collect(Sites::getSites())->pluck('name', 'id')->all()),
             ])

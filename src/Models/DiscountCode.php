@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductPricesJob;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 
 class DiscountCode extends Model
 {
@@ -180,10 +181,21 @@ class DiscountCode extends Model
     {
         $productGroupIds = array_unique(array_merge($this->productGroupIdsForPrices(), $previousProductGroupIds));
 
+        // Eén taak in het takenicoon voor de hele ronde: elke job telt zijn
+        // groep af. Een handvol groepen is zo klaar en krijgt geen taak.
+        $taskId = count($productGroupIds) >= UpdateProductPricesJob::TASK_MIN_GROUPS
+            ? BackgroundTasks::startBatch(
+                UpdateProductPricesJob::TASK_TYPE,
+                __('Prijzen herberekenen: :naam', ['naam' => $this->name ?: $this->code]),
+                count($productGroupIds),
+                rescue(fn () => auth()->id(), null, false),
+            )
+            : null;
+
         foreach (array_chunk($productGroupIds, 500) as $chunk) {
             // De job haalt de groep zelf vers op, dus alleen het id is nodig.
             foreach (ProductGroup::query()->select('id')->whereIn('id', $chunk)->get() as $productGroup) {
-                UpdateProductPricesJob::dispatch($productGroup)
+                UpdateProductPricesJob::dispatch($productGroup, $taskId)
                     ->onQueue('ecommerce')
                     ->afterCommit();
             }

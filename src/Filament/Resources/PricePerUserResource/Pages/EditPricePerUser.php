@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Models\PriceGroup;
 use Dashed\DashedEcommerceCore\Models\ProductCategory;
 use Dashed\DashedEcommerceCore\Jobs\ProcessPricesPerUser;
 use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerProduct;
+use Dashed\DashedEcommerceCore\Jobs\ImportPricesPerUserPerCategory;
 use Dashed\DashedEcommerceCore\Exports\PricePerProductForUserExport;
 use Dashed\DashedEcommerceCore\Exports\PricePerCategoryForUserExport;
 use Dashed\DashedEcommerceCore\Filament\Resources\PricePerUserResource;
@@ -60,7 +61,7 @@ class EditPricePerUser extends EditRecord
                 ])
                 ->action(function ($data) {
 
-                    ImportPricesPerUserPerProduct::dispatch($this->record, $data['file']);
+                    ImportPricesPerUserPerProduct::dispatch($this->record, $data['file'], auth()->id());
 
                     Notification::make()
                         ->title(__('Importeren'))
@@ -96,7 +97,7 @@ class EditPricePerUser extends EditRecord
                 ])
                 ->action(function ($data) {
 
-                    ImportPricesPerUserPerProduct::dispatch($this->record, $data['file']);
+                    ImportPricesPerUserPerCategory::dispatch($this->record, $data['file'], auth()->id());
 
                     Notification::make()
                         ->title(__('Importeren'))
@@ -175,7 +176,7 @@ class EditPricePerUser extends EditRecord
         $this->record->show_prices_ex_vat = $pricing['show_prices_ex_vat'];
         $this->record->save();
 
-        ProcessPricesPerUser::dispatch($this->record, $data)->onQueue('ecommerce');
+        ProcessPricesPerUser::dispatch($this->record, $data, auth()->id())->onQueue('ecommerce');
 
         // Preserve price_group_id so Filament writes it to the users table.
         // Keep the key even when null, otherwise detaching a user from a

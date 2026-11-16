@@ -75,7 +75,7 @@ class CreateProductGroup extends CreateRecord
             $this->record->enabledProductFilterOptions()->attach($productFilter['id'], $productFilter['attributes']);
         }
 
-        CreateMissingProductVariationsJob::dispatch($this->record)
+        CreateMissingProductVariationsJob::dispatch($this->record, null, [], auth()->id())
         ->onQueue('ecommerce');
     }
 }

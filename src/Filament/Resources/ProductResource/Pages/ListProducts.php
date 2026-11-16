@@ -253,7 +253,7 @@ class ListProducts extends ListRecords
             return;
         }
 
-        ImportProductToEditJob::dispatch($file);
+        ImportProductToEditJob::dispatch($file, auth()->id());
 
         Notification::make()
             ->title(__('Importeren'))

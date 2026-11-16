@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.202.0 - 2026-11-16
+
+### Added
+- Het taakcentrum (het tabje Bezig) toont nu ontbrekende variaties aanmaken, de imports (EAN-codes, prijzen per gebruiker per product en per categorie, producten bewerken), prijzen herberekenen, prijzen bijwerken na een kortingscode (gegroepeerd), de nachtelijke voorraad- en verkoopronde, abonnementen terugvullen, facturen privé zetten en de volledigheid van producten.
+
+### Fixed
+- Bij Prijzen per gebruiker startte de knop "Categorieën" de productimport; hij start nu `ImportPricesPerUserPerCategory`.
+- Meta Conversions API: de instellingenpagina vertaalt zijn titel en de eventfilter leest de namen uit `MetaCapiEvent::EVENT_NAMES`.
+
 ## v4.201.0 - 2026-11-16
 
 - Migratie `privatize_product_extra_files`: verhuist bij de deploy (queued job, alleen in productie) bestanden bij product-extra's in orders naar de privé opslag. Handmatig: `php artisan dashed-ecommerce:privatize-product-extra-files [--now]`. Vereist dashed-core ^4.110.

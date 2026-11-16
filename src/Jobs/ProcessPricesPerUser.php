@@ -23,10 +23,16 @@ class ProcessPricesPerUser implements ShouldQueue
     public array $data;
     public User $user;
 
-    public function __construct(User $user, array $data)
+    /**
+     * De beheerder die opsloeg, voor het takenicoon van de herberekening.
+     */
+    public ?int $startedByUserId = null;
+
+    public function __construct(User $user, array $data, ?int $startedByUserId = null)
     {
         $this->user = $user;
         $this->data = $data;
+        $this->startedByUserId = $startedByUserId;
     }
 
     public function handle(): void
@@ -48,7 +54,7 @@ class ProcessPricesPerUser implements ShouldQueue
 
             $affectedProductIds = array_values(array_unique($affectedProductIds));
             if ($affectedProductIds) {
-                RecalculateProductPricesJob::dispatch($affectedProductIds)->onQueue('ecommerce');
+                RecalculateProductPricesJob::dispatch($affectedProductIds, $this->startedByUserId)->onQueue('ecommerce');
             }
 
             return;
@@ -114,7 +120,7 @@ class ProcessPricesPerUser implements ShouldQueue
 
         $affectedProductIds = array_values(array_unique($affectedProductIds));
         if ($affectedProductIds) {
-            RecalculateProductPricesJob::dispatch($affectedProductIds)->onQueue('ecommerce');
+            RecalculateProductPricesJob::dispatch($affectedProductIds, $this->startedByUserId)->onQueue('ecommerce');
         }
     }
 }

@@ -585,6 +585,7 @@ class OrderSettingsPage extends Page
                         onlyMarketing: (bool) ($data['only_marketing'] ?? false),
                         batchSize: (int) ($data['batch_size'] ?? 50),
                         orderOrigins: array_values($data['order_origins'] ?? []),
+                        startedByUserId: auth()->id(),
                     );
 
                     Notification::make()

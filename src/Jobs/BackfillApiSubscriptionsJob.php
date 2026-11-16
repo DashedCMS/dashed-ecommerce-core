@@ -12,6 +12,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 use Dashed\DashedEcommerceCore\Models\ApiSubscriptionLog;
 
 class BackfillApiSubscriptionsJob implements ShouldQueue
@@ -30,6 +31,13 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
      */
     public int $tries = 200;
 
+    public const TASK_TYPE = 'api-subscriptions-backfill';
+
+    /**
+     * De beheerder die de backfill startte, voor het takenicoon.
+     */
+    public ?int $startedByUserId = null;
+
     /**
      * @param  array<int, string>  $apiClasses    Subset of fully-qualified class names uit Customsetting('apis')['class'] om mee te nemen. Leeg = alles.
      * @param  array<int, string>  $sources       Subset uit ['orders','carts','popup_views','form_inputs','users']. Leeg = alles.
@@ -41,7 +49,9 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
         public bool $onlyMarketing = false,
         public int $batchSize = 50,
         public array $orderOrigins = [],
+        ?int $startedByUserId = null,
     ) {
+        $this->startedByUserId = $startedByUserId;
         $this->batchSize = max(1, min(500, $this->batchSize));
     }
 
@@ -85,6 +95,10 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
         $totalDispatched = 0;
         $staggerMs = 0;
 
+        // Eerst verzamelen wat er nog moet, zodat er één taak in het
+        // takenicoon staat met het totaal: elke job telt zijn adres af.
+        $pending = [];
+
         foreach ($tuples as $email => $tuple) {
             foreach ($configuredApis as $api) {
                 $apiClass = $api['class'];
@@ -99,18 +113,27 @@ class BackfillApiSubscriptionsJob implements ShouldQueue
                     continue;
                 }
 
-                SyncEmailToApiJob::dispatch(
-                    $email,
-                    $tuple['first_name'] ?? null,
-                    $tuple['last_name'] ?? null,
-                    $apiClass,
-                    $api,
-                    ApiSubscriptionLog::SOURCE_BACKFILL,
-                )->delay(now()->addMilliseconds($staggerMs));
-
-                $staggerMs += 100;
-                $totalDispatched++;
+                $pending[] = [$email, $tuple, $api];
             }
+        }
+
+        $taskId = $pending !== []
+            ? BackgroundTasks::startBatch(self::TASK_TYPE, __('E-mailadressen naar de koppelingen sturen'), count($pending), $this->startedByUserId)
+            : null;
+
+        foreach ($pending as [$email, $tuple, $api]) {
+            SyncEmailToApiJob::dispatch(
+                $email,
+                $tuple['first_name'] ?? null,
+                $tuple['last_name'] ?? null,
+                $api['class'],
+                $api,
+                ApiSubscriptionLog::SOURCE_BACKFILL,
+                $taskId,
+            )->delay(now()->addMilliseconds($staggerMs));
+
+            $staggerMs += 100;
+            $totalDispatched++;
         }
 
         Log::info('BackfillApiSubscriptionsJob klaar met dispatchen', [

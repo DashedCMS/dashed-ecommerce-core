@@ -25,6 +25,7 @@ class MetaCapiSettingsPage extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
     use HasSettingsPermission;
+    use \Dashed\DashedCore\Filament\Concerns\TranslatesPageLabels;
 
     protected static bool $shouldRegisterNavigation = false;
 

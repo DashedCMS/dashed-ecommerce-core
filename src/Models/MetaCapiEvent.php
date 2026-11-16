@@ -16,6 +16,9 @@ class MetaCapiEvent extends Model
     public const STATUS_FAILED = 'failed';
     public const STATUS_SKIPPED = 'skipped';
 
+    /** Meta's own event names: identifiers, not translatable text. */
+    public const EVENT_NAMES = ['Purchase', 'ViewContent', 'AddToCart', 'InitiateCheckout', 'Lead'];
+
     protected $table = 'dashed__meta_capi_events';
 
     protected $guarded = [];

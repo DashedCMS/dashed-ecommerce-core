@@ -20,10 +20,17 @@ class ProcessPricesPerPriceGroup implements ShouldQueue
     public $tries = 5;
     public $timeout = 1200;
 
+    /**
+     * De beheerder die opsloeg, voor het takenicoon van de herberekening.
+     */
+    public ?int $startedByUserId = null;
+
     public function __construct(
         public int $priceGroupId,
         public array $data,
+        ?int $startedByUserId = null,
     ) {
+        $this->startedByUserId = $startedByUserId;
     }
 
     public function handle(): void
@@ -83,7 +90,7 @@ class ProcessPricesPerPriceGroup implements ShouldQueue
 
         $affectedProductIds = array_values(array_unique($affectedProductIds));
         if ($affectedProductIds) {
-            RecalculateProductPricesJob::dispatch($affectedProductIds)->onQueue('ecommerce');
+            RecalculateProductPricesJob::dispatch($affectedProductIds, $this->startedByUserId)->onQueue('ecommerce');
         }
 
         \Dashed\DashedEcommerceCore\Events\PriceGroups\PriceGroupPricesUpdatedEvent::dispatch($this->priceGroupId);

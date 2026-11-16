@@ -9,6 +9,7 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 use Dashed\DashedEcommerceCore\Models\ApiSubscriptionLog;
 use Dashed\DashedEcommerceCore\Contracts\SupportsEmailBackfill;
@@ -37,6 +38,13 @@ class SyncEmailToApiJob implements ShouldQueue
     public int $tries = 100;
 
     /**
+     * De taak in het takenicoon van de backfill waar deze job bij hoort.
+     * Met een standaardwaarde, zodat een job die al in de wachtrij stond hem
+     * ook heeft.
+     */
+    public ?int $backgroundTaskId = null;
+
+    /**
      * @param  class-string  $apiClass
      */
     public function __construct(
@@ -46,10 +54,45 @@ class SyncEmailToApiJob implements ShouldQueue
         public string $apiClass,
         public array $api,
         public string $source = ApiSubscriptionLog::SOURCE_BACKFILL,
+        ?int $backgroundTaskId = null,
     ) {
+        $this->backgroundTaskId = $backgroundTaskId;
     }
 
     public function handle(): void
+    {
+        $this->sync();
+
+        // Teruggelegd na een rate-limit: de job komt nog een keer langs en
+        // telt dan pas mee.
+        if ($this->backgroundTaskId && ! $this->job?->isReleased()) {
+            $this->advanceBackgroundTask();
+        }
+    }
+
+    /**
+     * Na de laatste poging: het adres telt mee als mislukt, anders blijft de
+     * taak van de backfill op "Bezig" staan.
+     */
+    public function failed(Throwable $e): void
+    {
+        $this->advanceBackgroundTask(failed: true);
+
+        $this->reportFailure($e);
+    }
+
+    protected function advanceBackgroundTask(bool $failed = false): void
+    {
+        BackgroundTasks::advanceBatch(
+            $this->backgroundTaskId,
+            fn (int $done, int $failedCount): string => $failedCount > 0
+                ? __(':aantal e-mailadressen verwerkt, :mislukt mislukt.', ['aantal' => $done, 'mislukt' => $failedCount])
+                : __(':aantal e-mailadressen verwerkt.', ['aantal' => $done]),
+            $failed,
+        );
+    }
+
+    protected function sync(): void
     {
         $apiClass = $this->apiClass;
 

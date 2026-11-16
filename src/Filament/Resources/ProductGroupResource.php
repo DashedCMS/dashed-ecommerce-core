@@ -270,7 +270,7 @@ class ProductGroupResource extends Resource
                         $prices = array_filter(VariationPriceSuggester::forVariations($record, $variations, $data['price_filters'] ?? []));
 
                         if (count($variations)) {
-                            CreateMissingProductVariationsJob::dispatch($record, $variations, $prices)
+                            CreateMissingProductVariationsJob::dispatch($record, $variations, $prices, auth()->id())
                                 ->onQueue('ecommerce');
                         }
 

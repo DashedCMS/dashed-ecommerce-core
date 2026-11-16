@@ -73,6 +73,6 @@ trait PersistsPriceGroupPrices
             }
         }
 
-        ProcessPricesPerPriceGroup::dispatch($this->record->id, $data);
+        ProcessPricesPerPriceGroup::dispatch($this->record->id, $data, auth()->id());
     }
 }
