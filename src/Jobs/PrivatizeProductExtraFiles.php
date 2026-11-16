@@ -97,10 +97,12 @@ class PrivatizeProductExtraFiles implements ShouldQueue
 
                 // Originelen pas weg na het bijwerken van de orderregel.
                 // Een kopie van een order kan naar hetzelfde bestand wijzen: dan blijft het
-                // origineel staan tot ook die orderregel is verwerkt.
+                // origineel staan tot ook die orderregel is verwerkt. Zoeken op het hele
+                // oude pad (niet de bestandsnaam: die blijft als 'value' staan); '/' kan
+                // in de JSON als '\/' staan, daarom als wildcard.
                 foreach ($movedFrom as $oldPath) {
                     $stillUsed = DB::table('dashed__order_products')
-                        ->where('product_extras', 'like', '%' . basename($oldPath) . '%')
+                        ->where('product_extras', 'like', '%' . str_replace('/', '%', $oldPath) . '%')
                         ->exists();
                     if (! $stillUsed) {
                         rescue(fn () => Storage::disk(ProductExtraFile::DISK)->delete($oldPath), null, false);

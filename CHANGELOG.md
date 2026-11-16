@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.202.1 - 2026-11-16
+
+### Fixed
+- `PrivatizeProductExtraFiles` verwijderde het oude publieke bestand nooit: de controle "wijst er nog een orderregel naar" zocht op de bestandsnaam, die als `value` in dezelfde orderregel blijft staan. Hij zoekt nu op het hele oude pad.
+
 ## v4.202.0 - 2026-11-16
 
 ### Added
