@@ -11,8 +11,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
-use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
+use Dashed\DashedEcommerceCore\Support\BackgroundTasks;
 use Dashed\DashedCore\Jobs\Concerns\HandlesQueueFailures;
 
 class UpdateProductPricesJob implements ShouldQueue
