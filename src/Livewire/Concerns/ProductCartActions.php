@@ -206,7 +206,6 @@ trait ProductCartActions
         return $filters;
     }
 
-
     /**
      * Uploadpoort van dashed-core (Security\Uploads\UploadGate): bezoekers
      * mogen alleen uploaden naar `files.{extraId}.value` van een product-extra
@@ -222,6 +221,7 @@ trait ProductCartActions
 
         return collect($extras)->contains(fn ($extra) => (int) ($extra->id ?? 0) === (int) $match[1] && ($extra->type ?? null) === 'file');
     }
+
     public function checkCart(?string $status = null, ?string $message = null)
     {
         if ($status) {
