@@ -904,6 +904,10 @@ class ProductResource extends Resource
                         false: fn (Builder $q) => $q,
                         blank: fn (Builder $q) => $q,
                     ),
+                Filter::make('without_ean')
+                    ->label(__('Zonder EAN'))
+                    ->toggle()
+                    ->query(fn (Builder $query): Builder => $query->withoutEan()),
             ])
             ->deferFilters(false);
     }

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Added
+- Productenlijst: stat-widget "Producten zonder EAN" (alle producten met lege of ontbrekende EAN) naast "Producten niet voorradig", met een bijbehorende filter "Zonder EAN" waar de widget naartoe linkt.
+
 ## v4.202.1 - 2026-11-16
 
 ### Fixed
