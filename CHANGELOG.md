@@ -2,6 +2,20 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.205.0 - 2026-11-17
+
+### Added
+- **Labelfouten zichtbaar met fixvoorstel.** `Services\Shipping\LabelProblems`: `CarrierErrorParser` maakt van een Veloyd-, PostNL- of MyParcel-fout een Nederlandse oorzaak per veld, `AddressSuggester` zoekt voor Nederlandse adressen een voorstel bij PDOK (gecachet, ook mislukte aanvragen kort), `LabelProblemDetector` vindt het label met een probleem (niet bij afgehandelde of verzonden orders, niet als er een PDF is) en `LabelProblemFixer` past het verzendadres aan en vervangt het label (vereist dashed-ecommerce-veloyd of -myparcel ^4.18).
+- CMS: melding bovenaan de order met oorzaak en knop "Wijzig naar ... en maak nieuw label", en het filter "Labels met problemen" in de orderlijst.
+- Mobiele API: `label_problem` op de order, `error` en `error_cause` per label, `POST orders/{order}/label-problem/fix`, filter `label_problem=1` en `has_label_problem` in de lijst.
+- Push `order.label_failed` bij een nieuwe labelfout (een keer per dag per fout).
+- Migratie `clear_label_errors_with_pdf`: wist oude fouten bij labels die wel een PDF hebben.
+
+### Changed
+- Printwachtrij: een verzendlabel dat niet opgehaald kan worden geeft een 422 met de oorzaak ("Label kon niet worden opgehaald: ...") in plaats van een kale 404; de daemon-melding "PDF fetch HTTP 422" overschrijft die oorzaak niet meer. `label-url` geeft dan ook een 422 met de oorzaak.
+- Checkout: Nederlandse postcodes moeten de vorm 1234 AB hebben en worden zo opgeslagen, Belgische postcodes 4 cijfers.
+- Een oude labelfout wordt gewist zodra een ander label van dezelfde order een PDF krijgt.
+
 ## v4.204.1 - 2026-11-17
 
 ### Fixed
