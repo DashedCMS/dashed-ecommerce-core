@@ -26,7 +26,6 @@ use Dashed\DashedEcommerceCore\Services\Gs1\Gs1ExportBuilder;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 use LaraZeus\SpatieTranslatable\Resources\Pages\ListRecords\Concerns\Translatable;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductOutOfStockStat;
-use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource\Widgets\ProductWithoutEanStat;
 
 class ListProducts extends ListRecords
 {
@@ -45,7 +44,6 @@ class ListProducts extends ListRecords
     {
         return array_merge(parent::getHeaderWidgets() ?? [], [
             ProductOutOfStockStat::class,
-            ProductWithoutEanStat::class,
         ]);
     }
 

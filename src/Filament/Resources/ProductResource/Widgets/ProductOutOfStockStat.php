@@ -9,9 +9,13 @@ use Dashed\DashedCore\Filament\Support\ResourceFilterUrl;
 use Dashed\DashedEcommerceCore\Filament\Resources\ProductResource;
 
 /**
- * Stat-widget bovenaan de productenlijst: telt producten die voorraad
- * gebruiken, op 0 staan en niet "doorverkopen bij geen voorraad" hebben.
- * Klik leidt door naar de out_of_stock-filter.
+ * Stat-widget bovenaan de productenlijst met twee tellers:
+ * - producten die voorraad gebruiken, op 0 staan en niet "doorverkopen bij
+ *   geen voorraad" hebben (klik: out_of_stock-filter);
+ * - producten zonder EAN, NULL of lege string (klik: without_ean-filter).
+ *
+ * Bewust één widget: met een tweede los (lazy) stat-widget in de header liep
+ * de productenlijst in de browser vast en laadde de tabel nooit.
  */
 class ProductOutOfStockStat extends StatsOverviewWidget
 {
@@ -30,6 +34,11 @@ class ProductOutOfStockStat extends StatsOverviewWidget
                 ->color('danger')
                 ->url(ResourceFilterUrl::for(ProductResource::class, [
                     'out_of_stock' => 1,
+                ])),
+            Stat::make('Producten zonder EAN', (string) Product::query()->withoutEan()->count())
+                ->color('warning')
+                ->url(ResourceFilterUrl::for(ProductResource::class, [
+                    'without_ean' => ['isActive' => true],
                 ])),
         ];
     }

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.205.1 - 2026-11-17
+
+### Fixed
+- Productenlijst liep in de browser vast (tabel bleef op "Loading..." en de tab reageerde niet meer) sinds de losse widget "Producten zonder EAN" uit v4.203.0. De teller staat nu als tweede stat in de bestaande widget naast "Producten niet voorradig"; `ProductWithoutEanStat` is verwijderd.
+
 ## v4.205.0 - 2026-11-17
 
 ### Added
