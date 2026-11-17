@@ -52,18 +52,18 @@ class ViewGs1Run extends ViewRecord
                     Notification::make()->title(__('Velden opgeslagen'))->success()->send();
                 }),
             Action::make('exclude')
-                ->label(__('Producten uitvinken'))
-                ->icon('heroicon-o-no-symbol')
+                ->label(__('Producten aan- of uitvinken'))
+                ->icon('heroicon-o-check-circle')
                 ->color('gray')
                 ->authorize(fn () => auth()->user()?->can('update', $this->record) ?? false)
-                ->visible(fn () => $this->record->isConcept() && $this->plannedProducts() !== [])
+                ->visible(fn () => $this->record->isConcept() && ($this->plannedProducts() !== [] || $this->excludedProducts() !== []))
                 ->modalHeading(__('Welke producten krijgen een GS1-code?'))
-                ->modalDescription(__('Vink producten uit die geen code moeten krijgen. Dat wordt op het product onthouden: ook bij een volgende run blijven ze uitgesloten. Terugzetten kan onderaan het voorbeeld of op het product zelf.'))
+                ->modalDescription(__('Aangevinkt krijgt een code, uitgevinkt niet. Dat wordt op het product onthouden: uitgesloten producten blijven ook bij een volgende run uitgesloten tot je ze hier weer aanvinkt.'))
                 ->modalSubmitActionLabel(__('Opslaan'))
                 ->schema(fn () => [
                     CheckboxList::make('products')
                         ->hiddenLabel()
-                        ->options($this->plannedProducts())
+                        ->options($this->plannedProducts() + $this->excludedProducts())
                         ->default(array_keys($this->plannedProducts()))
                         ->searchable()
                         ->bulkToggleable()
@@ -71,8 +71,11 @@ class ViewGs1Run extends ViewRecord
                 ])
                 ->action(function (array $data) {
                     $keep = array_map('intval', $data['products'] ?? []);
-                    $exclude = array_values(array_diff(array_keys($this->plannedProducts()), $keep));
-                    $this->setExcluded($exclude, true);
+                    $planned = array_keys($this->plannedProducts());
+                    $excluded = array_keys($this->excludedProducts());
+
+                    $this->setExcluded(array_values(array_diff($planned, $keep)), true);
+                    $this->setExcluded(array_values(array_intersect($excluded, $keep)), false);
                 }),
             Action::make('assign')
                 ->label(__('Toewijzen en bestand maken'))
@@ -135,7 +138,7 @@ class ViewGs1Run extends ViewRecord
             ->authorize(fn () => auth()->user()?->can('update', $this->record) ?? false)
             ->requiresConfirmation()
             ->modalHeading(fn (array $arguments) => __(':product uitsluiten?', ['product' => Product::find($arguments['product'] ?? 0)?->name ?? '']))
-            ->modalDescription(__('Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan onderaan het voorbeeld of op het product zelf.'))
+            ->modalDescription(__('Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan via Producten aan- of uitvinken, onderaan het voorbeeld of op het product zelf.'))
             ->modalSubmitActionLabel(__('Uitsluiten'))
             ->action(fn (array $arguments) => $this->setExcluded([(int) ($arguments['product'] ?? 0)], true));
     }
@@ -187,6 +190,19 @@ class ViewGs1Run extends ViewRecord
         $ids = array_merge(array_column($plan->assignments, 'product_id'), $plan->placeholders, array_keys($plan->blocked));
 
         return $this->plannedProducts = Product::query()->whereIn('id', $ids)->get()
+            ->mapWithKeys(fn (Product $product) => [$product->id => (string) $product->name])
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->all();
+    }
+
+    /**
+     * Producten die met de hand van GS1 zijn uitgesloten: id => naam, op naam gesorteerd.
+     *
+     * @return array<int, string>
+     */
+    private function excludedProducts(): array
+    {
+        return Product::query()->gs1ExcludedByHand()->get()
             ->mapWithKeys(fn (Product $product) => [$product->id => (string) $product->name])
             ->sort(SORT_NATURAL | SORT_FLAG_CASE)
             ->all();

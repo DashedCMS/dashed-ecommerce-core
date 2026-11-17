@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.204.1 - 2026-11-17
+
+### Fixed
+- GS1-run: "Producten uitvinken" heet nu "Producten aan- of uitvinken" en toont ook de uitgesloten producten (uitgevinkt), zodat je ze daar weer kunt aanvinken.
+- GS1-voorbeeld: ruimte tussen GTIN en productnaam.
+
 ## v4.204.0 - 2026-11-17
 
 ### Added

@@ -25,7 +25,7 @@
         <table class="w-full text-left">
             <thead>
                 <tr>
-                    <th class="py-1">{{ __('GTIN') }}</th>
+                    <th class="py-1 pe-4">{{ __('GTIN') }}</th>
                     <th class="py-1">{{ __('Product') }}</th>
                     <th class="py-1"></th>
                     <th class="py-1"></th>
@@ -34,7 +34,7 @@
             <tbody>
                 @foreach ($plan->assignments as $assignment)
                     <tr wire:key="gs1-plan-{{ $assignment['product_id'] }}" class="border-t border-gray-200 dark:border-white/10">
-                        <td class="py-1 font-mono">{{ $assignment['gtin'] }}</td>
+                        <td class="py-1 pe-4 font-mono whitespace-nowrap">{{ $assignment['gtin'] }}</td>
                         <td class="py-1">{{ $products->get($assignment['product_id'])?->name }}</td>
                         <td class="py-1">
                             @if ($assignment['reused'])
