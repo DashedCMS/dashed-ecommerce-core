@@ -516,6 +516,10 @@ class OrderResource extends Resource
 
                         return $query->proformaAwaitingPayment();
                     }),
+                Filter::make('label_problems')
+                    ->toggle()
+                    ->label(__('Labels met problemen'))
+                    ->query(fn (Builder $query, array $data): Builder => ($data['isActive'] ?? false) ? \Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector::applyScope($query) : $query),
                 Filter::make('on_account_open')
                     ->toggle()
                     ->label(__('Op rekening, openstaand'))

@@ -64,6 +64,8 @@
     <div class="dvo">
         @livewire('order-view-statusses', ['order' => $record])
 
+        @livewire('order-label-problem-banner', ['order' => $record], key('order-label-problem-'.$record->id))
+
         @if($record->quote)
             <div class="dvo-row">
                 <span class="dvo-muted">{{ __('Ontstaan uit offerte') }}</span>

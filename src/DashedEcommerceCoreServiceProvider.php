@@ -1787,6 +1787,7 @@ MARKDOWN,
         Livewire::component('order-customer-information-block-list', CustomerInformationBlockList::class);
         Livewire::component('order-attribution-information-list', AttributionInformationList::class);
         Livewire::component('order-view-statusses', ViewStatusses::class);
+        Livewire::component('order-label-problem-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\LabelProblemBanner::class);
         Livewire::component('order-create-track-and-trace', CreateTrackAndTrace::class);
 
         //Frontend components
