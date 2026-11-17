@@ -84,11 +84,11 @@ class LabelProblemFixer
     private static function fieldLabel(string $field): string
     {
         return match ($field) {
-            'zip_code' => 'postcode',
-            'house_nr' => 'huisnummer',
-            'street' => 'straat',
-            'city' => 'plaats',
-            default => 'land',
+            'zip_code' => __('postcode'),
+            'house_nr' => __('huisnummer'),
+            'street' => __('straat'),
+            'city' => __('plaats'),
+            default => __('land'),
         };
     }
 }

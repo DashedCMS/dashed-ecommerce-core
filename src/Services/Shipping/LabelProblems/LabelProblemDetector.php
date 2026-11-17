@@ -13,7 +13,10 @@ class LabelProblemDetector
         'myparcel' => ['relation' => 'myParcelOrders', 'model' => 'Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder'],
     ];
 
-    public static function forOrder(Order $order): ?LabelProblem
+    /**
+     * @param  bool  $withSuggestion  false = alleen de oorzaak, zonder PDOK-zoektocht (bv. printdaemon)
+     */
+    public static function forOrder(Order $order, bool $withSuggestion = true): ?LabelProblem
     {
         $best = null;
 
@@ -50,7 +53,7 @@ class LabelProblemDetector
             self::cause($parsed, $order),
             $raw,
             $parsed->field,
-            self::suggestion($parsed->field, $order),
+            $withSuggestion ? self::suggestion($parsed->field, $order) : null,
         );
     }
 

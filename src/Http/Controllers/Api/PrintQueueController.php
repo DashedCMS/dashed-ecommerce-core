@@ -18,6 +18,7 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Http\Resources\PrintJobResource;
 use Dashed\DashedEcommerceCore\Http\Requests\MarkJobFailedRequest;
 use Dashed\DashedEcommerceCore\Classes\PrintQueue\LabelPdfOrientation;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\CarrierErrorParser;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class PrintQueueController extends Controller
@@ -108,6 +109,7 @@ class PrintQueueController extends Controller
         // nodig uit MyParcel). Een specifiek label (printable) heeft voorrang op
         // het nieuwste label van de order.
         if ($job->type === PrintJobType::ShippingLabel && ! $job->pdf_path) {
+            $row = null;
             if ($job->printable_type && $job->printable_id && class_exists($job->printable_type)) {
                 $row = ($job->printable_type)::find($job->printable_id);
                 if ($row && ($path = $this->resolveLabelPdfPath($row))) {
@@ -134,10 +136,10 @@ class PrintQueueController extends Controller
             }
 
             // Geen PDF: geef de echte oorzaak terug in plaats van een kale 404.
-            if ($job->order && ($problem = LabelProblemDetector::forOrder($job->order))) {
-                $job->update(['error_message' => self::LABEL_FAILED_PREFIX . ': ' . $problem->cause]);
+            if ($cause = $this->labelFailureCause($job, $row)) {
+                $job->update(['error_message' => self::LABEL_FAILED_PREFIX . ': ' . $cause]);
 
-                return response()->json(['message' => $problem->cause], Response::HTTP_UNPROCESSABLE_ENTITY);
+                return response()->json(['message' => $cause], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         }
 
@@ -168,6 +170,28 @@ class PrintQueueController extends Controller
         }
 
         return Storage::disk($job->pdf_disk)->response($job->pdf_path);
+    }
+
+    /**
+     * Oorzaak van een label zonder PDF. Een job voor één specifiek label leest
+     * de fout van dat record; een job op orderniveau vraagt de detector (zonder
+     * PDOK-voorstel, dit is het pad van de printdaemon).
+     */
+    private function labelFailureCause(PrintJob $job, $row): ?string
+    {
+        if (! $job->order) {
+            return null;
+        }
+
+        if ($job->printable_type && $job->printable_id) {
+            $error = trim((string) ($row->error ?? ''));
+
+            return $error === ''
+                ? null
+                : LabelProblemDetector::cause(CarrierErrorParser::parse($error), $job->order);
+        }
+
+        return LabelProblemDetector::forOrder($job->order, false)?->cause;
     }
 
     /**

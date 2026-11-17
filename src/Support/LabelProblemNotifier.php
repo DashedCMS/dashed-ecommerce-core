@@ -60,7 +60,7 @@ class LabelProblemNotifier
             app(self::CENTER)->push()
                 ->type('order.label_failed')
                 ->site($order->site_id)
-                ->title('Label mislukt voor order ' . ($order->invoice_id ?: '#' . $order->id))
+                ->title(__('Label mislukt voor order :order', ['order' => $order->invoice_id ?: '#' . $order->id]))
                 ->body($cause)
                 ->route("/order/{$order->id}")
                 ->data(['type' => 'order', 'id' => $order->id])

@@ -31,29 +31,44 @@ class AddressSuggester
         $key = 'label-problem-pdok:'.md5(mb_strtolower("$street|$houseNr|$zip|$city"));
 
         try {
-            $result = Cache::remember($key, now()->addDay(), function () use ($street, $houseNr, $zip, $city) {
-                $response = Http::timeout(5)->get(self::URL, [
-                    'q' => trim("$street $houseNr ".($city !== '' ? $city : $zip)),
-                    'fq' => 'type:adres',
-                    'rows' => 10,
-                    'fl' => 'weergavenaam,postcode,huisnummer,huisletter,toevoeging,straatnaam,woonplaatsnaam',
-                ]);
-
-                if (! $response->successful()) {
-                    return null;
+            // Gevonden voorstel = array, geslaagde zoektocht zonder match = false
+            // (sentinel, zodat een misser niet elke keer opnieuw PDOK raakt).
+            // Een HTTP-fout wordt niet gecachet.
+            $result = Cache::get($key);
+            if ($result === null) {
+                $result = self::lookup($street, $houseNr, $zip, $city);
+                if ($result !== null) {
+                    Cache::put($key, $result, now()->addDay());
                 }
-
-                $suggestion = self::pick((array) $response->json('response.docs', []), $street, $houseNr, $zip, $city);
-
-                return $suggestion?->toArray();
-            });
+            }
         } catch (Throwable $e) {
             report($e);
 
             return null;
         }
 
-        return $result ? new AddressSuggestion($result['changes'], $result['label'], $result['source']) : null;
+        return is_array($result) ? new AddressSuggestion($result['changes'], $result['label'], $result['source']) : null;
+    }
+
+    /**
+     * @return array|false|null  voorstel, false bij geen match, null bij een HTTP-fout
+     */
+    private static function lookup(string $street, string $houseNr, string $zip, string $city): array|false|null
+    {
+        $response = Http::timeout(5)->get(self::URL, [
+            'q' => trim("$street $houseNr ".($city !== '' ? $city : $zip)),
+            'fq' => 'type:adres',
+            'rows' => 10,
+            'fl' => 'weergavenaam,postcode,huisnummer,huisletter,toevoeging,straatnaam,woonplaatsnaam',
+        ]);
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $suggestion = self::pick((array) $response->json('response.docs', []), $street, $houseNr, $zip, $city);
+
+        return $suggestion?->toArray() ?? false;
     }
 
     private static function pick(array $docs, string $street, string $houseNr, string $zip, string $city): ?AddressSuggestion
