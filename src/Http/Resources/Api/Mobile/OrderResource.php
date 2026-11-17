@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -50,6 +51,7 @@ class OrderResource extends JsonResource
         }
 
         return array_merge($base, [
+            'label_problem' => LabelProblemDetector::forOrder($this->resource)?->toArray(),
             'invoice_name' => $this->invoiceName,
             'hash' => $this->hash,
             'outstanding_amount' => (float) $this->outstandingAmount(),

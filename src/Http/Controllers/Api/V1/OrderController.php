@@ -21,6 +21,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemFixer;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\CarrierErrorParser;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
@@ -45,6 +47,12 @@ class OrderController extends Controller
         'return' => 'Retour',
     ];
 
+    /** alias => [relatie, model] voor de has_label_problem-subqueries in index(). */
+    private const LABEL_PROBLEM_RELATIONS = [
+        'lp_veloyd' => ['veloydOrders', 'Dashed\DashedEcommerceVeloyd\Models\VeloydOrder'],
+        'lp_myparcel' => ['myParcelOrders', 'Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder'],
+    ];
+
     public function index(Request $request): AnonymousResourceCollection
     {
         // orderProducts + toegewezen medewerker eager-loaden voor de inline
@@ -67,6 +75,17 @@ class OrderController extends Controller
             $query->where('assigned_to_user_id', $request->user()->id);
         } elseif ($assignedTo = (int) $request->query('assigned_to_user_id')) {
             $query->where('assigned_to_user_id', $assignedTo);
+        }
+
+        if ($request->boolean('label_problem')) {
+            LabelProblemDetector::applyScope($query);
+        }
+
+        // has_label_problem per rij: een exists-subquery per beschikbare vervoerder, geen N+1.
+        foreach (self::LABEL_PROBLEM_RELATIONS as $alias => [$relation, $model]) {
+            if (class_exists($model) && Order::hasDynamicRelation($relation)) {
+                $query->withExists([$relation . ' as ' . $alias => fn ($l) => $l->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)]);
+            }
         }
 
         $this->applyArrayFilter($query, 'status', $request->query('status'));
@@ -606,11 +625,26 @@ class OrderController extends Controller
     public function labels(int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
+
+        return response()->json([
+            'data' => $this->labelItems($model),
+            'providers' => $this->labelProviders($model),
+        ]);
+    }
+
+    /**
+     * Per label record (ook mislukte zonder zending): `error` is de ruwe
+     * vervoerderfout, `error_cause` de Nederlandse oorzaak (zelfde tekst als de banner).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function labelItems(Order $model): array
+    {
         $labels = [];
 
         if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
             foreach (\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
-                ->whereNotNull('shipment_id')->latest()->get() as $mp) {
+                ->where(fn ($q) => $q->whereNotNull('shipment_id')->orWhere(fn ($e) => $e->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)))->latest()->get() as $mp) {
                 $st = $this->labelStatus($mp);
                 $labels[] = [
                     'id' => (int) $mp->id,
@@ -624,13 +658,14 @@ class OrderController extends Controller
                     'status_tone' => $st['tone'],
                     'created_at' => optional($mp->created_at)->toIso8601String(),
                     'chosen_options' => $this->chosenOptionsFor($mp, 'myparcel'),
+                    ...$this->labelErrorFields($mp, $model),
                 ];
             }
         }
 
         if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             foreach (\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
-                ->whereNotNull('shipment_id')->latest()->get() as $v) {
+                ->where(fn ($q) => $q->whereNotNull('shipment_id')->orWhere(fn ($e) => $e->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)))->latest()->get() as $v) {
                 $st = $this->labelStatus($v);
                 $labels[] = [
                     'id' => (int) $v->id,
@@ -644,13 +679,47 @@ class OrderController extends Controller
                     'status_tone' => $st['tone'],
                     'created_at' => optional($v->created_at)->toIso8601String(),
                     'chosen_options' => $this->chosenOptionsFor($v, 'veloyd'),
+                    ...$this->labelErrorFields($v, $model),
                 ];
             }
         }
 
+        return $labels;
+    }
+
+    /** @return array{error: ?string, error_cause: ?string} */
+    private function labelErrorFields($record, Order $order): array
+    {
+        $raw = trim((string) ($record->error ?? ''));
+        if ($raw === '') {
+            return ['error' => null, 'error_cause' => null];
+        }
+
+        return [
+            'error' => $raw,
+            'error_cause' => LabelProblemDetector::cause(CarrierErrorParser::parse($raw), $order),
+        ];
+    }
+
+    /**
+     * Lost het labelprobleem van deze order in één klik op (adresvoorstel
+     * overnemen + label vervangen). 422 als er niets op te lossen valt.
+     */
+    public function fixLabelProblem(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        $problem = LabelProblemDetector::forOrder($model);
+
+        if (! $problem || ! $problem->suggestion) {
+            return response()->json(['message' => __('Er is geen oplosbaar labelprobleem voor deze bestelling.')], 422);
+        }
+
+        $result = LabelProblemFixer::apply($model, $problem, $request->user()?->id);
+
         return response()->json([
-            'data' => $labels,
-            'providers' => $this->labelProviders($model),
+            'ok' => (bool) $result['ok'],
+            'message' => $result['message'],
+            'labels' => $this->labelItems($model->fresh()),
         ]);
     }
 
