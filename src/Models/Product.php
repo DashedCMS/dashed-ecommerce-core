@@ -449,6 +449,18 @@ class Product extends Model
             ->whereDoesntHave('productGroup', fn ($group) => $group->where('gs1_excluded', true));
     }
 
+    /**
+     * Producten zonder EAN die met de hand van GS1 zijn uitgesloten (vinkje op het product).
+     * Uitsluiting via de productgroep valt hier buiten: die zet je op de groep terug.
+     */
+    public function scopeGs1ExcludedByHand($query)
+    {
+        $query->withoutEan()
+            ->where('public', true)
+            ->where('is_bundle', false)
+            ->where('gs1_excluded', true);
+    }
+
     public function breadcrumbs()
     {
         $breadcrumbs = [

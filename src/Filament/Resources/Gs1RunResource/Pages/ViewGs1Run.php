@@ -9,6 +9,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\CheckboxList;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1Assigner;
 use Dashed\DashedEcommerceCore\Services\Gs1\Gs1FileReader;
@@ -21,6 +22,9 @@ use Dashed\DashedEcommerceCore\Services\Gs1\Gs1RunLockedException;
 class ViewGs1Run extends ViewRecord
 {
     protected static string $resource = Gs1RunResource::class;
+
+    /** @var array<int, string>|null Alleen binnen één request bewaard. */
+    private ?array $plannedProducts = null;
 
     /**
      * Alleen-lezen (bekijken, downloaden) mag met View:Product. Alles wat
@@ -46,6 +50,29 @@ class ViewGs1Run extends ViewRecord
                     }
 
                     Notification::make()->title(__('Velden opgeslagen'))->success()->send();
+                }),
+            Action::make('exclude')
+                ->label(__('Producten uitvinken'))
+                ->icon('heroicon-o-no-symbol')
+                ->color('gray')
+                ->authorize(fn () => auth()->user()?->can('update', $this->record) ?? false)
+                ->visible(fn () => $this->record->isConcept() && $this->plannedProducts() !== [])
+                ->modalHeading(__('Welke producten krijgen een GS1-code?'))
+                ->modalDescription(__('Vink producten uit die geen code moeten krijgen. Dat wordt op het product onthouden: ook bij een volgende run blijven ze uitgesloten. Terugzetten kan onderaan het voorbeeld of op het product zelf.'))
+                ->modalSubmitActionLabel(__('Opslaan'))
+                ->schema(fn () => [
+                    CheckboxList::make('products')
+                        ->hiddenLabel()
+                        ->options($this->plannedProducts())
+                        ->default(array_keys($this->plannedProducts()))
+                        ->searchable()
+                        ->bulkToggleable()
+                        ->columns(2),
+                ])
+                ->action(function (array $data) {
+                    $keep = array_map('intval', $data['products'] ?? []);
+                    $exclude = array_values(array_diff(array_keys($this->plannedProducts()), $keep));
+                    $this->setExcluded($exclude, true);
                 }),
             Action::make('assign')
                 ->label(__('Toewijzen en bestand maken'))
@@ -98,6 +125,71 @@ class ViewGs1Run extends ViewRecord
                     $this->record->refresh();
                 }),
         ];
+    }
+
+    /** Eén product uitsluiten vanuit een regel in het voorbeeld. */
+    public function excludeProductAction(): Action
+    {
+        return Action::make('excludeProduct')
+            ->label(__('Uitsluiten'))
+            ->authorize(fn () => auth()->user()?->can('update', $this->record) ?? false)
+            ->requiresConfirmation()
+            ->modalHeading(fn (array $arguments) => __(':product uitsluiten?', ['product' => Product::find($arguments['product'] ?? 0)?->name ?? '']))
+            ->modalDescription(__('Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan onderaan het voorbeeld of op het product zelf.'))
+            ->modalSubmitActionLabel(__('Uitsluiten'))
+            ->action(fn (array $arguments) => $this->setExcluded([(int) ($arguments['product'] ?? 0)], true));
+    }
+
+    /** Een uitgesloten product weer meenemen. */
+    public function includeProductAction(): Action
+    {
+        return Action::make('includeProduct')
+            ->authorize(fn () => auth()->user()?->can('update', $this->record) ?? false)
+            ->action(fn (array $arguments) => $this->setExcluded([(int) ($arguments['product'] ?? 0)], false));
+    }
+
+    /** @param  list<int>  $productIds */
+    private function setExcluded(array $productIds, bool $excluded): void
+    {
+        $productIds = array_values(array_filter($productIds));
+        if ($productIds === [] || ! $this->record->isConcept()) {
+            return;
+        }
+
+        $count = 0;
+        foreach (Product::query()->whereIn('id', $productIds)->get() as $product) {
+            $product->gs1_excluded = $excluded;
+            $product->save();
+            $count++;
+        }
+
+        Notification::make()
+            ->title($excluded
+                ? trans_choice('{1} :aantal product uitgesloten van GS1|[2,*] :aantal producten uitgesloten van GS1', $count, ['aantal' => $count])
+                : trans_choice('{1} :aantal product krijgt weer een code|[2,*] :aantal producten krijgen weer een code', $count, ['aantal' => $count]))
+            ->success()
+            ->send();
+    }
+
+    /**
+     * Alle producten die in deze run een code of plaatshouder zouden krijgen, of
+     * wachten op velden: id => naam, op naam gesorteerd.
+     *
+     * @return array<int, string>
+     */
+    private function plannedProducts(): array
+    {
+        if ($this->plannedProducts !== null) {
+            return $this->plannedProducts;
+        }
+
+        $plan = app(Gs1Assigner::class)->plan($this->record);
+        $ids = array_merge(array_column($plan->assignments, 'product_id'), $plan->placeholders, array_keys($plan->blocked));
+
+        return $this->plannedProducts = Product::query()->whereIn('id', $ids)->get()
+            ->mapWithKeys(fn (Product $product) => [$product->id => (string) $product->name])
+            ->sort(SORT_NATURAL | SORT_FLAG_CASE)
+            ->all();
     }
 
     private function missingFields(): Gs1MissingFields

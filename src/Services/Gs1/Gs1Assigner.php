@@ -47,6 +47,17 @@ class Gs1Assigner
             }
         }
 
+        // Een product dat (of waarvan de groep) is uitgesloten, krijgt ook geen vaste koppeling meer.
+        if ($fixed !== []) {
+            $excluded = Product::query()
+                ->whereIn('id', array_column($fixed, 'product_id'))
+                ->where(fn ($query) => $query->where('gs1_excluded', true)
+                    ->orWhereHas('productGroup', fn ($group) => $group->where('gs1_excluded', true)))
+                ->pluck('id')
+                ->all();
+            $fixed = array_values(array_filter($fixed, fn (array $assignment) => ! in_array($assignment['product_id'], $excluded, true)));
+        }
+
         $missing = new Gs1MissingFields(Gs1ReferenceData::fromArray($run->reference_data ?? []), $run->site_id);
         $resolver = new Gs1MetaResolver($run->site_id);
         $blocked = [];

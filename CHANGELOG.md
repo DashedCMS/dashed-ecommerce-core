@@ -2,7 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.204.0 - 2026-11-17
+
+### Added
+- GS1-run, Voorbeeld: per product een knop "Uitsluiten" (ook bij plaatshouders en producten die op velden wachten) en een knop "Producten uitvinken" met een lijst om aan of uit te vinken. Uitsluiten zet `gs1_excluded` op het product, dus het blijft ook bij volgende runs uitgesloten. Onderaan het voorbeeld staan de uitgesloten producten met "Weer meenemen".
+
+### Changed
+- `Gs1Assigner::plan()` slaat ook vaste koppelingen (naam-match, wees koppelen) over voor uitgesloten producten of groepen.
+
+## v4.203.0 - 2026-11-17
 
 ### Added
 - Productenlijst: stat-widget "Producten zonder EAN" (alle producten met lege of ontbrekende EAN) naast "Producten niet voorradig", met een bijbehorende filter "Zonder EAN" waar de widget naartoe linkt.

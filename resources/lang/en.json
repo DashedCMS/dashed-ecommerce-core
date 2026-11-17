@@ -2396,5 +2396,16 @@
     "Voorraad en verkopen van producten bijwerken": "Updating product stock and sales",
     ":aantal e-mailadressen verwerkt.": ":aantal email addresses processed.",
     ":aantal e-mailadressen verwerkt, :mislukt mislukt.": ":aantal email addresses processed, :mislukt failed.",
-    "E-mailadressen naar de koppelingen sturen": "Sending email addresses to the integrations"
+    "E-mailadressen naar de koppelingen sturen": "Sending email addresses to the integrations",
+    "Producten uitvinken": "Exclude products",
+    "Welke producten krijgen een GS1-code?": "Which products get a GS1 code?",
+    "Vink producten uit die geen code moeten krijgen. Dat wordt op het product onthouden: ook bij een volgende run blijven ze uitgesloten. Terugzetten kan onderaan het voorbeeld of op het product zelf.": "Untick products that should not get a code. This is remembered on the product: they stay excluded in later runs too. You can undo it at the bottom of the preview or on the product itself.",
+    ":product uitsluiten?": "Exclude :product?",
+    "Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan onderaan het voorbeeld of op het product zelf.": "This product will not get a GS1 code, not in later runs either. You can undo it at the bottom of the preview or on the product itself.",
+    "{1} :aantal product uitgesloten van GS1|[2,*] :aantal producten uitgesloten van GS1": "{1} :aantal product excluded from GS1|[2,*] :aantal products excluded from GS1",
+    "{1} :aantal product krijgt weer een code|[2,*] :aantal producten krijgen weer een code": "{1} :aantal product will get a code again|[2,*] :aantal products will get a code again",
+    "Moet een product geen code krijgen? Klik op Uitsluiten; dat wordt onthouden.": "Should a product not get a code? Click Exclude; it will be remembered.",
+    "Krijgen een plaatshouder (er zijn niet genoeg vrije codes):": "Get a placeholder (not enough free codes):",
+    "{1} :aantal product uitgesloten van GS1|[0,*] :aantal producten uitgesloten van GS1": "{1} :aantal product excluded from GS1|[0,*] :aantal products excluded from GS1",
+    "Weer meenemen": "Include again"
 }
