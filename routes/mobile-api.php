@@ -8,7 +8,6 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrinterController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CustomerController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DiscountController;
-use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CheckoutAbandonmentController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\InsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PrintJobController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ShipmentController;
@@ -22,6 +21,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsControlle
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CheckoutAbandonmentController;
 
 /**
  * Mobiele kassa: dezelfde PointOfSaleApiController als de web-kassa, maar onder

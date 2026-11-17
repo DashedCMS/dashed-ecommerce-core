@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 
 use Illuminate\Http\Request;
-use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderResource extends JsonResource
 {
