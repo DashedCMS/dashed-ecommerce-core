@@ -375,6 +375,14 @@ class Checkout extends Component
             $value = 'Nederland';
         }
 
+        if ($name === 'invoiceZipCode') {
+            $this->invoiceZipCode = $this->normalizePostcode($this->invoiceZipCode, $this->invoiceCountry);
+        }
+
+        if ($name === 'zipCode') {
+            $this->zipCode = $this->normalizePostcode($this->zipCode, $this->country);
+        }
+
         if (in_array($name, ['invoiceHouseNr', 'invoiceZipCode'], true)) {
             $this->updateInvoiceAddressByApi();
 
@@ -696,6 +704,7 @@ class Checkout extends Component
             'zipCode' => [
                 Rule::requiredIf($this->requiresShipping),
                 'max:10',
+                $this->postcodeFormatRule($this->country, $this->requiresShipping),
             ],
             'city' => [
                 Rule::requiredIf($this->requiresShipping),
@@ -730,6 +739,7 @@ class Checkout extends Component
             'invoiceZipCode' => [
                 Rule::requiredIf((bool) $this->invoiceStreet),
                 'max:255',
+                $this->postcodeFormatRule($this->invoiceCountry, (bool) $this->invoiceStreet),
             ],
             'invoiceCity' => [
                 Rule::requiredIf((bool) $this->invoiceStreet),
@@ -746,6 +756,41 @@ class Checkout extends Component
                 'max:255',
             ],
         ], $this->checkoutCustomFieldRules());
+    }
+
+    /**
+     * Zet een NL-postcode om naar "1234 AB" en een BE-postcode naar "1234".
+     * Andere landen en ongeldige invoer blijven ongemoeid, de regel hieronder
+     * geeft dan de foutmelding.
+     */
+    protected function normalizePostcode(?string $zip, ?string $country): string
+    {
+        $zip = trim((string) $zip);
+
+        if (Countries::getCountryIsoCode($country) === 'NL' && preg_match('/^([1-9][0-9]{3})\s?([A-Za-z]{2})$/', $zip, $m)) {
+            return $m[1] . ' ' . strtoupper($m[2]);
+        }
+
+        return $zip;
+    }
+
+    protected function postcodeFormatRule(?string $country, bool $applies): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) use ($country, $applies) {
+            if (! $applies || blank($value)) {
+                return;
+            }
+
+            $iso = Countries::getCountryIsoCode($country);
+
+            if ($iso === 'NL' && ! preg_match('/^[1-9][0-9]{3}\s?[A-Za-z]{2}$/', trim((string) $value))) {
+                $fail(Translation::get('invalid-postcode-nl', 'checkout', 'Vul een volledige postcode in, bijvoorbeeld 1234 AB.'));
+            }
+
+            if ($iso === 'BE' && ! preg_match('/^[1-9][0-9]{3}$/', trim((string) $value))) {
+                $fail(Translation::get('invalid-postcode-be', 'checkout', 'Vul een geldige Belgische postcode in van 4 cijfers.'));
+            }
+        };
     }
 
     /**
@@ -828,6 +873,9 @@ class Checkout extends Component
         if ($sawFullGiftcardCoverage && ! $this->giftcardsCoverCart()) {
             return $this->refuseChangedGiftcardBalance();
         }
+
+        $this->zipCode = $this->normalizePostcode($this->zipCode, $this->country);
+        $this->invoiceZipCode = $this->normalizePostcode($this->invoiceZipCode, $this->invoiceCountry);
 
         $validator = Validator::make([
             'shippingMethod' => $this->shippingMethod,
