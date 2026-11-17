@@ -21,6 +21,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\Concerns\MapsCarrierLabelStatus;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\SendPaymentLinkAction;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegenerateInvoiceAction;
@@ -584,6 +585,16 @@ class OrderController extends Controller
         $url = (! empty($data['carrier']) && ! empty($data['label_id']))
             ? $this->specificLabelPublicUrl($model, (string) $data['carrier'], (int) $data['label_id'])
             : $this->firstLabelPublicUrl($model);
+
+        // Geen PDF door een labelfout: geef de oorzaak (en het voorstel) mee.
+        if (! $url && ($problem = LabelProblemDetector::forOrder($model))
+            && (empty($data['carrier']) || empty($data['label_id'])
+                || ($problem->carrier === $data['carrier'] && $problem->labelId === (int) $data['label_id']))) {
+            return response()->json([
+                'message' => $problem->cause,
+                'label_problem' => $problem->toArray(),
+            ], 422);
+        }
 
         return response()->json(['url' => $url]);
     }

@@ -78,7 +78,7 @@ class LabelProblemDetector
         return $path !== '' && Storage::disk('public')->exists($path);
     }
 
-    private static function cause(ParsedCarrierError $parsed, Order $order): string
+    public static function cause(ParsedCarrierError $parsed, Order $order): string
     {
         $value = match ($parsed->field) {
             'zip_code' => $order->zip_code,

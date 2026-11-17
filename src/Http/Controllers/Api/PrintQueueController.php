@@ -18,9 +18,12 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
 use Dashed\DashedEcommerceCore\Http\Resources\PrintJobResource;
 use Dashed\DashedEcommerceCore\Http\Requests\MarkJobFailedRequest;
 use Dashed\DashedEcommerceCore\Classes\PrintQueue\LabelPdfOrientation;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class PrintQueueController extends Controller
 {
+    private const LABEL_FAILED_PREFIX = 'Label kon niet worden opgehaald';
+
     public function pending(Request $request): JsonResponse
     {
         $printer = $this->printerFrom($request);
@@ -74,7 +77,16 @@ class PrintQueueController extends Controller
     public function failed(string $ulid, MarkJobFailedRequest $request): JsonResponse
     {
         $job = PrintJob::where('ulid', $ulid)->firstOrFail();
-        $job->markAsFailed($request->validated()['error_message']);
+        $message = $request->validated()['error_message'];
+
+        // De server zette al de echte oorzaak (labelfout); de daemon meldt dan
+        // alleen "PDF fetch HTTP 422". Die kale melding mag de oorzaak niet wissen.
+        if (str_starts_with((string) $job->error_message, self::LABEL_FAILED_PREFIX)
+            && preg_match('/HTTP (404|422)/', $message)) {
+            $message = $job->error_message;
+        }
+
+        $job->markAsFailed($message);
 
         return response()->json(['status' => 'failed']);
     }
@@ -119,6 +131,13 @@ class PrintQueueController extends Controller
                         return $this->labelResponse('public', $path);
                     }
                 }
+            }
+
+            // Geen PDF: geef de echte oorzaak terug in plaats van een kale 404.
+            if ($job->order && ($problem = LabelProblemDetector::forOrder($job->order))) {
+                $job->update(['error_message' => self::LABEL_FAILED_PREFIX . ': ' . $problem->cause]);
+
+                return response()->json(['message' => $problem->cause], Response::HTTP_UNPROCESSABLE_ENTITY);
             }
         }
 

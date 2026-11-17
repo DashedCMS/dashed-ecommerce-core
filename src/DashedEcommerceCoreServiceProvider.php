@@ -262,6 +262,17 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             }
         });
 
+        // Verzendlabel mislukt → app-push met de echte oorzaak. De vervoerders
+        // bewaren de ruwe fout in 'error' op hun labelrecord.
+        foreach ([
+            \Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class,
+            \Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class,
+        ] as $labelModel) {
+            if (class_exists($labelModel)) {
+                $labelModel::saved(fn ($label) => \Dashed\DashedEcommerceCore\Support\LabelProblemNotifier::fromLabel($label));
+            }
+        }
+
         // Register the product price fields at package boot (runs in every
         // context) rather than only in the Filament panel plugin. The product
         // import runs in a queue worker that never boots a panel, so a panel-only
@@ -2099,6 +2110,7 @@ MARKDOWN,
                     ['key' => 'return.requested', 'label' => 'Nieuw retourverzoek', 'description' => 'Een klant of chat meldt een retour aan.', 'group' => 'Retouren', 'sound' => 'order', 'ability' => 'orders.read', 'default' => true],
                     ['key' => 'return.auto_approved', 'label' => 'Retour automatisch goedgekeurd', 'description' => 'Een retour is via de auto-accept-regels meteen goedgekeurd.', 'group' => 'Retouren', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
                     ['key' => 'return.label_failed', 'label' => 'Retourlabel mislukt', 'description' => 'Het aanmaken van een retourlabel is mislukt.', 'group' => 'Retouren', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
+                    ['key' => 'order.label_failed', 'label' => 'Verzendlabel mislukt', 'description' => 'Een verzendlabel kon niet worden aangemaakt of opgehaald.', 'group' => 'Bestellingen', 'sound' => 'default', 'ability' => 'orders.read', 'default' => true],
                 ]);
             }
 
