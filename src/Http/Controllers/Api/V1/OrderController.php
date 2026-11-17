@@ -47,12 +47,6 @@ class OrderController extends Controller
         'return' => 'Retour',
     ];
 
-    /** alias => [relatie, model] voor de has_label_problem-subqueries in index(). */
-    private const LABEL_PROBLEM_RELATIONS = [
-        'lp_veloyd' => ['veloydOrders', 'Dashed\DashedEcommerceVeloyd\Models\VeloydOrder'],
-        'lp_myparcel' => ['myParcelOrders', 'Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder'],
-    ];
-
     public function index(Request $request): AnonymousResourceCollection
     {
         // orderProducts + toegewezen medewerker eager-loaden voor de inline
@@ -82,9 +76,9 @@ class OrderController extends Controller
         }
 
         // has_label_problem per rij: een exists-subquery per beschikbare vervoerder, geen N+1.
-        foreach (self::LABEL_PROBLEM_RELATIONS as $alias => [$relation, $model]) {
-            if (class_exists($model) && Order::hasDynamicRelation($relation)) {
-                $query->withExists([$relation . ' as ' . $alias => fn ($l) => $l->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)]);
+        foreach (LabelProblemDetector::carriers() as $carrier => $config) {
+            if (class_exists($config['model']) && Order::hasDynamicRelation($config['relation'])) {
+                $query->withExists([$config['relation'] . ' as lp_' . $carrier => fn ($l) => LabelProblemDetector::constrainToErrors($l)]);
             }
         }
 
@@ -644,7 +638,7 @@ class OrderController extends Controller
 
         if (class_exists(\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::class)) {
             foreach (\Dashed\DashedEcommerceMyParcel\Models\MyParcelOrder::where('order_id', $model->id)
-                ->where(fn ($q) => $q->whereNotNull('shipment_id')->orWhere(fn ($e) => $e->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)))->latest()->get() as $mp) {
+                ->where(fn ($q) => $q->whereNotNull('shipment_id')->orWhere(fn ($e) => LabelProblemDetector::constrainToErrors($e)))->latest()->get() as $mp) {
                 $st = $this->labelStatus($mp);
                 $labels[] = [
                     'id' => (int) $mp->id,
@@ -665,7 +659,7 @@ class OrderController extends Controller
 
         if (class_exists(\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::class)) {
             foreach (\Dashed\DashedEcommerceVeloyd\Models\VeloydOrder::where('order_id', $model->id)
-                ->where(fn ($q) => $q->whereNotNull('shipment_id')->orWhere(fn ($e) => $e->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)))->latest()->get() as $v) {
+                ->where(fn ($q) => $q->whereNotNull('shipment_id')->orWhere(fn ($e) => LabelProblemDetector::constrainToErrors($e)))->latest()->get() as $v) {
                 $st = $this->labelStatus($v);
                 $labels[] = [
                     'id' => (int) $v->id,

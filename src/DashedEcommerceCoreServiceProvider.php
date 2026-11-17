@@ -270,6 +270,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         ] as $labelModel) {
             if (class_exists($labelModel)) {
                 $labelModel::saved(fn ($label) => \Dashed\DashedEcommerceCore\Support\LabelProblemNotifier::fromLabel($label));
+                $labelModel::saved(fn ($label) => \Dashed\DashedEcommerceCore\Support\StaleLabelErrorCleaner::fromLabel($label));
             }
         }
 

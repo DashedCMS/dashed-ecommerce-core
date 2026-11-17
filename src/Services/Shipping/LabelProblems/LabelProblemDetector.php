@@ -57,6 +57,18 @@ class LabelProblemDetector
         );
     }
 
+    /** @return array<string, array{relation: string, model: string}> */
+    public static function carriers(): array
+    {
+        return self::CARRIERS;
+    }
+
+    /** Beperkt een labelquery tot niet-retourlabels met een opgeslagen fout. */
+    public static function constrainToErrors($query)
+    {
+        return $query->whereNotNull('error')->where('error', '!=', '')->where('is_return', false);
+    }
+
     public static function applyScope(Builder $orders): Builder
     {
         return $orders->where(function (Builder $q) {
@@ -65,7 +77,7 @@ class LabelProblemDetector
                 if (! class_exists($config['model']) || ! Order::hasDynamicRelation($config['relation'])) {
                     continue;
                 }
-                $q->orWhereHas($config['relation'], fn ($l) => $l->whereNotNull('error')->where('error', '!=', '')->where('is_return', false));
+                $q->orWhereHas($config['relation'], fn ($l) => self::constrainToErrors($l));
                 $any = true;
             }
             if (! $any) {
