@@ -6,6 +6,7 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderSummaryResource extends JsonResource
 {
@@ -30,8 +31,10 @@ class OrderSummaryResource extends JsonResource
                 : null,
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
-            // Uit de withExists-subqueries in OrderController::index(); false als niet geladen.
-            'has_label_problem' => (bool) (($this->lp_veloyd ?? false) || ($this->lp_myparcel ?? false)),
+            // Uit de withExists-subqueries in OrderController::index(); false als niet geladen
+            // of als de order al is afgehandeld/verzonden (zelfde regel als de scope).
+            'has_label_problem' => (bool) (($this->lp_veloyd ?? false) || ($this->lp_myparcel ?? false))
+                && ! LabelProblemDetector::isDone($this->fulfillment_status),
             'created_at' => optional($this->created_at)->toIso8601String(),
             // Bestelde producten (naam × aantal) voor de inline-preview in de lijst.
             'products' => $this->orderProducts->map(fn ($p) => [

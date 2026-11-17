@@ -28,21 +28,31 @@ class AddressSuggester
             return null;
         }
 
-        $key = 'label-problem-pdok:'.md5(mb_strtolower("$street|$houseNr|$zip|$city"));
+        $hash = md5(mb_strtolower("$street|$houseNr|$zip|$city"));
+        $key = 'label-problem-pdok:'.$hash;
+        $failedKey = 'label-problem-pdok-failed:'.$hash;
 
         try {
             // Gevonden voorstel = array, geslaagde zoektocht zonder match = false
             // (sentinel, zodat een misser niet elke keer opnieuw PDOK raakt).
-            // Een HTTP-fout wordt niet gecachet.
             $result = Cache::get($key);
             if ($result === null) {
+                // Een recente HTTP-fout of uitzondering: PDOK even niet opnieuw
+                // proberen, anders kost een storing 5s per banner of detail.
+                if (Cache::has($failedKey)) {
+                    return null;
+                }
+
                 $result = self::lookup($street, $houseNr, $zip, $city);
-                if ($result !== null) {
+                if ($result === null) {
+                    Cache::put($failedKey, true, now()->addMinutes(5));
+                } else {
                     Cache::put($key, $result, now()->addDay());
                 }
             }
         } catch (Throwable $e) {
             report($e);
+            rescue(fn () => Cache::put($failedKey, true, now()->addMinutes(5)), null, false);
 
             return null;
         }

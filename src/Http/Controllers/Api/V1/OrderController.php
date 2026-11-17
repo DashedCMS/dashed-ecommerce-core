@@ -704,7 +704,7 @@ class OrderController extends Controller
         $model = Order::thisSite()->findOrFail($order);
         $problem = LabelProblemDetector::forOrder($model);
 
-        if (! $problem || ! $problem->suggestion) {
+        if (! $problem || ! $problem->canFix()) {
             return response()->json(['message' => __('Er is geen oplosbaar labelprobleem voor deze bestelling.')], 422);
         }
 

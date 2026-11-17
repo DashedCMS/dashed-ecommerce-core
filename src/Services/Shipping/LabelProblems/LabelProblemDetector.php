@@ -14,10 +14,20 @@ class LabelProblemDetector
     ];
 
     /**
+     * Fulfilmentstatussen waarbij de order de deur al uit is: een oude
+     * labelfout telt dan niet meer als probleem.
+     */
+    public const DONE_FULFILLMENT_STATUSES = ['handled', 'shipped', 'ready_for_pickup'];
+
+    /**
      * @param  bool  $withSuggestion  false = alleen de oorzaak, zonder PDOK-zoektocht (bv. printdaemon)
      */
     public static function forOrder(Order $order, bool $withSuggestion = true): ?LabelProblem
     {
+        if (self::isDone($order->fulfillment_status)) {
+            return null;
+        }
+
         $best = null;
 
         foreach (self::CARRIERS as $carrier => $config) {
@@ -63,14 +73,30 @@ class LabelProblemDetector
         return self::CARRIERS;
     }
 
-    /** Beperkt een labelquery tot niet-retourlabels met een opgeslagen fout. */
+    /** Beperkt een labelquery tot niet-retourlabels met een opgeslagen fout en zonder PDF. */
     public static function constrainToErrors($query)
     {
-        return $query->whereNotNull('error')->where('error', '!=', '')->where('is_return', false);
+        return $query->whereNotNull('error')->where('error', '!=', '')->where('is_return', false)
+            ->where(fn ($q) => $q->whereNull('label_pdf_path')->orWhere('label_pdf_path', ''));
+    }
+
+    /** True als de order al is afgehandeld of verzonden. */
+    public static function isDone(?string $fulfillmentStatus): bool
+    {
+        return in_array($fulfillmentStatus, self::DONE_FULFILLMENT_STATUSES, true);
+    }
+
+    /** Sluit orders uit die al zijn afgehandeld of verzonden. */
+    public static function constrainToOpenOrders(Builder $orders): Builder
+    {
+        return $orders->where(fn (Builder $q) => $q->whereNull('fulfillment_status')
+            ->orWhereNotIn('fulfillment_status', self::DONE_FULFILLMENT_STATUSES));
     }
 
     public static function applyScope(Builder $orders): Builder
     {
+        self::constrainToOpenOrders($orders);
+
         return $orders->where(function (Builder $q) {
             $any = false;
             foreach (self::CARRIERS as $config) {

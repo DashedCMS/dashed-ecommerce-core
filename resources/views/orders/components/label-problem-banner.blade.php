@@ -4,7 +4,7 @@
             <div style="font-weight: 600;">{{ __('Verzendlabel lukt niet') }}</div>
             <div>{{ $problem->cause }}</div>
 
-            @if($problem->suggestion)
+            @if($problem->canFix())
                 <div>
                     <button type="button"
                             wire:click="fix"

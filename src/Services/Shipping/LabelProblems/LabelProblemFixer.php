@@ -16,7 +16,8 @@ class LabelProblemFixer
     /** Velden van het verzendadres die een voorstel mag wijzigen. */
     private const SHIPPING_FIELDS = ['street', 'house_nr', 'zip_code', 'city', 'country'];
 
-    private const CARRIERS = [
+    /** @var array<string, array{model: string, class: string}> */
+    private static array $carriers = [
         'veloyd' => [
             'model' => 'Dashed\DashedEcommerceVeloyd\Models\VeloydOrder',
             'class' => 'Dashed\DashedEcommerceVeloyd\Classes\Veloyd',
@@ -41,9 +42,15 @@ class LabelProblemFixer
             return ['ok' => false, 'message' => __('Het adresvoorstel bevat geen wijzigingen.')];
         }
 
-        $config = self::CARRIERS[$problem->carrier] ?? null;
+        $config = self::$carriers[$problem->carrier] ?? null;
         if (! $config || ! class_exists($config['model']) || ! class_exists($config['class'])) {
             return ['ok' => false, 'message' => __('Vervoerder :carrier is niet beschikbaar.', ['carrier' => $problem->carrier])];
+        }
+
+        // Vóór elke wijziging: zonder replaceLabel kan er geen nieuw label komen
+        // en mag het adres dus ook niet worden aangepast.
+        if (! self::supportsReplace($problem->carrier)) {
+            return ['ok' => false, 'message' => __('Vervoerder :carrier kan het label niet automatisch vervangen. Er is niets aangepast; maak het label handmatig opnieuw aan.', ['carrier' => $problem->carrier])];
         }
 
         $label = ($config['model'])::where('order_id', $order->id)->whereKey($problem->labelId)->first();
@@ -79,6 +86,17 @@ class LabelProblemFixer
         }
 
         return ['ok' => true, 'message' => __('Adres aangepast en nieuw label aangemaakt.')];
+    }
+
+    /** True als de vervoerder beschikbaar is en een label kan vervangen. */
+    public static function supportsReplace(string $carrier): bool
+    {
+        $config = self::$carriers[$carrier] ?? null;
+
+        return $config !== null
+            && class_exists($config['model'])
+            && class_exists($config['class'])
+            && method_exists($config['class'], 'replaceLabel');
     }
 
     private static function fieldLabel(string $field): string

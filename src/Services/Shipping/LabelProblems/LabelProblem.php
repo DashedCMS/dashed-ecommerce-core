@@ -23,7 +23,13 @@ readonly class LabelProblem
             'raw_error' => $this->rawError,
             'field' => $this->field,
             'suggestion' => $this->suggestion?->toArray(),
-            'can_fix' => $this->suggestion !== null,
+            'can_fix' => $this->canFix(),
         ];
+    }
+
+    /** Er is een adresvoorstel en de vervoerder kan een label vervangen. */
+    public function canFix(): bool
+    {
+        return $this->suggestion !== null && LabelProblemFixer::supportsReplace($this->carrier);
     }
 }

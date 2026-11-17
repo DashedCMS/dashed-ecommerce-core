@@ -28,7 +28,7 @@ class LabelProblemBanner extends Component
     {
         $problem = $this->problem;
 
-        if (! $problem || ! $problem->suggestion) {
+        if (! $problem || ! $problem->canFix()) {
             Notification::make()
                 ->title(__('Er is geen voorstel om automatisch te herstellen'))
                 ->warning()
