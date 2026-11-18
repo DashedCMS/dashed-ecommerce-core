@@ -207,7 +207,7 @@ class ParcelType
      */
     public static function eagerLoads(): array
     {
-        $relations = ['shippingMethod', 'orderProducts.product.productGroup'];
+        $relations = ['shippingMethod', 'orderProducts.product.productGroup.customBlocks'];
 
         foreach (self::$labelRelations as $relation) {
             if (Order::hasDynamicRelation($relation)) {
