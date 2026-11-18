@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.207.0 - 2026-11-18
+
+### Added
+- **Checkout-validatie overschrijfbaar.** `Checkout::submit()` bouwt zijn validator via `makeCheckoutValidator()` met de nieuwe beschermde methodes `validationMessages()` en `validationAttributes()` (standaard `[]`, dus Laravels standaardteksten) als 3e/4e argument. `shouldShowValidationToast()` (standaard `true`) bepaalt of een mislukte validatie de eerste fout als melding en `showAlert` toont; met `false` geeft `submit()` `null` terug zodat een project de fouten inline kan tonen. Uitval wordt in beide gevallen vastgelegd; de aanbetaling-check toont altijd een melding.
+
 ## v4.206.0 - 2026-11-18
 
 ### Added

@@ -808,6 +808,50 @@ class Checkout extends Component
     }
 
     /**
+     * Custom validation messages for submit(), passed to the validator as
+     * its third argument (e.g. ['street.required' => 'Vul je straatnaam in.']).
+     * Empty by default, so Laravel's standard messages are used.
+     *
+     * @return array<string, string>
+     */
+    protected function validationMessages(): array
+    {
+        return [];
+    }
+
+    /**
+     * Custom attribute names for submit()'s validation messages, passed to the
+     * validator as its fourth argument (e.g. ['street' => 'straatnaam']).
+     *
+     * @return array<string, string>
+     */
+    protected function validationAttributes(): array
+    {
+        return [];
+    }
+
+    /**
+     * Whether a failed submit() validation shows its first error as a
+     * notification and a showAlert event. Override with false when the
+     * checkout shows the errors inline itself; submit() then returns null.
+     */
+    protected function shouldShowValidationToast(): bool
+    {
+        return true;
+    }
+
+    /**
+     * The checkout validator with the overridable messages and attributes.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $rules
+     */
+    protected function makeCheckoutValidator(array $data, array $rules): \Illuminate\Contracts\Validation\Validator
+    {
+        return Validator::make($data, $rules, $this->validationMessages(), $this->validationAttributes());
+    }
+
+    /**
      * Leg vast waarom de checkout strandt vóór order-creatie. Error-veilig:
      * mag de checkout nooit breken.
      */
@@ -877,7 +921,7 @@ class Checkout extends Component
         $this->zipCode = $this->normalizePostcode($this->zipCode, $this->country);
         $this->invoiceZipCode = $this->normalizePostcode($this->invoiceZipCode, $this->invoiceCountry);
 
-        $validator = Validator::make([
+        $validator = $this->makeCheckoutValidator([
             'shippingMethod' => $this->shippingMethod,
             'paymentMethod' => $this->paymentMethod,
             'depositPaymentMethod' => $this->depositPaymentMethod,
@@ -908,12 +952,16 @@ class Checkout extends Component
         ], $this->rules());
 
         if ($validator->fails()) {
+            $this->recordAbandonment('validation_failed');
+
+            if (! $this->shouldShowValidationToast()) {
+                return null;
+            }
+
             Notification::make()
                 ->danger()
                 ->title(collect($validator->errors())->first()[0])
                 ->send();
-
-            $this->recordAbandonment('validation_failed');
 
             return $this->dispatch('showAlert', 'error', collect($validator->errors())->first()[0]);
         }
@@ -1050,7 +1098,7 @@ class Checkout extends Component
 
         $depositAmount = $giftcardsCoverCart ? 0.0 : cartHelper()->getDepositAmount();
         if ($depositAmount > 0.00) {
-            $validator = Validator::make([
+            $validator = $this->makeCheckoutValidator([
                 'depositPaymentMethod' => $this->depositPaymentMethod,
             ], [
                 'depositPaymentMethod' => ['required'],
