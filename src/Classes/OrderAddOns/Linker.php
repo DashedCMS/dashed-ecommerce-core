@@ -225,14 +225,32 @@ final class Linker
         }
     }
 
-    /** False for a (non-return) shipment of an add-on that ships with its parent. */
+    /**
+     * False for an automatic (non-return) shipment of an add-on that ships with its parent.
+     *
+     * An admin who pushes a label by hand from the CMS gets it: the vendor push code would otherwise
+     * buy a real label at the carrier while the blocked record is silently not saved. The add-on then
+     * ships separately (no extra shipment prepared here: the admin's own push is that shipment).
+     */
     public static function shipmentAllowed(object $shipment): bool
     {
         if ($shipment->is_return ?? false) {
             return true;
         }
 
-        return ! OrderAddOn::where('order_id', (int) $shipment->order_id)->where('status', OrderAddOn::LINKED)->exists();
+        $link = OrderAddOn::where('order_id', (int) $shipment->order_id)->where('status', OrderAddOn::LINKED)->first();
+
+        if (! $link) {
+            return true;
+        }
+
+        if (auth()->user()?->mustLoginViaPanel()) {
+            self::makeSeparate(Order::find($link->order_id), 'label met de hand aangemaakt', false);
+
+            return true;
+        }
+
+        return false;
     }
 
     /** The parent can still take the add-on: not cancelled/returned and fulfillment still in an open status. */
