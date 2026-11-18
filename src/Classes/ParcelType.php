@@ -271,6 +271,11 @@ class ParcelType
             report($e);
         }
 
+        // A label that really exists shows what is on it, whatever an override would pick now.
+        if ($key = self::safeKey(fn () => self::storedPackageType($order, true))) {
+            return $key;
+        }
+
         foreach (self::$overrides as $fn) {
             if ($key = self::safeKey(fn () => $fn($order))) {
                 return $key;
@@ -324,7 +329,7 @@ class ParcelType
      * package_type of the newest non-return label row over all carrier relations.
      * Filters in PHP so older carrier tables without `is_return` still work.
      */
-    private static function storedPackageType(Order $order): int|string|null
+    private static function storedPackageType(Order $order, bool $onlyCreatedLabels = false): int|string|null
     {
         $latest = null;
 
@@ -334,7 +339,8 @@ class ParcelType
             }
 
             $row = collect($order->{$relation})
-                ->filter(fn ($label) => $label instanceof Model && ! $label->getAttribute('is_return') && filled($label->getAttribute('package_type')))
+                ->filter(fn ($label) => $label instanceof Model && ! $label->getAttribute('is_return') && filled($label->getAttribute('package_type'))
+                    && (! $onlyCreatedLabels || filled($label->getAttribute('shipment_id')) || $label->getAttribute('label_printed')))
                 ->sortByDesc(fn ($label) => [$label->created_at?->getTimestamp() ?? 0, $label->getKey()])
                 ->first();
 

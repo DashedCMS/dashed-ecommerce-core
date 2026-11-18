@@ -72,9 +72,9 @@ if (! function_exists('parcelTypeOrder')) {
         ]));
     }
 
-    function parcelTypeStoredLabel(Order $order, ?int $packageType, bool $isReturn = false): ParcelTypeTestLabel
+    function parcelTypeStoredLabel(Order $order, ?int $packageType, bool $isReturn = false, ?string $shipmentId = null): ParcelTypeTestLabel
     {
-        return ParcelTypeTestLabel::create(['order_id' => $order->id, 'package_type' => $packageType, 'is_return' => $isReturn]);
+        return ParcelTypeTestLabel::create(['order_id' => $order->id, 'package_type' => $packageType, 'is_return' => $isReturn, 'shipment_id' => $shipmentId]);
     }
 }
 
@@ -88,6 +88,8 @@ beforeEach(function () {
         $table->unsignedBigInteger('order_id');
         $table->string('package_type')->nullable();
         $table->boolean('is_return')->default(false);
+        $table->string('shipment_id')->nullable();
+        $table->boolean('label_printed')->default(false);
         $table->timestamps();
     });
 
@@ -123,6 +125,10 @@ it('resolves pickup, digital, override, stored label, computation and unknown in
     ParcelType::overrideUsing(fn (Order $o) => 'mailbox');
     expect(ParcelType::forOrder($order->fresh()))->toBe(['key' => 'mailbox', 'code' => 2, 'label' => 'BRIEVENBUS', 'color' => 'orange'])
         ->and(ParcelType::carrierCodeFor($order->fresh()))->toBe(2);
+
+    // a label that was really created beats the override: it shows what is on the label
+    parcelTypeStoredLabel($order, 1, shipmentId: 'SHIP-1');
+    expect(ParcelType::forOrder($order->fresh())['key'])->toBe('package');
 
     // (b) digital beats the override; lines without product are ignored
     $digital = parcelTypeOrder();
