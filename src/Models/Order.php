@@ -36,6 +36,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Dashed\DashedEcommerceCore\Classes\ShippingVat;
 use Dashed\DashedEcommerceCore\Jobs\SendInvoiceJob;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -580,6 +581,31 @@ class Order extends Model
     public function replacesOrder(): HasOne
     {
         return $this->hasOne(Order::class, 'replaced_by_order_id');
+    }
+
+    /** De bijbestel-koppeling als deze order zelf een bijbestelling is (linked of separate). */
+    public function addOnLink(): HasOne
+    {
+        return $this->hasOne(OrderAddOn::class, 'order_id');
+    }
+
+    /** Bijbestellingen die (nog) in dezelfde doos meegaan met deze order. */
+    public function addOnOrders(): HasManyThrough
+    {
+        return $this->hasManyThrough(Order::class, OrderAddOn::class, 'parent_order_id', 'id', 'id', 'order_id')
+            ->where('dashed__order_add_ons.status', OrderAddOn::LINKED);
+    }
+
+    /** Gaat deze order als bijbestelling mee in de doos van een andere order? */
+    public function isAddOnOrder(): bool
+    {
+        return $this->addOnLink?->status === OrderAddOn::LINKED;
+    }
+
+    /** De order waarmee deze bijbestelling meegaat, alleen zolang de koppeling linked is. */
+    public function addOnParent(): ?Order
+    {
+        return $this->isAddOnOrder() ? $this->addOnLink->parentOrder : null;
     }
 
     public function shippingMethod(): BelongsTo

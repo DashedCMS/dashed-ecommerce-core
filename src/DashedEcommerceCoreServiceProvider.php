@@ -836,6 +836,25 @@ MARKDOWN,
         );
 
         cms()->registerSettingsDocs(
+            page: \Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderAddOnSettingsPage::class,
+            title: '',
+            intro: 'Laat klanten na een betaalde webshopbestelling nog iets toevoegen dat zonder verzendkosten in dezelfde doos meegaat. Per site instelbaar.',
+            sections: [
+                [
+                    'heading' => 'Hoe werkt bijbestellen?',
+                    'body' => 'Na een betaalde webshopbestelling (niet via een marktplaats of de kassa, niet ophalen, niet alleen digitaal) krijgt de klant een aanbod om nog iets toe te voegen. Dat aanbod staat op de gekozen plekken: de bedankpagina, de orderbevestiging, een losse herinneringsmail en de ordertracker of het account. De bijbestelling is een gewone order met een eigen factuur, maar zonder verzendkosten. Zodra die betaald is wordt hij stil op afgehandeld gezet: geen eigen verzendlabel, geen statusmail. De producten staan bij de eerste order (banner, pakbon), zodat ze samen worden ingepakt, en de track & trace van de eerste order wordt overgenomen. Het aanbod sluit zodra de eerste order niet meer in een van de gekozen statussen staat of de ingestelde tijd voorbij is. Komt een betaling binnen nadat de eerste order al verder is, of wordt de eerste order geannuleerd, dan gaat de bijbestelling los de deur uit en krijg je een melding.',
+                ],
+            ],
+            fields: [
+                'Bijbestellen aan' => 'Uit: geen aanbod en geen mail meer. Al verstuurde links tonen dat het aanbod gesloten is; lopende bijbestellingen gaan gewoon mee.',
+                'Statussen' => 'Zolang de eerste order in een van deze fulfillment statussen staat, kan er nog worden bijbesteld. Meestal alleen "Niet afgehandeld".',
+                'Uren na betaling' => 'Hoe lang na betaling het aanbod hoogstens open blijft. 0 = geen limiet, dan sluit alleen de status het aanbod.',
+                'Herinneringsmail' => 'Hoeveel minuten na betaling de herinneringsmail gaat (minimaal 5), alleen als het aanbod dan nog open is en er niets is bijbesteld. Per e-mailadres hoogstens één mail per ingesteld aantal dagen.',
+                'Aanbod tonen op' => 'Op welke plekken de klant het aanbod ziet.',
+            ],
+        );
+
+        cms()->registerSettingsDocs(
             page: \Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderCancelSettingsPage::class,
             title: '',
             intro: 'Bepaal naar welke fulfillment status een bestelling automatisch wordt gezet zodra die wordt geannuleerd. Per site instelbaar.',
@@ -2835,6 +2854,7 @@ MARKDOWN,
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\PrintQueueSettingsPage::class, 'Print queue', 'printer', 'Instellingen voor de print queue (auto print, health check, retentie)');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage::class, 'Verkoopdoelen', 'flag', 'Stel omzet- en bestellingsdoelen in per dag, week, maand en jaar');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class, 'Verlanglijst', 'heart', 'Verlanglijst aan of uit per site');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderAddOnSettingsPage::class, 'Bijbestellen', 'archive-box-arrow-down', 'Klanten nog iets laten toevoegen dat in dezelfde doos meegaat');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\OnAccountSettingsPage::class, 'Op rekening', 'document-currency-euro', 'Betaaltermijn, kredietlimiet, blokkade en betaalherinneringen voor klanten op rekening');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\QuoteSettingsPage::class, 'Offertes', 'document-text', 'Nummerformaat, geldigheidsduur, standaardteksten en herinneringen voor offertes');
 
