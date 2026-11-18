@@ -7,8 +7,8 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
-use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderResource extends JsonResource
