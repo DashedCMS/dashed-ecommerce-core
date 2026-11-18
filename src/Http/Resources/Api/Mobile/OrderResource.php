@@ -139,16 +139,32 @@ class OrderResource extends JsonResource
      */
     private function logsPayload(): array
     {
-        $logs = OrderLog::where('order_id', $this->id)->orderByDesc('created_at')->limit(50)->get();
+        $logs = OrderLog::where('order_id', $this->id)
+            ->with(['user', 'order'])
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
         $userNames = User::whereIn('id', $logs->pluck('user_id')->filter()->unique())->pluck('name', 'id');
 
-        return $logs->map(fn ($log) => [
-            'id' => $log->id,
-            'tag' => $log->tag,
-            'note' => $log->note,
-            'public_for_customer' => (bool) $log->public_for_customer,
-            'user_name' => $log->user_id ? ($userNames[$log->user_id] ?? null) : null,
-            'created_at' => optional($log->created_at)->toIso8601String(),
-        ])->values()->all();
+        return $logs->map(function ($log) use ($userNames) {
+            // Zelfde leesbare zin als het CMS-logboek (OrderLog::tag()), inclusief
+            // de naam/Systeem ervoor. Val defensief terug op de notitie of de ruwe
+            // tag als het renderen faalt, zodat één rotte logregel de order niet breekt.
+            try {
+                $label = (string) $log->tag();
+            } catch (\Throwable $e) {
+                $label = $log->note ?: (string) $log->tag;
+            }
+
+            return [
+                'id' => $log->id,
+                'tag' => $log->tag,
+                'label' => $label,
+                'note' => $log->note,
+                'public_for_customer' => (bool) $log->public_for_customer,
+                'user_name' => $log->user_id ? ($userNames[$log->user_id] ?? null) : null,
+                'created_at' => optional($log->created_at)->toIso8601String(),
+            ];
+        })->values()->all();
     }
 }

@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.206.0 - 2026-11-18
+
+### Added
+- Mobiele API: elke orderlogregel krijgt nu een `label` (dezelfde leesbare Nederlandse zin als het CMS-logboek, inclusief de naam of "Systeem" ervoor) en `user_name` (wie de regel aanmaakte, of `null` bij een systeemregel). De app toont daarmee dezelfde zinnen en auteur als het CMS in plaats van ruwe tags. Rendert via `OrderLog::tag()`, met user+order eager-loaded en `tag()` in een try/catch zodat een rotte logregel de order-endpoint nooit kan laten crashen.
+
 ## v4.205.1 - 2026-11-17
 
 ### Fixed
