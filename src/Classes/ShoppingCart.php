@@ -35,9 +35,54 @@ class ShoppingCart
      */
     protected static ?\Closure $shippingOrderValueResolver = null;
 
+    /**
+     * Extra resolvers naast de enkele closure van resolveShippingOrderValueUsing().
+     * Ze draaien na die closure, in volgorde van registratie, en krijgen elk de
+     * waarde van de vorige.
+     *
+     * @var array<int, \Closure(float, mixed): float>
+     */
+    protected static array $shippingOrderValueResolvers = [];
+
     public static function resolveShippingOrderValueUsing(?\Closure $resolver): void
     {
         static::$shippingOrderValueResolver = $resolver;
+    }
+
+    /**
+     * Voegt een resolver toe aan de keten (bijv. bijbestellen: de wagen telt als
+     * minstens de drempel voor gratis verzending). Overschrijft de closure van
+     * resolveShippingOrderValueUsing() niet.
+     *
+     * @param  \Closure(float, mixed): float  $resolver
+     */
+    public static function addShippingOrderValueResolver(\Closure $resolver): void
+    {
+        static::$shippingOrderValueResolvers[] = $resolver;
+    }
+
+    /** Leegt de resolver-keten (tests); de enkele closure blijft staan. */
+    public static function flushShippingOrderValueResolvers(): void
+    {
+        static::$shippingOrderValueResolvers = [];
+    }
+
+    /**
+     * Past eerst de enkele closure en daarna de keten toe.
+     *
+     * @param  iterable<object>|mixed  $cartItems
+     */
+    protected static function applyShippingOrderValueResolvers(float $total, mixed $cartItems): float
+    {
+        if (static::$shippingOrderValueResolver) {
+            $total = (float) (static::$shippingOrderValueResolver)($total, $cartItems);
+        }
+
+        foreach (static::$shippingOrderValueResolvers as $resolver) {
+            $total = (float) $resolver($total, $cartItems);
+        }
+
+        return $total;
     }
 
     /**
@@ -50,9 +95,7 @@ class ShoppingCart
     {
         $total = max(0.0, round($total, 2));
 
-        return static::$shippingOrderValueResolver
-            ? (float) (static::$shippingOrderValueResolver)($total, $cartItems)
-            : $total;
+        return static::applyShippingOrderValueResolvers($total, $cartItems);
     }
 
     public static function getCartUrl()
@@ -260,9 +303,7 @@ class ShoppingCart
 
                     $total = max(0.0, round((float) $total, 2));
 
-                    if (static::$shippingOrderValueResolver) {
-                        $total = (float) (static::$shippingOrderValueResolver)((float) $total, $cartItems);
-                    }
+                    $total = static::applyShippingOrderValueResolvers((float) $total, $cartItems);
                 }
 
                 $shippingMethods = $shippingZone->shippingMethods()
