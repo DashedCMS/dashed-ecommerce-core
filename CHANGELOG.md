@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.208.0 - 2026-11-18
 
 ### Added
 - Verzendvorm per order: nieuwe `Classes\ParcelType` bepaalt of een order een Pakket, Brievenbus, Brief, Stamp, Pallet, Klein pakket, Ophalen, Digitaal of Onbekend is. Volgorde: ophalen (verzendmethode `take_away`), alles digitaal, app-overrides (`ParcelType::overrideUsing()`), het laatste opgeslagen verzendlabel (Veloyd/MyParcel, als dat pakket geladen is), carrier-berekening (`ParcelType::computeUsing()`), anders Onbekend. `ParcelType::carrierCodeFor()` geeft de vervoerderscode (1 t/m 6) voor labels.
@@ -11,6 +11,7 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Changed
 - Verzendlabels: zonder gekozen pakkettype gebruiken de app-endpoints (`create-label`, bulk) en de automatiseringsactie nu de verzendvorm van de order in plaats van de landstandaard; `label-options` zet die ook als standaard in het formulier. Valt terug op de landstandaard als de verzendvorm geen vervoerderscode heeft.
+- Een echt aangemaakt label (shipment_id of geprint) toont zijn eigen pakkettype, vóór app-overrides.
 - Pakbon downloaden rendert de PDF altijd opnieuw (`createPackingSlip(force: true)`), zodat de verzendvorm erop actueel is. Creditorders krijgen geen verzendvorm-regel.
 
 ## v4.207.0 - 2026-11-18
