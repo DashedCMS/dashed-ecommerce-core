@@ -107,21 +107,33 @@ final class ReminderPlanning
         }
 
         if ($reason) {
-            $offer->update(['mail_skipped' => mb_substr($reason, 0, 191)]);
+            $this->claim($offer, ['mail_skipped' => mb_substr($reason, 0, 191)]);
 
             return $reason;
         }
 
         $locale = $order->locale ?: config('app.locale');
 
-        // Eerst vastleggen: een tweede job voor dezelfde order verstuurt dan niets meer.
-        $offer->update(['mail_sent_at' => now()]);
+        // Eerst atomair vastleggen: alleen wie de rij claimt verstuurt; een tweede job tegelijk verstuurt niets.
+        if (! $this->claim($offer, ['mail_sent_at' => now()])) {
+            return self::SKIP_ALREADY_PROCESSED;
+        }
 
         Mail::to($order->email)->send(
             (new OrderAddOnReminderMail($order, $suggestions->pluck('id')->map(fn ($id) => (int) $id)->all(), Offer::untilText($order, $locale)))->locale($locale)
         );
 
         return self::SENT;
+    }
+
+    /** Zet de waarden alleen als de mail nog niet verstuurd of overgeslagen is; true als deze aanroep won. */
+    private function claim(OrderAddOnOffer $offer, array $values): bool
+    {
+        return OrderAddOnOffer::query()
+            ->whereKey($offer->id)
+            ->whereNull('mail_sent_at')
+            ->whereNull('mail_skipped')
+            ->update(array_merge($values, ['updated_at' => now()])) === 1;
     }
 
     private function reasonNotToSend(Order $order): ?string

@@ -27,6 +27,10 @@ class OrderAddOnBanner extends Component
 
     public function render()
     {
+        if (! Display::installed()) {
+            return '<div></div>';
+        }
+
         $order = $this->order->fresh() ?? $this->order;
         $link = $order->addOnLink;
         $addOns = $link?->isLinked() ? collect() : Display::linkedAddOns($order);

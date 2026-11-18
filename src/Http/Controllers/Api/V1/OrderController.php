@@ -171,7 +171,8 @@ class OrderController extends Controller
     private function detail(Order $model): OrderResource
     {
         return new OrderResource($model->fresh()->load(array_merge(
-            ['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser', 'addOnLink.parentOrder:id,invoice_id', 'addOnOrders.orderProducts'],
+            ['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser'],
+            Display::detailRelations(),
             ParcelType::eagerLoads(),
         )));
     }

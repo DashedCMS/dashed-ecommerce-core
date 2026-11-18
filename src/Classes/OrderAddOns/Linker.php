@@ -108,7 +108,15 @@ final class Linker
             return;
         }
 
-        $link->update(['paid_at' => now()]);
+        // Atomic claim: when two saves/webhooks report the payment at once, only one handles it.
+        $paidAt = now();
+
+        if (OrderAddOn::query()->whereKey($link->id)->whereNull('paid_at')->update(['paid_at' => $paidAt, 'updated_at' => $paidAt]) !== 1) {
+            return;
+        }
+
+        $link->paid_at = $paidAt;
+        $link->syncOriginalAttribute('paid_at');
 
         if (! $link->isLinked()) {
             return;

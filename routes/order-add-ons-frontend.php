@@ -11,11 +11,11 @@ use Dashed\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
 // blijven werken. De handtekening controleert de controller zelf (een gesloten aanbod is geen 403).
 Route::get('/bijbestellen/{order}', [OrderAddOnController::class, 'show'])
     ->whereNumber('order')
-    ->middleware([
+    ->middleware(array_merge([
         'web',
         FrontendMiddleware::class,
         LocaleSessionRedirect::class,
         LaravelLocalizationRedirectFilter::class,
         LaravelLocalizationViewPath::class,
-    ])
+    ], cms()->builder('frontendMiddlewares')))
     ->name('dashed.frontend.order-add-ons.show');

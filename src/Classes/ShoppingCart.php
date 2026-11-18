@@ -61,6 +61,12 @@ class ShoppingCart
         static::$shippingOrderValueResolvers[] = $resolver;
     }
 
+    /** Zit deze closure (zelfde instantie) al in de keten? */
+    public static function hasShippingOrderValueResolver(\Closure $resolver): bool
+    {
+        return in_array($resolver, static::$shippingOrderValueResolvers, true);
+    }
+
     /** Leegt de resolver-keten (tests); de enkele closure blijft staan. */
     public static function flushShippingOrderValueResolvers(): void
     {
@@ -521,7 +527,7 @@ class ShoppingCart
         return $paymentMethods;
     }
 
-    public static function getShippingZoneByCountry(?string $countryName): ?ShippingZone
+    public static function getShippingZoneByCountry(?string $countryName, ?string $siteId = null): ?ShippingZone
     {
         if (! $countryName) {
             return null;
@@ -529,7 +535,9 @@ class ShoppingCart
 
         $allCountries = Countries::getCountries();
         $countryNameLower = strtolower($countryName);
-        $shippingZones = ShippingZone::get();
+        $shippingZones = $siteId
+            ? ShippingZone::query()->where(fn ($query) => $query->where('site_id', $siteId)->orWhereNull('site_id'))->get()
+            : ShippingZone::get();
         foreach ($shippingZones as $shippingZone) {
             $shippingZoneIsActive = false;
             foreach ($shippingZone->zones as $zone) {

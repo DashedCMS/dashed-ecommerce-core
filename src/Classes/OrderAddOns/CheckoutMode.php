@@ -37,7 +37,8 @@ final class CheckoutMode
     /** @var array<string, array{parent: ?Order, active: bool, reason: ?string, product: ?string}> */
     private static array $states = [];
 
-    private static bool $resolverRegistered = false;
+    /** The closure this class added to ShoppingCart's resolver chain (checked for presence, survives a flush). */
+    private static ?\Closure $resolver = null;
 
     public static function start(Order $order): void
     {
@@ -182,15 +183,13 @@ final class CheckoutMode
     /** Idempotent: statics survive repeated app boots within one PHP process (tests, Octane). */
     public static function registerShippingValueResolver(): void
     {
-        if (self::$resolverRegistered) {
+        if (self::$resolver && ShoppingCart::hasShippingOrderValueResolver(self::$resolver)) {
             return;
         }
 
-        self::$resolverRegistered = true;
+        self::$resolver = fn ($total) => rescue(fn () => self::shippingOrderValue((float) $total), (float) $total, true);
 
-        ShoppingCart::addShippingOrderValueResolver(
-            fn ($total) => rescue(fn () => self::shippingOrderValue((float) $total), (float) $total, true)
-        );
+        ShoppingCart::addShippingOrderValueResolver(self::$resolver);
     }
 
     /** @return array<int, Product> */

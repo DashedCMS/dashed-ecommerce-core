@@ -182,7 +182,7 @@ final class Offer
     /** De methode "gratis verzending" in de zone van het afleveradres: daarmee kost de bijbestelling € 0 verzending. */
     public static function freeShippingMethod(Order $order): ?ShippingMethod
     {
-        $zone = rescue(fn () => ShoppingCart::getShippingZoneByCountry((string) $order->country), null, false);
+        $zone = rescue(fn () => ShoppingCart::getShippingZoneByCountry((string) $order->country, $order->site_id ? (string) $order->site_id : null), null, false);
 
         if (! $zone) {
             return null;

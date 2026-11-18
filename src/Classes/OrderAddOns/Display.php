@@ -2,11 +2,12 @@
 
 namespace Dashed\DashedEcommerceCore\Classes\OrderAddOns;
 
+use Throwable;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedEcommerceCore\Classes\SKUs;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedEcommerceCore\Models\OrderAddOn;
 
 /**
  * Shared presentation of add-on orders ("bijbestellingen") for the CMS order view,
@@ -15,9 +16,38 @@ use Dashed\DashedEcommerceCore\Models\OrderAddOn;
  */
 final class Display
 {
+    private static ?bool $installed = null;
+
+    /**
+     * Is the core migration run (dashed__order_add_ons exists)? Cached per process, so sites that did not
+     * migrate yet keep a working order list, view and packing slip instead of a SQL error.
+     */
+    public static function installed(): bool
+    {
+        if (self::$installed === null) {
+            try {
+                self::$installed = Schema::hasTable('dashed__order_add_ons');
+            } catch (Throwable $e) {
+                return false;
+            }
+        }
+
+        return self::$installed;
+    }
+
+    /** Relations for the mobile API detail, or none while the table is missing. */
+    public static function detailRelations(): array
+    {
+        return self::installed() ? ['addOnLink.parentOrder:id,invoice_id', 'addOnOrders.orderProducts'] : [];
+    }
+
     /** Eager loads for order lists (Filament table, mobile API index): no N+1 per row. */
     public static function eagerLoadForList(Builder $query): Builder
     {
+        if (! self::installed()) {
+            return $query;
+        }
+
         return $query
             ->withCount(['addOnOrders as add_on_orders_count'])
             ->with(['addOnLink.parentOrder:id,invoice_id']);
@@ -36,6 +66,10 @@ final class Display
      */
     public static function linkedAddOns(Order $parent): Collection
     {
+        if (! self::installed()) {
+            return collect();
+        }
+
         if (! $parent->relationLoaded('addOnOrders')) {
             $parent->load('addOnOrders.orderProducts');
         }
@@ -54,7 +88,12 @@ final class Display
             return $parent->addOnOrders->count();
         }
 
-        return OrderAddOn::where('parent_order_id', $parent->id)->where('status', OrderAddOn::LINKED)->count();
+        if (! self::installed()) {
+            return 0;
+        }
+
+        // Same rule as Order::addOnOrders(): linked, paid and not cancelled/returned.
+        return $parent->addOnOrders()->count();
     }
 
     /**
@@ -90,6 +129,10 @@ final class Display
      */
     public static function listBadge(Order $order): ?array
     {
+        if (! self::installed()) {
+            return null;
+        }
+
         $link = $order->addOnLink;
 
         if ($link) {
@@ -116,6 +159,10 @@ final class Display
      */
     public static function apiPayload(Order $order, bool $detail): array
     {
+        if (! self::installed()) {
+            return $detail ? ['add_on_orders' => [], 'add_on_for' => null] : ['add_on_orders_count' => 0, 'add_on_for' => null];
+        }
+
         $link = $order->addOnLink;
 
         $payload = $detail

@@ -4,7 +4,14 @@
         $titleStyle = 'font-size: 1.125rem; line-height: 1.5rem; font-weight: 700;';
     @endphp
 
-    @if($link && $link->isLinked())
+    @if($link && $link->isLinked() && ! $link->paid_at)
+        <div class="dvo-add-on-banner" data-add-on="child-unpaid" style="{{ $boxStyle }}">
+            <div style="{{ $titleStyle }}">
+                {{ __('Bijbestelling bij') }} #{{ $parent ? \Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display::number($parent) : $link->parent_order_id }}:
+                {{ __('nog niet betaald, gaat pas mee in de doos na betaling') }}
+            </div>
+        </div>
+    @elseif($link && $link->isLinked())
         <div class="dvo-add-on-banner" data-add-on="child" style="{{ $boxStyle }}">
             <div style="{{ $titleStyle }}">
                 {{ __('Bijbestelling bij') }}

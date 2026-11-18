@@ -16,6 +16,9 @@ class OrderAddOn extends Model
 
     public const SEPARATE = 'separate';
 
+    /** Order statuses of an add-on that never go in the parent's box. */
+    public const GONE_ORDER_STATUSES = ['cancelled', 'return'];
+
     protected $table = 'dashed__order_add_ons';
 
     protected $fillable = [
@@ -45,6 +48,12 @@ class OrderAddOn extends Model
     public function isLinked(): bool
     {
         return $this->status === self::LINKED;
+    }
+
+    /** Linked and paid: really goes along in the parent's box. */
+    public function goesAlong(): bool
+    {
+        return $this->isLinked() && $this->paid_at !== null;
     }
 
     public function isSeparate(): bool

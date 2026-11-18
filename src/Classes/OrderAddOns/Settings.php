@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Classes\OrderAddOns;
 
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 
@@ -60,6 +61,18 @@ final class Settings
     public static function enabled(?string $siteId = null): bool
     {
         return filter_var(Customsetting::get(self::ENABLED, $siteId, '0'), FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /** Staat bijbestellen op minstens één site aan (bijv. om de kolom in de orderlijst te tonen)? */
+    public static function enabledForAnySite(): bool
+    {
+        foreach (Sites::getSites() as $site) {
+            if (self::enabled(isset($site['id']) ? (string) $site['id'] : null)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return array<int, string> fulfillment statussen waarin bijbestellen nog kan */

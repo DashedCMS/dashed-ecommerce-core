@@ -38,9 +38,13 @@ final class PackingSlip
     /** Note at the top of the packing slip, or null when the order has nothing to do with add-ons. */
     public static function notice(Order $order): ?string
     {
-        $link = $order->addOnLink;
+        if (! Display::installed()) {
+            return null;
+        }
 
-        if ($link?->isLinked()) {
+        $link = rescue(fn () => $order->addOnLink, null, true);
+
+        if ($link?->goesAlong()) {
             return Translation::get('packing-slip-add-on-notice', 'bijbestellen', 'BIJBESTELLING bij #:nummer:: samen verzenden, één doos (geen eigen label).', 'text', [
                 'nummer' => $link->parentOrder ? Display::number($link->parentOrder) : $link->parent_order_id,
             ]);
@@ -64,6 +68,10 @@ final class PackingSlip
      */
     public static function addOnLines(Order $parent): Collection
     {
+        if (! Display::installed()) {
+            return collect();
+        }
+
         if ($parent->addOnLink?->isLinked()) {
             return collect();
         }

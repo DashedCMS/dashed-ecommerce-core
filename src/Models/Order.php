@@ -589,11 +589,17 @@ class Order extends Model
         return $this->hasOne(OrderAddOn::class, 'order_id');
     }
 
-    /** Bijbestellingen die (nog) in dezelfde doos meegaan met deze order. */
+    /**
+     * Bijbestellingen die (nog) in dezelfde doos meegaan met deze order: gekoppeld, betaald en niet
+     * geannuleerd/geretourneerd. De checkout koppelt al vóór de betaling; een openstaande, verlopen of
+     * geannuleerde bijbestelling hoort niet op de pakbon, de banner, de lijst of in de app.
+     */
     public function addOnOrders(): HasManyThrough
     {
         return $this->hasManyThrough(Order::class, OrderAddOn::class, 'parent_order_id', 'id', 'id', 'order_id')
-            ->where('dashed__order_add_ons.status', OrderAddOn::LINKED);
+            ->where('dashed__order_add_ons.status', OrderAddOn::LINKED)
+            ->whereNotNull('dashed__order_add_ons.paid_at')
+            ->whereNotIn('dashed__orders.status', OrderAddOn::GONE_ORDER_STATUSES);
     }
 
     /** Gaat deze order als bijbestelling mee in de doos van een andere order? */
@@ -602,10 +608,17 @@ class Order extends Model
         return $this->addOnLink?->status === OrderAddOn::LINKED;
     }
 
-    /** De order waarmee deze bijbestelling meegaat, alleen zolang de koppeling linked is. */
+    /**
+     * De order waarmee deze bijbestelling meegaat: alleen zolang de koppeling linked is, de bijbestelling
+     * betaald is en niet geannuleerd/geretourneerd (zelfde regel als addOnOrders()).
+     */
     public function addOnParent(): ?Order
     {
-        return $this->isAddOnOrder() ? $this->addOnLink->parentOrder : null;
+        if (! $this->isAddOnOrder() || ! $this->addOnLink->paid_at || in_array($this->status, OrderAddOn::GONE_ORDER_STATUSES, true)) {
+            return null;
+        }
+
+        return $this->addOnLink->parentOrder;
     }
 
     public function shippingMethod(): BelongsTo

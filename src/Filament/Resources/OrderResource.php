@@ -40,6 +40,7 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Settings;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
@@ -339,6 +340,7 @@ class OrderResource extends Resource
                     ->sortable(),
                 TextColumn::make('add_on')
                     ->label(__('Bijbestelling'))
+                    ->visible(fn (): bool => Display::installed() && rescue(fn () => Settings::enabledForAnySite(), false, false))
                     ->toggleable()
                     ->badge()
                     ->icon('heroicon-o-archive-box-arrow-down')
