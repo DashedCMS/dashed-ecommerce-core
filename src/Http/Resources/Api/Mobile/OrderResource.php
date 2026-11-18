@@ -7,6 +7,7 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 use Illuminate\Http\Request;
 use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
+use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
@@ -21,6 +22,8 @@ class OrderResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $parcelType = ParcelType::forOrder($this->resource);
+
         $base = [
             'id' => $this->id,
             'invoice_id' => $this->invoice_id,
@@ -43,6 +46,8 @@ class OrderResource extends JsonResource
                 : null,
             'created_at' => optional($this->created_at)->toIso8601String(),
             'products' => OrderProductResource::collection($this->whenLoaded('orderProducts')),
+            // Verzendvorm (Pakket, Brievenbus, Ophalen, ...), see ParcelType.
+            'parcel_type' => self::parcelTypePayload($parcelType),
         ];
 
         // Compacte lijst-respons: alleen de basis.
@@ -99,7 +104,10 @@ class OrderResource extends JsonResource
             'payment_method' => $this->paymentMethod,
             // Naam in de actieve taal (HasTranslations); withTrashed op de
             // relatie, dus ook zichtbaar als de methode inmiddels weg is.
-            'shipping_method' => $this->shippingMethod?->name,
+            // Prefixed with the verzendvorm so the existing app shows it without
+            // an update ("BRIEVENBUS · Gratis verzending"); raw name below.
+            'shipping_method' => self::shippingMethodWithParcelType($parcelType, $this->shippingMethod?->name),
+            'shipping_method_name' => $this->shippingMethod?->name,
             'payments' => $this->whenLoaded('orderPayments', fn () => $this->orderPayments->map(fn ($p) => [
                 'id' => $p->id,
                 'method' => $p->psp ?: ($p->payment_method ?? null),
@@ -132,6 +140,21 @@ class OrderResource extends JsonResource
             ], fn ($v) => ! empty($v)),
             'logs' => $this->logsPayload(),
         ]);
+    }
+
+    /**
+     * @param  array{key: string, code: ?int, label: string, color: string}  $parcelType
+     * @return array{key: string, code: ?int, label: string}
+     */
+    public static function parcelTypePayload(array $parcelType): array
+    {
+        return ['key' => $parcelType['key'], 'code' => $parcelType['code'], 'label' => $parcelType['label']];
+    }
+
+    /** "BRIEVENBUS · Gratis verzending", or just the label without a method name. */
+    public static function shippingMethodWithParcelType(array $parcelType, ?string $name): string
+    {
+        return filled($name) ? $parcelType['label'] . ' · ' . $name : $parcelType['label'];
     }
 
     /**

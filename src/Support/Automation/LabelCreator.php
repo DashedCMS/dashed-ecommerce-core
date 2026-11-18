@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Support\Automation;
 
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\ParcelType;
 
 /**
  * De ENE plek voor de verzendlabel-providerkeuze: welke provider (Veloyd,
@@ -47,6 +48,7 @@ class LabelCreator
     public static function attempt(Order $model, string $provider = '', array $overrides = []): array
     {
         $errors = [];
+        $overrides = self::withParcelTypeDefault($model, $overrides);
 
         if (($provider === '' || $provider === 'veloyd') && self::veloydConfigured($model)) {
             try {
@@ -75,6 +77,29 @@ class LabelCreator
             'provider' => null,
             'message' => $errors ? implode(' ', $errors) : 'Geen verzendprovider geconfigureerd voor deze site.',
         ];
+    }
+
+    /**
+     * Fill in the order's verzendvorm (ParcelType) as package_type when the
+     * caller did not choose one, so a label made from the app or an automation
+     * follows the same rule as the CMS instead of the country default.
+     *
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    public static function withParcelTypeDefault(Order $model, array $overrides): array
+    {
+        if (($overrides['package_type'] ?? null) !== null && $overrides['package_type'] !== '') {
+            return $overrides;
+        }
+
+        $code = ParcelType::carrierCodeFor($model);
+
+        if ($code !== null) {
+            $overrides['package_type'] = $code;
+        }
+
+        return $overrides;
     }
 
     /**

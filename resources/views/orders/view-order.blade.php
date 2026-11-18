@@ -47,6 +47,10 @@
         @media (min-width: 1024px) { .dvo-docs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
         .dvo-doc { width: 100%; height: 28rem; border: 0; border-radius: .5rem; background: #fff; }
         .dvo-address { font-style: normal; }
+        .dvo-parcel { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-radius: .75rem; color: #fff; }
+        .dvo-parcel-icon { width: 2.75rem; height: 2.75rem; flex: none; }
+        .dvo-parcel-label { font-size: .8125rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; opacity: .9; }
+        .dvo-parcel-type { font-size: 1.875rem; line-height: 2.25rem; font-weight: 800; letter-spacing: .02em; }
         .custom-view-order { display: flex; flex-direction: column; gap: .5rem; }
         .custom-view-order .w-full .fi-btn { width: 100%; }
     </style>
@@ -59,9 +63,21 @@
             || [$record->invoice_street, $record->invoice_house_nr, $record->invoice_zip_code, $record->invoice_city] == [$record->street, $record->house_nr, $record->zip_code, $record->city];
         $invoiceUrl = $record->downloadInvoiceUrl();
         $packingSlipUrl = $record->downloadPackingslipUrl();
+        $parcelType = \Dashed\DashedEcommerceCore\Classes\ParcelType::forOrder($record);
     @endphp
 
     <div class="dvo">
+        @unless($isCredit)
+            <div class="dvo-parcel" data-parcel-type="{{ $parcelType['key'] }}"
+                 style="background: {{ \Dashed\DashedEcommerceCore\Classes\ParcelType::hex($parcelType['key']) }};">
+                <x-filament::icon :icon="\Dashed\DashedEcommerceCore\Classes\ParcelType::icon($parcelType['key'])" class="dvo-parcel-icon" style="width: 2.75rem; height: 2.75rem;" />
+                <div>
+                    <div class="dvo-parcel-label">{{ __('Verzendvorm') }}</div>
+                    <div class="dvo-parcel-type">{{ $parcelType['label'] }}</div>
+                </div>
+            </div>
+        @endunless
+
         @livewire('order-view-statusses', ['order' => $record])
 
         @livewire('order-label-problem-banner', ['order' => $record], key('order-label-problem-'.$record->id))

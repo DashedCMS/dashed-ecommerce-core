@@ -1,6 +1,11 @@
 <x-dashed-ecommerce-core::invoices.master :title="Translation::get('invoice-for', 'invoice', 'Factuur voor :siteName:', 'text', [
             'siteName' => Customsetting::get('site_name')
         ])">
+    @php($parcelType = \Dashed\DashedEcommerceCore\Classes\ParcelType::forOrder($order))
+    <div style="border: 4px solid #000; padding: 10px 14px; margin: 0 0 16px; font-size: 24px; font-weight: bold; text-align: center; letter-spacing: 1px; color: #000;">
+        VERZENDVORM: {{ $parcelType['label'] }}
+    </div>
+
     <h1>{{ Translation::get('packing-slip', 'invoice', 'Pakbon') }}</h1>
 
     <table class="table-details">

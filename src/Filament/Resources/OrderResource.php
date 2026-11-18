@@ -33,6 +33,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use LynX39\LaraPdfMerger\Facades\PdfMerger;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Filament\Schemas\Components\Utilities\Get;
@@ -371,6 +372,13 @@ class OrderResource extends Resource
                         'warning' => fn ($state): bool => ($state === 'Ingepakt'),
                         'success' => fn ($state): bool => ($state === 'Afgehandeld' || $state === 'Verzonden' || $state == 'Klaar om opgehaald te worden'),
                     ]),
+                TextColumn::make('parcel_type')
+                    ->label(__('Verzendvorm'))
+                    ->toggleable()
+                    ->badge()
+                    ->getStateUsing(fn ($record): string => ParcelType::forOrder($record)['label'])
+                    ->color(fn ($record): array => ParcelType::filamentColor(ParcelType::forOrder($record)['key']))
+                    ->icon(fn ($record): string => ParcelType::icon(ParcelType::forOrder($record)['key'])),
                 TextColumn::make('deadline')
                     ->label(__('Deadline'))
                     ->toggleable()
@@ -1008,7 +1016,7 @@ class OrderResource extends Resource
                     }),
             ])
             ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited(
-                $query->without('orderProducts')->with(['mainPaymentMethod', 'orderPayments.paymentMethod'])
+                $query->without('orderProducts')->with(array_merge(['mainPaymentMethod', 'orderPayments.paymentMethod'], ParcelType::eagerLoads()))
             ))
             ->filtersFormColumns(4)
             ->deferFilters(false)

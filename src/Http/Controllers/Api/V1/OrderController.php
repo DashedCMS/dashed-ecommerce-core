@@ -21,6 +21,7 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
+use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemFixer;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\CarrierErrorParser;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
@@ -51,7 +52,11 @@ class OrderController extends Controller
     {
         // orderProducts + toegewezen medewerker eager-loaden voor de inline
         // product-preview en de assignee-badge in de lijst.
-        $query = Order::thisSite()->with(['orderProducts:id,order_id,name,quantity', 'assignedUser:id,name']);
+        // Plus what ParcelType needs for the verzendvorm per row (no N+1).
+        $query = Order::thisSite()->with(array_merge(
+            ['orderProducts:id,order_id,product_id,name,quantity', 'assignedUser:id,name'],
+            ParcelType::eagerLoads(),
+        ));
 
         // Dashboard-shortcut: alleen onafgehandelde orders.
         if ($request->boolean('unhandled')) {
@@ -162,7 +167,10 @@ class OrderController extends Controller
     /** Laadt de relaties die de detail-resource nodig heeft. */
     private function detail(Order $model): OrderResource
     {
-        return new OrderResource($model->fresh()->load(['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser']));
+        return new OrderResource($model->fresh()->load(array_merge(
+            ['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser'],
+            ParcelType::eagerLoads(),
+        )));
     }
 
     /** Wijst de bestelling toe aan een medewerker (User), of maakt de toewijzing leeg. */
@@ -1045,7 +1053,7 @@ class OrderController extends Controller
             $v = '\Dashed\DashedEcommerceVeloyd\Classes\Veloyd';
             $fields = [
                 $this->labelSelectField('carrier', 'Vervoerder', $v::getCarriers(), $cs::get("veloyd_default_carrier_{$country}", $model->site_id, 'PostNL')),
-                $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), $cs::get("veloyd_default_package_type_{$country}", $model->site_id, '1')),
+                $this->labelSelectField('package_type', 'Pakkettype', $v::getPackageTypes(), self::defaultPackageType($model, 'veloyd')),
                 $this->labelSelectField('delivery_type', 'Verzendtype', $v::getDeliveryTypes(), $cs::get("veloyd_default_delivery_type_{$country}", $model->site_id, 'Standaard')),
             ];
 
@@ -1064,7 +1072,7 @@ class OrderController extends Controller
             $m = '\Dashed\DashedEcommerceMyParcel\Classes\MyParcel';
             $fields = [
                 $this->labelSelectField('carrier', 'Vervoerder', $m::getCarriers(), $cs::get("my_parcel_default_carrier_{$country}", $model->site_id)),
-                $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), $cs::get("my_parcel_default_package_type_{$country}", $model->site_id, '1')),
+                $this->labelSelectField('package_type', 'Pakkettype', $m::getPackageTypes(), self::defaultPackageType($model, 'myparcel')),
                 $this->labelSelectField('delivery_type', 'Verzendtype', $m::getDeliveryTypes(), $cs::get("my_parcel_default_delivery_type_{$country}", $model->site_id, '2')),
             ];
 
@@ -1080,6 +1088,26 @@ class OrderController extends Controller
         }
 
         return response()->json(['providers' => $out]);
+    }
+
+    /**
+     * Default package type in the label form: the order's verzendvorm
+     * (ParcelType, e.g. Brievenbus) when it maps to a carrier code, otherwise
+     * the provider's country default as before.
+     */
+    public static function defaultPackageType(Order $model, string $provider): ?string
+    {
+        $code = \Dashed\DashedEcommerceCore\Classes\ParcelType::carrierCodeFor($model);
+
+        if ($code !== null) {
+            return (string) $code;
+        }
+
+        $setting = $provider === 'myparcel' ? 'my_parcel_default_package_type_' : 'veloyd_default_package_type_';
+
+        $default = \Dashed\DashedCore\Models\Customsetting::get($setting . $model->countryIsoCode, $model->site_id, '1');
+
+        return $default === null ? null : (string) $default;
     }
 
     /**

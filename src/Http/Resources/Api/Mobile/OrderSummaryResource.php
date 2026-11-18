@@ -6,6 +6,7 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderSummaryResource extends JsonResource
@@ -35,6 +36,8 @@ class OrderSummaryResource extends JsonResource
             // of als de order al is afgehandeld/verzonden (zelfde regel als de scope).
             'has_label_problem' => (bool) (($this->lp_veloyd ?? false) || ($this->lp_myparcel ?? false))
                 && ! LabelProblemDetector::isDone($this->fulfillment_status),
+            // Verzendvorm (Pakket, Brievenbus, Ophalen, ...), see ParcelType.
+            'parcel_type' => OrderResource::parcelTypePayload(ParcelType::forOrder($this->resource)),
             'created_at' => optional($this->created_at)->toIso8601String(),
             // Bestelde producten (naam × aantal) voor de inline-preview in de lijst.
             'products' => $this->orderProducts->map(fn ($p) => [
