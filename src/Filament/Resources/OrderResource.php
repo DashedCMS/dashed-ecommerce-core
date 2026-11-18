@@ -39,6 +39,7 @@ use Filament\Schemas\Components\Utilities\Get;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
@@ -336,6 +337,13 @@ class OrderResource extends Resource
                     ->toggleable()
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('add_on')
+                    ->label(__('Bijbestelling'))
+                    ->toggleable()
+                    ->badge()
+                    ->icon('heroicon-o-archive-box-arrow-down')
+                    ->getStateUsing(fn ($record): ?string => Display::listBadge($record)['label'] ?? null)
+                    ->color(fn ($record): string => Display::listBadge($record)['color'] ?? 'gray'),
                 TextColumn::make('payment_method')
                     ->label(__('Betaalmethode'))
                     ->toggleable()
@@ -1016,7 +1024,7 @@ class OrderResource extends Resource
                     }),
             ])
             ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited(
-                $query->without('orderProducts')->with(array_merge(['mainPaymentMethod', 'orderPayments.paymentMethod'], ParcelType::eagerLoads()))
+                Display::eagerLoadForList($query->without('orderProducts')->with(array_merge(['mainPaymentMethod', 'orderPayments.paymentMethod'], ParcelType::eagerLoads())))
             ))
             ->filtersFormColumns(4)
             ->deferFilters(false)

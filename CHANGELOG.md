@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Added
+- **Bijbestellen (order add-ons).** Een klant kan na een betaalde bestelling nog producten bijbestellen die in dezelfde doos meegaan, zonder verzendkosten. Een bijbestelling is een gewone betaalde order met een eigen factuur, gekoppeld via de nieuwe tabel `dashed__order_add_ons` (`linked` of `separate` met reden); aanbod, mails en kliks staan in `dashed__order_add_on_offers`. Order-relaties `addOnLink()`, `addOnOrders()`, `isAddOnOrder()` en `addOnParent()`.
+- Instellingen per site onder Instellingen > Bijbestellen (`Classes\OrderAddOns\Settings`): aan/uit (standaard uit), fulfillmentstatussen waarin bijbestellen nog kan, maximaal aantal uur, mailvertraging, mail-cooldown en de ingangen (bedankpagina, bevestigingsmail, herinneringsmail, ordertracker).
+- Aanbod en voorstellen (`Classes\OrderAddOns\Offer`, `Suggestions`) met uitbreidingspunten `OrderAddOns::rejectOrderUsing()`, `excludeProductUsing()` en `suggestProductsUsing()`; `ShoppingCart::addShippingOrderValueResolver()` als keten naast het bestaande `resolveShippingOrderValueUsing()`.
+- Bijbestelmodus in de checkout (vaste klant- en adresgegevens van de hoofdorder, alleen de gratis verzendmethode) en de `Linker`: een betaalde bijbestelling gaat stil naar afgehandeld (geen klantmail, geen statusevent, geen eigen verzendlabel bij Veloyd/MyParcel); is de hoofdorder al weg of wordt die geannuleerd, dan gaat de bijbestelling los (`separate`) met een melding aan het team. Track & trace van de hoofdorder wordt gekopieerd; "order wijzigen" verhuist de koppeling mee.
+- Klantingangen: signed route `GET /bijbestellen/{order}` (`dashed.frontend.order-add-ons.show`), blokken voor bedankpagina, winkelwagen/checkout en ordertracker, e-mailblok `order-add-on-offer` in de bevestigingsmail en de herinneringsmail via `dashed:order-add-ons-mails`.
+- CMS: opvallende oranje melding bovenaan de order. Op de hoofdorder "Let op: verzenden mét bijbestelling #Y" per bijbestelling, met de productregels (aantal, naam, opties/SKU) en "N extra items in deze doos"; op de bijbestelling "Bijbestelling bij #X: wordt meegestuurd in dezelfde doos, geen eigen verzendlabel", of "Losse zending (reden)". Badgekolom "Bijbestelling" in de orderlijst ("+ bijbestelling" / "Bijbestelling bij #X"), eager-loaded via `Classes\OrderAddOns\Display::eagerLoadForList()`.
+- Pakbon: de hoofdorder toont bovenaan een omkaderde notitie en de regels van de bijbestellingen ("+ Bijbestelling #Y: ..."); de bijbestelling zelf meldt dat hij meegaat. Teksten via Translation-tag `bijbestellen`. `Classes\OrderAddOns\PackingSlip::forget($order)` wist de bewaarde pakbon-PDF bij koppelen of los zetten.
+- Mobiele API: blok `add_on` op order-detail (`add_on_orders: [{id, invoice_id, items_count, products: [{name, quantity, sku}]}]`), compacte order en orderlijst (`add_on_orders_count`), plus `add_on_for: {id, invoice_id, status}` op een bijbestelling. Eager-loaded in de lijst.
+
 ## v4.208.0 - 2026-11-18
 
 ### Added

@@ -15,6 +15,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
@@ -57,6 +58,8 @@ class OrderController extends Controller
             ['orderProducts:id,order_id,product_id,name,quantity,sku,hidden_options', 'assignedUser:id,name'],
             ParcelType::eagerLoads(),
         ));
+        // Bijbestellingen per rij (aantal + hoofdorder) zonder N+1.
+        Display::eagerLoadForList($query);
 
         // Dashboard-shortcut: alleen onafgehandelde orders.
         if ($request->boolean('unhandled')) {
@@ -168,7 +171,7 @@ class OrderController extends Controller
     private function detail(Order $model): OrderResource
     {
         return new OrderResource($model->fresh()->load(array_merge(
-            ['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser'],
+            ['orderProducts.product', 'orderPayments', 'trackAndTraces', 'assignedUser', 'addOnLink.parentOrder:id,invoice_id', 'addOnOrders.orderProducts'],
             ParcelType::eagerLoads(),
         )));
     }

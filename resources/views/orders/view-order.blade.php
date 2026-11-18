@@ -67,6 +67,8 @@
     @endphp
 
     <div class="dvo">
+        @livewire('order-add-on-banner', ['order' => $record], key('order-add-on-banner-'.$record->id))
+
         @unless($isCredit)
             <div class="dvo-parcel" data-parcel-type="{{ $parcelType['key'] }}"
                  style="background: {{ \Dashed\DashedEcommerceCore\Classes\ParcelType::hex($parcelType['key']) }};">

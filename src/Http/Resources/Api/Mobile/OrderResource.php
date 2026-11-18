@@ -9,6 +9,7 @@ use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderResource extends JsonResource
@@ -50,8 +51,13 @@ class OrderResource extends JsonResource
             'parcel_type' => self::parcelTypePayload($parcelType),
         ];
 
+        $isDetail = $request->boolean('detail') || $this->resource->relationLoaded('orderPayments');
+
+        // Bijbestellingen: in het detail de volledige add_on_orders, compact alleen het aantal.
+        $base['add_on'] = Display::apiPayload($this->resource, $isDetail);
+
         // Compacte lijst-respons: alleen de basis.
-        if (! $request->boolean('detail') && ! $this->resource->relationLoaded('orderPayments')) {
+        if (! $isDetail) {
             return $base;
         }
 

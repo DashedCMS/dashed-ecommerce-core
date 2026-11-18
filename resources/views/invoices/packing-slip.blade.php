@@ -8,6 +8,13 @@
         </div>
     @endunless
 
+    @php($addOnNotice = \Dashed\DashedEcommerceCore\Classes\OrderAddOns\PackingSlip::notice($order))
+    @if($addOnNotice)
+        <div class="add-on-notice" style="border: 4px dashed #000; padding: 10px 14px; margin: 0 0 16px; font-size: 18px; font-weight: bold; text-align: center; color: #000;">
+            {{ $addOnNotice }}
+        </div>
+    @endif
+
     <h1>{{ Translation::get('packing-slip', 'invoice', 'Pakbon') }}</h1>
 
     <table class="table-details">
@@ -155,6 +162,28 @@
 
                     <td class="numeric">
                         {{$orderProduct->quantity}}x
+                    </td>
+                </tr>
+            @endforeach
+
+            @foreach (\Dashed\DashedEcommerceCore\Classes\OrderAddOns\PackingSlip::addOnLines($order) as $addOnLine)
+                <tr class="add-on-line">
+                    <td colspan="2">
+                        <b>{{ $addOnLine['prefix'] }}:</b> {{ $addOnLine['line']->name }}
+                        @if($addOnLine['line']->product_extras)
+                            @foreach($addOnLine['line']->product_extras as $option)
+                                <br>
+                                <small>{{ $option['name'] ?? '' }}: {{ $option['value'] ?? '' }}</small>
+                            @endforeach
+                        @endif
+                        @if($addOnLine['line']->sku)
+                            <br>
+                            <small>SKU: {{ $addOnLine['line']->sku }}</small>
+                        @endif
+                    </td>
+
+                    <td class="numeric">
+                        {{ $addOnLine['line']->quantity }}x
                     </td>
                 </tr>
             @endforeach

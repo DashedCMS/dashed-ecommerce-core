@@ -7,6 +7,7 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderSummaryResource extends JsonResource
@@ -44,6 +45,8 @@ class OrderSummaryResource extends JsonResource
                 'name' => (string) $p->name,
                 'quantity' => (int) $p->quantity,
             ])->values()->all(),
+            // Bijbestellingen: add_on_orders_count (parent) en add_on_for (de bijbestelling zelf).
+            'add_on' => Display::apiPayload($this->resource, false),
         ];
     }
 }
