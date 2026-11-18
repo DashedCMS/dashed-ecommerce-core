@@ -324,6 +324,11 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Observers\GiftcardIssueObserver::class
         );
 
+        // Bijbestellen: koppelen bij betaling, annuleren/vervangen van de hoofdorder, track & trace,
+        // geen eigen Veloyd/MyParcel-zending, en gratis verzending in de bijbestel-modus.
+        \Dashed\DashedEcommerceCore\Classes\OrderAddOns\Linker::register();
+        \Dashed\DashedEcommerceCore\Classes\OrderAddOns\CheckoutMode::registerShippingValueResolver();
+
         $this->registerPopupTemplates();
 
         cms()

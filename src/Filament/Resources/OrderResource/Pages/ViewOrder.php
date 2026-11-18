@@ -212,6 +212,21 @@ class ViewOrder extends ViewRecord
                 ->url(fn () => $this->record->hash ? route('dashed.frontend.proforma-checkout', ['orderHash' => $this->record->hash]) : null)
                 ->openUrlInNewTab()
                 ->visible(fn (): bool => (bool) $this->record->is_proforma && $this->record->isConcept() && (bool) $this->record->hash),
+            Action::make('separateAddOn')
+                ->label(__('Bijbestelling los verzenden'))
+                ->icon('heroicon-o-scissors')
+                ->color('gray')
+                ->visible(fn (): bool => $this->record->isAddOnOrder())
+                ->authorize($mayEdit)
+                ->requiresConfirmation()
+                ->modalHeading(__('Bijbestelling los verzenden'))
+                ->modalDescription(__('De bijbestelling gaat dan niet meer mee in de doos van de eerste bestelling: hij krijgt een eigen verzending en de verzendkosten zijn voor ons.'))
+                ->action(function (): void {
+                    \Dashed\DashedEcommerceCore\Classes\OrderAddOns\Linker::makeSeparate($this->record, 'handmatig los gezet');
+                    $this->record->refresh();
+
+                    Notification::make()->success()->title(__('De bijbestelling wordt los verzonden'))->send();
+                }),
             'registerReturn' => RegisterReturnAction::forOrder($this->record)
                 ->authorize(fn (): bool => $this->mayEditOrder() || (auth()->user()?->can('edit_order_return') ?? false)),
             ActionGroup::make([

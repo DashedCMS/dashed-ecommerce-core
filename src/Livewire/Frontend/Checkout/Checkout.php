@@ -27,6 +27,8 @@ use Dashed\DashedEcommerceCore\Classes\CartHelper;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Linker;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\CheckoutMode;
 use Dashed\DashedEcommerceCore\Classes\TikTokHelper;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedCore\Classes\Caching\IdentifiedVisitor;
@@ -244,6 +246,9 @@ class Checkout extends Component
             cartHelper()->applyDiscountCode($sessionDiscount);
         }
 
+        // Bijbestelling: adres en klantgegevens van de eerdere order, alleen gratis verzending.
+        $this->applyOrderAddOnFields();
+
         $this->checkCart();
         $this->fillPrices();
 
@@ -340,6 +345,101 @@ class Checkout extends Component
         ) {
             $this->shippingMethod = $this->shippingMethods->first()['id'] ?? '';
         }
+
+        $this->onlyFreeShippingForOrderAddOn();
+    }
+
+    /**
+     * Bijbestel-modus: alleen de gratis verzendmethode (geen ophalen). Is er in deze zone geen gratis
+     * methode, dan blijft alles staan en wordt de order bij het afrekenen niet gekoppeld.
+     */
+    protected function onlyFreeShippingForOrderAddOn(): void
+    {
+        if (! CheckoutMode::active()) {
+            return;
+        }
+
+        $methods = collect($this->shippingMethods);
+        $free = $methods->filter(fn ($method) => CheckoutMode::isFreeShippingMethod($method))->values();
+
+        if ($free->isEmpty()) {
+            return;
+        }
+
+        if (! $free->contains(fn ($method) => (string) ($method['id'] ?? '') === (string) $this->shippingMethod)) {
+            $this->shippingMethod = $free->first()['id'] ?? $this->shippingMethod;
+        }
+
+        $this->shippingMethods = $this->shippingMethods instanceof \Illuminate\Support\Collection ? $free : $free->all();
+    }
+
+    /**
+     * Bijbestel-modus: de gegevens van de eerdere order staan vast (zelfde doos, zelfde adres).
+     * Geeft true als de velden gezet zijn.
+     */
+    protected function applyOrderAddOnFields(): bool
+    {
+        $values = CheckoutMode::fixedValues();
+
+        foreach ($values as $property => $value) {
+            $this->{$property} = $value;
+        }
+
+        if ($values !== [] && filled($values['company'] ?? null)) {
+            $this->isCompany = true;
+        }
+
+        return $values !== [];
+    }
+
+    /**
+     * De order waaraan een nieuwe order als bijbestelling gekoppeld wordt: alleen in een actieve modus én
+     * bij een gratis verzendmethode (anders is het een gewone bestelling). Subklassen mogen dit aanpassen.
+     */
+    protected function orderAddOnParentFor(mixed $shippingMethod): ?Order
+    {
+        if (! CheckoutMode::active() || ! CheckoutMode::isFreeShippingMethod($shippingMethod)) {
+            return null;
+        }
+
+        return CheckoutMode::parent();
+    }
+
+    /** Koppelt de net aangemaakte order aan de eerdere order (hook voor subklassen). */
+    protected function linkOrderAddOn(Order $order, mixed $shippingMethod): void
+    {
+        rescue(function () use ($order, $shippingMethod) {
+            if ($parent = $this->orderAddOnParentFor($shippingMethod)) {
+                Linker::link($order, $parent);
+            }
+        }, null, true);
+    }
+
+    /**
+     * De bezoeker kwam via de bijbestel-link, maar het aanbod is intussen dicht (ingepakt, te laat): de modus
+     * gaat uit en de checkout meldt het, zonder order. Daarna bestelt de klant gewoon met normale verzending.
+     */
+    protected function refuseClosedOrderAddOn(): bool
+    {
+        CheckoutMode::reset();
+
+        if (! CheckoutMode::closed()) {
+            return false;
+        }
+
+        CheckoutMode::stop();
+        $this->fillPrices();
+
+        $message = Translation::get('modus-gesloten', 'bijbestellen', 'Je eerdere bestelling is al ingepakt of de tijd is voorbij: er kan niets meer bij in die doos. Je kunt gewoon bestellen, we versturen dit dan apart.');
+
+        Notification::make()
+            ->warning()
+            ->title($message)
+            ->send();
+
+        $this->dispatch('showAlert', 'error', $message);
+
+        return true;
     }
 
     public function updatedEmail(string $value): void
@@ -369,6 +469,11 @@ class Checkout extends Component
 
     public function updated($name, $value)
     {
+        // Bijbestelling: de gegevens van de eerdere order staan vast.
+        if (array_key_exists($name, CheckoutMode::FIXED_FIELDS) && $this->applyOrderAddOnFields()) {
+            $value = $this->{$name};
+        }
+
         // Geen land geselecteerd? Altijd terugvallen op Nederland.
         if ($name === 'country' && blank($value)) {
             $this->country = 'Nederland';
@@ -874,6 +979,24 @@ class Checkout extends Component
 
     public function submit()
     {
+        // Bijbestelling: opnieuw controleren of het aanbod van de eerdere order nog open is.
+        if ($this->refuseClosedOrderAddOn()) {
+            return null;
+        }
+
+        $result = $this->submitCheckout();
+
+        // De order is aangemaakt (doorgestuurd naar betalen of de bedankpagina): de modus is klaar.
+        if (($result instanceof \Symfony\Component\HttpFoundation\RedirectResponse || $result instanceof \Livewire\Features\SupportRedirects\Redirector)
+            && CheckoutMode::requestedParentId()) {
+            CheckoutMode::stop();
+        }
+
+        return $result;
+    }
+
+    protected function submitCheckout()
+    {
         // Wat de klant bij de laatste render zag, vóór fillPrices() het
         // opnieuw uitrekent. Alleen gebruikt om af te breken: wie hiermee
         // knoeit, krijgt hooguit een extra ververste checkout.
@@ -917,6 +1040,8 @@ class Checkout extends Component
         if ($sawFullGiftcardCoverage && ! $this->giftcardsCoverCart()) {
             return $this->refuseChangedGiftcardBalance();
         }
+
+        $this->applyOrderAddOnFields();
 
         $this->zipCode = $this->normalizePostcode($this->zipCode, $this->country);
         $this->invoiceZipCode = $this->normalizePostcode($this->invoiceZipCode, $this->invoiceCountry);
@@ -1230,6 +1355,9 @@ class Checkout extends Component
         $order->prices_ex_vat = (bool) ($cartForVatMode->prices_ex_vat ?? false);
 
         $order->save();
+
+        // Bijbestelling: meteen koppelen, vóór er een betaling kan binnenkomen.
+        $this->linkOrderAddOn($order, $shippingMethod);
 
         try {
             // Zorg dat de attributie-data uit cart of sessie ook na de save
