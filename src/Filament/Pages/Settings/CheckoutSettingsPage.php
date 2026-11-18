@@ -49,6 +49,7 @@ class CheckoutSettingsPage extends Page
             $formData["checkout_google_api_key_{$site['id']}"] = Customsetting::get('checkout_google_api_key', $site['id']);
             $formData["checkout_postnl_api_key_{$site['id']}"] = Customsetting::get('checkout_postnl_api_key', $site['id']);
             $formData["checkout_postcode_api_key_{$site['id']}"] = Customsetting::get('checkout_postcode_api_key', $site['id']);
+            $formData["checkout_belgian_addresses_{$site['id']}"] = (bool) Customsetting::get('checkout_belgian_addresses', $site['id']);
             $formData["checkout_bcc_email_{$site['id']}"] = Customsetting::get('checkout_bcc_email', $site['id']);
             $formData["checkout_force_checkout_page_{$site['id']}"] = Customsetting::get('checkout_force_checkout_page', $site['id'], false);
             $formData["currency_format_type_{$site['id']}"] = Customsetting::get('currency_format_type', $site['id'], 'type1');
@@ -111,6 +112,9 @@ class CheckoutSettingsPage extends Page
                 Toggle::make("checkout_autofill_address_{$site['id']}")
                     ->label(__('Automatisch aanvullen van adresgegevens inschakelen'))
                     ->helperText(__('Hiermee wordt het adres van klanten automatisch aangevuld op basis van de Google API of PostNL API om zo het invullen soepeler te laten verlopen.')),
+                Toggle::make("checkout_belgian_addresses_{$site['id']}")
+                    ->label(__('Belgische adressen aanvullen'))
+                    ->helperText(__('Vult bij een Belgische postcode de gemeente in en stelt straten voor terwijl de klant typt, in de checkout en de kassa. Gebruikt de gratis open data van de federale overheid (BOSA): na het aanzetten worden de adressen binnen een dag ingeladen en daarna maandelijks ververst.')),
                 Textarea::make("checkout_extra_scripts_{$site['id']}")
                     ->label(__('Aanvullende scripts'))
                     ->rows(5)
@@ -192,6 +196,7 @@ class CheckoutSettingsPage extends Page
             Customsetting::set('checkout_google_api_key', $this->form->getState()["checkout_google_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_postnl_api_key', $this->form->getState()["checkout_postnl_api_key_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_postcode_api_key', $this->form->getState()["checkout_postcode_api_key_{$site['id']}"], $site['id']);
+            Customsetting::set('checkout_belgian_addresses', $this->form->getState()["checkout_belgian_addresses_{$site['id']}"] ? 1 : 0, $site['id']);
             Customsetting::set('checkout_bcc_email', $this->form->getState()["checkout_bcc_email_{$site['id']}"], $site['id']);
             Customsetting::set('checkout_force_checkout_page', $this->form->getState()["checkout_force_checkout_page_{$site['id']}"], $site['id']);
             Customsetting::set('currency_format_type', $this->form->getState()["currency_format_type_{$site['id']}"], $site['id']);

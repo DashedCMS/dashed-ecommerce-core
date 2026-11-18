@@ -141,14 +141,16 @@
                                             placeholder="{{Translation::get('house-number', 'checkout', 'Huisnummer')}}"
                                         />
 
-                                        <x-fields.input
-                                            required
-                                            type="text"
-                                            model="street"
-                                            id="street"
-                                            :label="Translation::get('enter-street', 'checkout', 'Vul je straat in')"
-                                            placeholder="{{Translation::get('street', 'checkout', 'Straat')}}"
-                                        />
+                                        <x-dashed-ecommerce-core::frontend.checkout.belgian-street-suggestions zip="zipCode" street="street" city="city" country="country">
+                                            <x-fields.input
+                                                required
+                                                type="text"
+                                                model="street"
+                                                id="street"
+                                                :label="Translation::get('enter-street', 'checkout', 'Vul je straat in')"
+                                                placeholder="{{Translation::get('street', 'checkout', 'Straat')}}"
+                                            />
+                                        </x-dashed-ecommerce-core::frontend.checkout.belgian-street-suggestions>
 
                                         <x-fields.input
                                             required
@@ -231,14 +233,16 @@
                                                 :label="Translation::get('enter-house-number', 'checkout', 'Vul je huisnummer in')"
                                                 placeholder="{{Translation::get('house-number', 'checkout', 'Huisnummer')}}"
                                             />
-                                            <x-fields.input
-                                                required
-                                                type="text"
-                                                model="invoiceStreet"
-                                                id="invoiceStreet"
-                                                :label="Translation::get('enter-street', 'checkout', 'Vul je straat in')"
-                                                placeholder="{{Translation::get('street', 'checkout', 'Straat')}}"
-                                            />
+                                            <x-dashed-ecommerce-core::frontend.checkout.belgian-street-suggestions zip="invoiceZipCode" street="invoiceStreet" city="invoiceCity" country="invoiceCountry" country-fallback="country">
+                                                <x-fields.input
+                                                    required
+                                                    type="text"
+                                                    model="invoiceStreet"
+                                                    id="invoiceStreet"
+                                                    :label="Translation::get('enter-street', 'checkout', 'Vul je straat in')"
+                                                    placeholder="{{Translation::get('street', 'checkout', 'Straat')}}"
+                                                />
+                                            </x-dashed-ecommerce-core::frontend.checkout.belgian-street-suggestions>
                                             <x-fields.input
                                                 required
                                                 type="text"

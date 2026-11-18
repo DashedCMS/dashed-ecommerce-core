@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.210.0 - 2026-11-18
+
+### Added
+- **Belgische adressen aanvullen.** Nieuwe instelling `checkout_belgian_addresses` (Instellingen > Checkout, standaard uit). Aan: bij een Belgische postcode vult de checkout (`Checkout::updateAddressByApi()`/`updateInvoiceAddressByApi()`, nooit over een al ingevulde plaats) en de kassa de gemeente in, en het straatveld stelt straten binnen de postcode voor terwijl de klant typt.
+- Data uit de gratis BeSt Address open data van BOSA (Vlaanderen, Brussel en Wallonië, nl/fr/de) in de nieuwe tabellen `dashed__belgian_streets` en `dashed__belgian_postcodes`, via `Services\Address\BelgianAddresses` en het commando `dashed:import-belgian-addresses` (`--file=` voor lokale zip/csv). De planner importeert vanzelf zodra een site de instelling aan heeft (binnen een dag) en ververst maandelijks; een lege of kapotte download vervangt nooit een werkende set.
+- Route `GET /ecommerce/address/belgian-streets?postcode=&q=&locale=` (`dashed.frontend.address.belgian-streets`, zonder sessie, throttle 90/min) en het Blade-component `<x-dashed-ecommerce-core::frontend.checkout.belgian-street-suggestions>` dat een straatveld omhult (combobox met toetsenbord en ARIA); het standaard checkout-template gebruikt het voor bezorg- en factuurstraat.
+- `AddressLookup::lookup()` heeft een optionele derde parameter `$country`; bij België geeft hij alleen de gemeente. De kassa geeft het land mee en toont Belgische straten als datalist.
+
 ## v4.209.0 - 2026-11-18
 
 ### Added

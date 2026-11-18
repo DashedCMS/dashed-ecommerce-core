@@ -13,16 +13,25 @@ use Dashed\DashedCore\Models\Customsetting;
  * beschikbaar is), valt terug op postcode.tech. Geeft een array met `city`
  * en `street` terug, of een lege array als geen van beide providers iets
  * vindt of geconfigureerd is.
+ *
+ * België (met `$country` erbij en Belgische adressen aan): alleen de gemeente
+ * uit BelgianAddresses; de straat volgt niet uit postcode + huisnummer.
  */
 class AddressLookup
 {
     /**
      * @return array{city?: string|null, street?: string|null}
      */
-    public static function lookup(?string $zipCode, ?string $houseNr): array
+    public static function lookup(?string $zipCode, ?string $houseNr, ?string $country = null): array
     {
         $zipCode = preg_replace('/\s+/', '', (string) $zipCode) ?? '';
         $houseNr = trim((string) $houseNr);
+
+        if ($country !== null && BelgianAddresses::isBelgium($country)) {
+            $municipality = BelgianAddresses::active() ? app(BelgianAddresses::class)->municipality($zipCode) : null;
+
+            return $municipality ? ['city' => $municipality, 'street' => null] : [];
+        }
 
         if ($zipCode === '' || $houseNr === '' || strlen($zipCode) < 6) {
             return [];

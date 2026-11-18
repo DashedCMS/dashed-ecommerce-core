@@ -29,6 +29,12 @@ Route::post('/ecommerce/meta/view-content', [MetaEventController::class, 'viewCo
     ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class, \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])
     ->name('dashed.frontend.meta.view-content');
 
+// Belgische straatsuggesties in de checkout (Services\Address\BelgianAddresses).
+// Zonder sessie en cookies; alleen actief als de site Belgische adressen aan heeft.
+Route::get('/ecommerce/address/belgian-streets', \Dashed\DashedEcommerceCore\Controllers\Frontend\BelgianStreetsController::class)
+    ->middleware('throttle:90,1')
+    ->name('dashed.frontend.address.belgian-streets');
+
 //Exchange routes
 Route::get('/ecommerce/orders/exchange', [TransactionController::class, 'exchange'])
     ->middleware('webhook.idempotency:auto')

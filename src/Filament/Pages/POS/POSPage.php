@@ -34,6 +34,7 @@ use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\Address\AddressLookup;
+use Dashed\DashedEcommerceCore\Services\Address\BelgianAddresses;
 
 class POSPage extends Component implements HasActions, HasSchemas
 {
@@ -841,7 +842,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = AddressLookup::lookup($state, $get('houseNr'));
+                        $address = AddressLookup::lookup($state, $get('houseNr'), $get('country'));
                         if (! empty($address['street'])) {
                             $set('street', $address['street']);
                         }
@@ -856,7 +857,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = AddressLookup::lookup($get('zipCode'), $state);
+                        $address = AddressLookup::lookup($get('zipCode'), $state, $get('country'));
                         if (! empty($address['street'])) {
                             $set('street', $address['street']);
                         }
@@ -867,6 +868,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
                 TextInput::make('street')
                     ->label(__('Straat'))
+                    ->datalist(fn (Get $get) => BelgianAddresses::isBelgium($get('country')) && BelgianAddresses::active() ? app(BelgianAddresses::class)->streetNames($get('zipCode')) : [])
                     ->maxLength(255)
                     ->lazy()
                     ->reactive(),
@@ -902,7 +904,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = AddressLookup::lookup($state, $get('invoiceHouseNr'));
+                        $address = AddressLookup::lookup($state, $get('invoiceHouseNr'), $get('invoiceCountry') ?: $get('country'));
                         if (! empty($address['street'])) {
                             $set('invoiceStreet', $address['street']);
                         }
@@ -917,7 +919,7 @@ class POSPage extends Component implements HasActions, HasSchemas
                     ->maxLength(255)
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, $get) {
-                        $address = AddressLookup::lookup($get('invoiceZipCode'), $state);
+                        $address = AddressLookup::lookup($get('invoiceZipCode'), $state, $get('invoiceCountry') ?: $get('country'));
                         if (! empty($address['street'])) {
                             $set('invoiceStreet', $address['street']);
                         }
@@ -928,6 +930,7 @@ class POSPage extends Component implements HasActions, HasSchemas
 
                 TextInput::make('invoiceStreet')
                     ->label(__('Factuur straat'))
+                    ->datalist(fn (Get $get) => BelgianAddresses::isBelgium($get('invoiceCountry') ?: $get('country')) && BelgianAddresses::active() ? app(BelgianAddresses::class)->streetNames($get('invoiceZipCode')) : [])
                     ->nullable()
                     ->maxLength(255)
                     ->reactive(),

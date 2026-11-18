@@ -1664,6 +1664,11 @@ MARKDOWN,
             $schedule->job(new \Dashed\DashedEcommerceCore\Jobs\StoreProductCompletenessJob())
                 ->dailyAt('04:15')
                 ->name('dashed:product-completeness');
+            // Belgische straten en gemeentes: alleen als een site ze aan heeft, binnen een dag na aanzetten en daarna maandelijks.
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\ImportBelgianAddressesCommand::class)
+                ->dailyAt($spreadAt('04:35', 'import-belgian-addresses'))
+                ->when(fn () => \Dashed\DashedEcommerceCore\Services\Address\BelgianAddresses::importDue())
+                ->withoutOverlapping(120);
             $schedule->command(CancelOldOrders::class)
                 ->everyFifteenMinutes()
                 ->when(fn () => CancelOldOrders::hasWork())
@@ -2892,6 +2897,7 @@ MARKDOWN,
             ])
             ->hasViews()
             ->hasCommands([
+                \Dashed\DashedEcommerceCore\Commands\ImportBelgianAddressesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrivatizeProductExtraFilesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\DisableOwnPaymentMethodsCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\MetaCapiTestCommand::class,

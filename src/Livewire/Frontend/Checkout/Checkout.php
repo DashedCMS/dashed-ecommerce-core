@@ -531,6 +531,10 @@ class Checkout extends Component
 
     public function updateAddressByApi(): void
     {
+        if ($this->fillBelgianCity('zipCode', 'city', $this->country)) {
+            return;
+        }
+
         $zip = preg_replace('/\s+/', '', (string) $this->zipCode);
         $houseNr = (string) $this->houseNr;
 
@@ -548,6 +552,10 @@ class Checkout extends Component
 
     public function updateInvoiceAddressByApi(): void
     {
+        if ($this->fillBelgianCity('invoiceZipCode', 'invoiceCity', $this->invoiceCountry ?: $this->country)) {
+            return;
+        }
+
         $zip = preg_replace('/\s+/', '', (string) $this->invoiceZipCode);
         $houseNr = (string) $this->invoiceHouseNr;
 
@@ -561,6 +569,28 @@ class Checkout extends Component
             $this->invoiceCity = $response['city'] ?? $this->invoiceCity;
             $this->invoiceStreet = $response['street'] ?? $this->invoiceStreet;
         }
+    }
+
+    /**
+     * België: de gemeente bij de postcode (Services\Address\BelgianAddresses), nooit
+     * over een plaats die de klant al typte (een postcode dekt soms meerdere dorpen).
+     * Geeft true terug als het land België is, zodat de NL-lookup overgeslagen wordt.
+     */
+    protected function fillBelgianCity(string $zipField, string $cityField, ?string $country): bool
+    {
+        if (! \Dashed\DashedEcommerceCore\Services\Address\BelgianAddresses::isBelgium($country)) {
+            return false;
+        }
+
+        if (blank($this->{$cityField}) && \Dashed\DashedEcommerceCore\Services\Address\BelgianAddresses::active()) {
+            $municipality = app(\Dashed\DashedEcommerceCore\Services\Address\BelgianAddresses::class)->municipality($this->{$zipField});
+            if ($municipality) {
+                $this->{$cityField} = $municipality;
+                $this->resetErrorBag($cityField);
+            }
+        }
+
+        return true;
     }
 
     public function getAddressInfoByApi(?string $zipCode = null, ?string $houseNr = null): array
