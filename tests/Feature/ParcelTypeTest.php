@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\Product;
-use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
@@ -26,6 +25,14 @@ use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderSummaryResource;
 class ParcelTypeTestLabel extends Model
 {
     protected $table = 'parcel_type_test_labels';
+
+    protected $guarded = [];
+}
+
+/** A carrier label table from before the return-label migrations (no is_return). */
+class ParcelTypeOldLabel extends Model
+{
+    protected $table = 'parcel_type_old_labels';
 
     protected $guarded = [];
 }
@@ -157,7 +164,6 @@ it('memoises per order instance and forgets after flush', function () {
 
 it('uses the verzendvorm as label default and only when no package_type was chosen', function () {
     $order = parcelTypeOrder();
-    Customsetting::set('veloyd_default_package_type_NL', '1', 'default');
 
     // unknown: label overrides untouched, form falls back to the country default
     expect(LabelCreator::withParcelTypeDefault($order, []))->toBe([])
@@ -181,9 +187,64 @@ it('adds parcel_type to the mobile resources and prefixes the shipping method', 
         ->and($detail['shipping_method'])->toBe('BRIEVENBUS · Gratis verzending')
         ->and($detail['shipping_method_name'])->toBe('Gratis verzending');
 
+    // unknown: bare method name, no "ONBEKEND ·"
+    ParcelType::reset();
+    ParcelType::useLabelRelations(['parcelTypeTestLabels']);
+    $unknown = (new OrderResource($order->fresh()))->toArray(Request::create('/', 'GET', ['detail' => 1]));
+    expect($unknown['shipping_method'])->toBe('Gratis verzending')
+        ->and($unknown['parcel_type']['key'])->toBe('unknown');
+    ParcelType::overrideUsing(fn () => 2);
+
     $list = (new OrderResource($order))->toArray(Request::create('/'));
     expect($list['parcel_type']['key'])->toBe('mailbox');
 
     $summary = (new OrderSummaryResource($order->load('orderProducts')))->toArray(Request::create('/'));
     expect($summary['parcel_type'])->toBe(['key' => 'mailbox', 'code' => 2, 'label' => 'BRIEVENBUS']);
+});
+
+it('never throws: failing or odd callables fall through, and tables without is_return work', function () {
+    $order = parcelTypeOrder();
+
+    ParcelType::overrideUsing(fn () => throw new RuntimeException('boom'));
+    ParcelType::overrideUsing(fn () => false);
+    ParcelType::overrideUsing(fn () => 1.5);
+    ParcelType::computeUsing(fn () => throw new RuntimeException('boom'));
+    expect(ParcelType::forOrder($order)['key'])->toBe('unknown');
+
+    ParcelType::computeUsing(fn () => '2');
+    expect(ParcelType::forOrder($order->fresh())['key'])->toBe('mailbox');
+
+    // a stored-label relation that throws (missing table) is skipped too
+    Order::addDynamicRelation('parcelTypeMissingLabels', fn (Order $o) => $o->hasMany(ParcelTypeTestLabel::class)->from('parcel_type_does_not_exist'));
+    ParcelType::useLabelRelations(['parcelTypeMissingLabels']);
+    expect(ParcelType::forOrder($order->fresh())['key'])->toBe('mailbox');
+
+    // a carrier table without is_return
+    Schema::create('parcel_type_old_labels', function (Blueprint $table) {
+        $table->temporary();
+        $table->id();
+        $table->unsignedBigInteger('order_id');
+        $table->string('package_type')->nullable();
+        $table->timestamps();
+    });
+    Order::addDynamicRelation('parcelTypeOldLabels', fn (Order $o) => $o->hasMany(ParcelTypeOldLabel::class));
+    ParcelType::useLabelRelations(['parcelTypeOldLabels']);
+    ParcelTypeOldLabel::create(['order_id' => $order->id, 'package_type' => '3']);
+    expect(ParcelType::forOrder($order->fresh())['key'])->toBe('letter');
+});
+
+it('treats a line whose product was deleted as physical and forgets one order on request', function () {
+    $order = parcelTypeOrder();
+    parcelTypeProductLine($order, true);
+    Schema::disableForeignKeyConstraints();
+    OrderProduct::withoutEvents(fn () => OrderProduct::create(['order_id' => $order->id, 'product_id' => 999999, 'name' => 'Weg', 'quantity' => 1, 'price' => 5]));
+    Schema::enableForeignKeyConstraints();
+    expect(ParcelType::forOrder($order->fresh())['key'])->toBe('unknown');
+
+    $order = parcelTypeOrder();
+    expect(ParcelType::forOrder($order)['key'])->toBe('unknown');
+    parcelTypeStoredLabel($order, 2);
+    expect(ParcelType::forOrder($order)['key'])->toBe('unknown'); // memoised
+    ParcelType::forget($order);
+    expect(ParcelType::forOrder($order)['key'])->toBe('mailbox');
 });

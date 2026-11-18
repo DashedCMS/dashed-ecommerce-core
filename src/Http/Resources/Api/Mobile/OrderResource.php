@@ -151,9 +151,16 @@ class OrderResource extends JsonResource
         return ['key' => $parcelType['key'], 'code' => $parcelType['code'], 'label' => $parcelType['label']];
     }
 
-    /** "BRIEVENBUS · Gratis verzending", or just the label without a method name. */
-    public static function shippingMethodWithParcelType(array $parcelType, ?string $name): string
+    /**
+     * "BRIEVENBUS · Gratis verzending", or just the label without a method name.
+     * Unknown keeps the bare name: no alarming "ONBEKEND" where nothing is known.
+     */
+    public static function shippingMethodWithParcelType(array $parcelType, ?string $name): ?string
     {
+        if ($parcelType['key'] === ParcelType::UNKNOWN) {
+            return $name;
+        }
+
         return filled($name) ? $parcelType['label'] . ' · ' . $name : $parcelType['label'];
     }
 

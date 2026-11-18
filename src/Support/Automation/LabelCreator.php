@@ -54,6 +54,8 @@ class LabelCreator
             try {
                 app(\Dashed\DashedEcommerceVeloyd\Classes\Veloyd::class)->createLabelForOrder($model, $overrides);
 
+                ParcelType::forget($model);
+
                 return ['ok' => true, 'provider' => 'veloyd', 'message' => 'Verzendlabel aangemaakt via Veloyd.'];
             } catch (\Throwable $e) {
                 report($e);
@@ -64,6 +66,8 @@ class LabelCreator
         if (($provider === '' || $provider === 'myparcel') && self::myparcelConfigured($model)) {
             try {
                 app(\Dashed\DashedEcommerceMyParcel\Classes\MyParcel::class)->createLabelForOrder($model, $overrides);
+
+                ParcelType::forget($model);
 
                 return ['ok' => true, 'provider' => 'myparcel', 'message' => 'Verzendlabel aangemaakt via MyParcel.'];
             } catch (\Throwable $e) {

@@ -1272,11 +1272,12 @@ class Order extends Model
         //        }
     }
 
-    public function createPackingSlip()
+    /** @param  bool  $force  render again even when a stored slip exists (e.g. download, so the verzendvorm is current) */
+    public function createPackingSlip(bool $force = false)
     {
         if ($this->status == 'paid' || $this->status == 'waiting_for_confirmation' || $this->status == 'partially_paid' || $this->parentCreditOrder) {
             $order = Order::find($this->id);
-            if (! Storage::disk('dashed')->exists('/packing-slips/packing-slip-'.($order->invoice_id ?: $order->id).'-'.$order->hash.'.pdf')) {
+            if ($force || ! Storage::disk('dashed')->exists('/packing-slips/packing-slip-'.($order->invoice_id ?: $order->id).'-'.$order->hash.'.pdf')) {
                 $view = View::make('dashed-ecommerce-core::invoices.packing-slip', compact('order'));
                 $contents = $view->render();
                 $pdf = App::make('dompdf.wrapper');

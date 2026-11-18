@@ -30,7 +30,7 @@ it('order-detail: bevat de verzendmethode-naam', function () {
     $res->assertOk();
 
     $data = $res->json('data') ?? $res->json();
-    // Prefixed with the verzendvorm (ParcelType); the raw name stays available.
-    expect($data['shipping_method'])->toBe('ONBEKEND · PostNL pakket')
+    // Unknown verzendvorm (ParcelType): no prefix; the raw name is also separate.
+    expect($data['shipping_method'])->toBe('PostNL pakket')
         ->and($data['shipping_method_name'])->toBe('PostNL pakket');
 });

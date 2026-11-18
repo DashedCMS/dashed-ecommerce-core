@@ -110,6 +110,10 @@ class CartController extends Controller
 
         abort_unless(InvoiceAccess::allows($request, $order), 403);
 
+        // Always render afresh on download, so the slip shows the current
+        // verzendvorm (ParcelType) instead of the one of the first render.
+        rescue(fn () => $order->createPackingSlip(force: true), null, true);
+
         if (! $order->downloadPackingslipUrl()) {
             return redirect('/')->with('error', Translation::get('order-not-found', 'checkout', 'The order could not be found'));
         }

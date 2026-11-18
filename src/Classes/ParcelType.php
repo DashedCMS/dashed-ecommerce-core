@@ -109,7 +109,14 @@ class ParcelType
             return self::$memo[$order];
         }
 
-        return self::$memo[$order] = self::describe(self::resolveKey($order));
+        try {
+            $key = self::resolveKey($order);
+        } catch (\Throwable $e) {
+            report($e);
+            $key = self::UNKNOWN;
+        }
+
+        return self::$memo[$order] = self::describe($key);
     }
 
     /** The carrier code to use for a label (null for pickup, digital and unknown). */
@@ -223,6 +230,18 @@ class ParcelType
         self::flush();
     }
 
+    /** Forget the memo and loaded label rows of one order (e.g. after a label was created). */
+    public static function forget(Order $order): void
+    {
+        if (self::$memo !== null) {
+            unset(self::$memo[$order]);
+        }
+
+        foreach (self::$labelRelations as $relation) {
+            $order->unsetRelation($relation);
+        }
+    }
+
     /** Forget memoised results (e.g. after a label was created). */
     public static function flush(): void
     {
@@ -240,26 +259,30 @@ class ParcelType
 
     private static function resolveKey(Order $order): string
     {
-        if ($order->shippingMethod?->sort === 'take_away') {
-            return self::PICKUP;
-        }
+        try {
+            if ($order->shippingMethod?->sort === 'take_away') {
+                return self::PICKUP;
+            }
 
-        if (self::isDigitalOnly($order)) {
-            return self::DIGITAL;
+            if (self::isDigitalOnly($order)) {
+                return self::DIGITAL;
+            }
+        } catch (\Throwable $e) {
+            report($e);
         }
 
         foreach (self::$overrides as $fn) {
-            if ($key = self::keyFor($fn($order))) {
+            if ($key = self::safeKey(fn () => $fn($order))) {
                 return $key;
             }
         }
 
-        if ($key = self::keyFor(self::storedPackageType($order))) {
+        if ($key = self::safeKey(fn () => self::storedPackageType($order))) {
             return $key;
         }
 
         foreach (self::$computations as $fn) {
-            if ($key = self::keyFor($fn($order))) {
+            if ($key = self::safeKey(fn () => $fn($order))) {
                 return $key;
             }
         }
@@ -267,19 +290,40 @@ class ParcelType
         return self::UNKNOWN;
     }
 
-    /** True when the order has product lines and every one of them is digital. */
-    private static function isDigitalOnly(Order $order): bool
+    /**
+     * Run one resolution step without ever throwing into the order list, API,
+     * order page, packing slip or label creation: exceptions are reported and
+     * anything that is not an int or string counts as "no answer".
+     */
+    private static function safeKey(callable $step): ?string
     {
-        $products = $order->orderProducts
-            ->filter(fn ($line) => $line->product_id)
-            ->map(fn ($line) => $line->product)
-            ->filter();
+        try {
+            $value = $step();
+        } catch (\Throwable $e) {
+            report($e);
 
-        return $products->isNotEmpty()
-            && $products->every(fn ($product) => $product->isDigital());
+            return null;
+        }
+
+        return is_int($value) || is_string($value) ? self::keyFor($value) : null;
     }
 
-    /** package_type of the newest non-return label row over all carrier relations. */
+    /**
+     * True when the order has product lines and every one of them is digital.
+     * A line whose product was deleted counts as physical.
+     */
+    private static function isDigitalOnly(Order $order): bool
+    {
+        $lines = $order->orderProducts->filter(fn ($line) => $line->product_id);
+
+        return $lines->isNotEmpty()
+            && $lines->every(fn ($line) => $line->product && $line->product->isDigital());
+    }
+
+    /**
+     * package_type of the newest non-return label row over all carrier relations.
+     * Filters in PHP so older carrier tables without `is_return` still work.
+     */
     private static function storedPackageType(Order $order): int|string|null
     {
         $latest = null;
@@ -289,24 +333,16 @@ class ParcelType
                 continue;
             }
 
-            $row = $order->relationLoaded($relation)
-                ? $order->getRelation($relation)
-                    ->filter(fn ($label) => ! $label->is_return && filled($label->package_type))
-                    ->sortByDesc(fn ($label) => [$label->created_at?->getTimestamp() ?? 0, $label->getKey()])
-                    ->first()
-                : $order->{$relation}()
-                    ->where(fn ($q) => $q->where('is_return', false)->orWhereNull('is_return'))
-                    ->whereNotNull('package_type')
-                    ->where('package_type', '!=', '')
-                    ->latest('created_at')
-                    ->latest('id')
-                    ->first();
+            $row = collect($order->{$relation})
+                ->filter(fn ($label) => $label instanceof Model && ! $label->getAttribute('is_return') && filled($label->getAttribute('package_type')))
+                ->sortByDesc(fn ($label) => [$label->created_at?->getTimestamp() ?? 0, $label->getKey()])
+                ->first();
 
-            if ($row instanceof Model && (! $latest || $row->created_at > $latest->created_at)) {
+            if ($row && (! $latest || $row->created_at > $latest->created_at)) {
                 $latest = $row;
             }
         }
 
-        return $latest?->package_type;
+        return $latest?->getAttribute('package_type');
     }
 }
