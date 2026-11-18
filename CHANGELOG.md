@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.209.0 - 2026-11-18
 
 ### Added
 - **Bijbestellen (order add-ons).** Een klant kan na een betaalde bestelling nog producten bijbestellen die in dezelfde doos meegaan, zonder verzendkosten. Een bijbestelling is een gewone betaalde order met een eigen factuur, gekoppeld via de nieuwe tabel `dashed__order_add_ons` (`linked` of `separate` met reden); aanbod, mails en kliks staan in `dashed__order_add_on_offers`. Order-relaties `addOnLink()`, `addOnOrders()`, `isAddOnOrder()` en `addOnParent()`.
