@@ -54,7 +54,7 @@ class OrderController extends Controller
         // product-preview en de assignee-badge in de lijst.
         // Plus what ParcelType needs for the verzendvorm per row (no N+1).
         $query = Order::thisSite()->with(array_merge(
-            ['orderProducts:id,order_id,product_id,name,quantity', 'assignedUser:id,name'],
+            ['orderProducts:id,order_id,product_id,name,quantity,sku,hidden_options', 'assignedUser:id,name'],
             ParcelType::eagerLoads(),
         ));
 
