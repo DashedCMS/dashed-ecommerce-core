@@ -374,6 +374,8 @@
                                                                 </table>
                                                             </td>
                                                         </tr>
+                                                        {{-- Bijbestellen: alleen zolang het aanbod open is en de ingang `confirmation_mail` aanstaat. --}}
+                                                        {!! \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddOnOfferBlock::render([], ['order' => $order, 'primaryColor' => Translation::get('primary-color-code', 'emails', '#A0131C')]) !!}
                                                     </table>
                                                 </td>
                                             </tr>

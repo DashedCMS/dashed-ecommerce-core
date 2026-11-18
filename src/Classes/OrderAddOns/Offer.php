@@ -22,9 +22,6 @@ final class Offer
 {
     public const ROUTE = 'dashed.frontend.order-add-ons.show';
 
-    /** Hoelang een link geldig is als het aanbod alleen aan de status gebonden is. */
-    public const LINK_DAYS_WITHOUT_DEADLINE = 30;
-
     public const REASON_DISABLED = 'disabled';
 
     public const REASON_NOT_OWN_ORDER = 'not_own_order';
@@ -157,16 +154,29 @@ final class Offer
     }
 
     /**
-     * De ondertekende link naar de bijbestelpagina. Geldig tot de deadline, of 30 dagen als het aanbod
-     * alleen aan de fulfilmentstatus gebonden is (de pagina meldt zelf als het dicht is).
+     * "tot morgen 14:00, of tot we je bestelling inpakken" als er een deadline is, anders
+     * "tot je bestelling wordt ingepakt": de volledige zinsnede voor teksten als "Dat kan :deadline:.".
+     */
+    public static function untilText(Order $order, ?string $locale = null): string
+    {
+        $text = self::deadlineText($order, $locale);
+
+        if (! self::deadline($order)) {
+            return $text;
+        }
+
+        return str_replace(':deadline:', $text, Translation::get('deadline-or-until-packed', 'bijbestellen', ':deadline:, of tot we je bestelling inpakken'));
+    }
+
+    /**
+     * De ondertekende link naar de bijbestelpagina. Verloopt bewust niet: een gesloten aanbod
+     * toont op de pagina zelf een vriendelijke "dicht"-melding in plaats van een 403.
      *
      * @param  array<string, mixed>  $parameters  extra queryparameters (bijv. `via`)
      */
     public static function url(Order $order, array $parameters = []): string
     {
-        $expiresAt = self::deadline($order) ?? now()->addDays(self::LINK_DAYS_WITHOUT_DEADLINE);
-
-        return URL::temporarySignedRoute(self::ROUTE, $expiresAt, ['order' => $order->id] + $parameters);
+        return URL::signedRoute(self::ROUTE, ['order' => $order->id] + $parameters);
     }
 
     /** De methode "gratis verzending" in de zone van het afleveradres: daarmee kost de bijbestelling € 0 verzending. */

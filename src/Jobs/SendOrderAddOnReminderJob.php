@@ -1,0 +1,30 @@
+<?php
+
+namespace Dashed\DashedEcommerceCore\Jobs;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Queue\SerializesModels;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Dashed\DashedEcommerceCore\Classes\OrderAddOns\ReminderPlanning;
+
+/** Verstuurt de herinneringsmail "Nog iets vergeten?" voor één order; controleert op het moment zelf opnieuw of het nog mag. */
+class SendOrderAddOnReminderJob implements ShouldQueue
+{
+    use Dispatchable;
+    use InteractsWithQueue;
+    use Queueable;
+    use SerializesModels;
+
+    public int $tries = 1;
+
+    public function __construct(public int $orderId)
+    {
+    }
+
+    public function handle(ReminderPlanning $planning): void
+    {
+        $planning->send($this->orderId);
+    }
+}

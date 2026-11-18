@@ -336,7 +336,8 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->emailBlock('order-address', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddressBlock::class)
             ->emailBlock('order-methods', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderMethodsBlock::class)
             ->emailBlock('order-note', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderNoteBlock::class)
-            ->emailBlock('order-track-and-trace', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderTrackAndTraceBlock::class);
+            ->emailBlock('order-track-and-trace', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderTrackAndTraceBlock::class)
+            ->emailBlock('order-add-on-offer', \Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderAddOnOfferBlock::class);
 
         // Twee guards: dashed-core kan ouder zijn en emailBlock nog niet
         // kennen, en een webshop zonder nieuwsbriefmodule heeft deze blokken
@@ -359,6 +360,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
         cms()
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderAddOnReminderMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderConfirmationMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\PreOrderConfirmationMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminPreOrderConfirmationMail::class)
@@ -1731,6 +1733,13 @@ MARKDOWN,
                 ->dailyAt('09:00')
                 ->withoutOverlapping();
 
+            // Bijbestellen: de herinneringsmail "Nog iets vergeten?" (alleen in productie; het commando zelf
+            // weigert daarbuiten ook zonder --force).
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendOrderAddOnRemindersCommand::class)
+                ->everyFiveMinutes()
+                ->when(fn () => app()->environment('production'))
+                ->withoutOverlapping(10);
+
             // Omzetalarm: drie uur duidelijk minder betaalde bestellingen dan
             // normaal is meestal een kapotte checkout of betaalprovider.
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::class)
@@ -1842,6 +1851,7 @@ MARKDOWN,
         Livewire::component('cart.cart-suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartSuggestions::class);
         Livewire::component('cart-recommendations', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\CartRecommendations::class);
         Livewire::component('cart.quick-add-product', \Dashed\DashedEcommerceCore\Livewire\Frontend\Cart\QuickAddProduct::class);
+        Livewire::component('order-add-ons.suggestions', \Dashed\DashedEcommerceCore\Livewire\Frontend\OrderAddOns\Suggestions::class);
         Livewire::component('product-finder-quiz', \Dashed\DashedEcommerceCore\Livewire\Frontend\ProductFinder\ProductFinderQuiz::class);
         Livewire::component('order-withdrawal', \Dashed\DashedEcommerceCore\Livewire\Frontend\OrderWithdrawal::class);
         Livewire::component('order-return-thread', \Dashed\DashedEcommerceCore\Livewire\Frontend\OrderReturnThread::class);
@@ -2872,6 +2882,7 @@ MARKDOWN,
                 'point-of-sale',
                 'google-ads',
                 'order-handled-frontend',
+                'order-add-ons-frontend',
                 'print-queue-api',
                 'export-api',
             ])
@@ -2916,6 +2927,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\CheckRevenueAlarmCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\IssueMissingGiftcardsCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\SendOrderAddOnRemindersCommand::class,
             ]);
 
     }

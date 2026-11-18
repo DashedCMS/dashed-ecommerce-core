@@ -31,4 +31,31 @@ class OrderAddOnOffer extends Model
     {
         return $this->belongsTo(Order::class, 'order_id');
     }
+
+    /** De rij van deze order, aangemaakt met het (genormaliseerde) e-mailadres als hij er nog niet is. */
+    public static function for(Order $order): self
+    {
+        return self::firstOrCreate(
+            ['order_id' => $order->id],
+            ['email' => mb_strtolower(trim((string) $order->email)) ?: null],
+        );
+    }
+
+    /** Eerste keer getoond (bedankpagina); een fout mag de pagina nooit breken. */
+    public static function markShown(Order $order): void
+    {
+        rescue(function () use ($order) {
+            $offer = self::for($order);
+            $offer->shown_at ?: $offer->update(['shown_at' => now()]);
+        }, null, false);
+    }
+
+    /** Een klik op de ondertekende link: eerste klikmoment en het aantal kliks. */
+    public static function countClick(Order $order): void
+    {
+        rescue(function () use ($order) {
+            $offer = self::for($order);
+            $offer->update(['clicked_at' => $offer->clicked_at ?: now(), 'clicks' => (int) $offer->clicks + 1]);
+        }, null, false);
+    }
 }

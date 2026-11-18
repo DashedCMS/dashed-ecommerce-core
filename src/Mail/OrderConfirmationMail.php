@@ -47,7 +47,7 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
         return [
             'heading', 'text', 'button', 'image', 'divider',
             'order-details', 'order-summary', 'order-address',
-            'order-methods', 'order-note',
+            'order-methods', 'order-note', 'order-add-on-offer',
         ];
     }
 
@@ -79,6 +79,10 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
                     'background' => ':primaryColor:',
                     'color' => '#ffffff',
                 ],
+            ],
+            [
+                'type' => 'order-add-on-offer',
+                'data' => [],
             ],
             [
                 'type' => 'divider',
