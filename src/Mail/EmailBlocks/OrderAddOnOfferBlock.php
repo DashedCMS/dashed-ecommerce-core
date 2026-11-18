@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Mail\EmailBlocks;
 
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Builder\Block;
-use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedCore\Mail\EmailBlocks\EmailBlock;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\EntryPoints;
 
 /**
