@@ -163,9 +163,11 @@ class OpenOrderProductController extends Controller
             ->get();
 
         $products = $this->productMap($rows->pluck('product_id')->all());
+        $deadlines = $this->deadlineMap($rows->pluck('order_id')->all());
 
-        $data = $rows->map(function ($r) use ($products): array {
+        $data = $rows->map(function ($r) use ($products, $deadlines): array {
             $p = $products[$r->product_id] ?? null;
+            $d = $deadlines[$r->order_id] ?? [];
 
             return [
                 'id' => (int) $r->id,
@@ -183,6 +185,13 @@ class OpenOrderProductController extends Controller
                 'fulfillment_status' => $r->fulfillment_status,
                 'customer_name' => trim((string) ($r->first_name . ' ' . $r->last_name)) ?: $r->email,
                 'created_at' => $r->created_at ? (string) $r->created_at : null,
+                // Verzend-/leverdeadline, zodat de app dezelfde deadline-chip toont
+                // als in de andere orderlijsten (alleen in de ongegroepeerde view).
+                'ship_by_date' => $d['ship_by_date'] ?? null,
+                'deliver_by_date' => $d['deliver_by_date'] ?? null,
+                'deadline_source' => $d['deadline_source'] ?? null,
+                'deadline_label' => $d['deadline_label'] ?? null,
+                'deadline_urgency' => $d['deadline_urgency'] ?? null,
             ];
         })->all();
 
@@ -272,6 +281,34 @@ class OpenOrderProductController extends Controller
             ->implode(' | ');
 
         return trim($line) !== ':' && $line !== '' ? $line : null;
+    }
+
+    /**
+     * Verzend-/leverdeadline per order (zelfde velden als OrderSummaryResource),
+     * zodat de open-orderregels dezelfde deadline-chip kunnen tonen. Eén query
+     * voor alle orders op de pagina.
+     *
+     * @param array<int, int|string> $orderIds
+     * @return array<int, array<string, mixed>>
+     */
+    private function deadlineMap(array $orderIds): array
+    {
+        $ids = array_values(array_filter(array_unique($orderIds)));
+        if (! $ids) {
+            return [];
+        }
+
+        return \Dashed\DashedEcommerceCore\Models\Order::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->mapWithKeys(fn ($order): array => [$order->id => [
+                'ship_by_date' => $order->ship_by_date?->toDateString(),
+                'deliver_by_date' => $order->deliver_by_date?->toDateString(),
+                'deadline_source' => $order->deadline_source,
+                'deadline_label' => $order->deadlineLabel(),
+                'deadline_urgency' => $order->deadlineUrgency(),
+            ]])
+            ->all();
     }
 
     /**

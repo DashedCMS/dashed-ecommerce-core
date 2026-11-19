@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.211.0 - 2026-11-19
+
+### Added
+- Mobiele API: de open-orderregels (`GET open-order-products`, ongegroepeerde weergave) sturen nu per regel de verzend-/leverdeadline mee (`ship_by_date`, `deliver_by_date`, `deadline_source`, `deadline_label`, `deadline_urgency`), zodat de app in het tabblad Openstaande bestellingen dezelfde deadline-chip kan tonen als in de andere orderlijsten. Een extra query per pagina; de gegroepeerde weergaven blijven ongewijzigd.
+
 ## v4.210.0 - 2026-11-18
 
 ### Added
