@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Reports;
 
-use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\DB;
+use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ReturnReason;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;

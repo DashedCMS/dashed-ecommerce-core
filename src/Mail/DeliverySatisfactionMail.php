@@ -9,8 +9,8 @@ use Illuminate\Mail\Mailables\Envelope;
 use Dashed\DashedCore\Mail\MailBranding;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Dashed\DashedCore\Satisfaction\Satisfaction;
 use Dashed\DashedCore\Models\SatisfactionRating;
+use Dashed\DashedCore\Satisfaction\Satisfaction;
 
 /**
  * De vraag na levering: een korte tekst en vijf klikbare scores, in de

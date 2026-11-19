@@ -2,8 +2,8 @@
 
 namespace Dashed\DashedEcommerceCore\Listeners\Referrals;
 
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Services\Referrals\ReferralProgram;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 
 /**
  * Legt een verwijzing vast zodra een bestelling met een verwijscode betaald

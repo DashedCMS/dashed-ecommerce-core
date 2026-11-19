@@ -5,13 +5,13 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
-use Illuminate\Support\HtmlString;
 use Filament\Actions\DeleteAction;
+use Illuminate\Support\HtmlString;
 use Dashed\DashedCore\Classes\Sites;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ToggleColumn;
@@ -19,8 +19,8 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Dashed\DashedEcommerceCore\Models\MetaAudience;
 use Dashed\DashedEcommerceCore\Jobs\SyncMetaAudienceJob;
-use Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaAudienceSettingsPage;
 use Dashed\DashedEcommerceCore\Services\Meta\Audiences\MetaAudienceSettings;
+use Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaAudienceSettingsPage;
 use Dashed\DashedEcommerceCore\Filament\Resources\MetaAudienceResource\Pages\ListMetaAudiences;
 
 /**

@@ -2,11 +2,11 @@
 
 namespace Dashed\DashedEcommerceCore\Reports;
 
-use Dashed\DashedCore\Reports\ReportSource;
 use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedCore\Reports\ReportSource;
 use Dashed\DashedCore\Reports\ReportMeasure;
-use Dashed\DashedCore\Reports\ReportGrouping;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedCore\Reports\ReportGrouping;
 
 /**
  * Klanten, gemeten aan hun eerste betaalde bestelling: per klant (op

@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Dashed\DashedEcommerceCore\Models\Referral;
-use Dashed\DashedEcommerceCore\Policies\ReferralPolicy;
 use Dashed\DashedEcommerceCore\Mail\ReferralRewardMail;
+use Dashed\DashedEcommerceCore\Policies\ReferralPolicy;
 use Dashed\DashedEcommerceCore\Commands\ProcessReferralsCommand;
 use Dashed\DashedEcommerceCore\Filament\Pages\CustomerProfilePage;
-use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
 use Dashed\DashedEcommerceCore\Mail\EmailBlocks\OrderReorderBlock;
-use Dashed\DashedEcommerceCore\Mail\EmailBlocks\ReferralInviteBlock;
 use Dashed\DashedEcommerceCore\Services\Referrals\ReferralProgram;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderMarkedAsPaidEvent;
+use Dashed\DashedEcommerceCore\Mail\EmailBlocks\ReferralInviteBlock;
 use Dashed\DashedEcommerceCore\Listeners\Referrals\RecordReferralListener;
 
 /**

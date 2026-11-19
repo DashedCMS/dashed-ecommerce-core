@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Dashed\DashedEcommerceCore\Helpers;
 
-use Illuminate\Support\Facades\Cache;
 use Dashed\DashedCore\Classes\Sites;
+use Illuminate\Support\Facades\Cache;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;

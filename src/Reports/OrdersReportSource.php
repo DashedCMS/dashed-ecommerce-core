@@ -3,12 +3,12 @@
 namespace Dashed\DashedEcommerceCore\Reports;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Reports\ReportFilter;
 use Dashed\DashedCore\Reports\ReportSource;
-use Illuminate\Database\Eloquent\Builder;
 use Dashed\DashedCore\Reports\ReportMeasure;
-use Dashed\DashedCore\Reports\ReportGrouping;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedCore\Reports\ReportGrouping;
 use Dashed\DashedEcommerceCore\Classes\OrderStatistics;
 
 /**

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\PersonalData;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Facades\Schema;
 use Dashed\DashedCore\PersonalData\Anonymized;
 use Dashed\DashedCore\PersonalData\PersonalDataExport;
 use Dashed\DashedCore\PersonalData\PersonalDataFinding;

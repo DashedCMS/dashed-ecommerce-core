@@ -10,8 +10,8 @@ use Dashed\DashedCore\Classes\Sites;
 use Dashed\DashedCore\Classes\RateLimits;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\ProductQuestion;
-use Dashed\DashedEcommerceCore\Services\ProductReviews\ProductQuestionService;
 use Dashed\DashedEcommerceCore\Services\ProductReviews\ProductReviewSettings;
+use Dashed\DashedEcommerceCore\Services\ProductReviews\ProductQuestionService;
 
 /**
  * Vragen en antwoorden op de productpagina, met een formulier om een vraag

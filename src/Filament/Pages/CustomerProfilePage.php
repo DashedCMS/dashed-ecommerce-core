@@ -4,8 +4,8 @@ namespace Dashed\DashedEcommerceCore\Filament\Pages;
 
 use UnitEnum;
 use BackedEnum;
-use Livewire\Attributes\Url;
 use Filament\Pages\Page;
+use Livewire\Attributes\Url;
 use Filament\Notifications\Notification;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\CustomerNote;

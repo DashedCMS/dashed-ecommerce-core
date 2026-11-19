@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Services\ProductReviews;
 
 use Filament\Actions\Action;
-use Dashed\DashedCore\Classes\Mails;
 use Dashed\DashedCore\Models\User;
+use Dashed\DashedCore\Classes\Mails;
 use Illuminate\Support\Facades\Mail;
 use Filament\Notifications\Notification;
 use Dashed\DashedCore\Mail\NotificationMail;
