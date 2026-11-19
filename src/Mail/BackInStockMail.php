@@ -20,7 +20,7 @@ class BackInStockMail extends Mailable implements RegistersEmailTemplate, Should
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public Product $product, public string $recipient)
+    public function __construct(public Product $product, public string $recipient, public ?string $customerLocale = null)
     {
     }
 
@@ -73,8 +73,10 @@ class BackInStockMail extends Mailable implements RegistersEmailTemplate, Should
 
     public function build()
     {
-        $name = is_array($this->product->name) ? reset($this->product->name) : (string) $this->product->name;
-        $url = rescue(fn () => $this->product->getUrl(), '#', false);
+        // In de taal waarin de klant zich aanmeldde, niet in de standaardtaal.
+        $locale = $this->customerLocale ?: app()->getLocale();
+        $name = (string) ($this->product->getTranslation('name', $locale, true) ?: $this->product->name);
+        $url = rescue(fn () => $this->product->getUrl($locale), '#', false);
 
         $context = [
             'product' => $this->product,
@@ -83,16 +85,17 @@ class BackInStockMail extends Mailable implements RegistersEmailTemplate, Should
             'siteName' => Customsetting::get('site_name'),
         ];
 
-        $templateHtml = $this->renderFromTemplate($context);
+        $templateHtml = $this->renderFromTemplate($context, $locale);
 
         if ($templateHtml !== null) {
             $subject = $this->templateSubject(
                 Translation::get('back-in-stock-email-subject', 'products', ':productName: is weer op voorraad', 'text', [
                     'productName' => $name,
                 ]),
-                $context
+                $context,
+                $locale
             );
-            [$fromEmail, $fromName] = $this->templateFrom(Customsetting::get('site_from_email'), Customsetting::get('site_name'));
+            [$fromEmail, $fromName] = $this->templateFrom(Customsetting::get('site_from_email'), Customsetting::get('site_name'), $locale);
 
             return $this->to($this->recipient)
                 ->html($templateHtml)

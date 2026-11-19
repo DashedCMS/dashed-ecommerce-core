@@ -430,6 +430,8 @@ trait ProductCartActions
         // Skipping when there are no FAQs keeps the head clean.
         if ($this->product) {
             $faqJsonLd = $this->product->buildFaqJsonLd();
+            // Beantwoorde productvragen in dezelfde FAQPage (nooit een tweede).
+            $faqJsonLd = \Dashed\DashedEcommerceCore\Services\ProductReviews\ProductQuestionFaq::merge($this->product, $faqJsonLd);
             if ($faqJsonLd) {
                 seo()->metaData('customStructuredData', array_merge(
                     (array) seo()->metaData('customStructuredData'),
@@ -520,6 +522,9 @@ trait ProductCartActions
 
         if (! $isMount) {
             $this->dispatch('productUpdated', [
+                // Voor componenten naast de productpagina die bij de gekozen
+                // variant horen, zoals de terug-op-voorraad-melding.
+                'productId' => $this->product?->id,
                 'extras' => $this->extras,
                 'name' => $this->name,
                 'images' => $this->images,

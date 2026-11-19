@@ -120,6 +120,9 @@ class Order extends Model
 
     protected $table = 'dashed__orders';
 
+    /** De statussen die als omzet tellen; scopeIsPaid() en de rapportbronnen lezen deze. */
+    public const PAID_STATUSES = ['paid', 'waiting_for_confirmation', 'partially_paid'];
+
     protected $casts = [
         'vat_percentages' => 'array',
         'prices_ex_vat' => 'boolean',
@@ -926,7 +929,7 @@ class Order extends Model
 
     public function scopeIsPaid($query)
     {
-        return $query->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid']);
+        return $query->whereIn('status', self::PAID_STATUSES);
     }
 
     /**

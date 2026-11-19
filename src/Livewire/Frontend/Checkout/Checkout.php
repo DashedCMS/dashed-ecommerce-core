@@ -1169,6 +1169,25 @@ class Checkout extends Component
             }
         }
 
+        // Kortingscodes die pas met het e-mailadres te beoordelen zijn (een
+        // verwijscode geldt alleen voor de eerste bestelling van een ander dan
+        // de verwijzer). Een guard geeft een melding terug of null; bij een
+        // melding gaat de code eruit en ziet de klant het nieuwe totaal.
+        foreach (ecommerce()->builder('checkoutDiscountGuards') as $guard) {
+            $refusal = is_callable($guard) ? $guard(cartHelper()->getDiscountCode(), $this->email, auth()->id()) : null;
+
+            if ($refusal) {
+                cartHelper()->applyDiscountCode(null);
+                $this->discountCode = '';
+                $this->fillPrices();
+
+                Notification::make()->danger()->title($refusal)->send();
+                $this->recordAbandonment('discount_refused');
+
+                return $this->dispatch('showAlert', 'error', $refusal);
+            }
+        }
+
         $cartItems = cartHelper()->getCartItems();
 
         // getCartItems() geeft een Collection, en een lege Collection is

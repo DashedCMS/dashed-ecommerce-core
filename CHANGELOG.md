@@ -2,6 +2,18 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.214.0 - 2026-11-19
+
+### Added
+- Eigen productreviews met een verzoekmail na levering, moderatie, en `aggregateRating` in het productschema; productvragen met antwoordmail en FAQ-schema. Standaard uit.
+- Opnieuw bestellen (account en mail), een klantprofiel (klant 360°) met secties per pakket, en een verwijsprogramma met kortingscodes. Standaard uit.
+- Doelgroepen naar Meta (Custom Audiences) uit nieuwsbrieflijsten, segmenten en prijsgroepen. Standaard uit.
+- Rapportbronnen (bestellingen, orderregels, klanten, retouren), de tevredenheidsvraag na levering, ingeplande en bulkwijzigingen voor producten, en AVG-providers.
+
+### Fixed
+- Terug op voorraad: taal van de klant, geen dubbele mails, niet-publieke producten wachten, varianten volgen, en opruimen via de bewaartermijn.
+- Gratis-verzendbalk: verborgen zonder gratis verzending, drempel per site, vergelijking met de orderwaarde zoals de checkout.
+
 ## v4.213.0 - 2026-11-19
 
 ### Added

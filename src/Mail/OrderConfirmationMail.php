@@ -39,7 +39,7 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
 
     public static function availableVariables(): array
     {
-        return ['orderId', 'customerFirstName', 'customerLastName', 'totalFormatted', 'siteName', 'orderUrl', 'dueDate', 'paymentUrl', 'primaryColor'];
+        return ['orderId', 'customerFirstName', 'customerLastName', 'totalFormatted', 'siteName', 'orderUrl', 'dueDate', 'paymentUrl', 'primaryColor', 'reorderUrl'];
     }
 
     public static function availableBlockKeys(): array
@@ -47,7 +47,7 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
         return [
             'heading', 'text', 'button', 'image', 'divider',
             'order-details', 'order-summary', 'order-address',
-            'order-methods', 'order-note', 'order-add-on-offer',
+            'order-methods', 'order-note', 'order-add-on-offer', 'order-reorder',
         ];
     }
 
@@ -163,6 +163,7 @@ class OrderConfirmationMail extends Mailable implements RegistersEmailTemplate
             'orderUrl' => method_exists($this->order, 'getUrl') ? $this->order->getUrl() : '#',
             'dueDate' => $this->order->payment_due_at?->format('d-m-Y') ?? '',
             'paymentUrl' => $this->order->payment_due_at ? $this->order->paymentUrl() : '',
+            'reorderUrl' => \Dashed\DashedEcommerceCore\Services\Reorder\Reorder::url($this->order),
         ];
 
         $templateHtml = $this->renderFromTemplate($context);

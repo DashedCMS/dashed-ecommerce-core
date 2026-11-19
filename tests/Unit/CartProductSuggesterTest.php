@@ -45,11 +45,11 @@ function makeSuggesterProduct(string $name, float $price, ?ProductGroup $group =
 
 function setFreeShippingThreshold(float $minimum): void
 {
-    Cache::forget('free-shipping-method');
+    \Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper::flush();
 
     DB::table('dashed__shipping_zones')->insertOrIgnore([
         'id' => 1,
-        'site_id' => 'default',
+        'site_id' => \Dashed\DashedCore\Classes\Sites::getActive(),
         'name' => json_encode(['nl' => 'Test zone']),
         'zones' => json_encode(['NL']),
         'created_at' => now(),
@@ -70,7 +70,7 @@ function setFreeShippingThreshold(float $minimum): void
 }
 
 beforeEach(function () {
-    Cache::forget('free-shipping-method');
+    \Dashed\DashedEcommerceCore\Helpers\FreeShippingHelper::flush();
     $this->suggester = new CartProductSuggester();
 });
 

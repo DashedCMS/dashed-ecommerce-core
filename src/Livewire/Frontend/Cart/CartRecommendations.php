@@ -59,7 +59,7 @@ class CartRecommendations extends Component
         $cartTotal = (float) cartHelper()->getTotal();
 
         try {
-            $this->progress = app(FreeShippingHelper::class)->progress($cartTotal);
+            $this->progress = app(FreeShippingHelper::class)->progressForCart();
         } catch (\Throwable) {
             $this->progress = ['gap' => 0.0, 'percentage' => 100, 'reached' => true];
         }

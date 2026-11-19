@@ -114,6 +114,7 @@ class DashedEcommerceCorePlugin implements Plugin
                 ReturnSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage::class,
                 CustomerMatchSettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaAudienceSettingsPage::class,
                 Gs1SettingsPage::class,
                 PrintQueueSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\RecommendationsDebugPage::class,
@@ -127,6 +128,9 @@ class DashedEcommerceCorePlugin implements Plugin
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderAddOnSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\OnAccountSettingsPage::class,
                 \Dashed\DashedEcommerceCore\Filament\Pages\Settings\QuoteSettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Settings\ProductReviewSettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerLoyaltySettingsPage::class,
+                \Dashed\DashedEcommerceCore\Filament\Pages\CustomerProfilePage::class,
             ])
             ->widgets([
                 MonthlyRevenueAndReturnLineChartStats::class,
@@ -147,6 +151,7 @@ class DashedEcommerceCorePlugin implements Plugin
             ])
             ->resources([
                 \Dashed\DashedEcommerceCore\Filament\Resources\MetaCapiEventResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\MetaAudienceResource::class,
                 \Dashed\DashedEcommerceCore\Filament\Resources\ApiClientResource::class,
                 PaymentMethodResource::class,
                 OrderLogTemplateResource::class,
@@ -183,6 +188,9 @@ class DashedEcommerceCorePlugin implements Plugin
                 PrinterResource::class,
                 PrintJobResource::class,
                 \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\ProductReviewResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\ProductQuestionResource::class,
+                \Dashed\DashedEcommerceCore\Filament\Resources\ReferralResource::class,
             ]);
     }
 

@@ -31,6 +31,7 @@ class OrderVariableReplacer
             ':fulfillmentStatusName:',
             ':trackingCodes:',
             ':trackingLinks:',
+            ':reorderUrl:',
         ];
     }
 
@@ -63,6 +64,8 @@ class OrderVariableReplacer
         ->replace(':fulfillmentStatusName:', Orders::getFulfillmentStatusses()[$order->fulfillment_status] ?? (string) $order->fulfillment_status)
         ->replace(':trackingCodes:', self::trackingCodes($order))
         ->replace(':trackingLinks:', self::trackingLinks($order))
+        // Leeg als "Bestel opnieuw" uit staat of de order niet te herhalen is.
+        ->replace(':reorderUrl:', \Dashed\DashedEcommerceCore\Services\Reorder\Reorder::url($order))
         ->replace(':name:', $e((string) $order->name));
 
         return $message;

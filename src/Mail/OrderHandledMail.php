@@ -99,6 +99,8 @@ class OrderHandledMail extends Mailable
             ':discountCode:' => $discountCode,
             ':discountValue:' => $discountValue,
             ':reviewUrl:' => $reviewUrl,
+            // Leeg als "Bestel opnieuw" uit staat; dan valt een knop ermee weg.
+            ':reorderUrl:' => \Dashed\DashedEcommerceCore\Services\Reorder\Reorder::url($this->order),
         ];
 
         $subject = (string) $this->flowStep->getTranslation('subject', $locale, false);

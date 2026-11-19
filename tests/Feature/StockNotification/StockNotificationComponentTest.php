@@ -127,3 +127,31 @@ it('toont een successtaat met bevestigingstekst', function () {
         ->call('submit')
         ->assertSee('weer op voorraad');
 });
+
+it('volgt de variant die de klant op de productpagina kiest', function () {
+    $eerste = stockNotificationProduct();
+    $tweede = Product::withoutEvents(fn () => Product::create([
+        'name' => ['en' => 'Maat L'],
+        'slug' => ['en' => 'maat-l'],
+        'site_ids' => ['default'],
+        'product_group_id' => $eerste->product_group_id,
+        'use_stock' => true,
+        'stock' => 0,
+        'in_stock' => false,
+        'stock_status' => 'out_of_stock',
+        'price' => 10.00,
+        'current_price' => 10.00,
+    ]));
+    $vreemd = stockNotificationProduct(['slug' => ['en' => 'ander']]);
+
+    $component = Livewire::test(StockNotificationComponent::class, ['product' => $eerste])
+        ->dispatch('productUpdated', ['productId' => $vreemd->id]);
+    expect($component->instance()->product->id)->toBe($eerste->id);
+
+    $component->dispatch('productUpdated', ['productId' => $tweede->id])
+        ->set('email', 'klant@example.com')
+        ->call('submit');
+
+    expect(StockNotification::sole()->product_id)->toBe($tweede->id)
+        ->and(StockNotification::sole()->locale)->toBe(app()->getLocale());
+});

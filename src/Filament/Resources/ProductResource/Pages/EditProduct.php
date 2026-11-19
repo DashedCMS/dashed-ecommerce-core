@@ -188,6 +188,11 @@ class EditProduct extends EditRecord
             $buttons[] = AnalyzeSeoAction::make();
         }
         $buttons[] = self::translateAction();
+
+        if (class_exists(\Dashed\DashedCore\Filament\Actions\ScheduleChangeAction::class)) {
+            $buttons[] = \Dashed\DashedCore\Filament\Actions\ScheduleChangeAction::make();
+        }
+
         $buttons[] = LocaleSwitcher::make();
         $buttons[] = DeleteAction::make();
 

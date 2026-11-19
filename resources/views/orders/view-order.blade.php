@@ -180,6 +180,11 @@
 
             <div class="dvo-col">
                 @livewire('order-customer-information-block-list', ['order' => $record])
+                @if(($record->user_id || $record->email) && \Dashed\DashedEcommerceCore\Filament\Pages\CustomerProfilePage::canAccess())
+                    <div class="dvo-actions">
+                        <x-filament::link :href="\Dashed\DashedEcommerceCore\Filament\Pages\CustomerProfilePage::urlForOrder($record)" icon="heroicon-o-identification">{{ __('Klantprofiel bekijken') }}</x-filament::link>
+                    </div>
+                @endif
 
                 <x-filament::section>
                     <x-slot name="heading">{{ __('Adressen') }}</x-slot>

@@ -167,7 +167,9 @@ class CartSuggestions extends Component
         cartHelper()->initialize();
         $cartItems = collect(cartHelper()->getCartItems());
         $cartProductIds = $cartItems->pluck('id')->filter()->unique()->values()->all();
-        $cartTotal = (float) cartHelper()->getTotal();
+        // De orderwaarde zoals de checkout hem toetst voor gratis verzending,
+        // zodat suggesties en balk hetzelfde gat zien als de verzendmethodes.
+        $cartTotal = app(FreeShippingHelper::class)->cartOrderValue();
 
         $limit = $this->limit ?? (int) Customsetting::get(
             'cart_suggestions_limit_'.$this->view,

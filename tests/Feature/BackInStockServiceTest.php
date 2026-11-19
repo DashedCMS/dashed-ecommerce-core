@@ -123,3 +123,39 @@ it('het command verstuurt de wachtende meldingen en markeert ze', function () {
     Mail::assertQueued(BackInStockMail::class);
     expect(StockNotification::where('product_id', $product->id)->first()->notified_at)->not->toBeNull();
 });
+
+it('mailt in de taal van de aanmelding', function () {
+    Mail::fake();
+
+    $product = makeBackInStockProduct(['stock' => 5, 'total_stock' => 5, 'in_stock' => true, 'stock_status' => 'in_stock']);
+    app(BackInStockService::class)->subscribe('main', $product->id, 'klant@example.com', 'en');
+
+    expect(StockNotification::sole()->locale)->toBe('en');
+
+    app(BackInStockService::class)->notifyPending('main');
+
+    Mail::assertQueued(BackInStockMail::class, fn (BackInStockMail $mail) => $mail->locale === 'en' && $mail->customerLocale === 'en');
+});
+
+it('stuurt één mail per adres en product, ook bij dubbele aanmeldingen', function () {
+    Mail::fake();
+
+    $product = makeBackInStockProduct(['stock' => 5, 'total_stock' => 5, 'in_stock' => true, 'stock_status' => 'in_stock']);
+    StockNotification::create(['site_id' => 'main', 'product_id' => $product->id, 'email' => 'klant@example.com']);
+    StockNotification::create(['site_id' => 'main', 'product_id' => $product->id, 'email' => 'klant@example.com']);
+
+    expect(app(BackInStockService::class)->notifyPending('main'))->toBe(1);
+    Mail::assertQueued(BackInStockMail::class, 1);
+    expect(StockNotification::pending()->count())->toBe(0);
+});
+
+it('laat de aanvraag wachten zolang het product niet publiek is', function () {
+    Mail::fake();
+
+    $product = makeBackInStockProduct(['stock' => 5, 'total_stock' => 5, 'in_stock' => true, 'stock_status' => 'in_stock', 'public' => false]);
+    app(BackInStockService::class)->subscribe('main', $product->id, 'klant@example.com');
+
+    expect(app(BackInStockService::class)->notifyPending('main'))->toBe(0);
+    Mail::assertNothingQueued();
+    expect(StockNotification::pending()->count())->toBe(1);
+});

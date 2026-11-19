@@ -129,6 +129,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
 
     public function bootingPackage()
     {
+        // Opnieuw bestellen, verwijsprogramma en klantprofiel.
+        \Dashed\DashedEcommerceCore\Support\CustomerLoyalty::boot();
+
         // De productoverzichtspagina levert de SearchAction van het WebSite-schema (dashed-core).
         // Winkelwagen, afrekenen, bestellingen en verlanglijst horen nooit in de
         // index; gelezen door RobotsDecision in dashed-core.
@@ -1659,6 +1662,13 @@ MARKDOWN,
             // Oudere dashed-core zonder ScheduleSpread: de taken blijven op hun oude tijd.
             $spreadAt = fn (string $time, string $task): string => class_exists(\Dashed\DashedCore\Classes\ScheduleSpread::class) ? \Dashed\DashedCore\Classes\ScheduleSpread::at($time, $task) : $time;
             $spreadMinute = fn (string $task): int => class_exists(\Dashed\DashedCore\Classes\ScheduleSpread::class) ? \Dashed\DashedCore\Classes\ScheduleSpread::minute($task) : 0;
+            // Tevredenheidsvraag na levering (dashed-core >= deze release).
+            if (class_exists(\Dashed\DashedCore\Satisfaction\Satisfaction::class)) {
+                $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendDeliverySatisfactionCommand::class)
+                    ->dailyAt($spreadAt('10:00', 'send-delivery-satisfaction'))
+                    ->when(fn () => \Dashed\DashedEcommerceCore\Commands\SendDeliverySatisfactionCommand::hasWork())
+                    ->withoutOverlapping();
+            }
             $schedule->command(CheckPastDuePreorderDatesForProductsWithoutStockCommand::class)
                 ->daily();
             $schedule->job(new \Dashed\DashedEcommerceCore\Jobs\StoreProductCompletenessJob())
@@ -1756,6 +1766,14 @@ MARKDOWN,
                 ->withoutOverlapping();
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class)
                 ->dailyAt('09:00')
+                ->withoutOverlapping();
+            // Doelgroepen naar Meta: elke nacht het verschil, op zondag alles vervangen.
+            // Het commando slaat sites over waar de koppeling uit staat.
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SyncMetaAudiencesCommand::class)
+                ->dailyAt($spreadAt('04:15', 'meta-audiences'))
+                ->withoutOverlapping();
+            $schedule->command(\Dashed\DashedEcommerceCore\Commands\SyncMetaAudiencesCommand::class, ['--full'])
+                ->weeklyOn(0, $spreadAt('05:15', 'meta-audiences-full'))
                 ->withoutOverlapping();
         });
 
@@ -2383,6 +2401,16 @@ MARKDOWN,
 
         self::registreerBewaartermijnen();
         self::registreerVertaalbaren();
+        self::registreerWijzigbareVelden();
+
+        // Eigen productreviews en productvragen (standaard uit per site).
+        \Dashed\DashedEcommerceCore\Services\ProductReviews\ProductReviewsModule::boot();
+
+        // AVG-verzoeken (inzage en verwijdering). Guard: een oudere
+        // dashed-core kent de registry nog niet.
+        if (method_exists(cms(), 'registerPersonalDataProvider')) {
+            cms()->registerPersonalDataProvider(\Dashed\DashedEcommerceCore\PersonalData\EcommercePersonalDataProvider::class);
+        }
 
         // Volledigheidsregels voor de balk op de bewerkpagina van een product
         // (zie ProductCompleteness en Completeness in dashed-core).
@@ -2393,6 +2421,16 @@ MARKDOWN,
 
         // Webshoppunten op de livegang-checklist van dashed-core.
         \Dashed\DashedEcommerceCore\Classes\LaunchChecklistItems::register();
+
+        // Bronnen voor de rapportbouwer van dashed-core.
+        if (class_exists(\Dashed\DashedCore\Reports\ReportSource::class)) {
+            cms()->builder('reportSources', [
+                \Dashed\DashedEcommerceCore\Reports\OrdersReportSource::class,
+                \Dashed\DashedEcommerceCore\Reports\OrderLinesReportSource::class,
+                \Dashed\DashedEcommerceCore\Reports\CustomersReportSource::class,
+                \Dashed\DashedEcommerceCore\Reports\ReturnsReportSource::class,
+            ]);
+        }
 
         // Beveiligingsmaatregelen uit het playbook (september 2026): bewaking
         // van geldvelden, betaalmethodes en handmatige betaalmarkeringen, en
@@ -2451,6 +2489,42 @@ MARKDOWN,
      * worden. Staat met dezelfde reden op de uitsluitlijst in
      * TranslatableRegistryGuardTest.
      */
+    /**
+     * Velden van een product die je kunt inplannen (Wijziging inplannen) en
+     * in bulk bewerken (Bewerken op de productlijst). Prijzen gaan via
+     * price en new_price: current_price en discount_price rekent
+     * calculatePrices() daar zelf uit, via UpdateProductInformationJob uit de
+     * saved-hook. Prijsgroepen en prijzen per klant staan los daarvan en
+     * veranderen hier niet mee. Guarded op class_exists: dashed-core kent
+     * ChangeFields pas sinds deze versie.
+     */
+    public static function registreerWijzigbareVelden(): void
+    {
+        if (! class_exists(\Dashed\DashedCore\Classes\Changes\ChangeFields::class)) {
+            return;
+        }
+
+        $field = fn (string $key) => \Dashed\DashedCore\Classes\Changes\ChangeField::make($key);
+
+        \Dashed\DashedCore\Classes\Changes\ChangeFields::register(Product::class, fn () => [
+            $field('price')->label(__('Prijs'))->number(0.01),
+            $field('new_price')->label(__('Vorige prijs (doorgestreept)'))->number(0)->nullable()
+                ->helperText(__('Kies "Overnemen van Prijs" en verlaag de prijs met een percentage voor een actie met doorgestreepte prijs.')),
+            $field('stock')->label(__('Voorraad'))->integer(),
+            $field('use_stock')->label(__('Voorraad bijhouden'))->boolean(),
+            $field('stock_status')->label(__('Voorraadstatus'))->select(fn () => [
+                'in_stock' => __('Op voorraad'),
+                'out_of_stock' => __('Niet op voorraad'),
+            ]),
+            $field('public')->label(__('Openbaar'))->boolean(),
+            $field('productCategories')->label(__('Categorieën'))
+                ->relation('productCategories', fn () => ProductCategory::query()->get()->mapWithKeys(fn ($category) => [$category->id => (string) $category->name])->all())
+                ->helperText(__('Let op: staat bij de productgroep "Synchroniseer categorieën naar producten" aan (de standaard), dan zet de groep de categorieën van het product meteen weer gelijk aan die van de groep.')),
+            $field('shippingClasses')->label(__('Verzendklassen'))
+                ->relation('shippingClasses', fn () => \Dashed\DashedEcommerceCore\Models\ShippingClass::query()->get()->mapWithKeys(fn ($class) => [$class->id => (string) $class->name])->all()),
+        ], fn () => __('Product'));
+    }
+
     public static function registreerVertaalbaren(): void
     {
         if (! class_exists(\Dashed\DashedTranslations\Classes\Translatables\TranslatableRegistry::class)) {
@@ -2565,6 +2639,28 @@ MARKDOWN,
                 )
         );
 
+        // Terug-op-voorraad: een verstuurde melding heeft na drie maanden geen
+        // doel meer, een aanvraag die na een jaar nog wacht is een product dat
+        // niet terugkomt.
+        cms()->registerRetention(
+            Retention::make('stock_notifications')
+                ->label(__('Terug-op-voorraad-meldingen'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__stock_notifications')
+                ->termijn(
+                    Termijn::make('stock_notifications_sent', 90, 'notified_at')
+                        ->label(__('Verstuurde terug-op-voorraad-meldingen bewaren (dagen)'))
+                        ->uitleg(__('Gerekend vanaf het versturen. Standaard: 90 dagen.'))
+                        ->filter(fn ($query) => $query->whereNotNull('notified_at'))
+                )
+                ->termijn(
+                    Termijn::make('stock_notifications_pending', 365, 'created_at')
+                        ->label(__('Wachtende terug-op-voorraad-aanvragen bewaren (dagen)'))
+                        ->uitleg(__('Aanvragen voor een product dat in die tijd niet terugkwam. Standaard: 365 dagen.'))
+                        ->filter(fn ($query) => $query->whereNull('notified_at'))
+                )
+        );
+
         cms()->registerRetention(
             Retention::make('order_tracking')
                 ->label(__('Klantsignalen bij bestellingen'))
@@ -2647,6 +2743,18 @@ MARKDOWN,
                     Termijn::make('gs1_runs', 365, 'created_at')
                         ->label(__('GS1-runs bewaren (dagen)'))
                         ->uitleg(__('Verwerkte GS1-bestanden met hun toewijzingen. Standaard: 365 dagen.'))
+                )
+        );
+
+        cms()->registerRetention(
+            Retention::make('meta_audience_logs')
+                ->label(__('Logboek doelgroepen naar Meta'))
+                ->pakket('dashed-ecommerce-core', __('Webshop'))
+                ->tabel('dashed__meta_audience_logs')
+                ->termijn(
+                    Termijn::make('meta_audience_logs', 90, 'created_at')
+                        ->label(__('Logboek doelgroepen naar Meta bewaren (dagen)'))
+                        ->uitleg(__('Elke synchronisatie van een doelgroep met Meta, geslaagd of niet. Standaard: 90 dagen.'))
                 )
         );
     }
@@ -2864,6 +2972,7 @@ MARKDOWN,
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\ReturnSettingsPage::class, 'Retour-instellingen', 'arrow-uturn-left', 'Beheer regels voor het automatisch goedkeuren van retouren');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Resources\ApiClientResource::class, 'API-koppelingen', 'key', 'API-sleutels voor externe partijen, zoals een marketingbureau dat orderdata ophaalt');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaCapiSettingsPage::class, 'Meta Conversions API', 'signal', 'Stuur aankopen ook vanaf de server naar Meta');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\MetaAudienceSettingsPage::class, 'Doelgroepen naar Meta', 'user-group', 'Nieuwsbrieflijsten, segmenten en prijsgroepen als Custom Audience naar Meta');
         cms()->registerSettingsPage(ProductSettingsPage::class, 'Product instellingen', 'shopping-bag', 'Beheren instellingen over je producten');
         cms()->registerSettingsPage(CheckoutSettingsPage::class, 'Afreken instellingen', 'shopping-cart', 'Je online betaalprocess aanpassen');
         cms()->registerSettingsPage(ShippingClassResource::class, 'Verzendklasses', 'truck', 'Is een product breekbaar of veel groter? Reken een meerprijs');
@@ -2877,6 +2986,7 @@ MARKDOWN,
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\WishlistSettingsPage::class, 'Verlanglijst', 'heart', 'Verlanglijst aan of uit per site');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\OrderAddOnSettingsPage::class, 'Bijbestellen', 'archive-box-arrow-down', 'Klanten nog iets laten toevoegen dat in dezelfde doos meegaat');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\OnAccountSettingsPage::class, 'Op rekening', 'document-currency-euro', 'Betaaltermijn, kredietlimiet, blokkade en betaalherinneringen voor klanten op rekening');
+        cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\CustomerLoyaltySettingsPage::class, 'Klantenbinding', 'user-group', 'Opnieuw bestellen en het verwijsprogramma');
         cms()->registerSettingsPage(\Dashed\DashedEcommerceCore\Filament\Pages\Settings\QuoteSettingsPage::class, 'Offertes', 'document-text', 'Nummerformaat, geldigheidsduur, standaardteksten en herinneringen voor offertes');
 
         $package
@@ -2890,6 +3000,8 @@ MARKDOWN,
                 'order-add-ons-frontend',
                 'print-queue-api',
                 'export-api',
+                'product-reviews',
+                'customer-loyalty',
             ])
             ->hasConfigFile([
                 'dashed-ecommerce-core',
@@ -2897,6 +3009,9 @@ MARKDOWN,
             ])
             ->hasViews()
             ->hasCommands([
+                \Dashed\DashedEcommerceCore\Commands\SyncMetaAudiencesCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\SendDeliverySatisfactionCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\ProcessReferralsCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\ImportBelgianAddressesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\PrivatizeProductExtraFilesCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\DisableOwnPaymentMethodsCommand::class,
@@ -2934,6 +3049,7 @@ MARKDOWN,
                 \Dashed\DashedEcommerceCore\Commands\SendQuoteRemindersCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\IssueMissingGiftcardsCommand::class,
                 \Dashed\DashedEcommerceCore\Commands\SendOrderAddOnRemindersCommand::class,
+                \Dashed\DashedEcommerceCore\Commands\SendProductReviewRequestsCommand::class,
             ]);
 
     }

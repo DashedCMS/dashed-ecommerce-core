@@ -67,7 +67,7 @@ class CartPopup extends Component
             $this->cartSubtotal = round(max(0, $subtotal), 2);
             $this->cartTax = round(max(0, cartHelper()->getTax() - $extraVat), 2);
             $helper = app(FreeShippingHelper::class);
-            $progress = $helper->progress((float) $this->cartTotal);
+            $progress = $helper->progressForCart();
             $this->freeShippingThreshold = $helper->threshold();
             $this->freeShippingPercentage = $progress['percentage'];
             $this->initialized = true;

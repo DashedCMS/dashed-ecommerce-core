@@ -23,8 +23,9 @@ use Dashed\DashedEcommerceCore\Models\ProductFilterOption;
  * Eén productschema per productpagina: een Product voor een groep met één
  * variant (of een los product), een ProductGroup met hasVariant voor een
  * groep met meerdere, en boven MAX_VARIANTS alleen de gemounte variant met
- * isVariantOf. Geen aggregateRating: er zijn geen productreviews (een app
- * kan ze zelf op dit object zetten via for()).
+ * isVariantOf. aggregateRating en review komen alleen uit de eigen
+ * goedgekeurde productreviews (ProductReviewSchema), op de parent, en alleen
+ * met minstens één review; nooit uit de winkelscore.
  *
  * De parent heeft altijd een @id, naam en afbeelding: reviews hangen aan de
  * parent en Search Console meldt anders "Ontbrekend veld 'name' (in
@@ -70,7 +71,7 @@ class ProductSchema
         $shared = self::shared($product);
 
         if ($group && $variants->count() > 1 && $variants->count() <= self::MAX_VARIANTS) {
-            return self::productGroup($group, $variants, $shared);
+            return ProductReviewSchema::apply(self::productGroup($group, $variants, $shared), $product);
         }
 
         $node = self::product($product, $group, null, $shared);
@@ -84,7 +85,7 @@ class ProductSchema
             ]));
         }
 
-        return $node;
+        return ProductReviewSchema::apply($node, $product);
     }
 
     /** {url}#product, zodat reviews ondubbelzinnig aan deze parent hangen. */

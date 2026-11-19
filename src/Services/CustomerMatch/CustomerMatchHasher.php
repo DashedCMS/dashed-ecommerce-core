@@ -124,6 +124,15 @@ class CustomerMatchHasher
     }
 
     /**
+     * Telefoonnummer in E.164-vorm (`+31612345678`), of leeg als er geen
+     * landcode af te leiden is. Meta wil dezelfde vorm zonder plusteken.
+     */
+    public function normalizedPhone(?string $phone, ?string $country = null): string
+    {
+        return $this->normalizePhone($phone, $this->normalizeCountry($country) ?: null);
+    }
+
+    /**
      * @return list<string>
      */
     public function csvHeader(): array

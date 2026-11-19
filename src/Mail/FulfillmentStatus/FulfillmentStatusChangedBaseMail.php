@@ -76,6 +76,7 @@ abstract class FulfillmentStatusChangedBaseMail extends Mailable implements Regi
             'fulfillmentStatusName',
             'trackingCodes',
             'trackingLinks',
+            'reorderUrl',
             'siteName',
             'primaryColor',
         ];

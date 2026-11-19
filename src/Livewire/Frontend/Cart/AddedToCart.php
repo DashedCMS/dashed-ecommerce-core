@@ -40,7 +40,7 @@ class AddedToCart extends Component
         }
         $this->cartTotal = cartHelper()->getTotal();
         $helper = app(FreeShippingHelper::class);
-        $progress = $helper->progress((float) $this->cartTotal);
+        $progress = $helper->progressForCart();
         $this->freeShippingThreshold = $helper->threshold();
         $this->freeShippingPercentage = $progress['percentage'];
     }

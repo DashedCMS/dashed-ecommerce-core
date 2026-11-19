@@ -6,7 +6,7 @@
       @if ($progress['reached'])
         <strong class="text-green-700">{{ \Dashed\DashedTranslations\Models\Translation::get('free-shipping.reached', 'cart', 'Je hebt gratis verzending!') }}</strong>
       @else
-        {!! str_replace(':amount:', '<strong class="text-green-700">€'.number_format($progress['gap'], 2, ',', '.').'</strong>', \Dashed\DashedTranslations\Models\Translation::get('free-shipping.under', 'cart', 'Nog :amount: voor gratis verzending')) !!}
+        {!! str_replace(':amount:', '<strong class="text-green-700">'.e(\Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($progress['gap'])).'</strong>', \Dashed\DashedTranslations\Models\Translation::get('free-shipping.under', 'cart', 'Nog :amount: voor gratis verzending')) !!}
       @endif
     </div>
     <div class="mt-2 h-2 rounded-full bg-gray-200 overflow-hidden">

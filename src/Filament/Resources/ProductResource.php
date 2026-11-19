@@ -830,13 +830,16 @@ class ProductResource extends Resource
                 RestoreAction::make(),
                 ForceDeleteAction::make(),
             ])
-            ->toolbarActions(ToolbarActions::getActions([
+            ->toolbarActions(ToolbarActions::getActions(array_merge(class_exists(\Dashed\DashedCore\Filament\Actions\BulkEditAction::class) ? [
+                \Dashed\DashedCore\Filament\Actions\BulkEditAction::make(),
+                \Dashed\DashedCore\Filament\Actions\ScheduleChangeAction::bulk(),
+            ] : [], [
                 BulkPriceUpdateBulkAction::make(),
                 BulkAssignCategoriesBulkAction::make(),
                 BulkDeliveryTimeUpdateBulkAction::make(),
                 RestoreBulkAction::make(),
                 ForceDeleteBulkAction::make(),
-            ]))
+            ])))
             ->filters([
                 TrashedFilter::make(),
                 Filter::make('specificProductGroup')
