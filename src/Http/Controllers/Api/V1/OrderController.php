@@ -137,8 +137,21 @@ class OrderController extends Controller
 
         $perPage = (int) config('dashed-mobile-api.default_page_size', 25);
 
+        // Sortering: default nieuwste eerst. `sort=deadline` zet de orders die het
+        // eerst geleverd/verzonden moeten worden bovenaan (effectieve deadline =
+        // leverdatum, anders verzenddatum); orders zonder deadline komen achteraan.
+        if ((string) $request->query('sort') === 'deadline') {
+            $direction = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+            $effective = 'COALESCE(deliver_by_date, ship_by_date)';
+            $query->orderByRaw("{$effective} IS NULL")
+                ->orderByRaw("{$effective} {$direction}")
+                ->orderByDesc('created_at');
+        } else {
+            $query->orderByDesc('created_at');
+        }
+
         return OrderSummaryResource::collection(
-            $query->orderByDesc('created_at')->paginate($perPage),
+            $query->paginate($perPage),
         );
     }
 

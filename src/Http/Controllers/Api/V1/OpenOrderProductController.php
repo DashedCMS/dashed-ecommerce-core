@@ -148,7 +148,7 @@ class OpenOrderProductController extends Controller
 
         $total = (clone $base)->count();
         $totalQuantity = (int) (clone $base)->sum('op.quantity');
-        $rows = (clone $base)
+        $rowsQuery = (clone $base)
             ->select([
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
                 'op.product_extras',
@@ -157,10 +157,21 @@ class OpenOrderProductController extends Controller
             ])
             // Prioriteit-orders altijd bovenaan, ongeacht de gekozen sortering
             // (de app sorteert client-side identiek).
-            ->orderByDesc('o.is_priority')
-            ->orderBy($sortColumn, $sortDir)
-            ->forPage($page, $perPage)
-            ->get();
+            ->orderByDesc('o.is_priority');
+
+        if ((string) $request->query('sort') === 'deadline') {
+            // Eerst leveren: op effectieve deadline (leverdatum, anders verzenddatum);
+            // regels zonder deadline achteraan.
+            $dir = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+            $eff = 'COALESCE(o.deliver_by_date, o.ship_by_date)';
+            $rowsQuery->orderByRaw("{$eff} IS NULL")
+                ->orderByRaw("{$eff} {$dir}")
+                ->orderByDesc('o.created_at');
+        } else {
+            $rowsQuery->orderBy($sortColumn, $sortDir);
+        }
+
+        $rows = $rowsQuery->forPage($page, $perPage)->get();
 
         $products = $this->productMap($rows->pluck('product_id')->all());
         $deadlines = $this->deadlineMap($rows->pluck('order_id')->all());

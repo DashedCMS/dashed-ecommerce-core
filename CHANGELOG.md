@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.212.0 - 2026-11-19
+
+### Added
+- Mobiele API: sorteren op "eerst leveren" (deadline). `GET orders?sort=deadline` en `GET open-order-products?sort=deadline` (ongegroepeerd) sorteren nu op de effectieve verzend-/leverdeadline (leverdatum, anders verzenddatum) oplopend, met orders zonder deadline achteraan; prioriteit-orders blijven bij open-order-products bovenaan. Zo kan de app in Bestellingen en Openstaande bestellingen op deadline sorteren.
+
 ## v4.211.0 - 2026-11-19
 
 ### Added
