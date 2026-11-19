@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Dashed\DashedEcommerceCore\Models\Cart;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Services\Meta\MarketingConsent;
 
 /**
  * Centraal punt voor UTM- en attributie-data. Verzamelt touches uit de request,
@@ -34,6 +35,20 @@ class AttributionTracker
     ];
 
     /**
+     * Klik-ID's van advertentienetwerken. Die koppelen een bezoek aan een
+     * advertentieklik bij Google, Meta, Microsoft of TikTok en vallen daarmee
+     * onder marketing: met de cookiebanner aan alleen bewaren met
+     * marketingtoestemming. UTM-velden, landingspagina en verwijzer zijn
+     * first-party en blijven altijd.
+     *
+     * @var array<int,string>
+     */
+    public const CLICK_ID_PARAMS = ['gclid', 'gbraid', 'wbraid', 'fbclid', 'msclkid', 'ttclid'];
+
+    /** Sleutel in attribution_extra met de cookiekeuze bij het plaatsen van de order. */
+    public const CONSENT_KEY = 'consent';
+
+    /**
      * Vangt een touch op uit de request en bewaart die in de sessie. Geeft
      * de touch-array terug, of null als er niets te bewaren viel.
      *
@@ -47,8 +62,14 @@ class AttributionTracker
 
         $session = $request->session();
 
+        $clickIdsAllowed = self::clickIdsAllowed();
+
         $params = [];
         foreach (self::TRACKED_PARAMS as $key) {
+            if (! $clickIdsAllowed && in_array($key, self::CLICK_ID_PARAMS, true)) {
+                continue;
+            }
+
             $value = $request->query($key);
             if (is_string($value) && $value !== '') {
                 $params[$key] = mb_substr($value, 0, 255);
@@ -64,7 +85,7 @@ class AttributionTracker
         }
 
         $touch = $params + [
-            'landing_page' => mb_substr($request->fullUrl(), 0, 2048),
+            'landing_page' => mb_substr($clickIdsAllowed ? $request->fullUrl() : self::withoutClickIds($request->fullUrl()), 0, 2048),
             'referrer' => self::truncateOrNull($request->headers->get('referer'), 2048),
             'at' => Carbon::now()->toIso8601String(),
         ];
@@ -299,6 +320,13 @@ class AttributionTracker
             return;
         }
 
+        if (! self::clickIdsAllowed()) {
+            // Een keuze kan na het opvangen zijn ingetrokken, of de touches
+            // stammen van vóór de banner: dan gaan ze zonder klik-ID's mee.
+            $firstTouch = self::touchWithoutClickIds($firstTouch);
+            $lastTouch = self::touchWithoutClickIds($lastTouch);
+        }
+
         $dirty = false;
         $extra = is_array($model->attribution_extra ?? null) ? $model->attribution_extra : [];
 
@@ -357,6 +385,111 @@ class AttributionTracker
         if ($dirty && $model->exists) {
             $model->saveQuietly();
         }
+    }
+
+    /**
+     * Legt de cookiekeuze van de bezoeker vast op een checkout-order, in het
+     * verzoek waarin hij ontstaat. Een betaalwebhook heeft geen cookie, dus
+     * wat daarna naar Meta gaat leest deze momentopname. Alleen met de
+     * cookiebanner aan; zonder banner is er geen keuze en blijft alles zoals
+     * het was. Een bestaande momentopname wordt nooit overschreven.
+     */
+    public static function recordConsent(Order $order): void
+    {
+        if (! MarketingConsent::managed() || ! self::hasAttributionColumns($order->getTable())) {
+            return;
+        }
+
+        $extra = is_array($order->attribution_extra) ? $order->attribution_extra : [];
+        if (isset($extra[self::CONSENT_KEY]) && is_array($extra[self::CONSENT_KEY])) {
+            return;
+        }
+
+        $extra[self::CONSENT_KEY] = [
+            'marketing' => MarketingConsent::granted(request(), $order->site_id),
+            'analytics' => MarketingConsent::analyticsGranted(),
+        ];
+
+        $order->attribution_extra = $extra;
+
+        if ($order->exists) {
+            $order->saveQuietly();
+        }
+    }
+
+    /**
+     * De vastgelegde cookiekeuze van een order, of null als er geen is (een
+     * oude order, de kassa, of de banner stond uit).
+     *
+     * @return array{marketing: bool, analytics: bool}|null
+     */
+    public static function consentOf(Order $order): ?array
+    {
+        $consent = is_array($order->attribution_extra) ? ($order->attribution_extra[self::CONSENT_KEY] ?? null) : null;
+
+        if (! is_array($consent) || ! array_key_exists('marketing', $consent)) {
+            return null;
+        }
+
+        return [
+            'marketing' => (bool) $consent['marketing'],
+            'analytics' => (bool) ($consent['analytics'] ?? false),
+        ];
+    }
+
+    protected static function clickIdsAllowed(): bool
+    {
+        try {
+            return MarketingConsent::granted(request());
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * @param  array<string,mixed>|null  $touch
+     * @return array<string,mixed>|null
+     */
+    protected static function touchWithoutClickIds(?array $touch): ?array
+    {
+        if (! $touch) {
+            return $touch;
+        }
+
+        foreach (self::CLICK_ID_PARAMS as $key) {
+            unset($touch[$key]);
+        }
+
+        if (! empty($touch['landing_page']) && is_string($touch['landing_page'])) {
+            $touch['landing_page'] = self::withoutClickIds($touch['landing_page']);
+        }
+
+        return $touch;
+    }
+
+    /** Haalt de klik-ID's uit de querystring van een URL. */
+    public static function withoutClickIds(string $url): string
+    {
+        $parts = explode('?', $url, 2);
+        if (count($parts) < 2) {
+            return $url;
+        }
+
+        [$base, $rest] = $parts;
+        [$query, $fragment] = array_pad(explode('#', $rest, 2), 2, null);
+
+        $kept = array_filter(
+            explode('&', (string) $query),
+            function (string $pair) {
+                $name = strtolower(urldecode(explode('=', $pair, 2)[0]));
+
+                return $pair !== '' && ! in_array($name, self::CLICK_ID_PARAMS, true);
+            }
+        );
+
+        return $base
+            . ($kept ? '?' . implode('&', $kept) : '')
+            . ($fragment !== null ? '#' . $fragment : '');
     }
 
     /**

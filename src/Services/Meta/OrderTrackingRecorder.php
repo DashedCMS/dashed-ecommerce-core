@@ -26,13 +26,17 @@ class OrderTrackingRecorder
     {
         try {
             $cookies ??= $_COOKIE;
+            $consent = MarketingConsent::granted($request, $order->site_id);
 
+            // Zonder marketingtoestemming gaat er nooit een Purchase (zie
+            // SendMetaPurchaseEventJob), dus bewaren we ook geen Meta-cookies of
+            // user agent. De rij zelf blijft: hij legt de keuze vast.
             return OrderTracking::firstOrCreate(['order_id' => $order->id], [
-                'meta_fbp' => $this->metaCookie($cookies['_fbp'] ?? null, 255),
-                'meta_fbc' => $this->metaCookie($cookies['_fbc'] ?? null, 1000) ?? $this->fallbackFbc($order, $request),
-                'client_user_agent' => $this->truncate($request->userAgent(), 1000),
+                'meta_fbp' => $consent ? $this->metaCookie($cookies['_fbp'] ?? null, 255) : null,
+                'meta_fbc' => $consent ? ($this->metaCookie($cookies['_fbc'] ?? null, 1000) ?? $this->fallbackFbc($order, $request)) : null,
+                'client_user_agent' => $consent ? $this->truncate($request->userAgent(), 1000) : null,
                 'event_source_url' => $this->truncate($request->headers->get('referer'), 2048) ?? $this->checkoutUrl(),
-                'marketing_consent' => MarketingConsent::granted($request, $order->site_id),
+                'marketing_consent' => $consent,
             ]);
         } catch (Throwable $e) {
             report($e);

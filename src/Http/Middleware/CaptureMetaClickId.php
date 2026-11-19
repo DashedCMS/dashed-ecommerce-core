@@ -7,6 +7,7 @@ use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Symfony\Component\HttpFoundation\Response;
+use Dashed\DashedEcommerceCore\Services\Meta\MarketingConsent;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
 
 /**
@@ -15,7 +16,9 @@ use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
  * (adblocker, ITP). Best-effort: breekt nooit een verzoek. Alleen als de
  * Conversions API voor de actieve site aan staat; die instelling is een
  * ongecachete databaselezing en wordt daarom pas gelezen als er echt een
- * bruikbare fbclid in de URL staat.
+ * bruikbare fbclid in de URL staat. Met de cookiebanner aan alleen met
+ * marketingtoestemming (MarketingConsent): zonder keuze wordt er niets
+ * bewaard, ook niet tijdelijk.
  */
 class CaptureMetaClickId
 {
@@ -31,7 +34,8 @@ class CaptureMetaClickId
                 && is_string($fbclid)
                 && trim($fbclid) !== ''
                 && strlen($fbclid) <= 900
-                && MetaCapiSettings::for(null)->enabled()) {
+                && MetaCapiSettings::for(null)->enabled()
+                && MarketingConsent::granted($request)) {
                 $request->session()->put(self::SESSION_KEY, static::fbcFromClickId(trim($fbclid)));
             }
         } catch (Throwable $e) {

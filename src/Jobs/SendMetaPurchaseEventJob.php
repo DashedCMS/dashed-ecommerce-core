@@ -14,6 +14,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\MetaCapiEvent;
 use Dashed\DashedEcommerceCore\Services\Meta\ConversionsApi;
 use Dashed\DashedEcommerceCore\Services\Meta\MetaCapiSettings;
+use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 
 /**
  * Stuurt de Purchase van één order naar Meta's Conversions API. Idempotent op
@@ -155,6 +156,9 @@ class SendMetaPurchaseEventJob implements ShouldQueue
     {
         return match (true) {
             $order->status !== 'paid' => 'order is niet betaald',
+            // De cookiekeuze bij het plaatsen (AttributionTracker::recordConsent);
+            // zonder momentopname (oude order, kassa, banner uit) zoals voorheen.
+            (AttributionTracker::consentOf($order)['marketing'] ?? true) === false => 'geen marketingtoestemming in de cookiebanner',
             ! $order->tracking => 'geen klantsignalen: order komt niet uit de webshop-checkout',
             ! $order->tracking->marketing_consent => 'geen marketingtoestemming',
             (bool) $order->credit_for_order_id => 'creditorder',

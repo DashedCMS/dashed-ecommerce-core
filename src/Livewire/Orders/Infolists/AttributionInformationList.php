@@ -12,6 +12,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Dashed\DashedEcommerceCore\Services\Attribution\AttributionTracker;
 
 /**
  * Toont het herkomst-blok ("Herkomst") op de bestel-detailpagina. Geeft alle
@@ -113,6 +114,22 @@ class AttributionInformationList extends Component implements HasActions, HasSch
                             ->copyable()
                             ->url(fn ($record) => $record->landing_page_referrer ?: null, shouldOpenInNewTab: true)
                             ->visible(fn ($record) => filled($record->landing_page_referrer)),
+                        TextEntry::make('cookie_consent')
+                            ->label(__('Cookietoestemming'))
+                            ->columnSpanFull()
+                            ->getStateUsing(function ($record) {
+                                $consent = AttributionTracker::consentOf($record);
+                                if ($consent === null) {
+                                    return null;
+                                }
+
+                                return __('Marketing: :marketing, analytics: :analytics', [
+                                    'marketing' => $consent['marketing'] ? __('ja') : __('nee'),
+                                    'analytics' => $consent['analytics'] ? __('ja') : __('nee'),
+                                ]);
+                            })
+                            ->helperText(__('De keuze in de cookiebanner bij het plaatsen van de bestelling. Zonder marketingtoestemming gaat de aankoop niet naar Meta.'))
+                            ->visible(fn ($record) => AttributionTracker::consentOf($record) !== null),
                         TextEntry::make('attribution_first_touch_at')
                             ->label(__('First-touch'))
                             ->dateTime('d-m-Y H:i')
@@ -125,19 +142,32 @@ class AttributionInformationList extends Component implements HasActions, HasSch
                             ->label(__('Extra parameters'))
                             ->columnSpanFull()
                             ->getStateUsing(function ($record) {
-                                $extra = $record->attribution_extra;
-                                if (! is_array($extra) || empty($extra)) {
+                                $extra = static::extraWithoutConsent($record);
+                                if (empty($extra)) {
                                     return null;
                                 }
 
                                 return json_encode($extra, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
                             })
-                            ->visible(fn ($record) => is_array($record->attribution_extra) && ! empty($record->attribution_extra))
+                            ->visible(fn ($record) => ! empty(static::extraWithoutConsent($record)))
                             ->html()
                             ->formatStateUsing(fn ($state) => $state ? '<pre class="text-xs whitespace-pre-wrap break-all">'.e($state).'</pre>' : null),
                     ])
                     ->columns(2),
             ]);
+    }
+
+    /** De extra parameters zonder de cookiekeuze, die een eigen regel heeft. */
+    protected static function extraWithoutConsent($record): array
+    {
+        $extra = $record->attribution_extra;
+        if (! is_array($extra)) {
+            return [];
+        }
+
+        unset($extra[AttributionTracker::CONSENT_KEY]);
+
+        return $extra;
     }
 
     public function render()

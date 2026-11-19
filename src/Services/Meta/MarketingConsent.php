@@ -6,10 +6,12 @@ use Closure;
 use Illuminate\Http\Request;
 
 /**
- * De ene plek die beslist of er marketingtoestemming is. Er is nog geen
- * cookiebanner: de pixel laadt onvoorwaardelijk en deze klasse volgt dat. Een
- * banner sluit hier aan met resolveUsing() en houdt dan pixel en server-side
- * events samen tegen.
+ * De ene plek die beslist of er marketingtoestemming is, voor alles wat in het
+ * verzoek van de bezoeker naar Meta gaat (Contact, ViewContent, AddToCart,
+ * InitiateCheckout) en voor de momentopname op OrderTracking. Volgorde: een
+ * eigen resolver (resolveUsing()), anders de cookiebanner via ConsentGate van
+ * dashed-core (oudere core heeft die niet), anders toegestaan zoals voorheen.
+ * ConsentGate::allows() geeft zelf true zolang de banner uit staat.
  */
 class MarketingConsent
 {
@@ -24,6 +26,32 @@ class MarketingConsent
     {
         if (static::$resolver !== null) {
             return (bool) (static::$resolver)($request, $siteId);
+        }
+
+        if (class_exists(\Dashed\DashedCore\Classes\Consent\ConsentGate::class)) {
+            return \Dashed\DashedCore\Classes\Consent\ConsentGate::allows('marketing');
+        }
+
+        return true;
+    }
+
+    /**
+     * Staat het toestemmingsbeheer (de cookiebanner) aan voor de huidige site?
+     * Zonder banner is er geen keuze om vast te leggen.
+     */
+    public static function managed(): bool
+    {
+        return class_exists(\Dashed\DashedCore\Classes\Consent\ConsentGate::class)
+            && \Dashed\DashedCore\Classes\Consent\ConsentGate::active();
+    }
+
+    /**
+     * Een analytics-keuze, voor de momentopname op de order.
+     */
+    public static function analyticsGranted(): bool
+    {
+        if (class_exists(\Dashed\DashedCore\Classes\Consent\ConsentGate::class)) {
+            return \Dashed\DashedCore\Classes\Consent\ConsentGate::allows('analytics');
         }
 
         return true;

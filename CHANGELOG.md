@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.213.0 - 2026-11-19
+
+### Added
+- Cookietoestemming (dashed-cookies, via `ConsentGate` in dashed-core 4.115): met de banner aan gaan Contact, ViewContent, AddToCart, InitiateCheckout en de ordertracking alleen met marketingtoestemming naar de Meta Conversions API, beslist in het verzoek van de bezoeker. `MarketingConsent` is daarvoor de ene plek.
+- De checkout legt de keuze vast op de order (`attribution_extra['consent']`); het Purchase-event uit de betaalwebhook slaat over bij marketing nee. Zonder momentopname (oude orders, proforma, offerte, kassa) werkt het zoals voorheen. De bestelpagina toont de keuze onder Attributie.
+
+### Changed
+- Klik-ID's van advertenties (gclid, gbraid, wbraid, fbclid, msclkid, ttclid) en de fbclid in de sessie worden met de banner aan alleen met marketingtoestemming bewaard; UTM, landingspagina en verwijzer blijven. Zonder toestemming bewaart de ordertracking ook geen `_fbp`, `_fbc` en user agent meer.
+
 ## v4.212.0 - 2026-11-19
 
 ### Added

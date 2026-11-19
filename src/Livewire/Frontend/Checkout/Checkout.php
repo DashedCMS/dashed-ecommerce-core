@@ -1397,6 +1397,14 @@ class Checkout extends Component
             report($e);
         }
 
+        try {
+            // De cookiekeuze van dit moment: een betaalwebhook heeft geen
+            // cookie, en de Purchase naar Meta leest deze momentopname.
+            AttributionTracker::recordConsent($order);
+        } catch (\Throwable $e) {
+            report($e);
+        }
+
         CartActivityLogger::orderConverted($order->cart_id, $order->id);
 
         $this->writeAbandonedCartSummaryLog($order);

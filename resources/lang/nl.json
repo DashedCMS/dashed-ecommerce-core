@@ -2397,5 +2397,8 @@
     "Weer meenemen": "Weer meenemen",
     "Producten aan- of uitvinken": "Producten aan- of uitvinken",
     "Aangevinkt krijgt een code, uitgevinkt niet. Dat wordt op het product onthouden: uitgesloten producten blijven ook bij een volgende run uitgesloten tot je ze hier weer aanvinkt.": "Aangevinkt krijgt een code, uitgevinkt niet. Dat wordt op het product onthouden: uitgesloten producten blijven ook bij een volgende run uitgesloten tot je ze hier weer aanvinkt.",
-    "Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan via Producten aan- of uitvinken, onderaan het voorbeeld of op het product zelf.": "Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan via Producten aan- of uitvinken, onderaan het voorbeeld of op het product zelf."
+    "Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan via Producten aan- of uitvinken, onderaan het voorbeeld of op het product zelf.": "Dit product krijgt geen GS1-code, ook niet bij een volgende run. Terugzetten kan via Producten aan- of uitvinken, onderaan het voorbeeld of op het product zelf.",
+    "Cookietoestemming": "Cookietoestemming",
+    "Marketing: :marketing, analytics: :analytics": "Marketing: :marketing, analytics: :analytics",
+    "De keuze in de cookiebanner bij het plaatsen van de bestelling. Zonder marketingtoestemming gaat de aankoop niet naar Meta.": "De keuze in de cookiebanner bij het plaatsen van de bestelling. Zonder marketingtoestemming gaat de aankoop niet naar Meta."
 }
