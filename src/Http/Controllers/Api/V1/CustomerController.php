@@ -66,7 +66,8 @@ class CustomerController extends Controller
 
         $total = (clone $base)->distinct('email')->count('email');
 
-        $paid = "CASE WHEN status IN ('" . implode("','", self::PAID_STATUSES) . "') THEN total ELSE 0 END";
+        // Een vervangen order (orderwijziging) telt via zijn vervanger.
+        $paid = "CASE WHEN status IN ('" . implode("','", self::PAID_STATUSES) . "') AND replaced_by_order_id IS NULL THEN total ELSE 0 END";
 
         $rows = (clone $base)
             ->groupBy('email')

@@ -38,6 +38,7 @@ class OrdersReportSource extends ReportSource
     {
         return Order::query()
             ->whereIn('dashed__orders.status', Order::PAID_STATUSES)
+            ->whereNull('dashed__orders.replaced_by_order_id')
             ->whereNotIn('dashed__orders.invoice_id', ['PROFORMA', 'RETURN']);
     }
 

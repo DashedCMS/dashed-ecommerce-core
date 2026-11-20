@@ -36,6 +36,7 @@ class CustomersReportSource extends ReportSource
             ->toBase()
             ->selectRaw('email, MIN(created_at) as first_order_at, COUNT(*) as order_count, SUM(total) as total_spent')
             ->whereIn('status', Order::PAID_STATUSES)
+            ->whereNull('replaced_by_order_id')
             ->whereNotIn('invoice_id', ['PROFORMA', 'RETURN'])
             ->whereNotNull('email')
             ->where('email', '!=', '')

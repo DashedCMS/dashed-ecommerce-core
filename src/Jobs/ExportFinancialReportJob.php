@@ -82,7 +82,7 @@ class ExportFinancialReportJob implements ShouldQueue
         $startDate = $this->startDate ? Carbon::parse($this->startDate)->startOfDay() : Order::first()->created_at;
         $endDate = $this->endDate ? Carbon::parse($this->endDate)->endOfDay() : Order::latest()->first()->created_at;
 
-        $orders = Order::with(['orderProducts', 'orderProducts.product'])->isPaidOrReturn();
+        $orders = Order::with(['orderProducts', 'orderProducts.product'])->whereIn('status', Order::PAID_OR_RETURN_STATUSES);
         if ($startDate) {
             $orders->where('created_at', '>=', $startDate);
         }

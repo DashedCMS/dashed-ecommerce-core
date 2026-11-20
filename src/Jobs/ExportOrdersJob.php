@@ -61,7 +61,7 @@ class ExportOrdersJob implements ShouldQueue
         try {
             $this->markExportAsProcessing();
 
-            $orders = Order::isPaidOrReturn();
+            $orders = Order::whereIn('status', Order::PAID_OR_RETURN_STATUSES);
 
             if ($this->startDate) {
                 $orders->where('created_at', '>=', Carbon::parse($this->startDate)->startOfDay());

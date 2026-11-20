@@ -96,7 +96,8 @@ class OrderResource extends Resource
 
     public static function getGlobalSearchEloquentQuery(): EloquentBuilder
     {
-        return parent::getGlobalSearchEloquentQuery()->isPaid();
+        // Ook een vervangen order (orderwijziging) moet op nummer te vinden blijven.
+        return parent::getGlobalSearchEloquentQuery()->whereIn('status', Order::PAID_STATUSES);
     }
 
     public static function getGlobalSearchResultUrl(Model $record): string

@@ -123,6 +123,9 @@ class Order extends Model
     /** De statussen die als omzet tellen; scopeIsPaid() en de rapportbronnen lezen deze. */
     public const PAID_STATUSES = ['paid', 'waiting_for_confirmation', 'partially_paid'];
 
+    /** Betaald of retour, zonder het filter op orderwijzigingen: voor facturen en exports naar de boekhouding. */
+    public const PAID_OR_RETURN_STATUSES = ['paid', 'waiting_for_confirmation', 'partially_paid', 'return'];
+
     protected $casts = [
         'vat_percentages' => 'array',
         'prices_ex_vat' => 'boolean',
@@ -927,22 +930,39 @@ class Order extends Model
         return false;
     }
 
+    /**
+     * Betaalde orders die als omzet tellen. Een order die bij een wijziging
+     * vervangen is (OrderModificationService::replaceWithNewOrder()) telt niet
+     * mee: zijn vervanger staat op dezelfde betaaldatum en draagt het bedrag
+     * nu, dus zonder deze regel telt de omzet van die dag dubbel. Zie ook
+     * scopeWithoutModificationCredits().
+     */
     public function scopeIsPaid($query)
     {
-        return $query->whereIn('status', self::PAID_STATUSES);
+        return $query->whereIn('status', self::PAID_STATUSES)->withoutReplacedOrders();
     }
 
     /**
-     * Betaalde orders zoals ze in de omzet horen: zonder orders die door een
-     * orderwijziging vervangen zijn. Bij een wijziging met creditfactuur
-     * blijft de oude order op betaald staan en neemt de vervanger (met
-     * dezelfde orderdatum) zijn omzet over; met isPaid() alleen telt die
-     * omzet dubbel. De creditfactuur van de wijziging staat op retour en
-     * telt hier dus ook niet mee.
+     * Laat de vervangen order van een wijziging weg, en ook de creditorder
+     * die bij die wijziging is gemaakt: markAsCancelledWithCredit() kopieert
+     * de oude order met replicate(), dus die creditorder draagt dezelfde
+     * replaced_by_order_id. Een retour van vóór de wijziging heeft die kolom
+     * leeg en blijft gewoon meetellen. Facturen en exports voor de
+     * boekhouding horen alle orders te tonen en gebruiken deze scope niet.
+     */
+    public function scopeWithoutReplacedOrders($query)
+    {
+        return $query->whereNull($this->qualifyColumn('replaced_by_order_id'));
+    }
+
+    /**
+     * Betaalde orders zoals ze in de omzet horen. Sinds isPaid() zelf de
+     * vervangen orders van een wijziging weglaat is dit hetzelfde; de scope
+     * blijft bestaan omdat de omzetwidgets en de app hem gebruiken.
      */
     public function scopeCountsAsRevenue($query)
     {
-        return $query->isPaid()->whereNull($this->qualifyColumn('replaced_by_order_id'));
+        return $query->isPaid();
     }
 
     /**
@@ -1019,14 +1039,16 @@ class Order extends Model
             ->select("{$methods}.name->" . app()->getLocale());
     }
 
+    /** Creditorders als retour, zonder de tegenboeking van een orderwijziging (zie scopeWithoutReplacedOrders()). */
     public function scopeIsReturn($query)
     {
-        return $query->whereIn('status', ['return']);
+        return $query->whereIn('status', ['return'])->withoutReplacedOrders();
     }
 
+    /** Omzet en retour samen, zonder de orders van een wijziging; per saldo verandert er niets, maar de losse reeksen tellen niet dubbel. */
     public function scopeIsPaidOrReturn($query)
     {
-        return $query->whereIn('status', ['paid', 'waiting_for_confirmation', 'partially_paid', 'return']);
+        return $query->whereIn('status', self::PAID_OR_RETURN_STATUSES)->withoutReplacedOrders();
     }
 
     /**

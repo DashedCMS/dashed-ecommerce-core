@@ -48,6 +48,8 @@ class PurchaseAdvice
             ->join('dashed__orders as o', 'o.id', '=', 'op.order_id')
             ->leftJoin('dashed__products as sp', 'sp.id', '=', 'op.product_id')
             ->whereIn('o.status', ['paid', 'waiting_for_confirmation', 'partially_paid'])
+            // Een vervangen order (orderwijziging) telt via zijn vervanger.
+            ->whereNull('o.replaced_by_order_id')
             ->whereNotIn('o.invoice_id', ['PROFORMA', 'RETURN'])
             ->where('o.site_id', $siteId)
             ->where('o.created_at', '>=', $since)

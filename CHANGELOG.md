@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.216.2 - 2026-11-20
+
+### Fixed
+- Een gewijzigde bestelling telde op meer plekken nog dubbel. `Order::isPaid()` laat nu zelf de vervangen order van een wijziging weg (`withoutReplacedOrders()`), dus ook wat `isPaid()` direct leest telt goed, zoals de omzet-API van een klantproject. `isReturn()` en `isPaidOrReturn()` laten de creditfactuur van zo'n wijziging weg, zodat het verschil niet naar het retourcijfer of de omzetlijn schuift; een retour van vóór de wijziging telt gewoon mee. Ook inkoopadvies, de rapporten, het klantprofiel en de klantenlijst in de app. Het financiële rapport, de orderexport en de globale zoekfunctie tonen nog alle orders (`Order::PAID_OR_RETURN_STATUSES`). `countsAsRevenue()` is nu gelijk aan `isPaid()`.
+
 ## v4.216.1 - 2026-11-20
 
 ### Fixed

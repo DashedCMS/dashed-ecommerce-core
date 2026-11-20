@@ -42,6 +42,7 @@ class OrderLinesReportSource extends ReportSource
         return OrderProduct::query()
             ->join('dashed__orders', 'dashed__orders.id', '=', 'dashed__order_products.order_id')
             ->whereIn('dashed__orders.status', Order::PAID_STATUSES)
+            ->whereNull('dashed__orders.replaced_by_order_id')
             ->whereNotIn('dashed__orders.invoice_id', ['PROFORMA', 'RETURN'])
             ->whereNotIn('dashed__order_products.sku', OrderStatistics::NON_PRODUCT_SKUS);
     }

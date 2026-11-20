@@ -80,6 +80,7 @@ class RevenueSummaryContributor implements SummaryContributorInterface
         $topProducts = OrderProduct::query()
             ->join('dashed__orders', 'dashed__orders.id', '=', 'dashed__order_products.order_id')
             ->whereIn('dashed__orders.status', ['paid', 'waiting_for_confirmation', 'partially_paid'])
+            ->whereNull('dashed__orders.replaced_by_order_id')
             ->whereBetween('dashed__orders.created_at', [$period->start, $period->end])
             ->whereNull('dashed__order_products.deleted_at')
             ->groupBy('dashed__order_products.product_id', 'dashed__order_products.name')

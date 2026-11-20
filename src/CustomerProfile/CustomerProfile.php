@@ -100,6 +100,7 @@ class CustomerProfile
         $row = self::ordersFor($this->userId(), $this->email)
             ->whereIn('status', self::PAID_STATUSES)
             ->whereNull('credit_for_order_id')
+            ->whereNull('replaced_by_order_id')
             ->where(fn (Builder $q) => $q->whereNull('invoice_id')->orWhereNotIn('invoice_id', ['PROFORMA', 'RETURN']))
             ->toBase()
             ->selectRaw('count(*) as aantal, coalesce(sum(total), 0) as totaal, max(created_at) as laatste')
