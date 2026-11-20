@@ -2,9 +2,9 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\Concerns;
 
+use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Classes\Dashboard\DashboardPeriod;
-use Dashed\DashedCore\Filament\Pages\Dashboard\Dashboard;
 
 /**
  * Dezelfde periodekeuze als de bestaande omzetwidgets: begint op de
