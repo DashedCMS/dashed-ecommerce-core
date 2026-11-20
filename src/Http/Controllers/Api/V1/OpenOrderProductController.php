@@ -151,7 +151,7 @@ class OpenOrderProductController extends Controller
         $rowsQuery = (clone $base)
             ->select([
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
-                'op.product_extras',
+                'op.product_extras', 'op.stock_status_at_order',
                 'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at', 'o.is_priority',
                 'o.first_name', 'o.last_name', 'o.email',
             ])
@@ -190,6 +190,9 @@ class OpenOrderProductController extends Controller
                 'options' => $this->extrasLine($r->product_extras),
                 'quantity' => (int) $r->quantity,
                 'stock' => $p ? (int) $p['stock'] : null,
+                // Voorraadstatus op besteldatum (historisch, los van de huidige
+                // 'stock' hierboven): 'in_stock' / 'out_of_stock' / null.
+                'stock_status_at_order' => $r->stock_status_at_order,
                 'image_url' => $p['image_url'] ?? null,
                 'order_origin' => $r->order_origin,
                 'is_priority' => (bool) $r->is_priority,

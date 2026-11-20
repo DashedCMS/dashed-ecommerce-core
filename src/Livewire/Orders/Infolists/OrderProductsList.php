@@ -8,6 +8,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Storage;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
@@ -65,6 +66,11 @@ class OrderProductsList extends Component implements HasSchemas
                     'label' => ($orderProduct->send_to_fulfiller ? 'Doorgestuurd naar ' : 'Moet nog doorgestuurd worden naar ') . ($orderProduct->fulfillmentCompany->name ?? $orderProduct->fulfillment_provider),
                     'color' => $orderProduct->send_to_fulfiller ? 'success' : 'warning',
                 ];
+            }
+            if ($orderProduct->stock_status_at_order === OrderProduct::STOCK_STATUS_IN_STOCK) {
+                $badges[] = ['label' => 'Op voorraad', 'color' => 'success'];
+            } elseif ($orderProduct->stock_status_at_order === OrderProduct::STOCK_STATUS_OUT_OF_STOCK) {
+                $badges[] = ['label' => 'Niet op voorraad', 'color' => 'danger'];
             }
 
             $extras = '';

@@ -19,6 +19,12 @@ class OrderProduct extends Model
     use SoftDeletes;
     use LogsActivity;
 
+    /** Het volledige bestelde aantal was direct leverbaar op besteldatum. */
+    public const STOCK_STATUS_IN_STOCK = 'in_stock';
+
+    /** (Deels) backorder/pre-order: niet (volledig) leverbaar op besteldatum. */
+    public const STOCK_STATUS_OUT_OF_STOCK = 'out_of_stock';
+
     protected static $logFillable = true;
 
     protected $table = 'dashed__order_products';
@@ -27,6 +33,7 @@ class OrderProduct extends Model
         'quantity',
         'returned_quantity',
         'is_pre_order',
+        'stock_status_at_order',
         'order_id',
         'name',
         'product_id',
@@ -66,6 +73,14 @@ class OrderProduct extends Model
 
         static::creating(function ($orderProduct) {
             $orderProduct->skip_stock = $orderProduct->resolveSkipStock();
+
+            // Voorraadstatus op besteldatum: live productstand bij het aanmaken
+            // van de regel (de voorraad wordt pas later in Order afgeboekt), dus
+            // de stand nú = de stand op moment van bestellen. Niet overschrijven
+            // als een aanroeper de waarde al expliciet heeft gezet.
+            if ($orderProduct->stock_status_at_order === null) {
+                $orderProduct->stock_status_at_order = $orderProduct->resolveStockStatusAtOrder();
+            }
 
             // Zonder OSS op de actieve site blijft de order ongeladen: precies het oude pad.
             $order = OssVat::enabled() ? $orderProduct->order : null;
@@ -144,6 +159,46 @@ class OrderProduct extends Model
             ->whereIn('id', $optionIds)
             ->where('skip_stock', 1)
             ->exists();
+    }
+
+    /**
+     * Bepaalt of deze regel op het moment van bestellen (volledig) op voorraad
+     * was. Definitie: groen alleen als het hele bestelde aantal direct leverbaar
+     * was; een (deels) backorder/pre-order telt als niet op voorraad. Producten
+     * zonder voorraadbeheer (`use_stock = false`) en regels zonder gekoppeld
+     * product geven null (onbekend/niet van toepassing, niet getoond).
+     *
+     * Gebruikt dezelfde bron als de bestaande pre-order-check (`backorderedQuantity`),
+     * zodat de waarde consistent is met `is_pre_order` en met de backfill.
+     */
+    public function resolveStockStatusAtOrder(): ?string
+    {
+        if (! $this->product_id) {
+            return null;
+        }
+
+        $product = $this->relationLoaded('product')
+            ? $this->product
+            : Product::withTrashed()->find($this->product_id);
+
+        if (! $product || ! $product->use_stock) {
+            return null;
+        }
+
+        $quantity = (int) $this->quantity;
+
+        // Backorder/pre-order (zelfde check als is_pre_order): niet het hele
+        // bestelde aantal was direct leverbaar.
+        if ($product->backorderedQuantity($quantity) > 0) {
+            return self::STOCK_STATUS_OUT_OF_STOCK;
+        }
+
+        // Overige voorraadbeheer-producten (bv. handmatig toegevoegd ondanks
+        // tekort): op voorraad als de rauwe on-hand-voorraad het bestelde
+        // aantal dekte, anders niet.
+        return $product->directSellableStock(true) >= $quantity
+            ? self::STOCK_STATUS_IN_STOCK
+            : self::STOCK_STATUS_OUT_OF_STOCK;
     }
 
     public function product()

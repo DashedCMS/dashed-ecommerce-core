@@ -72,6 +72,24 @@ class ViewStatusses extends Component implements HasSchemas
             ];
         }
 
+        if ($summary = $this->order->stockStatusAtOrderSummary()) {
+            $badges[] = [
+                'status' => match ($summary) {
+                    'all_in_stock' => 'Alles op voorraad',
+                    'partial' => 'Deels op voorraad',
+                    'none_in_stock' => 'Niet op voorraad',
+                    default => '',
+                },
+                'color' => match ($summary) {
+                    'all_in_stock' => 'success',
+                    'partial' => 'warning',
+                    'none_in_stock' => 'danger',
+                    default => 'gray',
+                },
+                'url' => null,
+            ];
+        }
+
         return array_values(array_filter($badges, fn (array $badge): bool => filled($badge['status'])));
     }
 

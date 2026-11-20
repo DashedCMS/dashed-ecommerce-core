@@ -151,6 +151,24 @@ class OpenOrderProductsTable
                         )
                         ->orderBy('voorraad_join.stock', $direction)
                         ->select('dashed__order_products.*')),
+                TextColumn::make('stock_status_at_order')
+                    ->label(__('Voorraad bij besteldatum'))
+                    ->badge()
+                    ->toggleable()
+                    ->getStateUsing(fn ($record): ?string => match ($record->stock_status_at_order) {
+                        OrderProduct::STOCK_STATUS_IN_STOCK => __('Op voorraad'),
+                        OrderProduct::STOCK_STATUS_OUT_OF_STOCK => __('Niet op voorraad'),
+                        default => null,
+                    })
+                    ->color(fn ($record): string => match ($record->stock_status_at_order) {
+                        OrderProduct::STOCK_STATUS_IN_STOCK => 'success',
+                        OrderProduct::STOCK_STATUS_OUT_OF_STOCK => 'danger',
+                        default => 'gray',
+                    })
+                    // Een gegroepeerde regel bundelt meerdere orders/orderregels,
+                    // dus geen betekenisvolle per-regel voorraadstatus (net als de
+                    // Deadline- en Klant-kolommen hieronder).
+                    ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
                 TextColumn::make('order.order_origin')
                     ->label(__('Order origin'))
                     ->badge()

@@ -47,6 +47,12 @@ class OrderResource extends JsonResource
                 : null,
             'created_at' => optional($this->created_at)->toIso8601String(),
             'products' => OrderProductResource::collection($this->whenLoaded('orderProducts')),
+            // Samenvatting voorraad-op-besteldatum over de regels: 'all_in_stock'
+            // / 'partial' / 'none_in_stock' / null. Alleen berekend als de regels
+            // geladen zijn (voorkomt een extra query in de lijst-respons).
+            'stock_summary' => $this->resource->relationLoaded('orderProducts')
+                ? $this->stockStatusAtOrderSummary()
+                : null,
             // Verzendvorm (Pakket, Brievenbus, Ophalen, ...), see ParcelType.
             'parcel_type' => self::parcelTypePayload($parcelType),
         ];

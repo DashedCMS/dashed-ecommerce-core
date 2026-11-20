@@ -532,6 +532,33 @@ class Order extends Model
         return $this->hasMany(OrderProduct::class)->whereNotNull('product_id')->withTrashed();
     }
 
+    /**
+     * Samenvatting van de voorraadstatus op besteldatum over alle regels die er
+     * een hebben (voorraadbeheer-producten): 'all_in_stock' (alles op voorraad),
+     * 'none_in_stock' (niets op voorraad) of 'partial' (deels). Regels zonder
+     * status (geen voorraadbeheer, onbekend) tellen niet mee. Null als geen
+     * enkele regel een status heeft, zodat er dan niets getoond wordt.
+     */
+    public function stockStatusAtOrderSummary(): ?string
+    {
+        $statuses = $this->orderProducts
+            ->pluck('stock_status_at_order')
+            ->filter(fn ($status) => $status !== null && $status !== '');
+
+        if ($statuses->isEmpty()) {
+            return null;
+        }
+
+        $hasInStock = $statuses->contains(OrderProduct::STOCK_STATUS_IN_STOCK);
+        $hasOutOfStock = $statuses->contains(OrderProduct::STOCK_STATUS_OUT_OF_STOCK);
+
+        if ($hasInStock && $hasOutOfStock) {
+            return 'partial';
+        }
+
+        return $hasOutOfStock ? 'none_in_stock' : 'all_in_stock';
+    }
+
     public function orderPayments(): HasMany
     {
         return $this->hasMany(OrderPayment::class);

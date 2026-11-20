@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.217.0 - 2026-11-20
+
+### Added
+- Order-regels leggen nu vast of het product op voorraad was op het moment van bestellen, via het nieuwe nullable veld `stock_status_at_order` op `dashed__order_products` (`in_stock` = het volledige bestelde aantal was direct leverbaar, `out_of_stock` = (deels) backorder/pre-order, `null` = onbekend of geen voorraadbeheer). Wordt automatisch gevuld bij het aanmaken van elke order-regel (`OrderProduct::creating`) op basis van de live productstand, consistent met de bestaande `is_pre_order`-check.
+- `Order::stockStatusAtOrderSummary()`: samenvatting op orderniveau (`all_in_stock` / `partial` / `none_in_stock` / `null`) over de regels met voorraadbeheer.
+- Filament orderdetail: badge per productregel ("Op voorraad" / "Niet op voorraad") plus een samenvattingsbadge in de orderkop; ook een kolom "Voorraad bij besteldatum" op de pagina Openstaande bestellingen (verborgen op de gegroepeerde tabs).
+- Mobiele API: `stock_status_at_order` op de order-productregel (orderdetail) en op de openstaande-bestel-producten-lijst, plus `stock_summary` op het orderdetail.
+- Artisan-command `dashed:backfill-order-product-stock-status` om bestaande orders best-effort te vullen op basis van de opgeslagen `is_pre_order`-vlag (pre-order -> `out_of_stock`; niet-pre-order bij een voorraadbeheer-product -> `in_stock`; de rest blijft `null`/onbekend). Opties `--dry-run` en `--all`. Er is geen voorraadhistorie, dus historische reconstructie is bewust best-effort en vult nooit een gegokte waarde in.
+
 ## v4.216.2 - 2026-11-20
 
 ### Fixed
@@ -175,36 +184,30 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - **Klantnotities + vrije-tekst tags (mobiele API).** Klanten zijn een aggregatie van bestellingen op e-mailadres (geen los klant-model), dus een notitie + tags hangen aan `(site_id, email)` in de nieuwe tabel `dashed__customer_annotations` (los model `CustomerAnnotation`). `CustomerController` krijgt `annotation()` / `saveAnnotation()`, en `profile()` levert de annotatie mee. Routes `customers/annotation` (GET `orders.read`, PUT `orders.write`). Tags zijn vrije tekst met suggesties uit eerder gebruikte tags.
 - **Betaallink/-herinnering sturen (mobiele API).** Nieuw endpoint `POST orders/{order}/payment-link` (`orders.write`) dat de klant een betaallink mailt voor het openstaande bedrag. Hergebruikt de Filament `SendPaymentLinkAction` (concept-activatie + factuur identiek aan het CMS) en legt een orderlog vast. Bedrag + e-mailadres zijn optioneel te overschrijven.
 
-
 ## v4.197.1 - 2026-11-15
 
 ### Fixed
 - **Openstaande bestellingen: sorteren op Deadline, Voorraad en Order origin gaf een fout.** De sorteer-closures vroegen `$dir`, terwijl Filament de richting als `$direction` doorgeeft ("[$dir] was unresolvable").
-
 
 ## v4.197.0 - 2026-11-15
 
 ### Added
 - **Openstaande bestellingen: deadline.** Kolom "Deadline" (zelfde badge, kleur en tooltip als in de orderlijst, "Bol " ervoor bij een Bol-deadline), sorteerbaar met regels zonder deadline onderaan, en filter Deadline (te laat, vandaag, morgen, vandaag of eerder). Niet zichtbaar op de gegroepeerde tabbladen. `OpenOrderProductsTable::orderByDeadline()` en `filterDeadline()` werken via een gecorreleerde subquery (`DEADLINE_SQL`), zodat tabs met eigen joins blijven werken.
 
-
 ## v4.196.0 - 2026-11-14
 
 ### Changed
 - **Verlaten-wagen-flows: één actieve flow per trigger.** Er kunnen nu meerdere flows tegelijk aan staan, zolang ze geen trigger delen. Activeren (knop "Activeren", aanmaken of opslaan met "Actieve flow" aan, `AbandonedCartFlow::activate()`, `createDefault()`) zet alleen andere actieve flows uit die minstens één trigger delen (`deactivateOverlappingFlows()`); daarvoor ging elke andere flow uit. De engine kiest per trigger de actieve flow met `AbandonedCartFlow::getActiveFor($trigger)` (wagen met e-mail, geannuleerde bestelling, verlanglijst, "Toepassen op bestaande"); staan er door oude data twee aan voor dezelfde trigger, dan schrijft alleen de oudste in. `getActive()` blijft bestaan (eerste actieve flow). De standaardflow krijgt trigger `cart_with_email`. Helptekst en tip aangepast.
-
 
 ## v4.195.1 - 2026-11-14
 
 ### Fixed
 - **Product en productgroep bewerken gaf een 500** ("Cannot access trait constant AddsNewImages::NEW_IMAGES_DIRECTORY directly"): het uploadveld "Nieuwe afbeeldingen" las de constante via de trait, wat PHP niet toestaat. Leest hem nu via `EditProduct`.
 
-
 ## v4.195.0 - 2026-11-14
 
 ### Changed
 - **Leverdatum is leidend in de deadline.** Heeft een order een uiterste leverdatum, dan tonen orderlijst, orderdetail, pakbon en app die ("Uiterlijk geleverd …"); de verzenddatum alleen als er geen leverdatum is (Etsy). Sorteren en filteren volgen dezelfde datum.
-
 
 ## v4.194.0 - 2026-11-14
 
@@ -1012,8 +1015,6 @@ Uit het Beveiligingsplaybook Dashed-projecten (M5, M7, M12); vereist dashed-core
 - Nieuwe header-action **"Cadeaubon inleveren"** op `POSPage` (icoon `heroicon-o-gift`). Modal met code-input, helpertekst toont al-toegepaste bonnen, submit roept `applyGiftCardCode()` aan en geeft een notification met succes of fout.
 - `PointOfSaleApiController::calculatePosCartTotals()` retourneert nu ook `giftCards` (lijst met `code`, `discount_code_id`, `balance`, `redeemed`), `giftCardsTotal` en `totalAfterGiftCards`. Per cadeaubon `min(saldo, resterend totaal)` zodat eerstvolgorde-eerst-uitgeput werkt.
 - Order finalisatie in POS: `Order.applied_gift_cards` wordt opgeslagen, per cadeaubon wordt het saldo van de `DiscountCode` afgeboekt + `DiscountCodeLog::createLog(tag: 'giftcard.redeemed')` + losse `OrderPayment` (`psp='giftcard'`, `payment_method='Cadeaubon <code>'`, `status='paid'`) per kaart aangemaakt. Op de POSCart wordt `applied_gift_cards` daarna geleegd.
-
-
 
 ### Fixed
 - `body-extend.blade.php` registreert Livewire-event listeners (`productAddedToCart`, `viewProduct`, `cartInitiated`, `checkoutSubmitted`, `orderPaid`) nu defensief: als `window.Livewire` al bestaat bind direct, anders luister op `livewire:init`. Voorheen liep registratie altijd via `addEventListener('livewire:init', ...)` waardoor de callback nooit kwam wanneer `@livewireScripts` vóór deze tag stond. Daardoor werden Facebook Pixel events (AddToCart, ViewContent, AddPaymentInfo, Purchase, InitiateCheckout) en de bijbehorende GA4 / TikTok-tracking calls niet afgevuurd.
