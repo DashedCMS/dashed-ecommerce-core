@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.217.1 - 2026-11-20
+
+### Added
+- De backfill van `stock_status_at_order` draait nu eenmalig automatisch bij deploy via een migratie (`2026_11_20_130000_backfill_order_product_stock_status`), zodat bestaande orders meteen een status krijgen zonder de artisan-command handmatig te draaien. Idempotent (alleen rijen zonder waarde) en best-effort via de opgeslagen `is_pre_order`-vlag. De command `dashed:backfill-order-product-stock-status` blijft bestaan voor een `--dry-run` of een herberekening (`--all`); de kernlogica is nu gedeeld (`BackfillOrderProductStockStatus::backfill()`).
+
 ## v4.217.0 - 2026-11-20
 
 ### Added
