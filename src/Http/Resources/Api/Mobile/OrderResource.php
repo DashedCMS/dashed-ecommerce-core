@@ -101,6 +101,10 @@ class OrderResource extends JsonResource
                 'subtotal' => $this->subtotal !== null ? (float) $this->subtotal : null,
                 'btw' => $this->btw !== null ? (float) $this->btw : null,
                 'discount' => $this->discount !== null ? (float) $this->discount : null,
+                // De gebruikte kortingscode (zelfde bron als Filament: de
+                // discountCode-relatie), zodat de app bij Bedragen kan tonen
+                // welke code er is ingezet. Null als er geen code gebruikt is.
+                'discount_code' => $this->discount > 0 ? $this->discountCode?->code : null,
                 'total' => $this->total !== null ? (float) $this->total : null,
                 'paid' => (float) $this->paidAmount,
                 'open' => (float) $this->openAmount,

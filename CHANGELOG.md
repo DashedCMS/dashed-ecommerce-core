@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.216.0 - 2026-11-20
+
+### Added
+- Mobiele API (bestellingdetail): het veld `amounts.discount_code` met de gebruikte kortingscode (uit de `discountCode`-relatie, null zonder korting), zodat de app bij Bedragen kan tonen welke code is ingezet.
+
 ## v4.215.0 - 2026-11-20
 
 ### Added
