@@ -13,7 +13,7 @@ class AlltimeRevenueStats extends StatsOverviewWidget
     protected function getCards(): array
     {
         $statistics = Cache::remember('all-time-revenue-stats', 60 * 60, function () {
-            $normal = OrderStatistics::totals(Order::query()->isPaid());
+            $normal = OrderStatistics::totals(Order::query()->countsAsRevenue());
             $return = OrderStatistics::totals(Order::query()->isReturn());
 
             $average = fn (array $totals) => CurrencyHelper::formatPrice($totals['orders'] ? $totals['amount'] / $totals['orders'] : 0);

@@ -53,7 +53,7 @@ class DashboardFunLineChartStats extends ChartWidget
 
         while ($startDate < $endDate) {
             $statistics['newUsers'][] = User::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->count();
-            $statistics['newOrders'][] = Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->isPaid()->count();
+            $statistics['newOrders'][] = Order::where('created_at', '>=', $startDate->copy()->$startFormat())->where('created_at', '<=', $startDate->copy()->$endFormat())->countsAsRevenue()->count();
             $statistics['labels'][] = $startDate->format('d-m-Y');
             $startDate->$addFormat();
         }

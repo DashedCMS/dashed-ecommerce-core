@@ -31,7 +31,7 @@ class ProductTable extends TableWidget
         return $table
             ->poll('1s')
             ->query(function () {
-                $orderIds = Order::isPaid()
+                $orderIds = Order::countsAsRevenue()
                     ->where('created_at', '>=', $this->graphData['filters']['beginDate'])
                     ->where('created_at', '<=', $this->graphData['filters']['endDate']);
 

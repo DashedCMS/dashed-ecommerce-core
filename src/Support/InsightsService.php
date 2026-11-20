@@ -30,9 +30,9 @@ class InsightsService
     {
         $monthStart = now()->startOfMonth();
 
-        $paidThisMonth = Order::query()->where('site_id', $siteId)->isPaid()
+        $paidThisMonth = Order::query()->where('site_id', $siteId)->countsAsRevenue()
             ->whereBetween('created_at', [$monthStart, now()])->get(['total']);
-        $paidToday = Order::query()->where('site_id', $siteId)->isPaid()
+        $paidToday = Order::query()->where('site_id', $siteId)->countsAsRevenue()
             ->whereBetween('created_at', [now()->startOfDay(), now()])->get(['total']);
 
         $revenueMonth = round((float) $paidThisMonth->sum('total'), 2);
@@ -41,7 +41,7 @@ class InsightsService
         // Btw ontvangen deze maand (per orderregel opgeslagen).
         $vatMonth = round((float) OrderProduct::query()
             ->whereHas('order', function ($q) use ($siteId, $monthStart): void {
-                $q->where('site_id', $siteId)->isPaid()->whereBetween('created_at', [$monthStart, now()]);
+                $q->where('site_id', $siteId)->countsAsRevenue()->whereBetween('created_at', [$monthStart, now()]);
             })
             ->sum('btw'), 2);
 
@@ -68,7 +68,7 @@ class InsightsService
         $sold = OrderProduct::query()
             ->whereNotNull('product_id')
             ->whereHas('order', function ($q) use ($siteId, $since): void {
-                $q->where('site_id', $siteId)->isPaid()->where('created_at', '>=', $since);
+                $q->where('site_id', $siteId)->countsAsRevenue()->where('created_at', '>=', $since);
             })
             ->selectRaw('product_id, SUM(quantity) as units')
             ->groupBy('product_id')

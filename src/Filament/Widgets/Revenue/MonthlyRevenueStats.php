@@ -18,7 +18,7 @@ class MonthlyRevenueStats extends StatsOverviewWidget
         $statistics = Cache::remember('monthly-revenue-stats', 60 * 60, function () {
             $statistics = [];
 
-            $monthOrders = Order::where('created_at', '>=', now()->startOfMonth())->isPaid()->get();
+            $monthOrders = Order::where('created_at', '>=', now()->startOfMonth())->countsAsRevenue()->get();
             $statistics['month'] = [
                 'orders' => $monthOrders->count(),
                 'products' => OrderProduct::whereIn('order_id', $monthOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),

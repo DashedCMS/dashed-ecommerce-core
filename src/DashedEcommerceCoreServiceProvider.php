@@ -2226,7 +2226,7 @@ MARKDOWN,
 
                 $paidInRange = $orderModel::query()
                     ->where('site_id', $siteId)
-                    ->isPaid()
+                    ->countsAsRevenue()
                     ->whereBetween('created_at', [$period->start, $period->end])
                     ->get(['id', 'total', 'created_at']);
 
@@ -2238,7 +2238,7 @@ MARKDOWN,
                 $unhandledOrders = $orderModel::query()
                     ->where('site_id', $siteId)
                     ->where('fulfillment_status', 'unhandled')
-                    ->isPaid()
+                    ->countsAsRevenue()
                     ->count();
 
                 $series = [];
@@ -2276,7 +2276,7 @@ MARKDOWN,
                     $productModel = \Dashed\DashedEcommerceCore\Models\Product::class;
                     $fmt = fn (float $n): string => '€ ' . number_format($n, 2, ',', '.');
 
-                    $sum = fn ($from) => $orderModel::query()->where('site_id', $siteId)->isPaid()
+                    $sum = fn ($from) => $orderModel::query()->where('site_id', $siteId)->countsAsRevenue()
                         ->whereBetween('created_at', [$from, now()])->get(['total']);
 
                     $today = $sum(now()->startOfDay());

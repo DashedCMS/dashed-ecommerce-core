@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
  * in een periode, op één site.
  *
  * Op één plek zodat "wat telt mee als omzet" niet per analyse kan gaan
- * afwijken. Betaald is Order::isPaid() en de datum is orders.created_at,
+ * afwijken. Betaald is Order::countsAsRevenue() en de datum is orders.created_at,
  * gelijk aan de bestaande statistiekpagina's.
  */
 class OrderLineQuery
@@ -21,7 +21,7 @@ class OrderLineQuery
     {
         return Order::query()
             ->where('site_id', $siteId)
-            ->isPaid()
+            ->countsAsRevenue()
             ->whereBetween('created_at', [$period->start, $period->end]);
     }
 

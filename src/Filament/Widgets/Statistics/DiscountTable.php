@@ -47,7 +47,7 @@ class DiscountTable extends TableWidget
                 }
 
                 if ($this->graphData['filters']['status'] == null || $this->graphData['filters']['status'] == 'payment_obligation') {
-                    $orders->isPaid();
+                    $orders->countsAsRevenue();
                 } elseif ($this->graphData['filters']['status'] != 'all') {
                     $orders->where('status', $this->graphData['filters']['status']);
                 }

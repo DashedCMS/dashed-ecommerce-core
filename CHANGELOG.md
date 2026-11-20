@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.216.1 - 2026-11-20
+
+### Fixed
+- Omzet telde een gewijzigde bestelling dubbel: bij een wijziging met creditfactuur bleef de oude order op betaald staan naast de vervanger (die dezelfde orderdatum houdt). Nieuwe scope `Order::countsAsRevenue()` (betaald en niet vervangen) in de omzetwidgets (dag/maand/jaar/totaal/periode, grafiek, doelen, product-/groep-/kortingstabellen), `OrderStatistics`, `OrderLineQuery` (verkoopanalyse), `InsightsService` (mobiele app), dagbriefing, samenvattingen en de AI-omzettools. Creditfacturen worden nog steeds niet van de betaalde omzet afgetrokken.
+
 ## v4.216.0 - 2026-11-20
 
 ### Added

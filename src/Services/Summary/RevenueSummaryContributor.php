@@ -48,7 +48,7 @@ class RevenueSummaryContributor implements SummaryContributorInterface
     public static function contribute(SummaryPeriod $period): ?SummarySection
     {
         $ordersQuery = Order::query()
-            ->isPaid()
+            ->countsAsRevenue()
             ->whereBetween('created_at', [$period->start, $period->end]);
 
         $orderCount = (clone $ordersQuery)->count();

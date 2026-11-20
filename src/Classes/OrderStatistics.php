@@ -135,7 +135,7 @@ class OrderStatistics
         $previousTo = $previousEnd->toDateTimeString();
 
         $row = Order::query()
-            ->isPaid()
+            ->countsAsRevenue()
             ->where('created_at', '>=', $previousStart)
             ->where('created_at', '<=', $end)
             ->toBase()
@@ -163,7 +163,7 @@ class OrderStatistics
     public static function perOrigin(Carbon $start, Carbon $end): array
     {
         return Order::query()
-            ->isPaid()
+            ->countsAsRevenue()
             ->where('created_at', '>=', $start)
             ->where('created_at', '<=', $end)
             ->toBase()

@@ -27,7 +27,7 @@ class DoelenWidget extends Widget
             [$start, $end] = $this->range($key);
 
             $paid = Order::whereBetween('created_at', [$start, $end])
-                ->isPaid()
+                ->countsAsRevenue()
                 ->toBase()
                 ->selectRaw('COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue')
                 ->first();

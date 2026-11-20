@@ -18,7 +18,7 @@ class YearlyRevenueStats extends StatsOverviewWidget
         $statistics = Cache::remember('yearly-revenue-stats', 60 * 60, function () {
             $statistics = [];
 
-            $yearOrders = Order::where('created_at', '>=', now()->startOfYear())->isPaid()->get();
+            $yearOrders = Order::where('created_at', '>=', now()->startOfYear())->countsAsRevenue()->get();
             $statistics['year'] = [
                 'orders' => $yearOrders->count(),
                 'products' => OrderProduct::whereIn('order_id', $yearOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),

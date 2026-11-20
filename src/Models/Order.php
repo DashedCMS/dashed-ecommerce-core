@@ -933,6 +933,19 @@ class Order extends Model
     }
 
     /**
+     * Betaalde orders zoals ze in de omzet horen: zonder orders die door een
+     * orderwijziging vervangen zijn. Bij een wijziging met creditfactuur
+     * blijft de oude order op betaald staan en neemt de vervanger (met
+     * dezelfde orderdatum) zijn omzet over; met isPaid() alleen telt die
+     * omzet dubbel. De creditfactuur van de wijziging staat op retour en
+     * telt hier dus ook niet mee.
+     */
+    public function scopeCountsAsRevenue($query)
+    {
+        return $query->isPaid()->whereNull($this->qualifyColumn('replaced_by_order_id'));
+    }
+
+    /**
      * Orders met minstens één betaalde betaling via een van deze methodes.
      * Een gesplitste betaling (pin + contant) valt onder beide, een
      * mislukte poging telt niet. Oude betaalregels hebben alleen de naam

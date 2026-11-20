@@ -38,7 +38,7 @@ class SendDailyBriefingCommand extends Command
             // Gisteren: betaalde omzet + aantal bestellingen.
             $paid = Order::query()
                 ->where('site_id', $siteId)
-                ->isPaid()
+                ->countsAsRevenue()
                 ->whereBetween('created_at', [$start, $end])
                 ->get(['id', 'total']);
             $revenue = round((float) $paid->sum('total'), 2);
@@ -48,7 +48,7 @@ class SendDailyBriefingCommand extends Command
             $unhandled = Order::query()
                 ->where('site_id', $siteId)
                 ->where('fulfillment_status', 'unhandled')
-                ->isPaid()
+                ->countsAsRevenue()
                 ->count();
 
             // Producten op of onder de voorraaddrempel (of <= 0), zelfde definitie

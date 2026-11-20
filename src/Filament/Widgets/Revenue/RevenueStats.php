@@ -46,7 +46,7 @@ class RevenueStats extends StatsOverviewWidget
             ->where('created_at', '>=', $startDate->copy()->$startFormat())
             ->where('created_at', '<=', $endDate->copy()->$endFormat());
 
-        $normal = OrderStatistics::totals($inPeriod()->isPaid());
+        $normal = OrderStatistics::totals($inPeriod()->countsAsRevenue());
         $return = OrderStatistics::totals($inPeriod()->isReturn());
 
         $average = fn (array $totals) => CurrencyHelper::formatPrice($totals['orders'] ? $totals['amount'] / $totals['orders'] : 0);

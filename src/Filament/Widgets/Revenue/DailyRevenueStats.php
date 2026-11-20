@@ -17,7 +17,7 @@ class DailyRevenueStats extends StatsOverviewWidget
     {
         $statistics = [];
 
-        $todayOrders = Order::where('created_at', '>=', now()->startOfDay())->isPaid()->get();
+        $todayOrders = Order::where('created_at', '>=', now()->startOfDay())->countsAsRevenue()->get();
         $statistics['day'] = [
             'orders' => $todayOrders->count(),
             'products' => OrderProduct::whereIn('order_id', $todayOrders->pluck('id'))->whereNotIn('sku', OrderStatistics::NON_PRODUCT_SKUS)->sum('quantity'),
