@@ -1,28 +1,33 @@
 <div>
-    <div class="dvo-line">
-        <div class="dvo-grow">
-            <div class="dvo-strong">{{ $order->shippingMethod->name ?? __('Geen verzendmethode') }}</div>
-            <div class="dvo-small dvo-muted">{{ __('Verzendmethode') }}</div>
-        </div>
-    </div>
-    @forelse($order->trackAndTraces as $trackAndTrace)
-        <div class="dvo-line">
-            <div class="dvo-grow">
-                <div class="dvo-strong">{{ $trackAndTrace->delivery_company ?: __('Track & Trace') }}</div>
-                <div class="dvo-small dvo-muted">
-                    {{ __('Aangemaakt op :datum', ['datum' => $trackAndTrace->created_at?->format('d-m-Y H:i')]) }}
-                    @if($trackAndTrace->supplier)
-                        · {{ __('Via: :partij', ['partij' => $trackAndTrace->supplier]) }}
-                    @endif
-                </div>
+    <ul class="au-od-list">
+        <li class="au-od-line">
+            <div class="au-od-grow">
+                <div class="au-od-label au-od-muted">{{ __('Verzendmethode') }}</div>
+                <div class="au-od-strong">{{ $order->shippingMethod->name ?? __('Geen verzendmethode') }}</div>
             </div>
-            @if($trackAndTrace->url)
-                <x-filament::link :href="$trackAndTrace->url" target="_blank" icon="heroicon-o-truck">{{ $trackAndTrace->code }}</x-filament::link>
-            @else
-                <span class="dvo-mono">{{ $trackAndTrace->code }}</span>
-            @endif
-        </div>
-    @empty
-        <div class="dvo-line dvo-muted">{{ __('Nog geen track & trace bij deze bestelling.') }}</div>
-    @endforelse
+        </li>
+        @forelse($order->trackAndTraces as $trackAndTrace)
+            <li class="au-od-line">
+                <div class="au-od-grow">
+                    <div class="au-od-strong">{{ $trackAndTrace->delivery_company ?: __('Track & Trace') }}</div>
+                    <div class="au-od-small au-od-muted">
+                        {{ __('Aangemaakt op :datum', ['datum' => $trackAndTrace->created_at?->format('d-m-Y H:i')]) }}
+                        @if($trackAndTrace->supplier)
+                            · {{ __('Via: :partij', ['partij' => $trackAndTrace->supplier]) }}
+                        @endif
+                    </div>
+                    <div class="au-od-small au-od-gap-top">
+                        {{ __('Track & trace') }}:
+                        @if($trackAndTrace->url)
+                            <a class="au-od-link au-od-mono" href="{{ $trackAndTrace->url }}" target="_blank" rel="noopener">{{ $trackAndTrace->code }}</a>
+                        @else
+                            <span class="au-od-mono">{{ $trackAndTrace->code }}</span>
+                        @endif
+                    </div>
+                </div>
+            </li>
+        @empty
+            <li class="au-od-line au-od-muted">{{ __('Nog geen track & trace bij deze bestelling.') }}</li>
+        @endforelse
+    </ul>
 </div>

@@ -2,6 +2,16 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.215.0 - 2026-11-20
+
+### Added
+- Aurora-dashboard (alleen met de Aurora-stijl): KPI-rij met vergelijking met de vorige periode, omzetontwikkeling, omzet per verkoopkanaal, recente bestellingen, en prioriteiten (deadlines, prioriteitsorders, labels met fouten, te verwerken, retouraanvragen, offertes).
+- Bestellingenlijst: tabs Alle, Nieuw, Inpakken, Verzenden, Afgerond en Retouren met tellers, hoofdfilters boven de lijst, filter op verzendmethode, knop Exporteren en een werkvoorraad-widget. Standaard 25 per pagina.
+- Bestelpagina in Aurora-opmaak: stappenbalk, producten, betaling en verzending als kaarten, klantgegevens, snelle acties, documenten en een tijdlijn met filters.
+
+### Changed
+- Vereist dashed-core ^4.121.
+
 ## v4.214.0 - 2026-11-19
 
 ### Added

@@ -54,7 +54,11 @@ class OrderStatistics
      * het eind ervan; de reeks begint bij de stap waar de startdatum in valt
      * en gaat door zolang het begin van de stap voor de einddatum ligt.
      *
-     * @return array{labels: array<int, string>, paid: array<int, float>, return: array<int, float>}
+     * Naast de bedragen ook het aantal betaalde orders per stap (`paidCount`)
+     * en het begin van elke stap als timestamp (`timestamps`), voor wie zijn
+     * eigen labels wil maken.
+     *
+     * @return array{labels: array<int, string>, paid: array<int, float>, return: array<int, float>, paidCount: array<int, int>, timestamps: array<int, int>}
      */
     public static function perStep(Carbon $startDate, Carbon $endDate, string $steps): array
     {
@@ -76,12 +80,13 @@ class OrderStatistics
         );
         $paid = array_fill(0, count($starts), 0.0);
         $return = array_fill(0, count($starts), 0.0);
+        $paidCount = array_fill(0, count($starts), 0);
+        $boundaries = array_map(fn (Carbon $start) => $start->getTimestamp(), $starts);
 
         if ($starts === []) {
-            return ['labels' => $labels, 'paid' => $paid, 'return' => $return];
+            return ['labels' => $labels, 'paid' => $paid, 'return' => $return, 'paidCount' => $paidCount, 'timestamps' => $boundaries];
         }
 
-        $boundaries = array_map(fn (Carbon $start) => $start->getTimestamp(), $starts);
         $lastEnd = end($starts)->copy()->$endFormat();
 
         // Kale rijen, geen modellen: een jaar omzet is dan een paar kolommen per
@@ -93,7 +98,7 @@ class OrderStatistics
             ->toBase()
             ->select(['id', 'created_at', 'total', 'status'])
             ->orderBy('id')
-            ->chunkById(5000, function ($rows) use (&$paid, &$return, $boundaries) {
+            ->chunkById(5000, function ($rows) use (&$paid, &$return, &$paidCount, $boundaries) {
                 foreach ($rows as $row) {
                     $timestamp = strtotime((string) $row->created_at);
                     if ($timestamp === false) {
@@ -109,11 +114,69 @@ class OrderStatistics
                         $return[$index] += (float) $row->total;
                     } else {
                         $paid[$index] += (float) $row->total;
+                        $paidCount[$index]++;
                     }
                 }
             });
 
-        return ['labels' => $labels, 'paid' => $paid, 'return' => $return];
+        return ['labels' => $labels, 'paid' => $paid, 'return' => $return, 'paidCount' => $paidCount, 'timestamps' => $boundaries];
+    }
+
+    /**
+     * Aantal en bedrag van betaalde orders in een periode en in de periode
+     * ervoor, in één query: de twee periodes liggen naast elkaar, dus één
+     * bereik met een CASE per kolom volstaat.
+     *
+     * @return array{current: array{orders: int, amount: float}, previous: array{orders: int, amount: float}}
+     */
+    public static function comparePeriods(Carbon $start, Carbon $end, Carbon $previousStart, Carbon $previousEnd): array
+    {
+        $from = $start->toDateTimeString();
+        $previousTo = $previousEnd->toDateTimeString();
+
+        $row = Order::query()
+            ->isPaid()
+            ->where('created_at', '>=', $previousStart)
+            ->where('created_at', '<=', $end)
+            ->toBase()
+            ->selectRaw(
+                'SUM(CASE WHEN created_at >= ? THEN 1 ELSE 0 END) as current_orders,'
+                .' COALESCE(SUM(CASE WHEN created_at >= ? THEN total ELSE 0 END), 0) as current_amount,'
+                .' SUM(CASE WHEN created_at <= ? THEN 1 ELSE 0 END) as previous_orders,'
+                .' COALESCE(SUM(CASE WHEN created_at <= ? THEN total ELSE 0 END), 0) as previous_amount',
+                [$from, $from, $previousTo, $previousTo],
+            )
+            ->first();
+
+        return [
+            'current' => ['orders' => (int) ($row->current_orders ?? 0), 'amount' => (float) ($row->current_amount ?? 0)],
+            'previous' => ['orders' => (int) ($row->previous_orders ?? 0), 'amount' => (float) ($row->previous_amount ?? 0)],
+        ];
+    }
+
+    /**
+     * Betaalde orders per verkoopkanaal (`order_origin`) in een periode, met
+     * één GROUP BY. Een order zonder herkomst telt als eigen webshop.
+     *
+     * @return array<int, array{origin: string, orders: int, amount: float}>
+     */
+    public static function perOrigin(Carbon $start, Carbon $end): array
+    {
+        return Order::query()
+            ->isPaid()
+            ->where('created_at', '>=', $start)
+            ->where('created_at', '<=', $end)
+            ->toBase()
+            ->selectRaw("COALESCE(NULLIF(order_origin, ''), 'own') as origin, COUNT(*) as orders, COALESCE(SUM(total), 0) as amount")
+            ->groupByRaw("COALESCE(NULLIF(order_origin, ''), 'own')")
+            ->orderByDesc('amount')
+            ->get()
+            ->map(fn ($row) => [
+                'origin' => (string) $row->origin,
+                'orders' => (int) $row->orders,
+                'amount' => (float) $row->amount,
+            ])
+            ->all();
     }
 
     /** De laatste stap waarvan het begin op of voor het tijdstip ligt (binair zoeken). */

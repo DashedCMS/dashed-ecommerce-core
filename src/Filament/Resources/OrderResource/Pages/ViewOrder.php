@@ -141,6 +141,12 @@ class ViewOrder extends ViewRecord
             ->first() : '';
 
         $actions = [
+            'back' => Action::make('back')
+                ->label(__('Terug'))
+                ->icon('heroicon-o-arrow-left')
+                ->color('gray')
+                ->outlined()
+                ->url(OrderResource::getUrl('index')),
             Action::make('togglePriority')
                 ->iconButton()
                 ->label(fn () => $this->record->is_priority ? __('Prioriteit uitzetten') : __('Markeer als prioriteit'))

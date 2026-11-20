@@ -4,15 +4,10 @@ namespace Dashed\DashedEcommerceCore\Livewire\Orders\Infolists;
 
 use Livewire\Component;
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
 use Dashed\DashedCore\Classes\Helper;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Contracts\HasSchemas;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CustomerHistory;
@@ -40,72 +35,47 @@ class CustomerInformationBlockList extends Component implements HasActions, HasS
         $this->order = $order;
     }
 
-    public function infolist(Schema $schema): Schema
+    /**
+     * Tekst over eerdere bestellingen van deze klant, of null als de klant
+     * niet te herkennen is (geen gebruiker, e-mail of naam).
+     */
+    public function historyText(): ?string
     {
-        return $schema
-            ->record($this->order)
-            ->schema([
-                Fieldset::make(__('Klant'))
-                    ->schema([
-                        ImageEntry::make('image')
-                            ->getStateUsing(fn ($record) => Helper::getProfilePicture($record->email))
-                            ->circular()
-                            ->hiddenLabel()
-                            ->imageSize('md'),
-                        Grid::make()
-                            ->schema([
-                                TextEntry::make('name')
-                                    ->label(__('Naam'))
-                                    ->hiddenLabel(),
-                                TextEntry::make('phone_number')
-                                    ->label(__('Telefoonnummer'))
-                                    ->url(fn ($record) => 'tel:'.$record->phone_number)
-                                    ->badge()
-                                    ->icon('heroicon-o-phone')
-                                    ->hiddenLabel(),
-                            ])
-                            ->columnSpan(1)
-                            ->columns(1),
-                        TextEntry::make('email')
-                            ->label(__('Email'))
-                            ->url(fn ($record) => 'mailto:'.$record->email)
-                            ->badge()
-                            ->columnSpanFull()
-                            ->icon('heroicon-o-envelope')
-                            ->hiddenLabel(),
-                        TextEntry::make('customer_history_text')
-                            ->label(__('Eerdere bestellingen'))
-                            ->columnSpanFull()
-                            ->getStateUsing(function () {
-                                $other = $this->history()->otherCount();
+        if ($this->history()->matchKey() === null) {
+            return null;
+        }
 
-                                return $other === 0
-                                    ? 'Dit is de eerste bestelling van deze klant'
-                                    : 'Deze klant heeft al '.$other.' andere bestelling(en)';
-                            })
-                            ->visible(fn () => $this->history()->matchKey() !== null)
-                            ->helperText(__('Op basis van gebruiker, e-mail of voor+achternaam'))
-                            ->hintAction(
-                                Action::make('customer_history')
-                                    ->label(__('Bekijk details'))
-                                    ->icon('heroicon-o-chart-bar')
-                                    ->modalHeading(fn ($record) => __('Bestelhistorie: :naam', ['naam' => $record->name ?: $record->email]))
-                                    ->modalWidth('5xl')
-                                    ->modalContent(fn () => view(
-                                        'dashed-ecommerce-core::filament.orders.customer-history-modal',
-                                        ['history' => $this->history()],
-                                    ))
-                                    ->modalSubmitAction(false)
-                                    ->modalCancelActionLabel(__('Sluiten'))
-                                    ->visible(fn () => $this->history()->otherCount() > 0),
-                            ),
-                    ])
-                    ->columns(2),
-            ]);
+        $other = $this->history()->otherCount();
+
+        return $other === 0
+            ? __('Dit is de eerste bestelling van deze klant')
+            : __('Deze klant heeft al :aantal andere bestelling(en)', ['aantal' => $other]);
+    }
+
+    public function customerHistoryAction(): Action
+    {
+        return Action::make('customer_history')
+            ->label(__('Bekijk details'))
+            ->icon('heroicon-o-chart-bar')
+            ->link()
+            ->modalHeading(fn () => __('Bestelhistorie: :naam', ['naam' => $this->order->name ?: $this->order->email]))
+            ->modalWidth('5xl')
+            ->modalContent(fn () => view(
+                'dashed-ecommerce-core::filament.orders.customer-history-modal',
+                ['history' => $this->history()],
+            ))
+            ->modalSubmitAction(false)
+            ->modalCancelActionLabel(__('Sluiten'))
+            ->visible(fn () => $this->history()->matchKey() !== null && $this->history()->otherCount() > 0);
+    }
+
+    public function profilePicture(): ?string
+    {
+        return $this->order->email ? Helper::getProfilePicture($this->order->email) : null;
     }
 
     public function render()
     {
-        return view('dashed-ecommerce-core::orders.components.infolists.plain-info-list');
+        return view('dashed-ecommerce-core::orders.components.customer-card');
     }
 }

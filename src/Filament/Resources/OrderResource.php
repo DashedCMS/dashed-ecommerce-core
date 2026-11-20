@@ -14,6 +14,10 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Models\User;
 use Filament\Tables\Filters\Filter;
+use Filament\Schemas\Components\Grid;
+use Filament\Tables\Enums\FiltersLayout;
+use Dashed\DashedCore\Classes\Sites;
+use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -298,6 +302,26 @@ class OrderResource extends Resource
      * @param  array<string,mixed>  $data
      * @param  mixed  $livewire  Filament-injected HasTable Livewire component
      */
+    /**
+     * The default value of the status filter.
+     *
+     * @var array<int, string>
+     */
+    public const DEFAULT_STATUS_FILTER = ['paid', 'partially_paid', 'waiting_for_confirmation'];
+
+    /**
+     * @param  array<int, string>  $values
+     */
+    public static function isDefaultStatusFilter(array $values): bool
+    {
+        $values = array_values(array_unique(array_map('strval', $values)));
+        $default = self::DEFAULT_STATUS_FILTER;
+        sort($values);
+        sort($default);
+
+        return $values === $default;
+    }
+
     public static function statusFilterQuery(Builder $query, array $data, mixed $livewire): Builder
     {
         $proformaActive = (bool) ($livewire->getTableFilterState('proforma_awaiting_payment')['isActive'] ?? false);
@@ -309,6 +333,14 @@ class OrderResource extends Resource
         $values = $data['values'] ?? [];
 
         if (empty($values)) {
+            return $query;
+        }
+
+        // On the retouren tab (and while counting it) the default paid
+        // statuses would hide every credit order; see OrderListTabs. Only the
+        // default is skipped there: a status the admin chose still applies.
+        if (is_object($livewire) && method_exists($livewire, 'ignoresStatusFilter') && $livewire->ignoresStatusFilter()
+            && static::isDefaultStatusFilter($values)) {
             return $query;
         }
 
@@ -397,7 +429,7 @@ class OrderResource extends Resource
                         $deadline = $record->effectiveDeadline();
 
                         if (! $deadline) {
-                            return '-';
+                            return null;
                         }
 
                         return ($record->deadline_source === 'bol' ? 'Bol ' : '') . $deadline->format('d-m');
@@ -467,7 +499,10 @@ class OrderResource extends Resource
                 TextColumn::make('created_at')
                     ->toggleable()
                     ->label(__('Aangemaakt op'))
-                    ->getStateUsing(fn ($record) => $record->created_at->format('d-m-Y H:i'))
+                    ->getStateUsing(fn ($record) => $record->created_at->format('d-m-y H:i'))
+                    ->tooltip(fn ($record) => $record->created_at->format('d-m-Y H:i:s'))
+                    ->size('sm')
+                    ->color('gray')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('utm_source')
@@ -546,7 +581,7 @@ class OrderResource extends Resource
                     ->multiple()
                     ->form([
                         Select::make('values')
-                            ->label(__('Status'))
+                            ->label(__('Betaalstatus'))
                             ->multiple()
                             ->options([
                                 'paid' => __('Betaald'),
@@ -557,7 +592,7 @@ class OrderResource extends Resource
                                 'cancelled' => __('Geannuleerd'),
                                 'return' => __('Retour'),
                             ])
-                            ->default(['paid', 'partially_paid', 'waiting_for_confirmation']),
+                            ->default(static::DEFAULT_STATUS_FILTER),
                     ])
                     ->query(fn (Builder $query, array $data, $livewire): Builder => static::statusFilterQuery($query, $data, $livewire)),
                 SelectFilter::make('fulfillment_status')
@@ -591,6 +626,7 @@ class OrderResource extends Resource
                     ->multiple()
                     ->options(Orders::getReturnStatusses()),
                 SelectFilter::make('order_origin')
+                    ->label(__('Kanaal'))
                     ->multiple()
                     ->options($orderOrigins),
                 Filter::make('start_date')
@@ -668,6 +704,11 @@ class OrderResource extends Resource
                         filled($data['values'] ?? null),
                         fn ($query) => $query->withFailedPaymentAttempt($data['values']),
                     )),
+                SelectFilter::make('shipping_method_id')
+                    ->label(__('Verzendmethode'))
+                    ->multiple()
+                    ->searchable()
+                    ->options(fn () => static::shippingMethodFilterOptions()),
                 SelectFilter::make('country')
                     ->label(__('Land'))
                     ->multiple()
@@ -1025,13 +1066,86 @@ class OrderResource extends Resource
                             ->send();
                     }),
             ])
-            ->modifyQueryUsing(fn ($query) => static::modifyTableQueryForLastEdited(
-                Display::eagerLoadForList($query->without('orderProducts')->with(array_merge(['mainPaymentMethod', 'orderPayments.paymentMethod'], ParcelType::eagerLoads())))
+            ->modifyQueryUsing(fn ($query, $livewire) => static::modifyTableQueryForLastEdited(
+                Display::eagerLoadForList($query->without('orderProducts')->with(array_merge(
+                    ['mainPaymentMethod', 'orderPayments.paymentMethod'],
+                    ParcelType::eagerLoads(),
+                    // Hidden by default; only load the codes when the column is switched on.
+                    static::isListColumnVisible($livewire, 'trackAndTraces.code') ? ['trackAndTraces'] : [],
+                )))
             ))
-            ->filtersFormColumns(4)
+            ->filtersLayout(FiltersLayout::AboveContent)
+            ->filtersFormSchema(fn (array $filters): array => static::filtersFormLayout($filters))
+            ->filtersFormColumns(1)
+            ->paginated([25, 50, 100])
+            ->defaultPaginationPageOption(25)
             ->deferFilters(false)
             ->persistColumnSearchesInSession()
             ->persistFiltersInSession();
+    }
+
+    protected static function isListColumnVisible(mixed $livewire, string $column): bool
+    {
+        if (! is_object($livewire) || ! method_exists($livewire, 'isTableColumnToggledHidden')) {
+            return true;
+        }
+
+        return ! $livewire->isTableColumnToggledHidden($column);
+    }
+
+    /**
+     * Filters above the list: the four the design shows (period, channel,
+     * payment status, shipping method) always visible, the rest in a
+     * collapsed section. Any filter not named here lands in that section,
+     * so a filter added later is never lost.
+     *
+     * @param  array<string, \Filament\Schemas\Components\Group>  $filters
+     * @return array<int, \Filament\Schemas\Components\Component>
+     */
+    public static function filtersFormLayout(array $filters): array
+    {
+        $primaryNames = ['start_date', 'end_date', 'order_origin', 'status', 'shipping_method_id'];
+
+        $primary = array_values(array_intersect_key($filters, array_flip($primaryNames)));
+        $rest = array_values(array_diff_key($filters, array_flip($primaryNames)));
+
+        return [
+            Grid::make(['default' => 1, 'sm' => 2, 'lg' => 5])
+                ->schema($primary),
+            Section::make(__('Meer filters'))
+                ->collapsible()
+                ->collapsed()
+                ->compact()
+                ->columns(['default' => 1, 'sm' => 2, 'lg' => 4])
+                ->schema($rest),
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    protected static function shippingMethodFilterOptions(): array
+    {
+        // The order list spans every site, so with more than one site the
+        // site name goes in the label: methods often share a name per site.
+        $multipleSites = Sites::getAmountOfSites() > 1;
+        $siteNames = collect(Sites::getSites())->mapWithKeys(fn ($site) => [(string) $site['id'] => (string) ($site['name'] ?? $site['id'])]);
+
+        return ShippingMethod::query()
+            ->with('shippingZone')
+            ->get()
+            ->mapWithKeys(function (ShippingMethod $shippingMethod) use ($multipleSites, $siteNames) {
+                $label = (string) $shippingMethod->name;
+                $siteId = (string) ($shippingMethod->shippingZone?->site_id ?? $shippingMethod->site_id ?? '');
+
+                if ($multipleSites && $siteId !== '') {
+                    $label .= ' (' . ($siteNames[$siteId] ?? $siteId) . ')';
+                }
+
+                return [$shippingMethod->id => $label];
+            })
+            ->sort()
+            ->toArray();
     }
 
     /**

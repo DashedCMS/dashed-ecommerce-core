@@ -1,30 +1,33 @@
 <div>
-    @forelse($order->orderPayments as $orderPayment)
-        <div class="dvo-line">
-            <div class="dvo-grow">
-                <div class="dvo-strong">{{ $orderPayment->payment_method ?: ($orderPayment->paymentMethod->name ?? '-') }}</div>
-                <div class="dvo-small dvo-muted">
-                    {{ $orderPayment->created_at?->format('d-m-Y H:i') }}
-                    @if($orderPayment->psp)
-                        · {{ $orderPayment->psp }}
-                    @endif
-                    @if($orderPayment->psp_id)
-                        · <span class="dvo-mono">{{ $orderPayment->psp_id }}</span>
+    <ul class="au-od-list">
+        @forelse($order->orderPayments as $orderPayment)
+            <li class="au-od-line">
+                <div class="au-od-grow">
+                    <div class="au-od-label au-od-muted">{{ __('Betaalmethode') }}</div>
+                    <div class="au-od-strong">{{ $orderPayment->payment_method ?: ($orderPayment->paymentMethod->name ?? '-') }}</div>
+                    <div class="au-od-small au-od-muted">
+                        {{ $orderPayment->created_at?->format('d-m-Y H:i') }}
+                        @if($orderPayment->psp)
+                            · {{ $orderPayment->psp }}
+                        @endif
+                        @if($orderPayment->psp_id)
+                            · <span class="au-od-mono">{{ $orderPayment->psp_id }}</span>
+                        @endif
+                    </div>
+                    @if(filled($note = data_get($orderPayment->getAttribute('attributes'), 'note')))
+                        <div class="au-od-small au-od-gap-top">{{ $note }}</div>
                     @endif
                 </div>
-                @if(filled($note = data_get($orderPayment->getAttribute('attributes'), 'note')))
-                    <div class="dvo-small dvo-gap-top">{{ $note }}</div>
+                <x-dashed-core::aurora.badge :tone="\Dashed\DashedEcommerceCore\Classes\AuroraTone::from($this->statusColor($orderPayment->status))">{{ $this->statusLabel($orderPayment->status) }}</x-dashed-core::aurora.badge>
+                <div class="au-od-price au-od-strong">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderPayment->amount) }}</div>
+                @if(filled($orderPayment->psp_request) || filled($orderPayment->psp_response))
+                    {{ ($this->pspDataAction)(['payment' => $orderPayment->id]) }}
                 @endif
-            </div>
-            <x-filament::badge :color="$this->statusColor($orderPayment->status)">{{ $this->statusLabel($orderPayment->status) }}</x-filament::badge>
-            <div class="dvo-price dvo-strong">{{ \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($orderPayment->amount) }}</div>
-            @if(filled($orderPayment->psp_request) || filled($orderPayment->psp_response))
-                {{ ($this->pspDataAction)(['payment' => $orderPayment->id]) }}
-            @endif
-        </div>
-    @empty
-        <div class="dvo-line dvo-muted">{{ __('Nog geen betalingen bij deze bestelling.') }}</div>
-    @endforelse
+            </li>
+        @empty
+            <li class="au-od-line au-od-muted">{{ __('Nog geen betalingen bij deze bestelling.') }}</li>
+        @endforelse
+    </ul>
 
     <x-filament-actions::modals />
 </div>

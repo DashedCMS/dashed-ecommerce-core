@@ -1,108 +1,59 @@
 <x-filament::page>
-    {{-- Eigen stijlblok: niet elk klantproject compileert de views uit vendor/dashed mee in Tailwind. --}}
-    <style>
-        .dvo { display: flex; flex-direction: column; gap: 1rem; font-size: .875rem; line-height: 1.25rem; }
-        .dvo-grid { display: grid; gap: 1rem; align-items: start; }
-        @media (min-width: 1024px) { .dvo-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); } }
-        .dvo-col { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
-        .dvo-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-        .dvo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-        .dvo-actions > div { width: auto; }
-        .dvo-muted { opacity: .65; }
-        .dvo-small { font-size: .8125rem; }
-        .dvo-strong { font-weight: 600; }
-        .dvo-strike { text-decoration: line-through; }
-        .dvo-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8125rem; }
-        .dvo-gap-top { margin-top: .25rem; }
-        .dvo-line { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .75rem 0; border-top: 1px solid rgba(128, 128, 128, .2); }
-        .dvo-line:first-child { border-top: 0; padding-top: 0; }
-        .dvo-line:last-child { padding-bottom: 0; }
-        .dvo-grow { flex: 1 1 14rem; min-width: 0; overflow-wrap: anywhere; }
-        .dvo-thumb { width: 3.5rem; height: 3.5rem; object-fit: cover; border-radius: .5rem; flex: none; }
-        .dvo-qty { width: 3rem; text-align: right; }
-        .dvo-price { min-width: 5.5rem; text-align: right; }
-        .dvo-totals { display: flex; flex-direction: column; gap: .5rem; max-width: 24rem; margin: 1rem 0 0 auto; padding-top: 1rem; border-top: 1px solid rgba(128, 128, 128, .2); }
-        .dvo-total-row { display: flex; justify-content: space-between; gap: 1rem; }
-        .dvo-total-row--total { font-size: 1.125rem; font-weight: 700; padding-top: .5rem; border-top: 1px solid rgba(128, 128, 128, .2); }
-        .dvo-dl { display: grid; grid-template-columns: minmax(0, 9rem) minmax(0, 1fr); gap: .5rem .75rem; margin: 0; }
-        .dvo-dl dd { margin: 0; overflow-wrap: anywhere; }
-        .dvo-banner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: .875rem 1.125rem; border-radius: .75rem; border: 1px solid #f59e0b; background: rgba(245, 158, 11, .1); }
-        .dvo-steps { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(8rem, 1fr); gap: .5rem; overflow-x: auto; }
-        .dvo-step { display: flex; flex-direction: column; gap: .375rem; }
-        .dvo-step-bar { height: 4px; border-radius: 2px; background: rgba(128, 128, 128, .3); }
-        .dvo-step--done .dvo-step-bar { background: #10b981; }
-        .dvo-step--current .dvo-step-bar { background: #3b82f6; }
-        .dvo-step--warning .dvo-step-bar { background: #f59e0b; }
-        .dvo-step--danger .dvo-step-bar { background: #ef4444; }
-        .dvo-step--todo .dvo-step-label { opacity: .65; }
-        .dvo-timeline { list-style: none; margin: 1rem 0 0; padding: 0; }
-        .dvo-timeline .dvo-line { align-items: baseline; }
-        .dvo-dot { width: .5rem; height: .5rem; border-radius: 9999px; flex: none; background: #10b981; }
-        .dvo-dot--mail { background: #3b82f6; }
-        .dvo-dot--note { background: #a1a1aa; }
-        .dvo-when { width: 7.5rem; flex: none; }
-        .dvo-filter { padding: .25rem .625rem; border-radius: .5rem; font-size: .8125rem; font-weight: 600; opacity: .65; cursor: pointer; }
-        .dvo-filter--on { opacity: 1; background: rgba(128, 128, 128, .18); }
-        .dvo-docs { display: grid; gap: 1rem; }
-        @media (min-width: 1024px) { .dvo-docs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        .dvo-doc { width: 100%; height: 28rem; border: 0; border-radius: .5rem; background: #fff; }
-        .dvo-address { font-style: normal; }
-        .dvo-parcel { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border-radius: .75rem; color: #fff; }
-        .dvo-parcel-icon { width: 2.75rem; height: 2.75rem; flex: none; }
-        .dvo-parcel-label { font-size: .8125rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; opacity: .9; }
-        .dvo-parcel-type { font-size: 1.875rem; line-height: 2.25rem; font-weight: 800; letter-spacing: .02em; }
-        .custom-view-order { display: flex; flex-direction: column; gap: .5rem; }
-        .custom-view-order .w-full .fi-btn { width: 100%; }
-    </style>
+    @include('dashed-ecommerce-core::orders.partials.aurora-styles')
 
     @php
         $isCredit = (bool) $record->credit_for_order_id;
         $paymentGroup = $this->getPaymentActionGroup();
         $outstanding = $record->outstandingAmount();
-        $sameInvoiceAddress = blank($record->invoice_street)
-            || [$record->invoice_street, $record->invoice_house_nr, $record->invoice_zip_code, $record->invoice_city] == [$record->street, $record->house_nr, $record->zip_code, $record->city];
+        $orderStatus = $record->orderStatus();
+        $fulfillmentStatus = $record->fulfillmentStatus();
         $invoiceUrl = $record->downloadInvoiceUrl();
         $packingSlipUrl = $record->downloadPackingslipUrl();
         $parcelType = \Dashed\DashedEcommerceCore\Classes\ParcelType::forOrder($record);
+        $tone = fn (?string $color): string => \Dashed\DashedEcommerceCore\Classes\AuroraTone::from($color);
+        // De eerstvolgende stap is verzenden zodra er betaald is en de bestelling
+        // nog niet is afgehandeld; dan is de statusknop de primaire actie.
+        $fulfillmentIsNext = ! $isCredit && $record->isPaidFor() && $record->fulfillment_status !== 'handled';
+        $stepperSteps = array_map(fn (array $step): array => [
+            'label' => $step['label'],
+            'sub' => $step['date']?->format('d-m-Y H:i'),
+            'state' => $step['state'],
+        ], $steps);
     @endphp
 
-    <div class="dvo">
+    <div class="au-od">
+        {{-- Kopbadges: betaal- en verzendstatus altijd in beeld. --}}
+        <div class="au-od-head">
+            @livewire('order-view-statusses', ['order' => $record])
+            @unless($isCredit)
+                <span class="au-od-parcel" data-parcel-type="{{ $parcelType['key'] }}"
+                      style="background: {{ \Dashed\DashedEcommerceCore\Classes\ParcelType::hex($parcelType['key']) }};"
+                      title="{{ __('Verzendvorm') }}">
+                    <x-filament::icon :icon="\Dashed\DashedEcommerceCore\Classes\ParcelType::icon($parcelType['key'])" />
+                    <span><span class="sr-only">{{ __('Verzendvorm') }}: </span>{{ $parcelType['label'] }}</span>
+                </span>
+            @endunless
+        </div>
+
         @livewire('order-add-on-banner', ['order' => $record], key('order-add-on-banner-'.$record->id))
-
-        @unless($isCredit)
-            <div class="dvo-parcel" data-parcel-type="{{ $parcelType['key'] }}"
-                 style="background: {{ \Dashed\DashedEcommerceCore\Classes\ParcelType::hex($parcelType['key']) }};">
-                <x-filament::icon :icon="\Dashed\DashedEcommerceCore\Classes\ParcelType::icon($parcelType['key'])" class="dvo-parcel-icon" style="width: 2.75rem; height: 2.75rem;" />
-                <div>
-                    <div class="dvo-parcel-label">{{ __('Verzendvorm') }}</div>
-                    <div class="dvo-parcel-type">{{ $parcelType['label'] }}</div>
-                </div>
-            </div>
-        @endunless
-
-        @livewire('order-view-statusses', ['order' => $record])
-
         @livewire('order-label-problem-banner', ['order' => $record], key('order-label-problem-'.$record->id))
 
         @if($record->quote)
-            <div class="dvo-row">
-                <span class="dvo-muted">{{ __('Ontstaan uit offerte') }}</span>
+            <div class="au-od-row">
+                <span class="au-od-muted">{{ __('Ontstaan uit offerte') }}</span>
                 @can('view_quote')
-                    <x-filament::link
-                        :href="\Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::getUrl('edit', ['record' => $record->quote])">
-                        {{ $record->quote->displayNumber() }}
-                    </x-filament::link>
+                    <a class="au-od-link" href="{{ \Dashed\DashedEcommerceCore\Filament\Resources\QuoteResource::getUrl('edit', ['record' => $record->quote]) }}">{{ $record->quote->displayNumber() }}</a>
                 @else
-                    <span class="dvo-strong">{{ $record->quote->displayNumber() }}</span>
+                    <span class="au-od-strong">{{ $record->quote->displayNumber() }}</span>
                 @endcan
             </div>
         @endif
 
         @foreach($openReturns as $return)
-            <div class="dvo-banner">
+            <div class="au-od-banner">
                 <div>
-                    <div class="dvo-strong">{{ __('Retour #:id staat open: :status', ['id' => $return->id, 'status' => mb_strtolower($return->statusLabel())]) }}</div>
-                    <div class="dvo-small dvo-muted">{{ __('Aangemeld op :datum', ['datum' => $return->created_at?->format('d-m-Y H:i')]) }}</div>
+                    <div class="au-od-strong">{{ __('Retour #:id staat open: :status', ['id' => $return->id, 'status' => mb_strtolower($return->statusLabel())]) }}</div>
+                    <div class="au-od-small au-od-muted">{{ __('Aangemeld op :datum', ['datum' => $return->created_at?->format('d-m-Y H:i')]) }}</div>
                 </div>
                 <x-filament::button tag="a" color="warning" icon="heroicon-o-arrow-uturn-left"
                                     :href="route('filament.dashed.resources.order-returns.view', [$return])">
@@ -111,138 +62,114 @@
             </div>
         @endforeach
 
-        @if($steps)
-            <x-filament::section>
-                <div class="dvo-steps">
-                    @foreach($steps as $step)
-                        <div class="dvo-step dvo-step--{{ $step['state'] }}">
-                            <div class="dvo-step-bar"></div>
-                            <div class="dvo-strong dvo-step-label">{{ $step['label'] }}</div>
-                            <div class="dvo-small dvo-muted">{{ $step['date']?->format('d-m-Y H:i') ?? ' ' }}</div>
-                        </div>
-                    @endforeach
-                </div>
-            </x-filament::section>
+        @if($stepperSteps)
+            <x-dashed-core::aurora.stepper :steps="$stepperSteps" />
         @endif
 
-        <div class="dvo-grid">
-            <div class="dvo-col">
+        <div class="au-od-grid">
+            <div class="au-od-col">
                 @livewire('order-order-products-list', ['order' => $record])
 
-                <x-filament::section>
-                    <x-slot name="heading">{{ __('Betaling') }}</x-slot>
-                    <x-slot name="description">
-                        @if($outstanding > 0 && ! $isCredit)
-                            {{ __('Nog te betalen: :bedrag', ['bedrag' => \Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($outstanding)]) }}
-                        @else
-                            {{ __($record->orderStatus()['status']) }}
+                <div class="au-od-pair">
+                    <x-dashed-core::aurora.card :title="__('Betaling')" icon="heroicon-o-credit-card"
+                                                :badge="__($orderStatus['status'])" :badge-tone="$tone($orderStatus['color'])">
+                        @if($paymentGroup)
+                            <x-slot name="actions">{{ $paymentGroup }}</x-slot>
                         @endif
-                    </x-slot>
-                    @if($paymentGroup)
-                        <x-slot name="afterHeader">{{ $paymentGroup }}</x-slot>
-                    @endif
 
-                    @livewire('order-payments-list', ['order' => $record])
-                </x-filament::section>
+                        @if($outstanding > 0 && ! $isCredit)
+                            <x-dashed-core::aurora.info-row :label="__('Nog te betalen')"
+                                                            :value="\Dashed\DashedEcommerceCore\Classes\CurrencyHelper::formatPrice($outstanding)" />
+                        @endif
 
-                @if(! $isCredit)
-                    <x-filament::section>
-                        <x-slot name="heading">{{ __('Verzending') }}</x-slot>
-                        <x-slot name="description">{{ $record->fulfillmentStatus()['status'] }}</x-slot>
-                        <x-slot name="afterHeader">
-                            <div class="dvo-actions">
-                                @livewire('change-order-fulfillment-status', ['order' => $record, 'color' => 'gray'])
-                                @livewire('order-create-track-and-trace', ['order' => $record, 'color' => 'gray'])
-                                @livewire('send-order-to-fulfillment-companies', ['order' => $record, 'color' => 'gray'])
-                            </div>
-                        </x-slot>
+                        @livewire('order-payments-list', ['order' => $record])
+                    </x-dashed-core::aurora.card>
 
-                        @livewire('order-shipping-information-list', ['order' => $record])
-                    </x-filament::section>
-                @else
-                    <x-filament::section>
-                        <x-slot name="heading">{{ __('Retour') }}</x-slot>
-                        <x-slot name="description">{{ $record->fulfillmentStatus()['status'] }}</x-slot>
-                        <x-slot name="afterHeader">
-                            <div class="dvo-actions">
+                    @if(! $isCredit)
+                        <x-dashed-core::aurora.card :title="__('Verzending')" icon="heroicon-o-truck"
+                                                    :badge="$fulfillmentStatus['status']" :badge-tone="$tone($fulfillmentStatus['color'])">
+                            @livewire('order-shipping-information-list', ['order' => $record])
+                        </x-dashed-core::aurora.card>
+                    @else
+                        <x-dashed-core::aurora.card :title="__('Retour')" icon="heroicon-o-arrow-uturn-left"
+                                                    :badge="$fulfillmentStatus['status']" :badge-tone="$tone($fulfillmentStatus['color'])">
+                            <x-slot name="actions">
                                 @livewire('change-order-retour-status', ['order' => $record, 'color' => 'gray'])
-                            </div>
-                        </x-slot>
+                            </x-slot>
 
-                        @livewire('order-shipping-information-list', ['order' => $record])
-                    </x-filament::section>
-                @endif
+                            @livewire('order-shipping-information-list', ['order' => $record])
+                        </x-dashed-core::aurora.card>
+                    @endif
+                </div>
 
                 @include('dashed-ecommerce-core::orders.partials.order-returns', ['record' => $record])
 
                 @livewire('order-logs-list', ['order' => $record])
             </div>
 
-            <div class="dvo-col">
+            <div class="au-od-col">
                 @livewire('order-customer-information-block-list', ['order' => $record])
-                @if(($record->user_id || $record->email) && \Dashed\DashedEcommerceCore\Filament\Pages\CustomerProfilePage::canAccess())
-                    <div class="dvo-actions">
-                        <x-filament::link :href="\Dashed\DashedEcommerceCore\Filament\Pages\CustomerProfilePage::urlForOrder($record)" icon="heroicon-o-identification">{{ __('Klantprofiel bekijken') }}</x-filament::link>
+
+                @if(filled($record->note))
+                    <x-dashed-core::aurora.card :title="__('Notitie van de klant')" icon="heroicon-o-chat-bubble-left-ellipsis">
+                        <div>{!! nl2br(e($record->note)) !!}</div>
+                    </x-dashed-core::aurora.card>
+                @endif
+
+                @if(! $isCredit)
+                    <div class="au-od-first-on-mobile">
+                        <x-dashed-core::aurora.card :title="__('Snelle acties')" icon="heroicon-o-bolt">
+                            <div class="au-od-quick">
+                                @livewire('change-order-fulfillment-status', ['order' => $record, 'color' => $fulfillmentIsNext ? 'primary' : 'gray'])
+                                @livewire('order-create-track-and-trace', ['order' => $record, 'color' => 'gray'])
+                                @livewire('send-order-to-fulfillment-companies', ['order' => $record, 'color' => 'gray'])
+                                @livewire('create-order-log', ['order' => $record, 'color' => 'gray'], key('create-order-log-'.$record->id))
+                                @livewire('send-order-confirmation-to-email', ['order' => $record, 'color' => 'gray'])
+                                @livewire('cancel-order', ['order' => $record, 'color' => 'danger'])
+                            </div>
+                        </x-dashed-core::aurora.card>
+                    </div>
+                @else
+                    <div class="au-od-first-on-mobile">
+                        <x-dashed-core::aurora.card :title="__('Snelle acties')" icon="heroicon-o-bolt">
+                            <div class="au-od-quick">
+                                @livewire('create-order-log', ['order' => $record, 'color' => 'gray'], key('create-order-log-'.$record->id))
+                            </div>
+                        </x-dashed-core::aurora.card>
                     </div>
                 @endif
 
-                <x-filament::section>
-                    <x-slot name="heading">{{ __('Adressen') }}</x-slot>
-
-                    <div class="dvo-col">
-                        <div>
-                            <div class="dvo-small dvo-muted">{{ __('Verzendadres') }}</div>
-                            <address class="dvo-address">
-                                @if($record->company_name){{ $record->company_name }}<br>@endif
-                                {{ $record->name }}<br>
-                                {{ $record->street }} {{ $record->house_nr }}<br>
-                                {{ $record->zip_code }} {{ $record->city }}<br>
-                                {{ $record->country }}
-                            </address>
-                        </div>
-                        <div>
-                            <div class="dvo-small dvo-muted">{{ __('Factuuradres') }}</div>
-                            @if($sameInvoiceAddress)
-                                <div>{{ __('Gelijk aan verzendadres') }}</div>
+                <x-dashed-core::aurora.card :title="__('Documenten')" icon="heroicon-o-document-text">
+                    <ul class="au-od-list">
+                        <li class="au-od-line au-od-doc">
+                            <span class="au-od-strong">{{ $isCredit ? __('Creditfactuur :nummer', ['nummer' => $record->invoice_id]) : __('Factuur :nummer', ['nummer' => $record->invoice_id]) }}</span>
+                            @if($invoiceUrl)
+                                <a class="au-od-link" href="{{ $invoiceUrl }}" target="_blank" rel="noopener">{{ __('Downloaden') }} &rarr;</a>
                             @else
-                                <address class="dvo-address">
-                                    @if($record->company_name){{ $record->company_name }}<br>@endif
-                                    {{ $record->name }}<br>
-                                    {{ $record->invoice_street }} {{ $record->invoice_house_nr }}<br>
-                                    {{ $record->invoice_zip_code }} {{ $record->invoice_city }}<br>
-                                    {{ $record->invoice_country }}
-                                </address>
+                                <span class="au-od-small au-od-muted">{{ __('Nog niet beschikbaar') }}</span>
                             @endif
-                        </div>
-                    </div>
-                </x-filament::section>
-
-                <x-filament::section>
-                    <x-slot name="heading">{{ __('Notitie van de klant') }}</x-slot>
-                    <div class="{{ $record->note ? '' : 'dvo-muted' }}">{!! $record->note ? nl2br(e($record->note)) : e(__('Geen notitie')) !!}</div>
-                </x-filament::section>
+                        </li>
+                        <li class="au-od-line au-od-doc">
+                            <span class="au-od-strong">{{ __('Pakbon') }}</span>
+                            @if($packingSlipUrl)
+                                <a class="au-od-link" href="{{ $packingSlipUrl }}" target="_blank" rel="noopener">{{ __('Downloaden') }} &rarr;</a>
+                            @else
+                                <span class="au-od-small au-od-muted">{{ __('Nog niet beschikbaar') }}</span>
+                            @endif
+                        </li>
+                    </ul>
+                </x-dashed-core::aurora.card>
 
                 @livewire('order-payment-information-list', ['order' => $record])
 
-                @if(! $isCredit)
-                    <x-filament::section>
-                        <x-slot name="heading">{{ __('Overige acties') }}</x-slot>
-                        <div class="dvo-actions">
-                            @livewire('send-order-confirmation-to-email', ['order' => $record, 'color' => 'gray'])
-                            @livewire('cancel-order', ['order' => $record, 'color' => 'danger'])
-                        </div>
-                    </x-filament::section>
-                @endif
-
                 @if($sidebarWidgets)
-                    <x-filament::section>
-                        <x-slot name="heading">{{ __('Koppelingen') }}</x-slot>
-                        <div class="custom-view-order">
+                    <x-dashed-core::aurora.card :title="__('Koppelingen')" icon="heroicon-o-link">
+                        <div class="au-od-quick">
                             @foreach($sidebarWidgets as $widget)
                                 <livewire:is :component="$widget['name']" :order="$record" :key="'order-widget-'.$widget['name']"></livewire:is>
                             @endforeach
                         </div>
-                    </x-filament::section>
+                    </x-dashed-core::aurora.card>
                 @endif
 
                 @livewire('order-abandonment-diagnosis-list', ['order' => $record], key('order-abandonment-'.$record->id))
@@ -250,32 +177,17 @@
             </div>
         </div>
 
-        <x-filament::section collapsible>
-            <x-slot name="heading">{{ __('Documenten') }}</x-slot>
-            <x-slot name="description">{{ __('De factuur en pakbon worden live opgebouwd en kunnen door bijvoorbeeld een gewijzigde betaling afwijken van de verstuurde factuur.') }}</x-slot>
-
-            <div class="dvo-docs">
-                <div class="dvo-col">
-                    <div class="dvo-row">
-                        <span class="dvo-strong">{{ __('Factuur') }}</span>
-                        @if($invoiceUrl)
-                            <x-filament::link :href="$invoiceUrl" target="_blank" icon="heroicon-s-arrow-down-tray">{{ __('Downloaden') }}</x-filament::link>
-                        @endif
-                    </div>
-                    <iframe class="dvo-doc" title="{{ __('Factuur') }}" loading="lazy"
+        <x-dashed-core::aurora.card :title="__('Voorbeeld van de documenten')" icon="heroicon-o-eye">
+            <details>
+                <summary class="au-od-summary">{{ __('Factuur en pakbon tonen') }}</summary>
+                <p class="au-od-small au-od-muted au-od-gap-top">{{ __('De factuur en pakbon worden live opgebouwd en kunnen door bijvoorbeeld een gewijzigde betaling afwijken van de verstuurde factuur.') }}</p>
+                <div class="au-od-preview">
+                    <iframe title="{{ __('Factuur') }}" loading="lazy"
                             srcdoc="{{ view('dashed-ecommerce-core::invoices.invoice', ['order' => $record])->render() }}"></iframe>
-                </div>
-                <div class="dvo-col">
-                    <div class="dvo-row">
-                        <span class="dvo-strong">{{ __('Pakbon') }}</span>
-                        @if($packingSlipUrl)
-                            <x-filament::link :href="$packingSlipUrl" target="_blank" icon="heroicon-s-arrow-down-tray">{{ __('Downloaden') }}</x-filament::link>
-                        @endif
-                    </div>
-                    <iframe class="dvo-doc" title="{{ __('Pakbon') }}" loading="lazy"
+                    <iframe title="{{ __('Pakbon') }}" loading="lazy"
                             srcdoc="{{ view('dashed-ecommerce-core::invoices.packing-slip', ['order' => $record])->render() }}"></iframe>
                 </div>
-            </div>
-        </x-filament::section>
+            </details>
+        </x-dashed-core::aurora.card>
     </div>
 </x-filament::page>

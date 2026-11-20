@@ -2,38 +2,32 @@
     $filters = ['all' => __('Alles'), 'status' => __('Statussen'), 'mail' => __('E-mails'), 'note' => __('Notities')];
 @endphp
 <div x-data="{ soort: 'all' }">
-    <x-filament::section>
-        <x-slot name="heading">{{ __('Tijdlijn') }}</x-slot>
-        <x-slot name="afterHeader">
-            <div class="dvo-row">
+    <x-dashed-core::aurora.card :title="__('Activiteit & tijdlijn')" icon="heroicon-o-clock">
+        <x-slot name="actions">
+            <div class="au-od-tabs" role="group" aria-label="{{ __('Filter de tijdlijn') }}">
                 @foreach($filters as $key => $label)
-                    <button type="button" class="dvo-filter" x-on:click="soort = '{{ $key }}'" x-bind:class="{ 'dvo-filter--on': soort === '{{ $key }}' }" x-bind:aria-pressed="soort === '{{ $key }}'">{{ $label }}</button>
+                    <button type="button" class="au-od-tab" x-on:click="soort = '{{ $key }}'" x-bind:class="{ 'au-od-tab--on': soort === '{{ $key }}' }" x-bind:aria-pressed="(soort === '{{ $key }}').toString()">{{ $label }}</button>
                 @endforeach
             </div>
         </x-slot>
 
-        <div class="dvo-actions">
-            <livewire:create-order-log :order="$order" color="gray" :key="'create-order-log-'.$order->id" />
-        </div>
-
-        <ul class="dvo-timeline">
-            @foreach($logs as $log)
+        <ul class="au-od-list au-od-timeline">
+            @forelse($logs as $log)
                 @php($type = $this->typeFor((string) $log->tag))
-                <li class="dvo-line" wire:key="log-{{ $log->id }}" x-show="soort === 'all' || soort === '{{ $type }}'">
-                    <span class="dvo-dot dvo-dot--{{ $type }}" aria-hidden="true"></span>
-                    <div class="dvo-when dvo-small dvo-muted">{{ $log->created_at->format('d-m-Y H:i') }}</div>
-                    <div class="dvo-grow">
-                        <div>{{ $log->tag() }}</div>
+                <li class="au-od-line" wire:key="log-{{ $log->id }}" x-show="soort === 'all' || soort === '{{ $type }}'">
+                    <span class="au-od-dot au-od-dot--{{ $type }}" aria-hidden="true"></span>
+                    <div class="au-od-grow">
+                        <div class="au-od-strong">{{ $log->tag() }}</div>
                         @if($log->note)
-                            <div class="dvo-small dvo-muted">{!! nl2br(e($log->note)) !!}</div>
+                            <div class="au-od-small au-od-muted">{!! nl2br(e($log->note)) !!}</div>
                         @endif
                         @if($log->images)
-                            <div class="dvo-row dvo-gap-top">
+                            <div class="au-od-row au-od-gap-top">
                                 @foreach($log->images as $image)
                                     @php($url = mediaHelper()->getSingleMedia($image, 'original')->url ?? '')
                                     <a target="_blank" href="{{ $url }}" download>
                                         @if(! \Illuminate\Support\Str::contains($url, '.pdf'))
-                                            <img class="dvo-thumb" src="{{ $url }}" alt="">
+                                            <img class="au-od-thumb" src="{{ $url }}" alt="">
                                         @else
                                             <span>{{ __('PDF Bestand') }}</span>
                                         @endif
@@ -42,15 +36,18 @@
                             </div>
                         @endif
                         @if($log->public_for_customer)
-                            <div class="dvo-small dvo-muted">{{ __('Notitie is zichtbaar voor de klant') }}</div>
+                            <div class="au-od-small au-od-muted">{{ __('Notitie is zichtbaar voor de klant') }}</div>
                         @endif
                         @if($log->send_email_to_customer)
-                            <div class="dvo-small dvo-muted">{{ __('Klant heeft een mail gehad van deze notitie') }}</div>
+                            <div class="au-od-small au-od-muted">{{ __('Klant heeft een mail gehad van deze notitie') }}</div>
                         @endif
+                        <div class="au-od-small au-od-muted">{{ $log->user_id ? ($log->user->name ?? __('Systeem')) : __('Systeem') }}</div>
                     </div>
-                    <div class="dvo-small dvo-muted">{{ $log->user_id ? ($log->user->name ?? __('Systeem')) : __('Systeem') }}</div>
+                    <time class="au-od-when au-od-small au-od-muted" datetime="{{ $log->created_at->toIso8601String() }}">{{ $log->created_at->format('d-m-Y H:i') }}</time>
                 </li>
-            @endforeach
+            @empty
+                <li class="au-od-line au-od-muted">{{ __('Nog geen activiteit bij deze bestelling.') }}</li>
+            @endforelse
         </ul>
-    </x-filament::section>
+    </x-dashed-core::aurora.card>
 </div>

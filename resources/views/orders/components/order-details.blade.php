@@ -1,12 +1,7 @@
 <div>
-    <x-filament::section>
-        <x-slot name="heading">{{ __('Details') }}</x-slot>
-
-        <dl class="dvo-dl">
-            @foreach($this->details() as $label => $value)
-                <dt class="dvo-muted">{{ $label }}</dt>
-                <dd>{{ $value }}</dd>
-            @endforeach
-        </dl>
-    </x-filament::section>
+    <x-dashed-core::aurora.card :title="__('Details')" icon="heroicon-o-information-circle">
+        @foreach($this->details() as $label => $value)
+            <x-dashed-core::aurora.info-row :label="$label" :value="$value" />
+        @endforeach
+    </x-dashed-core::aurora.card>
 </div>

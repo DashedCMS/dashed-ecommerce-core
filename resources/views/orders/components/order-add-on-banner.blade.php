@@ -28,7 +28,7 @@
             <div style="{{ $titleStyle }}">
                 {{ $link->reason ? __('Losse zending (:reden)', ['reden' => $link->reason]) : __('Losse zending') }}
             </div>
-            <div class="dvo-small">
+            <div class="au-od-small">
                 {{ __('Bijbestelling die eerst bij') }}
                 @if($parent)
                     <x-filament::link :href="\Dashed\DashedEcommerceCore\Filament\Resources\OrderResource::getUrl('view', ['record' => $parent])">#{{ \Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display::number($parent) }}</x-filament::link>
@@ -60,7 +60,7 @@
                             <tr style="border-top: 1px solid rgba(245, 158, 11, .4);">
                                 <td style="padding: .25rem .5rem .25rem 0; font-weight: 600;">{{ $line->quantity }}x</td>
                                 <td style="padding: .25rem .5rem;">{{ $line->name }}</td>
-                                <td style="padding: .25rem 0 .25rem .5rem;" class="dvo-small">
+                                <td style="padding: .25rem 0 .25rem .5rem;" class="au-od-small">
                                     {{ collect([\Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display::options($line), $line->sku])->filter()->implode(' · ') }}
                                 </td>
                             </tr>

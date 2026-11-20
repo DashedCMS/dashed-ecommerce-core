@@ -1834,7 +1834,12 @@ MARKDOWN,
         // Resource header widgets
         Livewire::component('dashed.dashed-ecommerce-core.filament.resources.order-resource.widgets.order-unhandled-stat', OrderUnhandledStat::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.orders.order-outstanding-stats-widget', OrderOutstandingStatsWidget::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.orders.order-workflow-stats-widget', \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderWorkflowStatsWidget::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.revenue.alltime-revenue-stats', \Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\AlltimeRevenueStats::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.aurora.kpi-row-widget', \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\KpiRowWidget::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.aurora.revenue-trend-chart', \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\RevenueTrendChart::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.aurora.sales-channels-widget', \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\SalesChannelsWidget::class);
+        Livewire::component('dashed.dashed-ecommerce-core.filament.widgets.aurora.recent-orders-widget', \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\RecentOrdersWidget::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.resources.cart-resource.widgets.cart-active-stat', CartActiveStat::class);
         Livewire::component('dashed.dashed-ecommerce-core.filament.resources.product-resource.widgets.product-out-of-stock-stat', ProductOutOfStockStat::class);
 
@@ -2021,6 +2026,15 @@ MARKDOWN,
             '/apply-discount-code',
             '/ecommerce/',
         ]);
+
+        // Aurora: de nieuwe standaardindeling, bovenaan (negatieve sort). De
+        // werkdagbanner (-50) en "Heeft aandacht nodig" (-25) komen uit dashed-core.
+        // Alleen in de Aurora-indeling; classic houdt het oude dashboard.
+        if ($auroraWidgets = static::auroraDashboardWidgets()) {
+            cms()->builder('dashboardWidgets', $auroraWidgets);
+        }
+
+        cms()->builder('dashboardPriorities', \Dashed\DashedEcommerceCore\Classes\Dashboard\EcommercePriorities::sources());
 
         cms()->builder('dashboardWidgets', [
             'ec-outstanding-invoices' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Orders\OrderOutstandingStatsWidget::class,          'label' => 'Openstaande facturen',         'width' => 'full',      'sort' => 10],
@@ -3272,5 +3286,25 @@ MARKDOWN,
                 ['type' => 'discount_highlight', 'data' => ['label' => 'Tijdelijk', 'value' => '15%', 'suffix' => 'korting']],
             ],
         ]);
+    }
+
+    /**
+     * The Aurora dashboard widgets, only when the Aurora layout is on. With
+     * DASHED_CMS_LAYOUT=classic this is empty and the old dashboard stays.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public static function auroraDashboardWidgets(): array
+    {
+        if (! class_exists(\Dashed\DashedCore\Classes\CmsLayout::class) || ! \Dashed\DashedCore\Classes\CmsLayout::enabled()) {
+            return [];
+        }
+
+        return [
+            'ec-aurora-kpis' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\KpiRowWidget::class, 'label' => 'Kerncijfers', 'width' => 'full', 'sort' => -40],
+            'ec-aurora-revenue-trend' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\RevenueTrendChart::class, 'label' => 'Omzetontwikkeling', 'width' => 3, 'sort' => -30],
+            'ec-aurora-sales-channels' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\SalesChannelsWidget::class, 'label' => 'Omzet per verkoopkanaal', 'width' => 2, 'sort' => -20],
+            'ec-aurora-recent-orders' => ['widget' => \Dashed\DashedEcommerceCore\Filament\Widgets\Aurora\RecentOrdersWidget::class, 'label' => 'Recente bestellingen', 'width' => 2, 'sort' => -15],
+        ];
     }
 }
