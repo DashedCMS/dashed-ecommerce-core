@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.218.0 - 2026-11-21
+
+### Added
+- Openstaande bestellingen: de kolom "Voorraad bij besteldatum" is sorteerbaar. Binnen de status bij bestelling wordt gesorteerd op de voorraad nu (met voorraadbeheer: voorraad 0 of meer, want openstaande bestellingen zijn al afgeboekt; zonder voorraadbeheer: de handmatige voorraadstatus). Oplopend: niet op voorraad besteld en nu nog niet, niet op voorraad besteld en nu wel, op voorraad besteld en nu niet, op voorraad besteld en nu wel. Regels zonder status staan altijd onderaan.
+
 ## v4.217.1 - 2026-11-20
 
 ### Added

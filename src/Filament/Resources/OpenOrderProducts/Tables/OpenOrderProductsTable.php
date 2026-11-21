@@ -29,6 +29,28 @@ class OpenOrderProductsTable
             ->orderByRaw(static::DEADLINE_SQL . ' ' . $direction);
     }
 
+    /**
+     * 1 als het product van de regel nu op voorraad is, anders 0. Met
+     * voorraadbeheer telt een voorraad van 0 of meer: de voorraad is bij het
+     * bestellen al afgeboekt, dus 0 betekent dat alle openstaande bestellingen
+     * gedekt zijn. Zonder voorraadbeheer telt de handmatige voorraadstatus.
+     */
+    public const STOCK_NOW_SQL = "(select case when stock_now_products.use_stock = 1 then stock_now_products.stock >= 0 else stock_now_products.stock_status = 'in_stock' end from dashed__products as stock_now_products where stock_now_products.id = dashed__order_products.product_id limit 1)";
+
+    /**
+     * Sorteer op voorraad bij besteldatum en daarbinnen op voorraad nu.
+     * Oplopend: niet op voorraad besteld (nu nog niet, nu wel), dan op
+     * voorraad besteld (nu niet, nu wel). Regels zonder status altijd onderaan.
+     */
+    public static function orderByStockStatus(Builder $query, string $direction): Builder
+    {
+        $direction = strtolower($direction) === 'desc' ? 'desc' : 'asc';
+
+        return $query->orderByRaw('dashed__order_products.stock_status_at_order is null')
+            ->orderByRaw("dashed__order_products.stock_status_at_order = 'in_stock' " . $direction)
+            ->orderByRaw('coalesce(' . static::STOCK_NOW_SQL . ', 0) ' . $direction);
+    }
+
     /** Filter op deadline: late, today, tomorrow of today_or_earlier. */
     public static function filterDeadline(Builder $query, ?string $value): Builder
     {
@@ -165,6 +187,7 @@ class OpenOrderProductsTable
                         OrderProduct::STOCK_STATUS_OUT_OF_STOCK => 'danger',
                         default => 'gray',
                     })
+                    ->sortable(query: fn (Builder $query, string $direction) => static::orderByStockStatus($query, $direction))
                     // Een gegroepeerde regel bundelt meerdere orders/orderregels,
                     // dus geen betekenisvolle per-regel voorraadstatus (net als de
                     // Deadline- en Klant-kolommen hieronder).
