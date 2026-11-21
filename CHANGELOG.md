@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.219.0 - 2026-11-21
+
+### Added
+- App-API openstaande bestellingen (`/open-order-products`): per regel `stock_status_now` (voorraad nu voor die regel), sortering `sort=stock_combo` en filter `stock_combo=out_in,in_in,in_out,out_out` op de combinatie van voorraad bij bestellen en voorraad nu. Voorraad nu: de fysieke voorraad (huidige voorraad plus de al afgeboekte open aantallen) wordt oudste bestelling eerst over de open regels van het product verdeeld; zonder voorraadbeheer telt de handmatige voorraadstatus. Sorteervolgorde: niet op voorraad besteld en nu wel, op voorraad besteld en nog steeds, op voorraad besteld en nu niet, niet op voorraad besteld en nog steeds niet; onbekend onderaan.
+
 ## v4.218.0 - 2026-11-21
 
 ### Added

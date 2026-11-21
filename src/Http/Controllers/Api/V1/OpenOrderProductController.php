@@ -24,6 +24,19 @@ class OpenOrderProductController extends Controller
 {
     private const PAID_STATUSES = ['paid', 'waiting_for_confirmation', 'partially_paid'];
     private const COST_SKUS = ['shipping_costs', 'payment_costs'];
+    private const OPEN_STATUSES = ['unhandled', 'in_treatment'];
+
+    /**
+     * Combinaties van voorraad bij bestellen en voorraad nu (filter `stock_combo`),
+     * als [stock_status_at_order, now_in_stock]. De volgorde is ook de
+     * sorteervolgorde van `sort=stock_combo`: eerst wat nu eindelijk leverbaar is.
+     */
+    private const STOCK_COMBOS = [
+        'out_in' => ['out_of_stock', 1],
+        'in_in' => ['in_stock', 1],
+        'in_out' => ['in_stock', 0],
+        'out_out' => ['out_of_stock', 0],
+    ];
 
     public function index(Request $request): JsonResponse
     {
@@ -47,36 +60,37 @@ class OpenOrderProductController extends Controller
      */
     private function baseQuery(Request $request, string $siteId): Builder
     {
-        $query = DB::table('dashed__order_products as op')
-            ->join('dashed__orders as o', 'o.id', '=', 'op.order_id')
-            ->where('o.site_id', $siteId)
-            ->whereNull('op.deleted_at')
-            // Null-veilig: `sku NOT IN (...)` is in SQL onwaar voor NULL, dus zonder
-            // deze OR-groep vielen regels zonder SKU (bv. losse kassa-/POS-items)
-            // stil weg — gelijk aan de Filament-scope (OpenOrderProductResource).
-            ->where(function ($q): void {
-                $q->whereNull('op.sku')
-                    ->orWhereNotIn('op.sku', self::COST_SKUS);
-            })
-            ->whereIn('o.status', self::PAID_STATUSES)
-            // Alleen betaalde bestellingen met een echte factuur-id; nooit proforma/retour.
-            ->whereNotNull('o.invoice_id')
-            ->where('o.invoice_id', '!=', '')
-            ->whereNotIn('o.invoice_id', ['PROFORMA', 'RETURN']);
+        $query = $this->coreQuery($siteId)
+            // Voorraad nu per regel (oudste bestelling eerst), voor de weergave,
+            // de sortering en het filter op voorraad bij bestellen / nu.
+            ->leftJoinSub($this->stockNowQuery($siteId), 'sn', 'sn.line_id', '=', 'op.id');
 
         // "Openstaand" = nog niet afgehandeld óf in behandeling. Zonder expliciete
         // status (of met de sentinel 'open') tonen we beide; een concrete status
         // filtert exact; een expliciet lege waarde = alles.
-        $openStatuses = ['unhandled', 'in_treatment'];
         if (! $request->has('fulfillment_status')) {
-            $query->whereIn('o.fulfillment_status', $openStatuses);
+            $query->whereIn('o.fulfillment_status', self::OPEN_STATUSES);
         } else {
             $fulfillment = (string) $request->query('fulfillment_status');
             if ($fulfillment === 'open') {
-                $query->whereIn('o.fulfillment_status', $openStatuses);
+                $query->whereIn('o.fulfillment_status', self::OPEN_STATUSES);
             } elseif ($fulfillment !== '') {
                 $query->where('o.fulfillment_status', $fulfillment);
             }
+        }
+
+        if ($combos = $this->list($request->query('stock_combo'))) {
+            $query->where(function ($q) use ($combos): void {
+                foreach ($combos as $combo) {
+                    if (! isset(self::STOCK_COMBOS[$combo])) {
+                        continue;
+                    }
+                    [$atOrder, $now] = self::STOCK_COMBOS[$combo];
+                    $q->orWhere(function ($w) use ($atOrder, $now): void {
+                        $w->where('op.stock_status_at_order', $atOrder)->where('sn.now_in_stock', $now);
+                    });
+                }
+            });
         }
 
         if ($origins = $this->list($request->query('order_origin'))) {
@@ -137,6 +151,78 @@ class OpenOrderProductController extends Controller
         return $query;
     }
 
+    /**
+     * Openstaande regels zonder statusfilter: actieve site, niet verwijderd,
+     * geen kostenregels, betaald en met een echte factuur-id.
+     */
+    private function coreQuery(string $siteId): Builder
+    {
+        return DB::table('dashed__order_products as op')
+            ->join('dashed__orders as o', 'o.id', '=', 'op.order_id')
+            ->where('o.site_id', $siteId)
+            ->whereNull('op.deleted_at')
+            // Null-veilig: `sku NOT IN (...)` is in SQL onwaar voor NULL, dus zonder
+            // deze OR-groep vielen regels zonder SKU (bv. losse kassa-/POS-items)
+            // stil weg — gelijk aan de Filament-scope (OpenOrderProductResource).
+            ->where(function ($q): void {
+                $q->whereNull('op.sku')
+                    ->orWhereNotIn('op.sku', self::COST_SKUS);
+            })
+            ->whereIn('o.status', self::PAID_STATUSES)
+            // Alleen betaalde bestellingen met een echte factuur-id; nooit proforma/retour.
+            ->whereNotNull('o.invoice_id')
+            ->where('o.invoice_id', '!=', '')
+            ->whereNotIn('o.invoice_id', ['PROFORMA', 'RETURN']);
+    }
+
+    /**
+     * Per openstaande regel of het product nu op voorraad is (`now_in_stock` 1/0).
+     *
+     * Met voorraadbeheer is de voorraad van openstaande bestellingen al afgeboekt.
+     * De fysieke voorraad (huidige voorraad + afgeboekte open aantallen) wordt
+     * daarom in besteldatum-volgorde over de open regels van het product verdeeld:
+     * een regel is op voorraad als hij daarin volledig gedekt is (oudste eerst).
+     * Zonder voorraadbeheer telt de handmatige voorraadstatus. Altijd over álle
+     * openstaande regels, los van de filters in het verzoek.
+     */
+    private function stockNowQuery(string $siteId): Builder
+    {
+        $lines = $this->coreQuery($siteId)
+            ->whereIn('o.fulfillment_status', self::OPEN_STATUSES)
+            ->whereNotNull('op.product_id')
+            ->select([
+                'op.id as line_id',
+                'op.product_id',
+                DB::raw('SUM(op.quantity) OVER (PARTITION BY op.product_id ORDER BY o.created_at, op.id) as cum_qty'),
+                // skip_stock-regels zijn nooit afgeboekt, dus tellen niet mee in de fysieke voorraad.
+                DB::raw('SUM(CASE WHEN COALESCE(op.skip_stock, 0) = 1 THEN 0 ELSE op.quantity END) OVER (PARTITION BY op.product_id) as deducted_qty'),
+            ]);
+
+        return DB::query()
+            ->fromSub($lines, 'l')
+            ->join('dashed__products as snp', 'snp.id', '=', 'l.product_id')
+            ->select([
+                'l.line_id',
+                DB::raw("CASE WHEN snp.use_stock = 1 THEN (CASE WHEN COALESCE(snp.stock, 0) + l.deducted_qty >= l.cum_qty THEN 1 ELSE 0 END) WHEN snp.stock_status = 'in_stock' THEN 1 ELSE 0 END as now_in_stock"),
+            ]);
+    }
+
+    /**
+     * Rangorde voor `sort=stock_combo` (volgorde van STOCK_COMBOS); regels
+     * zonder status bij bestellen of zonder product krijgen de hoogste rang.
+     */
+    private function stockComboRankSql(): string
+    {
+        $cases = '';
+        $rank = 0;
+        foreach (self::STOCK_COMBOS as [$atOrder, $now]) {
+            $cases .= " WHEN op.stock_status_at_order = '{$atOrder}' AND sn.now_in_stock = {$now} THEN {$rank}";
+            $rank++;
+        }
+
+        return "CASE{$cases} ELSE {$rank} END";
+    }
+
     private function flat(Builder $base, Request $request, int $perPage, int $page): JsonResponse
     {
         [$sortColumn, $sortDir] = $this->sort($request, [
@@ -151,7 +237,7 @@ class OpenOrderProductController extends Controller
         $rowsQuery = (clone $base)
             ->select([
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
-                'op.product_extras', 'op.stock_status_at_order',
+                'op.product_extras', 'op.stock_status_at_order', 'sn.now_in_stock',
                 'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at', 'o.is_priority',
                 'o.first_name', 'o.last_name', 'o.email',
             ])
@@ -167,6 +253,16 @@ class OpenOrderProductController extends Controller
             $rowsQuery->orderByRaw("{$eff} IS NULL")
                 ->orderByRaw("{$eff} {$dir}")
                 ->orderByDesc('o.created_at');
+        } elseif ((string) $request->query('sort') === 'stock_combo') {
+            // Voorraad bij bestellen / nu: eerst wat nu eindelijk leverbaar is
+            // (zie STOCK_COMBOS); onbekend altijd achteraan, daarbinnen oudste eerst.
+            $dir = strtolower((string) $request->query('direction', 'asc')) === 'desc' ? 'desc' : 'asc';
+            $rank = $this->stockComboRankSql();
+            $unknown = count(self::STOCK_COMBOS);
+            $rowsQuery->orderByRaw("({$rank}) = {$unknown}")
+                ->orderByRaw("{$rank} {$dir}")
+                ->orderBy('o.created_at')
+                ->orderBy('op.id');
         } else {
             $rowsQuery->orderBy($sortColumn, $sortDir);
         }
@@ -193,6 +289,9 @@ class OpenOrderProductController extends Controller
                 // Voorraadstatus op besteldatum (historisch, los van de huidige
                 // 'stock' hierboven): 'in_stock' / 'out_of_stock' / null.
                 'stock_status_at_order' => $r->stock_status_at_order,
+                // Voorraad nu voor déze regel (oudste bestelling eerst gedekt):
+                // 'in_stock' / 'out_of_stock' / null (geen product).
+                'stock_status_now' => $r->now_in_stock === null ? null : ((int) $r->now_in_stock === 1 ? 'in_stock' : 'out_of_stock'),
                 'image_url' => $p['image_url'] ?? null,
                 'order_origin' => $r->order_origin,
                 'is_priority' => (bool) $r->is_priority,
