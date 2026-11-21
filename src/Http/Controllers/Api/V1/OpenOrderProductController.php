@@ -240,10 +240,14 @@ class OpenOrderProductController extends Controller
                 'op.product_extras', 'op.stock_status_at_order', 'sn.now_in_stock',
                 'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at', 'o.is_priority',
                 'o.first_name', 'o.last_name', 'o.email',
-            ])
-            // Prioriteit-orders altijd bovenaan, ongeacht de gekozen sortering
-            // (de app sorteert client-side identiek).
-            ->orderByDesc('o.is_priority');
+            ]);
+
+        // Prioriteit-orders (o.a. bol) altijd bovenaan, ongeacht de gekozen
+        // sortering (de app sorteert client-side identiek). Behalve bij het
+        // filter op voorraad bij bestellen / nu: dan telt alleen die selectie.
+        if (! $this->list($request->query('stock_combo'))) {
+            $rowsQuery->orderByDesc('o.is_priority');
+        }
 
         if ((string) $request->query('sort') === 'deadline') {
             // Eerst leveren: op effectieve deadline (leverdatum, anders verzenddatum);

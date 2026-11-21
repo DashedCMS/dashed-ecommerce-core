@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.219.1 - 2026-11-21
+
+### Changed
+- App-API openstaande bestellingen: met het filter `stock_combo` (voorraad bij bestellen / nu) staan prioriteit-orders (o.a. bol) niet meer vast bovenaan; dan telt alleen de gekozen sortering.
+
 ## v4.219.0 - 2026-11-21
 
 ### Added

@@ -88,3 +88,14 @@ it('open-order-products: filtert op combinaties van voorraad bij bestellen / nu'
         ->and($names('out_out'))->toBe(['A nieuw'])
         ->and($names('out_in,in_out'))->toBe(['B', 'C']);
 });
+
+it('open-order-products: met het voorraad-filter staan prioriteit-orders niet meer bovenaan', function () {
+    $prio = stockComboLine('Bol nieuw', stockComboProduct('Delta', ['stock' => 0]), 1, 'out_of_stock', '2026-11-05 10:00:00');
+    Order::query()->whereKey($prio->order_id)->update(['is_priority' => true]);
+
+    $filtered = collect($this->getJson('/api/v1/open-order-products?sort=stock_combo&stock_combo=out_in', ['X-Site-Id' => 'site'])->json('data'))->pluck('name')->all();
+    $unfiltered = collect($this->getJson('/api/v1/open-order-products?sort=stock_combo', ['X-Site-Id' => 'site'])->json('data'))->pluck('name')->all();
+
+    expect($filtered)->toBe(['B', 'Bol nieuw'])
+        ->and($unfiltered[0])->toBe('Bol nieuw');
+});
