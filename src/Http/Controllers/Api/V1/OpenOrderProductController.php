@@ -147,6 +147,11 @@ class OpenOrderProductController extends Controller
             $query->where('o.is_priority', true);
         }
 
+        // On hold: `on_hold=1` alleen regels van on-hold-orders, `on_hold=0` zonder.
+        if ($request->has('on_hold')) {
+            $request->boolean('on_hold') ? $query->whereNotNull('o.on_hold_at') : $query->whereNull('o.on_hold_at');
+        }
+
         SmartSearch::apply($query, $request->query('search'), ['op.name', 'o.invoice_id', DB::raw(OrderProduct::extrasSearchSql('op.product_extras'))]);
 
         return $query;
@@ -240,6 +245,7 @@ class OpenOrderProductController extends Controller
                 'op.id', 'op.order_id', 'op.product_id', 'op.name', 'op.sku', 'op.quantity',
                 'op.product_extras', 'op.stock_status_at_order', 'sn.now_in_stock',
                 'o.invoice_id', 'o.order_origin', 'o.fulfillment_status', 'o.created_at', 'o.is_priority',
+                'o.on_hold_at', 'o.on_hold_reason',
                 'o.first_name', 'o.last_name', 'o.email',
             ]);
 
@@ -300,6 +306,8 @@ class OpenOrderProductController extends Controller
                 'image_url' => $p['image_url'] ?? null,
                 'order_origin' => $r->order_origin,
                 'is_priority' => (bool) $r->is_priority,
+                'on_hold' => $r->on_hold_at !== null,
+                'on_hold_reason' => $r->on_hold_reason,
                 'fulfillment_status' => $r->fulfillment_status,
                 'customer_name' => trim((string) ($r->first_name . ' ' . $r->last_name)) ?: $r->email,
                 'created_at' => $r->created_at ? (string) $r->created_at : null,

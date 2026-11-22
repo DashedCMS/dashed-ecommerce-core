@@ -7,6 +7,7 @@ use Filament\Actions\ActionGroup;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Forms\Components\DatePicker;
@@ -159,6 +160,27 @@ class ViewOrder extends ViewRecord
                     \Dashed\DashedEcommerceCore\Models\OrderLog::logPriorityChange($this->record);
                     $this->record->refresh();
                 }),
+            Action::make('toggleOnHold')
+                ->iconButton()
+                ->label(fn () => $this->record->isOnHold() ? __('Van on hold halen') : __('On hold zetten'))
+                ->tooltip(fn () => $this->record->isOnHold() ? __('Van on hold halen') : __('On hold zetten'))
+                ->icon(fn () => $this->record->isOnHold() ? 'heroicon-s-pause-circle' : 'heroicon-o-pause-circle')
+                ->color(fn () => $this->record->isOnHold() ? 'warning' : 'gray')
+                ->authorize($mayEdit)
+                ->hidden(fn () => (bool) $this->record->credit_for_order_id)
+                ->modalHeading(fn () => $this->record->isOnHold() ? __('Van on hold halen') : __('On hold zetten'))
+                ->modalDescription(fn () => $this->record->isOnHold()
+                    ? __('De bestelling mag weer uitgeleverd worden.')
+                    : __('De bestelling mag (nog) niet uitgeleverd worden, bijv. omdat je wacht op een reactie van de klant. De verzendstatus blijft staan.'))
+                ->modalSubmitActionLabel(fn () => $this->record->isOnHold() ? __('Vrijgeven') : __('On hold zetten'))
+                ->schema(fn () => $this->record->isOnHold() ? [] : [
+                    Textarea::make('reason')
+                        ->label(__('Reden'))
+                        ->placeholder(__('Bijv. wacht op akkoord van de klant over de gravering'))
+                        ->rows(3)
+                        ->maxLength(1000),
+                ])
+                ->action(fn (array $data) => $this->applyOnHold(! $this->record->isOnHold(), $data['reason'] ?? null)),
             Action::make('adjustDeadline')
                 ->iconButton()
                 ->icon('heroicon-o-calendar-days')
@@ -555,6 +577,31 @@ class ViewOrder extends ViewRecord
         return $this->record->credit_for_order_id
             ? __('Creditorder :nummer', ['nummer' => $this->record->invoice_id])
             : __('Bestelling :nummer', ['nummer' => $this->record->invoice_id]);
+    }
+
+    protected function applyOnHold(bool $on, ?string $reason = null): void
+    {
+        $on ? $this->record->putOnHold($reason) : $this->record->releaseHold();
+        $this->record->refresh();
+
+        Notification::make()
+            ->title($on ? __('Bestelling staat on hold') : __('Bestelling is vrijgegeven'))
+            ->success()
+            ->send();
+    }
+
+    /** Knop in de on-hold-banner op de orderpagina. */
+    public function releaseHoldAction(): Action
+    {
+        return Action::make('releaseHold')
+            ->label(__('Vrijgeven'))
+            ->icon('heroicon-o-play-circle')
+            ->color('warning')
+            ->authorize(fn (): bool => $this->mayEditOrder())
+            ->requiresConfirmation()
+            ->modalHeading(__('Van on hold halen'))
+            ->modalDescription(__('De bestelling mag weer uitgeleverd worden.'))
+            ->action(fn () => $this->applyOnHold(false));
     }
 
     public function getSubheading(): ?string

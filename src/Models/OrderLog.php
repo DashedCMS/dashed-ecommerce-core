@@ -245,6 +245,14 @@ class OrderLog extends Model
             $string = str((string) $this->note)->lower()->contains('uit')
                 ? 'heeft de prioriteit uitgezet.'
                 : 'heeft de prioriteit aangezet.';
+        } elseif ($this->tag == 'order.on-hold.placed') {
+            $string = 'heeft de bestelling on hold gezet' . ($this->note ? ': ' . $this->note : '.');
+        } elseif ($this->tag == 'order.on-hold.updated') {
+            $string = 'heeft de on-hold-reden aangepast' . ($this->note ? ': ' . $this->note : '.');
+        } elseif ($this->tag == 'order.on-hold.released') {
+            $string = 'heeft de bestelling van on hold gehaald.';
+        } elseif ($this->tag == 'order.on-hold.auto-released') {
+            $string = 'heeft on hold opgeheven, want de bestelling is verzonden of afgehandeld.';
         } elseif ($this->tag == 'order.sent-to-fulfillment') {
             $string = 'heeft de bestelling naar de fulfillment-partijen gestuurd.';
         } elseif ($this->note) {
@@ -330,6 +338,24 @@ class OrderLog extends Model
             orderId: $order->id,
             tag: 'order.priority.changed',
             note: $order->is_priority ? 'Prioriteit aan' : 'Prioriteit uit',
+        );
+    }
+
+    /** @param  'placed'|'updated'|'released'|'auto-released'  $change */
+    public static function logOnHoldChange(Order $order, string $change): void
+    {
+        $tag = match ($change) {
+            'placed' => 'order.on-hold.placed',
+            'updated' => 'order.on-hold.updated',
+            'auto-released' => 'order.on-hold.auto-released',
+            default => 'order.on-hold.released',
+        };
+
+        self::createLog(
+            orderId: $order->id,
+            tag: $tag,
+            note: in_array($change, ['placed', 'updated'], true) ? $order->on_hold_reason : null,
+            isSystem: $change === 'auto-released' ? true : null,
         );
     }
 

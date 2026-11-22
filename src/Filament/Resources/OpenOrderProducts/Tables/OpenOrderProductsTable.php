@@ -112,6 +112,16 @@ class OpenOrderProductsTable
                     ->trueColor('warning')
                     ->falseColor('gray')
                     ->toggleable(),
+                IconColumn::make('order.on_hold_at')
+                    ->label(__('On hold'))
+                    ->state(fn ($record): bool => $record->order?->on_hold_at !== null)
+                    ->boolean()
+                    ->trueIcon('heroicon-s-pause-circle')
+                    ->falseIcon('heroicon-o-minus-small')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($record): ?string => $record->order?->on_hold_at ? ($record->order->on_hold_reason ?: __('On hold: niet uitleveren')) : null)
+                    ->toggleable(),
                 TextColumn::make('name')
                     ->label(__('Productnaam'))
                     ->wrap()
@@ -306,6 +316,15 @@ class OpenOrderProductsTable
                         true: fn ($query) => $query->whereHas('order', fn ($q) => $q->where('is_priority', true)),
                         false: fn ($query) => $query->whereHas('order', fn ($q) => $q->where('is_priority', false)),
                         blank: fn ($query) => $query,
+                    ),
+                TernaryFilter::make('on_hold')
+                    ->label(__('On hold'))
+                    ->placeholder(__('Alle regels'))
+                    ->trueLabel(__('Alleen on hold'))
+                    ->falseLabel(__('Zonder on hold'))
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereHas('order', fn (Builder $q) => $q->whereNotNull('on_hold_at')),
+                        false: fn (Builder $query) => $query->whereHas('order', fn (Builder $q) => $q->whereNull('on_hold_at')),
                     ),
                 TernaryFilter::make('has_product_extras')
                     ->label(__('Product opties'))

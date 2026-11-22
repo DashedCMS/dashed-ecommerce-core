@@ -71,6 +71,11 @@ class OrderController extends Controller
             $query->where('is_priority', true);
         }
 
+        // On hold: `on_hold=1` alleen on-hold-orders, `on_hold=0` juist zonder.
+        if ($request->has('on_hold')) {
+            $request->boolean('on_hold') ? $query->onHold() : $query->notOnHold();
+        }
+
         // Toewijzing: aan mij (ingelogde gebruiker) of aan een specifieke
         // medewerker. `assigned_to_me` wint van een losse user-id.
         if ($request->boolean('assigned_to_me')) {
@@ -1791,6 +1796,34 @@ class OrderController extends Controller
         }
 
         return response()->json(['data' => ['id' => $model->id, 'is_priority' => (bool) $model->is_priority]]);
+    }
+
+    /**
+     * Zet een bestelling on hold (`on: true`, optioneel `reason`) of haal hem
+     * eraf (`on: false`). Zonder `on` wisselt hij om.
+     */
+    public function setOnHold(Request $request, int $order): JsonResponse
+    {
+        $data = $request->validate([
+            'on' => ['sometimes', 'boolean'],
+            'reason' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $model = Order::thisSite()->findOrFail($order);
+        $on = array_key_exists('on', $data) ? (bool) $data['on'] : ! $model->isOnHold();
+
+        $on ? $model->putOnHold($data['reason'] ?? null, $request->user()?->id) : $model->releaseHold();
+        $model->refresh();
+
+        return response()->json(['data' => [
+            'id' => $model->id,
+            'on_hold' => $model->isOnHold(),
+            'on_hold_reason' => $model->on_hold_reason,
+            'on_hold_at' => optional($model->on_hold_at)->toIso8601String(),
+            'on_hold_by' => $model->on_hold_by
+                ? ['id' => (int) $model->on_hold_by, 'name' => optional($model->onHoldByUser)->name]
+                : null,
+        ]]);
     }
 
     private function applyFulfillmentFilter(Builder $query, mixed $value): void

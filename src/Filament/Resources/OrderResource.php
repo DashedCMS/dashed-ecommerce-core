@@ -14,6 +14,7 @@ use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Dashed\DashedCore\Models\User;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
 use Illuminate\Contracts\View\View;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Support\Facades\Auth;
@@ -366,6 +367,17 @@ class OrderResource extends Resource
                     ->falseColor('gray')
                     ->sortable()
                     ->toggleable(),
+                IconColumn::make('on_hold_at')
+                    ->label(__('On hold'))
+                    ->state(fn ($record): bool => $record->on_hold_at !== null)
+                    ->boolean()
+                    ->trueIcon('heroicon-s-pause-circle')
+                    ->falseIcon('heroicon-o-minus-small')
+                    ->trueColor('warning')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($record): ?string => $record->on_hold_at ? ($record->on_hold_reason ?: __('On hold')) : null)
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('invoice_id')
                     ->label(__('Bestelling ID'))
                     ->toggleable()
@@ -560,6 +572,15 @@ class OrderResource extends Resource
 
                         return $query->where('is_priority', true);
                     }),
+                TernaryFilter::make('on_hold')
+                    ->label(__('On hold'))
+                    ->placeholder(__('Alle bestellingen'))
+                    ->trueLabel(__('Alleen on hold'))
+                    ->falseLabel(__('Zonder on hold'))
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('on_hold_at'),
+                        false: fn (Builder $query) => $query->whereNull('on_hold_at'),
+                    ),
                 Filter::make('proforma_awaiting_payment')
                     ->toggle()
                     ->label(__('Wachtend op betaling (proforma)'))
@@ -733,6 +754,23 @@ class OrderResource extends Resource
                         // forceFill: onafhankelijk van de mass-assignment-config van Order.
                         $record->forceFill(['is_priority' => ! $record->is_priority])->save();
                         \Dashed\DashedEcommerceCore\Models\OrderLog::logPriorityChange($record);
+                    }),
+                Action::make('toggleOnHold')
+                    ->label(fn ($record) => $record->isOnHold() ? __('Van on hold halen') : __('On hold zetten'))
+                    ->icon('heroicon-o-pause-circle')
+                    ->color('warning')
+                    ->visible(fn ($record) => ! $record->credit_for_order_id)
+                    ->modalHeading(fn ($record) => $record->isOnHold() ? __('Van on hold halen') : __('On hold zetten'))
+                    ->modalSubmitActionLabel(fn ($record) => $record->isOnHold() ? __('Vrijgeven') : __('On hold zetten'))
+                    ->schema(fn ($record) => $record?->isOnHold() ? [] : [
+                        Textarea::make('reason')
+                            ->label(__('Reden'))
+                            ->placeholder(__('Bijv. wacht op akkoord van de klant over de gravering'))
+                            ->rows(3)
+                            ->maxLength(1000),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $record->isOnHold() ? $record->releaseHold() : $record->putOnHold($data['reason'] ?? null);
                     }),
                 Action::make('deleteDraft')
                     ->label(__('Verwijderen'))

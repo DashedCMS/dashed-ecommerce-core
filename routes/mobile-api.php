@@ -206,6 +206,7 @@ Route::prefix('api/v1')
         // de print-queue + de daemon op de Pi/NAS.
         // Prioriteit-markering op een bestelling (aan/uit).
         Route::post('orders/{order}/priority', [OrderController::class, 'togglePriority'])->middleware('ability:orders.write');
+        Route::post('orders/{order}/hold', [OrderController::class, 'setOnHold'])->middleware('ability:orders.write');
         Route::post('orders/{order}/assign', [OrderController::class, 'assign'])->middleware('ability:orders.write');
 
         // Print-wachtrij (CMS Print queue): bekijken + retry/cancel per taak.

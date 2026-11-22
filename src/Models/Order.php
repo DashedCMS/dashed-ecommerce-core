@@ -136,6 +136,7 @@ class Order extends Model
         'applied_discount_codes' => 'array',
         'applied_gift_cards' => 'array',
         'packed_at' => 'datetime',
+        'on_hold_at' => 'datetime',
         'free_shipping_threshold' => 'decimal:2',
         'fulfillment_reopened_at' => 'datetime',
         'is_proforma' => 'boolean',
@@ -674,6 +675,65 @@ class Order extends Model
     public function assignedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to_user_id');
+    }
+
+    public function onHoldByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'on_hold_by');
+    }
+
+    /** On hold: mag (nog) niet uitgeleverd worden, bijv. wachten op de klant. */
+    public function isOnHold(): bool
+    {
+        return $this->on_hold_at !== null;
+    }
+
+    public function scopeOnHold($query)
+    {
+        return $query->whereNotNull('on_hold_at');
+    }
+
+    public function scopeNotOnHold($query)
+    {
+        return $query->whereNull('on_hold_at');
+    }
+
+    /**
+     * Zet de bestelling on hold (of werk de reden bij als hij dat al is).
+     * Raakt de fulfilmentstatus niet aan; logt in het orderlogboek.
+     */
+    public function putOnHold(?string $reason = null, ?int $userId = null): void
+    {
+        $reason = trim((string) $reason) ?: null;
+        $wasOnHold = $this->isOnHold();
+
+        if ($wasOnHold && $reason === $this->on_hold_reason) {
+            return;
+        }
+
+        $this->forceFill([
+            'on_hold_at' => $this->on_hold_at ?? now(),
+            'on_hold_reason' => $reason,
+            'on_hold_by' => $userId ?? auth()->id() ?? $this->on_hold_by,
+        ])->save();
+
+        OrderLog::logOnHoldChange($this, $wasOnHold ? 'updated' : 'placed');
+    }
+
+    /** Haal de bestelling van on hold af. */
+    public function releaseHold(bool $system = false): void
+    {
+        if (! $this->isOnHold()) {
+            return;
+        }
+
+        $this->forceFill([
+            'on_hold_at' => null,
+            'on_hold_reason' => null,
+            'on_hold_by' => null,
+        ])->save();
+
+        OrderLog::logOnHoldChange($this, $system ? 'auto-released' : 'released');
     }
 
     public function cart(): BelongsTo
@@ -1764,6 +1824,11 @@ class Order extends Model
         }
 
         $this->fulfillment_status = $newStatus;
+
+        // Verzonden of afgehandeld: dan wachten we niet meer, hold vervalt.
+        if (in_array($newStatus, ['shipped', 'handled'], true) && $this->isOnHold()) {
+            $this->releaseHold(system: true);
+        }
 
         // Terug van afgehandeld naar open: vanaf hier tellen alleen zendingen
         // van na dit moment mee voor het automatisch afhandelen. Anders zet

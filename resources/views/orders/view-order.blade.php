@@ -38,6 +38,23 @@
         @livewire('order-add-on-banner', ['order' => $record], key('order-add-on-banner-'.$record->id))
         @livewire('order-label-problem-banner', ['order' => $record], key('order-label-problem-'.$record->id))
 
+        @if($record->isOnHold())
+            <div class="au-od-banner" data-on-hold>
+                <div>
+                    <div class="au-od-strong">{{ __('On hold: niet uitleveren') }}</div>
+                    @if($record->on_hold_reason)
+                        <div class="au-od-small">{{ $record->on_hold_reason }}</div>
+                    @endif
+                    <div class="au-od-small au-od-muted">
+                        {{ $record->onHoldByUser?->name
+                            ? __('Door :naam op :datum', ['naam' => $record->onHoldByUser->name, 'datum' => $record->on_hold_at?->format('d-m-Y H:i')])
+                            : __('Sinds :datum', ['datum' => $record->on_hold_at?->format('d-m-Y H:i')]) }}
+                    </div>
+                </div>
+                {{ $this->releaseHoldAction }}
+            </div>
+        @endif
+
         @if($record->quote)
             <div class="au-od-row">
                 <span class="au-od-muted">{{ __('Ontstaan uit offerte') }}</span>
