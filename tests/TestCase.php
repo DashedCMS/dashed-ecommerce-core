@@ -35,6 +35,12 @@ class TestCase extends Orchestra
             DashedEcommerceCoreServiceProvider::class,
         ];
 
+        // dashed-core luistert op LocaleUpdated en vraagt dan de `filament`-
+        // binding op (AdminLocale); zonder Filament-provider faalt elke test.
+        if (class_exists(\Filament\FilamentServiceProvider::class)) {
+            array_unshift($providers, \Filament\FilamentServiceProvider::class);
+        }
+
         // LaravelLocalization levert de `laravellocalization`-binding die de
         // frontend-routes bij boot nodig hebben. Conditioneel, zodat de test-
         // suite ook draait wanneer het package (nog) niet aanwezig is.
