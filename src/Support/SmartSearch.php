@@ -14,7 +14,7 @@ class SmartSearch
      * JSON-paden zijn (bv. 'op.name', 'name->nl').
      *
      * @param  \Illuminate\Contracts\Database\Query\Builder|\Illuminate\Database\Eloquent\Builder  $query
-     * @param  array<int, string>  $columns
+     * @param  array<int, string|\Illuminate\Contracts\Database\Query\Expression>  $columns
      */
     public static function apply($query, ?string $search, array $columns): void
     {

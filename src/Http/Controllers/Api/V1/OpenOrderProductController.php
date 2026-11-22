@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Dashed\DashedCore\Classes\Sites;
 use Illuminate\Database\Query\Builder;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Support\SmartSearch;
 
@@ -146,7 +147,7 @@ class OpenOrderProductController extends Controller
             $query->where('o.is_priority', true);
         }
 
-        SmartSearch::apply($query, $request->query('search'), ['op.name', 'o.invoice_id']);
+        SmartSearch::apply($query, $request->query('search'), ['op.name', 'o.invoice_id', DB::raw(OrderProduct::extrasSearchSql('op.product_extras'))]);
 
         return $query;
     }

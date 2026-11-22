@@ -124,7 +124,13 @@ class OpenOrderProductsTable
                             ->map(fn ($option) => ($option['name'] ?? '') . ': ' . ($option['value'] ?? ''))
                             ->implode(' | ');
                     })
-                    ->searchable()
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        $like = '%' . $search . '%';
+
+                        return $query->where(fn (Builder $q) => $q
+                            ->where('dashed__order_products.name', 'like', $like)
+                            ->orWhereRaw(OrderProduct::extrasSearchSql('dashed__order_products.product_extras') . ' like ?', [$like]));
+                    })
                     ->sortable(),
                 TextColumn::make('sku')
                     ->label(__('SKU'))

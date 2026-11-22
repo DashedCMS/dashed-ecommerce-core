@@ -58,6 +58,24 @@ class OrderProduct extends Model
         return OrderProductFactory::new();
     }
 
+    /**
+     * Doorzoekbare tekst van de gekozen extra's (namen + waarden) als SQL-
+     * expressie. Op MySQL via JSON_EXTRACT + CAST zodat ge-escapete tekens
+     * (bijv. \u00e9) als gewone tekst matchen, zonder hoofdlettergevoeligheid; elders de ruwe JSON-kolom.
+     */
+    public static function extrasSearchSql(string $column = 'product_extras'): string
+    {
+        $driver = (new static())->getConnection()->getDriverName();
+
+        if ($driver === 'mysql') {
+            // JSON naar tekst krijgt utf8mb4_bin (hoofdlettergevoelig); forceer
+            // een ci-collatie zodat zoeken net zo werkt als op de naam.
+            return "(CASE WHEN JSON_VALID({$column}) THEN CONVERT(JSON_EXTRACT({$column}, '\$[*].name', '\$[*].value') USING utf8mb4) COLLATE utf8mb4_unicode_ci ELSE CONVERT({$column} USING utf8mb4) COLLATE utf8mb4_unicode_ci END)";
+        }
+
+        return $column;
+    }
+
     public function scopeSearch($query, ?string $search)
     {
         if (request()->get('search', $search)) {
