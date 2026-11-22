@@ -273,7 +273,7 @@
                                         <div class="grid gap-4 lg:grid-cols-2 lg:col-span-2">
                                             @if(count($paymentMethods))
                                                 @foreach($paymentMethods as $thisPaymentMethod)
-                                                    <div class="grid gap-2">
+                                                    <div class="grid gap-2" @if(($thisPaymentMethod['psp_id'] ?? null) === 'applepay') x-data x-show="!! window.ApplePaySession && ApplePaySession.canMakePayments()" x-cloak @endif>
                                                         <label class="p-4 cursor-pointer bg-primary/10 hover:bg-primary/50  rounded-lg relative flex items-center">
                                                             <input required
                                                                    id="payment_method{{$thisPaymentMethod['id']}}"

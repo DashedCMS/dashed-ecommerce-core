@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Placeholder;
 use LaraZeus\Quantity\Components\Quantity;
 use Dashed\DashedCore\Models\Customsetting;
@@ -94,6 +96,10 @@ class Product extends Model
         'copyable_to_childs' => 'array',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'limit_purchases_whole_group' => 'boolean',
+        'limit_purchases_previous_orders' => 'boolean',
+        'limit_purchases_match_on' => 'array',
+        'limit_purchases_since' => 'datetime',
         'expected_in_stock_date' => 'datetime',
         'low_stock_alerted_at' => 'datetime',
         'automation_stock_zero_at' => 'datetime',
@@ -1959,6 +1965,30 @@ class Product extends Model
                 ->required()
                 ->numeric()
                 ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+            Toggle::make('limit_purchases_whole_group')
+                ->label(__('Limiet geldt voor alle varianten samen'))
+                ->helperText(__('Bijv. maat M en L van dezelfde box tellen samen. Zet dit (met dezelfde limiet) aan op alle varianten van de groep.'))
+                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+            Toggle::make('limit_purchases_previous_orders')
+                ->label(__('Ook eerdere bestellingen van dezelfde klant meetellen'))
+                ->helperText(__('Dan geldt het aantal hierboven per klant, over alle betaalde bestellingen samen. Handig voor acties als "1 per klant".'))
+                ->reactive()
+                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer')),
+            CheckboxList::make('limit_purchases_match_on')
+                ->label(__('Herken dezelfde klant aan'))
+                ->options([
+                    'email' => __('E-mailadres'),
+                    'address' => __('Afleveradres (postcode + huisnummer)'),
+                    'ip' => __('IP-adres'),
+                ])
+                ->helperText(__('Eén overeenkomst is genoeg om een eerdere bestelling mee te tellen. Let op: met IP-adres kunnen ook huisgenoten of collega\'s op hetzelfde netwerk geweigerd worden.'))
+                ->default(['email'])
+                ->required(fn (Get $get) => $get('limit_purchases_per_customer') && $get('limit_purchases_previous_orders'))
+                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer') || ! $get('limit_purchases_previous_orders')),
+            DateTimePicker::make('limit_purchases_since')
+                ->label(__('Alleen bestellingen meetellen vanaf'))
+                ->helperText(__('Leeg laten om alle eerdere bestellingen mee te tellen.'))
+                ->hidden(fn (Get $get) => ! $get('limit_purchases_per_customer') || ! $get('limit_purchases_previous_orders')),
             Select::make('fulfillment_provider')
                 ->label(__('Door wie wordt dit product verstuurd?'))
                 ->helperText(__('Laat leeg voor eigen fulfillment'))

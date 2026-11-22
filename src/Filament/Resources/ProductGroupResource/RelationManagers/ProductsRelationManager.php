@@ -108,6 +108,10 @@ class ProductsRelationManager extends RelationManager
                             'low_stock_notification_limit' => $record->low_stock_notification_limit,
                             'stock_status' => $record->stock_status,
                             'limit_purchases_per_customer_limit' => $record->limit_purchases_per_customer_limit,
+                            'limit_purchases_whole_group' => $record->limit_purchases_whole_group,
+                            'limit_purchases_previous_orders' => $record->limit_purchases_previous_orders,
+                            'limit_purchases_match_on' => $record->limit_purchases_match_on ?: ['email'],
+                            'limit_purchases_since' => $record->limit_purchases_since,
                             'fulfillment_provider' => $record->fulfillment_provider,
                         ];
 

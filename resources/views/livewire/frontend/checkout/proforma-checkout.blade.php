@@ -138,7 +138,7 @@
                             @if (count($paymentMethods))
                                 <div class="grid gap-3 sm:grid-cols-2">
                                     @foreach ($paymentMethods as $thisPaymentMethod)
-                                        <label class="flex h-full cursor-pointer items-center gap-3 rounded-[14px] border border-[rgba(48,84,91,0.12)] bg-white px-4 py-3 transition has-[:checked]:border-primary has-[:checked]:bg-secondary/20">
+                                        <label class="flex h-full cursor-pointer items-center gap-3 rounded-[14px] border border-[rgba(48,84,91,0.12)] bg-white px-4 py-3 transition has-[:checked]:border-primary has-[:checked]:bg-secondary/20" @if(($thisPaymentMethod['psp_id'] ?? null) === 'applepay') x-data x-show="!! window.ApplePaySession && ApplePaySession.canMakePayments()" x-cloak @endif>
                                             <input type="radio" name="payment_method" class="peer sr-only"
                                                    value="{{ $thisPaymentMethod['id'] }}"
                                                    wire:model.live="paymentMethod">

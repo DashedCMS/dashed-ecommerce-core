@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.221.0 - 2026-11-22
+
+### Added
+- Aankooplimiet per klant over eerdere bestellingen: per product aan te zetten ("Ook eerdere bestellingen van dezelfde klant meetellen"). Betaalde bestellingen tellen mee, herkend op e-mailadres, afleveradres (postcode + huisnummer) en/of IP-adres, optioneel pas vanaf een datum. Wordt bij het afrekenen gecontroleerd.
+- Aankooplimiet voor alle varianten samen ("Limiet geldt voor alle varianten samen"): de limiet gold per variant, waardoor je bijv. maat M en L van dezelfde actiebox samen kon kopen.
+- Checkout-templates: Apple Pay wordt alleen getoond in browsers die het ondersteunen.
+
 ## v4.220.0 - 2026-11-22
 
 ### Added

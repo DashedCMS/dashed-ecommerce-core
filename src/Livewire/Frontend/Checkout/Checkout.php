@@ -35,6 +35,7 @@ use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Linker;
 use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 use Dashed\DashedEcommerceCore\Services\CartActivityLogger;
+use Dashed\DashedEcommerceCore\Classes\CustomerPurchaseLimit;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccount;
 use Dashed\DashedEcommerceCore\Livewire\Concerns\CartActions;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderCreatedEvent;
@@ -1203,6 +1204,22 @@ class Checkout extends Component
             $this->recordAbandonment('no_items');
 
             return $this->dispatch('showAlert', 'error', Translation::get('no-items-in-cart', 'cart', 'You dont have any products in your shopping cart'));
+        }
+
+        // Aankooplimiet over alle varianten samen en/of eerdere bestellingen
+        // (bijv. "1 actiebox per klant"). Pas hier bekend: e-mail en adres.
+        $purchaseLimitRefusal = CustomerPurchaseLimit::refusal($cartItems, [
+            'email' => $this->email,
+            'zip_code' => $this->zipCode,
+            'house_nr' => $this->houseNr,
+            'ip' => request()->ip(),
+        ]);
+
+        if ($purchaseLimitRefusal) {
+            Notification::make()->danger()->title($purchaseLimitRefusal)->send();
+            $this->recordAbandonment('purchase_limit');
+
+            return $this->dispatch('showAlert', 'error', $purchaseLimitRefusal);
         }
 
         $extraOptionIds = [];
