@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.220.0 - 2026-11-22
+
+### Added
+- Bestellingen on hold zetten: de bestelling mag (nog) niet uitgeleverd worden, bijv. omdat je wacht op een reactie van de klant. Losse vlag (`on_hold_at`, `on_hold_reason`, `on_hold_by`) naast de fulfilmentstatus, die blijft staan. Logt in het orderlogboek en vervalt automatisch zodra de bestelling verzonden of afgehandeld is. Alleen een waarschuwing, niets wordt geblokkeerd.
+- CMS: knop en banner op de orderpagina, rij-actie, kolom en filter in de orderlijst en bij openstaande bestellingen.
+- App-API: `POST orders/{order}/hold` (`on`, `reason`), velden `on_hold`/`on_hold_reason` (plus `on_hold_at`/`on_hold_by` op het detail) en filter `on_hold` op `/orders` en `/open-order-products`.
+- Openstaande bestellingen: zoeken op productnaam vindt ook de gekozen product-extra's (naam en waarde), in het CMS en de app-API.
+
 ## v4.219.1 - 2026-11-21
 
 ### Changed
