@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.222.2 - 2026-11-23
+
+### Fixed
+- Popup "toegevoegd aan winkelwagen" (`AddedToCart`): `$cartTotal` is nu het bedrag waarop de checkout gratis verzending toetst (zonder verzendkosten en zonder verkochte cadeaubonnen). Een cadeaubon in de winkelwagen liet de regel "nog € x voor gratis verzending" eerder te laag uitvallen.
+
 ## v4.222.1 - 2026-11-23
 
 ### Fixed

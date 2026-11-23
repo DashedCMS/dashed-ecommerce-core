@@ -38,8 +38,12 @@ class AddedToCart extends Component
             $this->product = $product;
             $this->crossSellProducts = $product->getCrossSellProducts(true, true);
         }
-        $this->cartTotal = cartHelper()->getTotal();
         $helper = app(FreeShippingHelper::class);
+        // Themes compare $cartTotal with $freeShippingThreshold for the
+        // "nog € x voor gratis verzending" line, so it must be the order value
+        // the checkout uses (without shipping costs and sold gift cards),
+        // not the raw cart total.
+        $this->cartTotal = $helper->cartOrderValue();
         $progress = $helper->progressForCart();
         $this->freeShippingThreshold = $helper->threshold();
         $this->freeShippingPercentage = $progress['percentage'];
