@@ -18,6 +18,12 @@ class GiftcardIssuer
 
     public const DEFAULT_PREFIX = 'GC-';
 
+    public const NO_PREFIX = 'none';
+
+    public const MIN_CODE_LENGTH = 6;
+
+    public const MAX_CODE_LENGTH = 32;
+
     /**
      * Geeft per stuk van elke cadeaubonregel een verkochte bon uit.
      * Idempotent: een regel met al `quantity` bonnen krijgt er geen bij.
@@ -206,33 +212,68 @@ class GiftcardIssuer
 
     /**
      * Voorvoegsel van een nieuwe boncode, per winkel in te stellen met de
-     * instelling `giftcard_code_prefix` (standaard `GC-`).
+     * instelling `giftcard_code_prefix` (standaard `GC-`). Leeg valt terug op
+     * `GC-`; de waarde `none` betekent geen voorvoegsel.
      */
     public static function codePrefix(): string
     {
         $prefix = trim((string) Customsetting::get('giftcard_code_prefix', null, self::DEFAULT_PREFIX));
 
+        if (strtolower($prefix) === self::NO_PREFIX) {
+            return '';
+        }
+
         return $prefix !== '' ? $prefix : self::DEFAULT_PREFIX;
+    }
+
+    /**
+     * Aantal tekens van een nieuwe boncode (zonder voorvoegsel), in te stellen
+     * met de instelling `giftcard_code_length`. Niet gezet geeft null: dan het
+     * standaardformaat `XXXX-XXXX`. Gezet wordt het begrensd op 6..32.
+     */
+    public static function codeLength(): ?int
+    {
+        $length = trim((string) Customsetting::get('giftcard_code_length', null, ''));
+
+        if ($length === '' || ! is_numeric($length) || (int) $length < 1) {
+            return null;
+        }
+
+        return max(self::MIN_CODE_LENGTH, min(self::MAX_CODE_LENGTH, (int) $length));
     }
 
     public static function newCode(): string
     {
         $prefix = self::codePrefix();
+        $length = self::codeLength();
 
         do {
-            $code = $prefix . self::randomBlock() . '-' . self::randomBlock();
-        } while (DiscountCode::withTrashed()->where('code', $code)->exists());
+            $code = $length
+                ? $prefix . self::randomString($length)
+                : $prefix . self::randomString(4) . '-' . self::randomString(4);
+        } while (self::codeExists($code));
 
         return $code;
     }
 
-    private static function randomBlock(): string
+    /**
+     * Bestaat de code al (ook verwijderd, ook als gewone kortingscode)?
+     * Hoofdletterongevoelig.
+     */
+    public static function codeExists(string $code): bool
     {
-        $block = '';
-        for ($i = 0; $i < 4; $i++) {
-            $block .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
+        return DiscountCode::withTrashed()
+            ->whereRaw('UPPER(code) = ?', [strtoupper($code)])
+            ->exists();
+    }
+
+    private static function randomString(int $length): string
+    {
+        $string = '';
+        for ($i = 0; $i < $length; $i++) {
+            $string .= self::ALPHABET[random_int(0, strlen(self::ALPHABET) - 1)];
         }
 
-        return $block;
+        return $string;
     }
 }
