@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.222.1 - 2026-11-23
+
+### Fixed
+- Voorbeeld van de annuleringsmails (klant, admin, met creditorder) in de e-mailtemplates zocht op de niet-bestaande kolom `parent_credit_order_id`; dat is nu `credit_for_order_id`.
+
 ## v4.222.0 - 2026-11-23
 
 ### Added

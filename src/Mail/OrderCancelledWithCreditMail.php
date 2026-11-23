@@ -75,7 +75,7 @@ class OrderCancelledWithCreditMail extends Mailable implements RegistersEmailTem
 
     public static function makeForTest(): ?self
     {
-        $order = Order::query()->whereNotNull('parent_credit_order_id')->latest()->first() ?? Order::query()->latest()->first();
+        $order = Order::query()->whereNotNull('credit_for_order_id')->latest()->first() ?? Order::query()->latest()->first();
 
         return $order ? new self($order) : null;
     }
