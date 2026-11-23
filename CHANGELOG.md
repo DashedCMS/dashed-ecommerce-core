@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.222.0 - 2026-11-23
+
+### Added
+- Codeformaat van verkochte cadeaubonnen instelbaar: `giftcard_code_length` (6 t/m 32) geeft een code van zoveel tekens zonder streepje, bijv. voor fysieke kaarten met 6 codevakjes. Niet gezet blijft het formaat `XXXX-XXXX`.
+- `giftcard_code_prefix` met de waarde `none` geeft codes zonder voorvoegsel. Leeg valt nog steeds terug op `GC-`.
+
+### Changed
+- De controle of een nieuwe boncode al bestaat is nu hoofdletterongevoelig (ook tegen gewone kortingscodes).
+
 ## v4.221.0 - 2026-11-22
 
 ### Added

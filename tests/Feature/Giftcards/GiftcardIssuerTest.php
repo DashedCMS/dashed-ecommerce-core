@@ -129,6 +129,53 @@ it('uses GC- as the default code prefix', function () {
     expect(GiftcardIssuer::newCode())->toMatch('/^GC-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/');
 });
 
+it('keeps the default format when giftcard_code_length is empty', function () {
+    Customsetting::set('giftcard_code_prefix', 'LOV-');
+    Customsetting::set('giftcard_code_length', '');
+
+    expect(GiftcardIssuer::newCode())->toMatch('/^LOV-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/');
+});
+
+it('generates codes of a configured length without a dash', function () {
+    Customsetting::set('giftcard_code_length', 6);
+
+    for ($i = 0; $i < 50; $i++) {
+        expect(GiftcardIssuer::newCode())->toMatch('/^GC-[A-HJ-NP-Z2-9]{6}$/');
+    }
+});
+
+it('generates codes without a prefix when the prefix is none', function () {
+    Customsetting::set('giftcard_code_prefix', 'none');
+    Customsetting::set('giftcard_code_length', 6);
+
+    for ($i = 0; $i < 50; $i++) {
+        expect(GiftcardIssuer::newCode())->toMatch('/^[A-HJ-NP-Z2-9]{6}$/');
+    }
+});
+
+it('clamps the configured code length to 6..32', function () {
+    Customsetting::set('giftcard_code_prefix', 'none');
+
+    Customsetting::set('giftcard_code_length', 3);
+    expect(strlen(GiftcardIssuer::newCode()))->toBe(6);
+
+    Customsetting::set('giftcard_code_length', 100);
+    expect(strlen(GiftcardIssuer::newCode()))->toBe(32);
+});
+
+it('checks existing codes case-insensitively, including normal discount codes', function () {
+    DiscountCode::withoutEvents(fn () => DiscountCode::create([
+        'site_ids' => ['default'],
+        'name' => 'Oude bon',
+        'code' => 'zeos8j',
+        'type' => 'amount',
+        'discount_amount' => 10,
+    ]));
+
+    expect(GiftcardIssuer::codeExists('ZEOS8J'))->toBeTrue()
+        ->and(GiftcardIssuer::codeExists('ZEOS8K'))->toBeFalse();
+});
+
 it('does not re-issue a soft-deleted giftcard', function () {
     [$order] = giftcardIssuerOrder();
     $cards = app(GiftcardIssuer::class)->issueFor($order);
