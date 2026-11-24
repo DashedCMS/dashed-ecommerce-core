@@ -11,6 +11,9 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
  *
  * Automatisch: de eerste medewerker die een orderlogregel veroorzaakt wordt de
  * eigenaar; een bestaande toewijzing wordt nooit automatisch overschreven.
+ * Alleen medewerkers (paneelaccounts) tellen: klanten delen de auth-guard en
+ * loggen zelf ook regels (bijv. order.paid na afrekenen), en ook een
+ * medewerker die de klant van de bestelling zelf is wordt niet toegewezen.
  * Handmatig: overnemen (overschrijft) en vrijgeven (maakt leeg).
  *
  * Alle schrijfacties zijn query-updates, zodat er geen Order-events of
@@ -27,6 +30,9 @@ class OrderAssignment
         'order.assignment.taken-over',
         'order.assignment.assigned',
         'order.assignment.released',
+        'order.marked-as-paid',
+        'order.payment_link.sent',
+        'order.payment-reminder.manual',
     ];
 
     public static function assignFromLog(OrderLog $log): void
@@ -39,7 +45,37 @@ class OrderAssignment
             return;
         }
 
-        self::assignIfUnassignedId((int) $log->order_id, (int) $log->user_id);
+        $userId = (int) $log->user_id;
+
+        if (! self::isStaff($userId)) {
+            return;
+        }
+
+        // Nooit aan de eigen klant van de bestelling (ook niet als die medewerker is).
+        Order::withTrashed()
+            ->whereKey((int) $log->order_id)
+            ->whereNull('assigned_to_user_id')
+            ->where(fn ($query) => $query->whereNull('user_id')->orWhere('user_id', '!=', $userId))
+            ->update([
+                'assigned_to_user_id' => $userId,
+                'assigned_at' => now(),
+            ]);
+    }
+
+    /**
+     * Medewerker = account met paneelrechten, zelfde regel als
+     * User::mustLoginViaPanel(): een rol anders dan customer of een
+     * toegekende rol. Eén query.
+     */
+    private static function isStaff(int $userId): bool
+    {
+        return User::query()
+            ->whereKey($userId)
+            ->where(fn ($query) => $query
+                ->whereNull('role')
+                ->orWhere('role', '!=', 'customer')
+                ->orWhereHas('roles'))
+            ->exists();
     }
 
     /**

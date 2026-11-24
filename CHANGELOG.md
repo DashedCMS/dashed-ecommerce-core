@@ -5,7 +5,11 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 ## Unreleased
 
 ### Added
-- Bestellingen worden automatisch toegewezen aan de eerste medewerker die er iets mee doet: elke orderlogregel van een medewerker (geen systeemregel, geen aanmaak- of mailregel) zet `assigned_to_user_id`, ook vanuit de app. Een bestaande toewijzing wordt nooit automatisch overschreven. Nieuwe kolom `assigned_at` met het moment van toewijzen.
+- Bestellingen worden automatisch toegewezen aan de eerste medewerker die er iets mee doet: elke orderlogregel van een medewerker zet `assigned_to_user_id`, ook vanuit de app. Een bestaande toewijzing wordt nooit automatisch overschreven. Nieuwe kolom `assigned_at` met het moment van toewijzen.
+  - Alleen medewerkers (paneelaccount, zelfde regel als `User::mustLoginViaPanel()`) wijzen toe, nooit een klant (klanten loggen zelf bijv. `order.paid` na afrekenen) en nooit de eigen klant van de bestelling, ook niet als die medewerker is.
+  - Systeemregels wijzen niet toe, net als de tags `order.created`, `order.created.by.admin`, `abandoned-cart.converted`, `order.email.sent`, `order.marked-as-paid`, `order.payment_link.sent`, `order.payment-reminder.manual` en de drie toewijzingstags.
+  - Bulkacties in de bestellingenlijst wijzen elke geraakte (nog niet toegewezen) bestelling toe aan wie de actie uitvoerde.
+  - Deploy: eerst migraties draaien (`dashed:update` doet dat), daarna Horizon herstarten.
 - Overnemen en vrijgeven in het CMS: een balk op de bestelling toont wie hem heeft, met knoppen "Overnemen" en "Vrijgeven". Beide komen in de orderlog (`order.assignment.taken-over` / `order.assignment.released`; wijst iemand een ander toe via de app, dan `order.assignment.assigned` met de nieuwe eigenaar als notitie) en leiden zelf niet tot een nieuwe automatische toewijzing.
 - "Ook open bij": wie een bestelling nu open heeft (alleen in de cache, telt 90 seconden na de laatste ping). Zichtbaar als balk op de bestelling en als kolom in de bestellingenlijst.
 - Mobiele API: `assigned_at` in de lijst- en detailrespons, `viewers` (andere medewerkers die de bestelling open hebben, als `{id, name}`) in de detailrespons, `DELETE orders/{order}/assign` om vrij te geven en `POST`/`DELETE orders/{order}/presence` voor "bekijkt nu" (204). `POST orders/{order}/assign` en de automatische toewijzing bij app-acties lopen nu via `OrderAssignment`, zodat `assigned_at` en de orderlog worden gezet.
