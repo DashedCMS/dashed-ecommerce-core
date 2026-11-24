@@ -208,6 +208,10 @@ Route::prefix('api/v1')
         Route::post('orders/{order}/priority', [OrderController::class, 'togglePriority'])->middleware('ability:orders.write');
         Route::post('orders/{order}/hold', [OrderController::class, 'setOnHold'])->middleware('ability:orders.write');
         Route::post('orders/{order}/assign', [OrderController::class, 'assign'])->middleware('ability:orders.write');
+        Route::delete('orders/{order}/assign', [OrderController::class, 'unassign'])->middleware('ability:orders.write');
+        // "Bekijkt nu": de app pingt zolang een bestelling open staat (alleen cache).
+        Route::post('orders/{order}/presence', [OrderController::class, 'presence'])->middleware('ability:orders.read');
+        Route::delete('orders/{order}/presence', [OrderController::class, 'leavePresence'])->middleware('ability:orders.read');
 
         // Print-wachtrij (CMS Print queue): bekijken + retry/cancel per taak.
         Route::get('print-jobs', [PrintJobController::class, 'index'])->middleware('ability:orders.write');

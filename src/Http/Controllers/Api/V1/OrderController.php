@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
@@ -18,7 +19,9 @@ use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderAssignment;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Dashed\DashedEcommerceCore\Classes\OrderModificationService;
 use Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile\OrderResource;
@@ -202,9 +205,43 @@ class OrderController extends Controller
         $data = $request->validate([
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
-        $model->forceFill(['assigned_to_user_id' => $data['user_id'] ?? null])->save();
+        $userId = $data['user_id'] ?? null;
+
+        // Via OrderAssignment: zet assigned_at en schrijft de overname-/vrijgeeflog.
+        if ($userId !== null) {
+            OrderAssignment::takeOver($model, (int) $userId);
+        } else {
+            OrderAssignment::release($model, $request->user()?->id);
+        }
 
         return $this->detail($model);
+    }
+
+    /** Vrijgeven: niemand is meer eigenaar van de bestelling. */
+    public function unassign(Request $request, int $order): OrderResource
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        OrderAssignment::release($model, $request->user()?->id);
+
+        return $this->detail($model);
+    }
+
+    /** "Bekijkt nu": de app pingt zolang de bestelling open staat. */
+    public function presence(Request $request, int $order): Response
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        OrderPresence::ping((int) $model->id, (int) $request->user()->id);
+
+        return response()->noContent();
+    }
+
+    /** De app heeft de bestelling gesloten. */
+    public function leavePresence(Request $request, int $order): Response
+    {
+        $model = Order::thisSite()->findOrFail($order);
+        OrderPresence::leave((int) $model->id, (int) $request->user()->id);
+
+        return response()->noContent();
     }
 
     /**
@@ -217,11 +254,9 @@ class OrderController extends Controller
     private function autoAssignCurrentUser(Order $model, Request $request): void
     {
         $userId = $request->user()?->id;
-        if ($userId === null || $model->assigned_to_user_id !== null) {
+        if ($userId === null || ! OrderAssignment::assignIfUnassigned($model, (int) $userId)) {
             return;
         }
-
-        $model->forceFill(['assigned_to_user_id' => $userId])->save();
 
         activity()->performedOn($model)->causedBy($request->user())
             ->log('mobile-api: order automatisch toegewezen');

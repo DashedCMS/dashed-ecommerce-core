@@ -10,6 +10,7 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
 class OrderResource extends JsonResource
@@ -52,6 +53,7 @@ class OrderResource extends JsonResource
             'assigned_user' => $this->assigned_to_user_id
                 ? ['id' => (int) $this->assigned_to_user_id, 'name' => optional($this->assignedUser)->name]
                 : null,
+            'assigned_at' => $this->assigned_at?->toIso8601String(),
             'created_at' => optional($this->created_at)->toIso8601String(),
             'products' => OrderProductResource::collection($this->whenLoaded('orderProducts')),
             // Samenvatting voorraad-op-besteldatum over de regels: 'all_in_stock'
@@ -75,6 +77,8 @@ class OrderResource extends JsonResource
         }
 
         return array_merge($base, [
+            // Andere medewerkers die deze bestelling nu open hebben (zonder de vrager).
+            'viewers' => OrderPresence::otherViewers((int) $this->id, $request->user()?->id),
             'label_problem' => LabelProblemDetector::forOrder($this->resource)?->toArray(),
             'invoice_name' => $this->invoiceName,
             'hash' => $this->hash,

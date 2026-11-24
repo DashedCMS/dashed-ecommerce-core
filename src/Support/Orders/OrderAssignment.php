@@ -37,13 +37,40 @@ class OrderAssignment
             return;
         }
 
-        Order::withTrashed()
-            ->whereKey($log->order_id)
+        self::assignIfUnassignedId((int) $log->order_id, (int) $log->user_id);
+    }
+
+    /**
+     * Wijst de bestelling toe aan deze medewerker als er nog niemand is
+     * toegewezen (atomair, zonder model-events). Het meegegeven model wordt
+     * bijgewerkt. Geeft true terug als de toewijzing nu is gezet.
+     */
+    public static function assignIfUnassigned(Order $order, int $userId): bool
+    {
+        if ($order->assigned_to_user_id !== null) {
+            return false;
+        }
+
+        $assignedAt = now();
+
+        if (! self::assignIfUnassignedId((int) $order->getKey(), $userId, $assignedAt)) {
+            return false;
+        }
+
+        self::syncModel($order, ['assigned_to_user_id' => $userId, 'assigned_at' => $assignedAt]);
+
+        return true;
+    }
+
+    private static function assignIfUnassignedId(int $orderId, int $userId, $assignedAt = null): bool
+    {
+        return Order::withTrashed()
+            ->whereKey($orderId)
             ->whereNull('assigned_to_user_id')
             ->update([
-                'assigned_to_user_id' => $log->user_id,
-                'assigned_at' => now(),
-            ]);
+                'assigned_to_user_id' => $userId,
+                'assigned_at' => $assignedAt ?? now(),
+            ]) > 0;
     }
 
     /** Overnemen: de bestelling gaat naar deze medewerker, ook als iemand anders hem had. */
@@ -79,7 +106,12 @@ class OrderAssignment
 
         Order::withTrashed()->whereKey($order->getKey())->update($values);
 
-        // Het meegegeven model bijwerken zonder het als gewijzigd te markeren.
+        self::syncModel($order, $values);
+    }
+
+    /** Het meegegeven model bijwerken zonder het als gewijzigd te markeren. */
+    private static function syncModel(Order $order, array $values): void
+    {
         $order->forceFill($values)->syncOriginalAttributes(array_keys($values));
         $order->unsetRelation('assignedUser');
     }

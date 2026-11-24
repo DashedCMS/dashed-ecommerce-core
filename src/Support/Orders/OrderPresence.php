@@ -67,6 +67,17 @@ class OrderPresence
      */
     public static function otherViewerNames(int $orderId, ?int $excludeUserId): array
     {
+        return array_values(array_filter(array_column(self::otherViewers($orderId, $excludeUserId), 'name')));
+    }
+
+    /**
+     * Kijkers als {id, name}, zonder de opgegeven gebruiker. Eén cache-get;
+     * alleen als er kijkers zijn volgt een gebruikersquery.
+     *
+     * @return list<array{id: int, name: ?string}>
+     */
+    public static function otherViewers(int $orderId, ?int $excludeUserId): array
+    {
         $ids = array_values(array_diff(self::viewers($orderId), [(int) $excludeUserId]));
 
         if ($ids === []) {
@@ -74,7 +85,10 @@ class OrderPresence
         }
 
         // name is een accessor op User (voor- + achternaam), geen kolom.
-        return User::whereKey($ids)->get()->pluck('name')->filter()->values()->all();
+        return User::whereKey($ids)->get()
+            ->map(fn (User $user): array => ['id' => (int) $user->id, 'name' => $user->name])
+            ->values()
+            ->all();
     }
 
     public static function key(int $orderId): string

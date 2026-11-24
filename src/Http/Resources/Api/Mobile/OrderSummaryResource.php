@@ -34,6 +34,7 @@ class OrderSummaryResource extends JsonResource
             'assigned_user' => $this->assigned_to_user_id
                 ? ['id' => (int) $this->assigned_to_user_id, 'name' => optional($this->assignedUser)->name]
                 : null,
+            'assigned_at' => $this->assigned_at?->toIso8601String(),
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             // Uit de withExists-subqueries in OrderController::index(); false als niet geladen

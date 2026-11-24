@@ -2,6 +2,14 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## Unreleased
+
+### Added
+- Bestellingen worden automatisch toegewezen aan de eerste medewerker die er iets mee doet: elke orderlogregel van een medewerker (geen systeemregel, geen aanmaak- of mailregel) zet `assigned_to_user_id`, ook vanuit de app. Een bestaande toewijzing wordt nooit automatisch overschreven. Nieuwe kolom `assigned_at` met het moment van toewijzen.
+- Overnemen en vrijgeven in het CMS: een balk op de bestelling toont wie hem heeft, met knoppen "Overnemen" en "Vrijgeven". Beide komen in de orderlog (`order.assignment.taken-over` / `order.assignment.released`) en leiden zelf niet tot een nieuwe automatische toewijzing.
+- "Ook open bij": wie een bestelling nu open heeft (alleen in de cache, telt 90 seconden na de laatste ping). Zichtbaar als balk op de bestelling en als kolom in de bestellingenlijst.
+- Mobiele API: `assigned_at` in de lijst- en detailrespons, `viewers` (andere medewerkers die de bestelling open hebben, als `{id, name}`) in de detailrespons, `DELETE orders/{order}/assign` om vrij te geven en `POST`/`DELETE orders/{order}/presence` voor "bekijkt nu" (204). `POST orders/{order}/assign` en de automatische toewijzing bij app-acties lopen nu via `OrderAssignment`, zodat `assigned_at` en de orderlog worden gezet.
+
 ## v4.225.2 - 2026-11-24
 
 ### Fixed
