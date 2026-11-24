@@ -10,8 +10,8 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Mail\Concerns\HasEmailTemplate;
 use Dashed\DashedCore\Notifications\DTOs\TelegramSummary;
-use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
+use Dashed\DashedCore\Mail\Contracts\RegistersEmailTemplate;
 use Dashed\DashedCore\Notifications\Contracts\SendsToTelegram;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 

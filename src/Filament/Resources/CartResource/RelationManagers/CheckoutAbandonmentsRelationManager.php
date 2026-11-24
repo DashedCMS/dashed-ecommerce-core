@@ -3,8 +3,8 @@
 namespace Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers;
 
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\RelationManagers\RelationManager;
 use Dashed\DashedEcommerceCore\Models\CheckoutAbandonment;
 use Dashed\DashedEcommerceCore\Filament\Pages\Statistics\CheckoutAbandonmentsPage;
