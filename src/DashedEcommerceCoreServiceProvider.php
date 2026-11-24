@@ -1866,6 +1866,7 @@ MARKDOWN,
         Livewire::component('order-view-statusses', ViewStatusses::class);
         Livewire::component('order-label-problem-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\LabelProblemBanner::class);
         Livewire::component('order-add-on-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\OrderAddOnBanner::class);
+        Livewire::component('order-presence-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\OrderPresenceBanner::class);
         Livewire::component('order-create-track-and-trace', CreateTrackAndTrace::class);
 
         //Frontend components

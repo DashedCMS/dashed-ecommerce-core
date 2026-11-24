@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Support\Orders;
 
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -56,6 +57,24 @@ class OrderPresence
         }
 
         return $result;
+    }
+
+    /**
+     * Namen van de kijkers, zonder de opgegeven gebruiker (meestal de ingelogde).
+     * Eén cache-get; alleen als er kijkers zijn volgt een gebruikersquery.
+     *
+     * @return list<string>
+     */
+    public static function otherViewerNames(int $orderId, ?int $excludeUserId): array
+    {
+        $ids = array_values(array_diff(self::viewers($orderId), [(int) $excludeUserId]));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        // name is een accessor op User (voor- + achternaam), geen kolom.
+        return User::whereKey($ids)->get()->pluck('name')->filter()->values()->all();
     }
 
     public static function key(int $orderId): string

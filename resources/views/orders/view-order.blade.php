@@ -55,27 +55,8 @@
             </div>
         @endif
 
-        {{-- Toewijzing en "bekijkt nu"; de poll houdt de aanwezigheid bij en ververst deze balk. --}}
-        <div wire:poll.20s="pingPresence">
-            @if($record->assigned_to_user_id || $otherViewers)
-                <div class="au-od-banner" data-assignment>
-                    <div>
-                        @if($record->assigned_to_user_id)
-                            <div class="au-od-strong">
-                                {{ $record->assigned_at
-                                    ? __('Toegewezen aan :naam sinds :datum', ['naam' => $record->assignedUser?->name ?? '-', 'datum' => $record->assigned_at->format('d-m-Y H:i')])
-                                    : __('Toegewezen aan :naam', ['naam' => $record->assignedUser?->name ?? '-']) }}
-                            </div>
-                        @endif
-                        @if($otherViewers)
-                            <div class="au-od-small au-od-muted" data-other-viewers>
-                                {{ __('Ook open bij: :namen', ['namen' => implode(', ', $otherViewers)]) }}
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-        </div>
+        {{-- Toewijzing en "bekijkt nu"; eigen component zodat de poll niet de hele pagina ververst. --}}
+        @livewire('order-presence-banner', ['order' => $record], key('order-presence-'.$record->id))
 
         @if($record->quote)
             <div class="au-od-row">

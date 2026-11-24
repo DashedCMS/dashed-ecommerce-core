@@ -358,11 +358,7 @@ class OrderResource extends Resource
      */
     protected static function otherViewerNames(Order $order): array
     {
-        return once(function () use ($order): array {
-            $ids = array_values(array_diff(OrderPresence::viewers($order->id), [(int) auth()->id()]));
-
-            return $ids === [] ? [] : User::whereKey($ids)->get()->pluck('name')->filter()->values()->all();
-        });
+        return once(fn (): array => OrderPresence::otherViewerNames($order->id, auth()->id()));
     }
 
     public static function table(Table $table): Table

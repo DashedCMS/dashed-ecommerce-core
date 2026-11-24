@@ -4,7 +4,6 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
-use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Filament\Forms\Components\Checkbox;
@@ -56,7 +55,7 @@ class ViewOrder extends ViewRecord
         $this->pingPresence();
     }
 
-    /** "Bekijkt nu": bij openen en elke 20 seconden vanuit de view (wire:poll). */
+    /** "Bekijkt nu": bij openen; daarna pingt de OrderPresenceBanner elke 20 seconden. */
     public function pingPresence(): void
     {
         if (auth()->id()) {
@@ -211,6 +210,7 @@ class ViewOrder extends ViewRecord
                     $this->record->refresh();
                     OrderAssignment::takeOver($this->record, (int) auth()->id());
                     $this->record->refresh();
+                    $this->dispatch('order-assignment-changed');
 
                     Notification::make()->success()->title(__('Bestelling is aan jou toegewezen'))->send();
                 }),
@@ -226,6 +226,7 @@ class ViewOrder extends ViewRecord
                     $this->record->refresh();
                     OrderAssignment::release($this->record, auth()->id());
                     $this->record->refresh();
+                    $this->dispatch('order-assignment-changed');
 
                     Notification::make()->success()->title(__('Toewijzing is vrijgegeven'))->send();
                 }),
@@ -671,7 +672,6 @@ class ViewOrder extends ViewRecord
     protected function getViewData(): array
     {
         return [
-            'otherViewers' => $this->otherViewerNames(),
             'steps' => $this->record->credit_for_order_id ? [] : OrderProgress::for($this->record),
             'openReturns' => $this->record->orderReturns()->open()->orderByDesc('id')->get(),
             'sidebarWidgets' => array_values(array_filter(
@@ -679,18 +679,6 @@ class ViewOrder extends ViewRecord
                 fn ($widget): bool => ($widget['width'] ?? null) == 'sidebar',
             )),
         ];
-    }
-
-    /** @return list<string> namen van andere medewerkers die deze bestelling nu open hebben */
-    protected function otherViewerNames(): array
-    {
-        $ids = array_values(array_diff(OrderPresence::viewers($this->record->id), [(int) auth()->id()]));
-
-        if ($ids === []) {
-            return [];
-        }
-
-        return User::whereKey($ids)->get()->pluck('name')->filter()->values()->all();
     }
 
     public function refreshOrder(): void
