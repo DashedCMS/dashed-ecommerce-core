@@ -38,6 +38,9 @@
     .au-od-line { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .75rem 0; border-top: 1px solid var(--au-line, rgba(128, 128, 128, .2)); }
     .au-od-line:first-child { border-top: 0; padding-top: 0; }
     .au-od-line:last-child { padding-bottom: 0; }
+    /* Regel met gekozen product-extra-opties valt op met een amber vlak + accentrand (zoals .au-od-banner). */
+    .au-od-line--extras { background: color-mix(in srgb, var(--au-amber, #f59e0b) 10%, transparent); border-left: 3px solid var(--au-amber, #f59e0b); border-radius: 10px; padding-left: .625rem; padding-right: .625rem; }
+    .au-od-extras { color: var(--au-amber, #f59e0b); font-weight: 600; }
     .au-od-grow { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
     .au-od-thumb { width: 3.5rem; height: 3.5rem; object-fit: cover; border-radius: .625rem; flex: none; background: var(--au-panel-2, rgba(128, 128, 128, .1)); }
     .au-od-qty { min-width: 2.5rem; text-align: right; }

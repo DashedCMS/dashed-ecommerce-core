@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.224.0 - 2026-11-24
+
+### Added
+- Een orderregel met gekozen product-extra-opties (`product_extras` / `hidden_options`) valt in de order-detailweergave van het CMS nu op met een amber vlak + accentrand en een amber "Extra opties: ..."-regel, zodat personalisatie niet gemist wordt (via de bestaande `--au-amber`-token, licht én donker). De mobiele app doet hetzelfde (orderregel amber gemarkeerd + amber opties-regel in de open-orders-lijst).
+
 ## v4.223.0 - 2026-11-24
 
 ### Added

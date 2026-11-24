@@ -6,7 +6,7 @@
         <div class="au-od-products">
             <ul class="au-od-list">
                 @foreach($lines as $line)
-                    <li class="au-od-line">
+                    <li class="au-od-line @if($line['extras']) au-od-line--extras @endif">
                         @if($line['image'])
                             <img class="au-od-thumb" src="{{ $line['image'] }}" alt="" loading="lazy">
                         @endif
@@ -24,7 +24,7 @@
                                 </div>
                             @endif
                             @if($line['extras'])
-                                <div class="au-od-small au-od-muted au-od-gap-top">{{ $line['extras'] }}</div>
+                                <div class="au-od-small au-od-extras au-od-gap-top">{{ __('Extra opties') }}: {!! $line['extras'] !!}</div>
                             @endif
                         </div>
                         <div class="au-od-qty au-od-muted">{{ $line['quantity'] }}{{ __('x') }}</div>
