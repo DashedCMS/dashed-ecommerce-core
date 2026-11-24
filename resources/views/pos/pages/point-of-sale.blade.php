@@ -403,6 +403,7 @@
                             <div class="flex flex-col flex-wrap gap-1 flex-1">
                                 <span class="word-wrap text-sm" x-html="product.name"></span>
                                 <div class="flex flex-col leading-tight">
+                                    <s class="text-xs text-gray-400" x-html="product.priceFormattedOriginal" x-show="product.priceFormattedOriginal" x-cloak title="Prijs zonder staffelkorting"></s>
                                     <span class="font-bold text-md word-wrap" x-html="product.priceFormattedPrimary ?? product.priceFormatted"></span>
                                     <span class="text-xs text-gray-400" x-html="product.priceFormattedSecondary" x-show="product.priceFormattedSecondary"></span>
                                 </div>
@@ -479,7 +480,7 @@
                                     <div class="text-sm font-bold flex justify-between items-center gap-2 mb-2">
                                         <span class="flex items-center gap-2 truncate">
                                             <button type="button"
-                                                    @click="$wire.removeDiscountCode(code.code)"
+                                                    @click="removeDiscountCode(code.code)" x-bind:disabled="loading"
                                                     class="text-danger-500 hover:text-danger-700 shrink-0"
                                                     title="Kortingscode verwijderen">
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -2799,6 +2800,51 @@
                 return $wire.dispatch('notify', {
                     type: 'danger',
                     message: 'De winkelmand kon niet worden geleegd'
+                })
+            }
+        },
+
+        // Eén code van de bon halen via de kassa-API op deze posIdentifier.
+        // Liep eerst via een Livewire-call op "de actieve kassabon van de
+        // gebruiker"; faalde die stil (geen melding, geen refresh), dan bleef
+        // de code gewoon staan.
+        async removeDiscountCode(code) {
+            if (!code) {
+                return;
+            }
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.remove-discount') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        code: code,
+                    })
+                });
+
+                let data = await response.json();
+                this.loading = false;
+                this.focus();
+
+                if (!response.ok || !data.success) {
+                    $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message || 'De kortingscode kon niet worden verwijderd',
+                    });
+                }
+
+                this.retrieveCart();
+            } catch (error) {
+                this.loading = false;
+                this.retrieveCart();
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De kortingscode kon niet worden verwijderd'
                 })
             }
         },

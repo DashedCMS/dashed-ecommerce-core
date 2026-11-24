@@ -101,7 +101,10 @@ class PointOfSaleApiController extends Controller
         }
         unset($product);
 
-        $shippingMethods = PosShippingAdvisor::advise($posCart, (float) ($this->calculatePosCartTotals($posCart)['subtotal'] ?? 0));
+        $initTotals = $this->calculatePosCartTotals($posCart);
+        $products = $this->applyEffectiveLinePrices($products, $initTotals['lines'] ?? [], $modeInit);
+
+        $shippingMethods = PosShippingAdvisor::advise($posCart, (float) ($initTotals['subtotal'] ?? 0));
 
         $chosenShippingMethod = $posCart->shipping_method_id ? ShippingMethod::find($posCart->shipping_method_id) : null;
 
@@ -213,6 +216,8 @@ class PointOfSaleApiController extends Controller
             $product['priceFormattedSecondary'] = $lineDisplay['secondary'];
         }
         unset($product);
+
+        $products = $this->applyEffectiveLinePrices($products, $totals['lines'] ?? [], $mode);
 
         $paymentMethods = ShoppingCart::getPaymentMethods('pos');
         foreach ($paymentMethods as &$paymentMethod) {
@@ -736,8 +741,14 @@ class PointOfSaleApiController extends Controller
 
         $posCart = POSCart::where('identifier', $posIdentifier)->first();
 
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Kassabon niet gevonden.'], 422);
+        }
+
         if ($code) {
-            $posCart->removeDiscountCode((string) $code);
+            if (! $posCart->removeDiscountCode((string) $code)) {
+                return response()->json(['success' => false, 'message' => 'Kortingscode staat niet (meer) op deze bon.'], 422);
+            }
         } else {
             $posCart->discount_code = '';
             $posCart->applied_discount_codes = null;
@@ -2348,6 +2359,49 @@ class PointOfSaleApiController extends Controller
         }
 
         return $gross - ($gross / $divider);
+    }
+
+    /**
+     * Toon per regel wat er echt gerekend wordt vóór kortingscodes. De
+     * opgeslagen regelprijs is de catalogusprijs; staffelkorting (en een
+     * klantprijs) zit alleen in calculatePosCartTotals. Zonder dit telden de
+     * regels op de kassabon op tot meer dan het subtotaal, zonder te zien waarom.
+     */
+    public function applyEffectiveLinePrices(array $products, array $lines, string $mode): array
+    {
+        $effective = [];
+        foreach ($lines as $line) {
+            $key = (string) ($line['source_identifier'] ?? '');
+            if ($key !== '') {
+                $effective[$key] = (float) ($line['line_total_without_discount'] ?? 0);
+            }
+        }
+
+        foreach ($products as &$product) {
+            $product['priceFormattedOriginal'] = null;
+            $key = (string) ($product['identifier'] ?? '');
+            if ($key === '' || ! array_key_exists($key, $effective)) {
+                continue;
+            }
+
+            $stored = round((float) ($product['price'] ?? 0), 2);
+            $actual = round($effective[$key], 2);
+            if (abs($stored - $actual) < 0.01) {
+                continue;
+            }
+
+            $vatRate = $product['vat_rate'] ?? 21;
+            $actualDisplay = VatDisplay::formatLinePrice($actual, $vatRate, $mode);
+            $product['priceFormattedPrimary'] = $actualDisplay['primary'];
+            $product['priceFormattedSecondary'] = $actualDisplay['secondary'];
+
+            if ($actual < $stored) {
+                $product['priceFormattedOriginal'] = VatDisplay::formatLinePrice($stored, $vatRate, $mode)['primary'];
+            }
+        }
+        unset($product);
+
+        return $products;
     }
 
     public function calculatePosCartTotals(POSCart $posCart, $discountCodes = null): array

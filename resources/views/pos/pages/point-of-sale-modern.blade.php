@@ -266,6 +266,7 @@
                             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
                                 <span class="text-sm leading-tight" x-html="product.name"></span>
                                 <div class="leading-tight">
+                                    <s class="text-xs text-neutral-500 dark:text-white/40 mr-1" x-html="product.priceFormattedOriginal" x-show="product.priceFormattedOriginal" x-cloak title="Prijs zonder staffelkorting"></s>
                                     <span class="font-bold text-sm" x-html="product.priceFormattedPrimary ?? product.priceFormatted"></span>
                                     <span class="text-xs text-neutral-500 dark:text-white/40 ml-1" x-html="product.priceFormattedSecondary" x-show="product.priceFormattedSecondary"></span>
                                 </div>
@@ -319,7 +320,7 @@
                             <template x-for="code in appliedDiscountCodes" :key="code.code">
                                 <div class="text-sm flex justify-between items-center gap-2">
                                     <span class="flex items-center gap-2 truncate text-neutral-500 dark:text-white/70">
-                                        <button type="button" @click="$wire.removeDiscountCode(code.code)" class="text-red-600 dark:text-red-400 hover:text-red-300 shrink-0" title="Kortingscode verwijderen">
+                                        <button type="button" @click="removeDiscountCode(code.code)" x-bind:disabled="loading" class="text-red-600 dark:text-red-400 hover:text-red-300 shrink-0" title="Kortingscode verwijderen">
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/></svg>
                                         </button>
                                         <span class="truncate">Korting <span x-text="code.code" class="font-mono"></span> (<span x-text="code.valueLabel"></span>)</span>

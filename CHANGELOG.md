@@ -2,6 +2,12 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.225.1 - 2026-11-24
+
+### Fixed
+- Kassa: de regelprijzen op de bon toonden de catalogusprijs, terwijl het subtotaal staffelkorting (en klantprijzen) meerekende. De regels telden zo op tot meer dan het subtotaal zonder zichtbare reden. Elke regel toont nu de prijs die echt gerekend wordt, met de oude prijs doorgestreept.
+- Kassa: het kruisje bij een kortingscode liep via een Livewire-call die stil kon falen, waarna de code bleef staan. Het verwijdert nu via de kassa-API op de eigen kassabon, ververst de bon altijd en meldt het als de code niet weg kon.
+
 ## v4.225.0 - 2026-11-24
 
 ### Added

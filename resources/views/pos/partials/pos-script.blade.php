@@ -863,6 +863,51 @@
             }
         },
 
+        // Eén code van de bon halen via de kassa-API op deze posIdentifier.
+        // Liep eerst via een Livewire-call op "de actieve kassabon van de
+        // gebruiker"; faalde die stil (geen melding, geen refresh), dan bleef
+        // de code gewoon staan.
+        async removeDiscountCode(code) {
+            if (!code) {
+                return;
+            }
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.remove-discount') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        code: code,
+                    })
+                });
+
+                let data = await response.json();
+                this.loading = false;
+                this.focus();
+
+                if (!response.ok || !data.success) {
+                    $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message || 'De kortingscode kon niet worden verwijderd',
+                    });
+                }
+
+                this.retrieveCart();
+            } catch (error) {
+                this.loading = false;
+                this.retrieveCart();
+                return $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De kortingscode kon niet worden verwijderd'
+                })
+            }
+        },
+
         async removeDiscount() {
             this.loading = true;
             try {
