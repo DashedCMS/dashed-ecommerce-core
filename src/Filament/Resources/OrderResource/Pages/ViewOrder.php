@@ -4,6 +4,7 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages;
 
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Filament\Forms\Components\Checkbox;
@@ -22,6 +23,8 @@ use Dashed\DashedEcommerceCore\Classes\OrderProgress;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\ManualPaymentPin;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderAssignment;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Pages\POS\POSPageRedirect;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Actions\RegisterRefundAction;
@@ -45,6 +48,21 @@ class ViewOrder extends ViewRecord
     ];
 
     protected ?ActionGroup $paymentActionGroup = null;
+
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+
+        $this->pingPresence();
+    }
+
+    /** "Bekijkt nu": bij openen en elke 20 seconden vanuit de view (wire:poll). */
+    public function pingPresence(): void
+    {
+        if (auth()->id()) {
+            OrderPresence::ping($this->record->id, (int) auth()->id());
+        }
+    }
 
     public function getTitle(): string
     {
@@ -181,6 +199,36 @@ class ViewOrder extends ViewRecord
                         ->maxLength(1000),
                 ])
                 ->action(fn (array $data) => $this->applyOnHold(! $this->record->isOnHold(), $data['reason'] ?? null)),
+            Action::make('takeOverAssignment')
+                ->iconButton()
+                ->label(__('Overnemen'))
+                ->tooltip(__('Overnemen: deze bestelling aan mij toewijzen'))
+                ->icon('heroicon-o-hand-raised')
+                ->color('gray')
+                ->authorize($mayEdit)
+                ->visible(fn (): bool => (int) $this->record->assigned_to_user_id !== (int) auth()->id())
+                ->action(function (): void {
+                    $this->record->refresh();
+                    OrderAssignment::takeOver($this->record, (int) auth()->id());
+                    $this->record->refresh();
+
+                    Notification::make()->success()->title(__('Bestelling is aan jou toegewezen'))->send();
+                }),
+            Action::make('releaseAssignment')
+                ->iconButton()
+                ->label(__('Toewijzing vrijgeven'))
+                ->tooltip(__('Toewijzing vrijgeven'))
+                ->icon('heroicon-o-user-minus')
+                ->color('gray')
+                ->authorize($mayEdit)
+                ->visible(fn (): bool => $this->record->assigned_to_user_id !== null)
+                ->action(function (): void {
+                    $this->record->refresh();
+                    OrderAssignment::release($this->record, auth()->id());
+                    $this->record->refresh();
+
+                    Notification::make()->success()->title(__('Toewijzing is vrijgegeven'))->send();
+                }),
             Action::make('adjustDeadline')
                 ->iconButton()
                 ->icon('heroicon-o-calendar-days')
@@ -623,6 +671,7 @@ class ViewOrder extends ViewRecord
     protected function getViewData(): array
     {
         return [
+            'otherViewers' => $this->otherViewerNames(),
             'steps' => $this->record->credit_for_order_id ? [] : OrderProgress::for($this->record),
             'openReturns' => $this->record->orderReturns()->open()->orderByDesc('id')->get(),
             'sidebarWidgets' => array_values(array_filter(
@@ -630,6 +679,18 @@ class ViewOrder extends ViewRecord
                 fn ($widget): bool => ($widget['width'] ?? null) == 'sidebar',
             )),
         ];
+    }
+
+    /** @return list<string> namen van andere medewerkers die deze bestelling nu open hebben */
+    protected function otherViewerNames(): array
+    {
+        $ids = array_values(array_diff(OrderPresence::viewers($this->record->id), [(int) auth()->id()]));
+
+        if ($ids === []) {
+            return [];
+        }
+
+        return User::whereKey($ids)->get()->pluck('name')->filter()->values()->all();
     }
 
     public function refreshOrder(): void

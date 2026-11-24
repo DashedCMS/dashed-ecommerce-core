@@ -53,6 +53,7 @@ use Dashed\DashedCore\Classes\QueryHelpers\TokenizedSearch;
 use Dashed\DashedEcommerceCore\Classes\ConceptOrderService;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Settings;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\EditOrder;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource\Pages\ViewOrder;
@@ -349,6 +350,21 @@ class OrderResource extends Resource
         return $query->whereIn('status', $values);
     }
 
+    /**
+     * Namen van andere medewerkers die deze bestelling nu open hebben. Eén cache-get per
+     * bestelling (once() binnen het request); alleen bij kijkers volgt een gebruikersquery.
+     *
+     * @return list<string>
+     */
+    protected static function otherViewerNames(Order $order): array
+    {
+        return once(function () use ($order): array {
+            $ids = array_values(array_diff(OrderPresence::viewers($order->id), [(int) auth()->id()]));
+
+            return $ids === [] ? [] : User::whereKey($ids)->get()->pluck('name')->filter()->values()->all();
+        });
+    }
+
     public static function table(Table $table): Table
     {
         $orderOrigins = [];
@@ -377,6 +393,19 @@ class OrderResource extends Resource
                     ->falseColor('gray')
                     ->tooltip(fn ($record): ?string => $record->on_hold_at ? ($record->on_hold_reason ?: __('On hold')) : null)
                     ->sortable()
+                    ->toggleable(),
+                // Toegewezen medewerker, met een oogje als een ander de bestelling nu open heeft
+                // (per rij één cache-get). Zonder toewijzing maar met kijkers staat er "Niemand".
+                TextColumn::make('assignedUser.name')
+                    ->label(__('Toegewezen aan'))
+                    ->getStateUsing(fn ($record): ?string => $record->assignedUser?->name
+                        ?? (static::otherViewerNames($record) !== [] ? __('Niemand') : null))
+                    ->icon(fn ($record): ?string => static::otherViewerNames($record) !== [] ? 'heroicon-o-eye' : null)
+                    ->iconColor('info')
+                    ->tooltip(fn ($record): ?string => ($names = static::otherViewerNames($record)) !== []
+                        ? __('Nu open bij: :namen', ['namen' => implode(', ', $names)])
+                        : null)
+                    ->placeholder('')
                     ->toggleable(),
                 TextColumn::make('invoice_id')
                     ->label(__('Bestelling ID'))
@@ -1107,7 +1136,7 @@ class OrderResource extends Resource
             ])
             ->modifyQueryUsing(fn ($query, $livewire) => static::modifyTableQueryForLastEdited(
                 Display::eagerLoadForList($query->without('orderProducts')->with(array_merge(
-                    ['mainPaymentMethod', 'orderPayments.paymentMethod'],
+                    ['mainPaymentMethod', 'orderPayments.paymentMethod', 'assignedUser'],
                     ParcelType::eagerLoads(),
                     // Hidden by default; only load the codes when the column is switched on.
                     static::isListColumnVisible($livewire, 'trackAndTraces.code') ? ['trackAndTraces'] : [],
