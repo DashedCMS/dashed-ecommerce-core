@@ -137,6 +137,7 @@ class Order extends Model
         'applied_gift_cards' => 'array',
         'packed_at' => 'datetime',
         'on_hold_at' => 'datetime',
+        'assigned_at' => 'datetime',
         'free_shipping_threshold' => 'decimal:2',
         'fulfillment_reopened_at' => 'datetime',
         'is_proforma' => 'boolean',

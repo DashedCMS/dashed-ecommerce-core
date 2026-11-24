@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderAssignment;
 
 class OrderLog extends Model
 {
@@ -37,6 +38,12 @@ class OrderLog extends Model
             // is de terugval voor oude aanroepen die de vlag niet zelf zetten.
             $orderLog->is_system = $orderLog->is_system || str($orderLog->note)->contains('system');
             $orderLog->url = url()->current();
+        });
+
+        // Toewijzing: de eerste medewerker die iets met de bestelling doet,
+        // wordt de eigenaar. Een fout hier mag de actie zelf nooit breken.
+        static::created(function ($orderLog) {
+            rescue(fn () => OrderAssignment::assignFromLog($orderLog), report: true);
         });
     }
 
@@ -253,6 +260,10 @@ class OrderLog extends Model
             $string = 'heeft de bestelling van on hold gehaald.';
         } elseif ($this->tag == 'order.on-hold.auto-released') {
             $string = 'heeft on hold opgeheven, want de bestelling is verzonden of afgehandeld.';
+        } elseif ($this->tag == 'order.assignment.taken-over') {
+            $string = 'heeft de bestelling overgenomen.';
+        } elseif ($this->tag == 'order.assignment.released') {
+            $string = 'heeft de bestelling vrijgegeven.';
         } elseif ($this->tag == 'order.sent-to-fulfillment') {
             $string = 'heeft de bestelling naar de fulfillment-partijen gestuurd.';
         } elseif ($this->note) {
