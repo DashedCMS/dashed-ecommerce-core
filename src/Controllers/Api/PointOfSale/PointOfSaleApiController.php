@@ -2502,6 +2502,10 @@ class PointOfSaleApiController extends Controller
                 $options = (array) ($item->options ?? []);
                 $options['singlePrice'] = (float) $model->priceForUser($customerUser);
                 $options['isCustomPrice'] = true;
+                // Staffelkorting hangt af van de klant op de bon, niet van de
+                // ingelogde kassamedewerker: op een klant- of prijsgroepprijs
+                // komt geen staffel, net als in de webshop.
+                $options['priceUserId'] = $customerUser->id;
                 $item->options = $options;
             }
 

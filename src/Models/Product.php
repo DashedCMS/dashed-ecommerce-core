@@ -1795,8 +1795,13 @@ class Product extends Model
             }
         }
 
-        // 9) Volume discounts (alleen als er een model is en de gebruiker geen eigen prijs heeft)
-        if ($model && method_exists($model, 'volumeDiscounts') && ! $model->hasCustomPriceForUser() && ! $model->isExcludedFromDiscounts()) {
+        // 9) Volume discounts (alleen als er een model is en de klant geen eigen prijs heeft).
+        // De kassa geeft de klant van de bon mee (priceUserId); anders de ingelogde gebruiker.
+        $priceUser = isset($rawOptions['priceUserId']) && is_numeric($rawOptions['priceUserId'])
+            ? User::find((int) $rawOptions['priceUserId'])
+            : null;
+
+        if ($model && method_exists($model, 'volumeDiscounts') && ! $model->hasCustomPriceForUser($priceUser) && ! $model->isExcludedFromDiscounts()) {
             // Totaal over alle varianten in de wagen, gezet door CartHelper::syncVolumeDiscounts()
             $groupQty = isset($rawOptions['volumeDiscountQuantity'])
                 ? max($itemQty, (int) $rawOptions['volumeDiscountQuantity'])
@@ -2147,7 +2152,16 @@ class Product extends Model
             $user = auth()->user();
         }
 
-        if (! $user || ! $user->has_custom_pricing) {
+        if (! $user) {
+            return false;
+        }
+
+        // Een prijsgroepprijs is ook een eigen prijs: daar komt geen staffelkorting bovenop.
+        if ($user->price_group_id && $this->resolveGroupProductPrice((int) $user->price_group_id) !== null) {
+            return true;
+        }
+
+        if (! $user->has_custom_pricing) {
             return false;
         }
 

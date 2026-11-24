@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.225.2 - 2026-11-24
+
+### Fixed
+- Kassa: een klant met een prijsgroep- of klantprijs kreeg staffelkorting bovenop die prijs, omdat de staffelcontrole naar de ingelogde kassamedewerker keek in plaats van naar de klant op de bon (wagen van 194,11 werd 174,70). De kassa geeft de klant nu mee (`priceUserId` in de regelopties) en `Product::hasCustomPriceForUser()` telt een prijsgroepprijs ook als eigen prijs. Daardoor krijgt een klant met een prijsgroepprijs ook in de webshop (wagen, productpagina) geen staffel meer bovenop die prijs, zoals de bestaande regel "geen staffel op een eigen prijs" bedoelde.
+
 ## v4.225.1 - 2026-11-24
 
 ### Fixed

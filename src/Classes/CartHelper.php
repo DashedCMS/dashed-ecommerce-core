@@ -2372,7 +2372,7 @@ class CartHelper
             $optionsChanged = false;
 
             $volumeDiscount = null;
-            if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty() && ! $model->isExcludedFromDiscounts()) {
+            if ($model->volumeDiscounts && $model->volumeDiscounts->isNotEmpty() && ! $model->isExcludedFromDiscounts() && ! $model->hasCustomPriceForUser()) {
                 $volumeDiscount = ProductGroupVolumeDiscount::bestFor($model->volumeDiscounts, $qty, $groupQty);
             }
 
