@@ -209,7 +209,7 @@ class OrderController extends Controller
 
         // Via OrderAssignment: zet assigned_at en schrijft de overname-/vrijgeeflog.
         if ($userId !== null) {
-            OrderAssignment::takeOver($model, (int) $userId);
+            OrderAssignment::takeOver($model, (int) $userId, $request->user()?->id);
         } else {
             OrderAssignment::release($model, $request->user()?->id);
         }

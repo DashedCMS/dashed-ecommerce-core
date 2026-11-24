@@ -262,6 +262,8 @@ class OrderLog extends Model
             $string = 'heeft on hold opgeheven, want de bestelling is verzonden of afgehandeld.';
         } elseif ($this->tag == 'order.assignment.taken-over') {
             $string = 'heeft de bestelling overgenomen.';
+        } elseif ($this->tag == 'order.assignment.assigned') {
+            $string = 'heeft de bestelling toegewezen' . ($this->note ? ' aan ' . $this->note . '.' : '.');
         } elseif ($this->tag == 'order.assignment.released') {
             $string = 'heeft de bestelling vrijgegeven.';
         } elseif ($this->tag == 'order.sent-to-fulfillment') {

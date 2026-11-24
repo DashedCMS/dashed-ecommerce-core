@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Support\Orders;
 
+use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 
@@ -24,6 +25,7 @@ class OrderAssignment
         'abandoned-cart.converted',
         'order.email.sent',
         'order.assignment.taken-over',
+        'order.assignment.assigned',
         'order.assignment.released',
     ];
 
@@ -73,14 +75,29 @@ class OrderAssignment
             ]) > 0;
     }
 
-    /** Overnemen: de bestelling gaat naar deze medewerker, ook als iemand anders hem had. */
-    public static function takeOver(Order $order, int $userId): void
+    /**
+     * Overnemen: de bestelling gaat naar deze medewerker, ook als iemand anders
+     * hem had. Wijst iemand anders (de actor) hem toe, dan logt de actor met
+     * tag order.assignment.assigned en de naam van de nieuwe eigenaar als notitie.
+     */
+    public static function takeOver(Order $order, int $userId, ?int $actorId = null): void
     {
         if ((int) $order->assigned_to_user_id === $userId) {
             return;
         }
 
         self::write($order, $userId, now());
+
+        if ($actorId !== null && $actorId !== $userId) {
+            OrderLog::createLog(
+                orderId: $order->id,
+                tag: 'order.assignment.assigned',
+                note: User::find($userId)?->name,
+                userId: $actorId,
+            );
+
+            return;
+        }
 
         OrderLog::createLog(orderId: $order->id, tag: 'order.assignment.taken-over', userId: $userId);
     }
