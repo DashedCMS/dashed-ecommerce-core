@@ -22,6 +22,7 @@ use Dashed\DashedEcommerceCore\Models\CartLog;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Dashed\DashedEcommerceCore\Classes\Countries;
+use Dashed\DashedEcommerceCore\Classes\CheckoutValidationFailure;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\CartHelper;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
@@ -198,7 +199,7 @@ class Checkout extends Component
             $this->isCompany = Customsetting::get('checkout_form_company_name') == 'required';
         }
 
-        $this->country = filled($user?->country) ? $user->country : 'Nederland';
+        $this->country = $this->prefillCountry($user?->country, 'Nederland');
         $this->dateOfBirth = $user?->date_of_birth ?? '';
         $this->gender = $user?->gender ?? '';
         $this->email = $user?->email ?? cartHelper()->getCart()->abandoned_email ?? '';
@@ -215,7 +216,10 @@ class Checkout extends Component
         $this->invoiceHouseNr = $user?->invoice_house_nr ?? '';
         $this->invoiceZipCode = $user?->invoice_zip_code ?? '';
         $this->invoiceCity = $user?->invoice_city ?? '';
-        $this->invoiceCountry = $user?->invoice_country ?? '';
+        $this->invoiceCountry = $this->prefillCountry(
+            $user?->invoice_country,
+            filled($user?->invoice_street) ? $this->country : '',
+        );
 
         $this->countryList = Countries::getAllSelectedCountries();
 
@@ -1008,6 +1012,37 @@ class Checkout extends Component
         }
     }
 
+    /**
+     * Store which fields failed (with the rejected value) on the cart and
+     * alert the admin when it looks unusual. Never breaks the checkout.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function recordValidationFailure(\Illuminate\Contracts\Validation\Validator $validator, array $data): void
+    {
+        try {
+            CheckoutValidationFailure::record(
+                validator: $validator,
+                data: $data,
+                cartId: cartHelper()->getCart()?->id,
+                email: $this->email ?: null,
+                cartTotal: (float) cartHelper()->getTotal(),
+            );
+        } catch (\Throwable $e) {
+            // Bewust stil: uitval-logging mag het afrekenen niet verstoren.
+        }
+    }
+
+    /**
+     * A country stored on the customer's account that the checkout does not
+     * recognise (e.g. an e-mail address left there by browser autofill)
+     * would block every order on the known-country rule. Fall back instead.
+     */
+    protected function prefillCountry(?string $value, string $fallback): string
+    {
+        return filled($value) && Countries::getCountryIsoCode($value) ? $value : $fallback;
+    }
+
     public function submit()
     {
         // Bijbestelling: opnieuw controleren of het aanbod van de eerdere order nog open is.
@@ -1077,7 +1112,7 @@ class Checkout extends Component
         $this->zipCode = $this->normalizePostcode($this->zipCode, $this->country);
         $this->invoiceZipCode = $this->normalizePostcode($this->invoiceZipCode, $this->invoiceCountry);
 
-        $validator = $this->makeCheckoutValidator([
+        $validator = $this->makeCheckoutValidator($validationData = [
             'shippingMethod' => $this->shippingMethod,
             'paymentMethod' => $this->paymentMethod,
             'depositPaymentMethod' => $this->depositPaymentMethod,
@@ -1108,7 +1143,7 @@ class Checkout extends Component
         ], $this->rules());
 
         if ($validator->fails()) {
-            $this->recordAbandonment('validation_failed');
+            $this->recordValidationFailure($validator, $validationData);
 
             if (! $this->shouldShowValidationToast()) {
                 return null;

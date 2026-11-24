@@ -48,7 +48,39 @@ class CheckoutAbandonmentsPage extends Page
             'deposit_method_missing' => 'Geen geldige aanbetaling-betaalmethode',
             'email_duplicate' => 'E-mailadres al in gebruik voor account',
             'payment_start_failed' => 'Starten van de betaling mislukt',
+            'discount_refused' => 'Kortingscode geweigerd',
+            'purchase_limit' => 'Aankooplimiet bereikt',
+            'giftcard_balance_changed' => 'Cadeaukaartsaldo gewijzigd',
         ];
+    }
+
+    /**
+     * Latest individual abandonments with their field errors, so a stuck
+     * customer can be traced to the cart.
+     *
+     * @return \Illuminate\Support\Collection<int, CheckoutAbandonment>
+     */
+    public function recent(): \Illuminate\Support\Collection
+    {
+        return CheckoutAbandonment::query()
+            ->where('site_id', Sites::getActive())
+            ->where('updated_at', '>=', now()->subDays(max(1, $this->days)))
+            ->latest('updated_at')
+            ->limit(50)
+            ->get();
+    }
+
+    public function cartUrl(?int $cartId): ?string
+    {
+        if (! $cartId) {
+            return null;
+        }
+
+        try {
+            return \Dashed\DashedEcommerceCore\Filament\Resources\CartResource::getUrl('view', ['record' => $cartId]);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

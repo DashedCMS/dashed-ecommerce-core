@@ -75,6 +75,11 @@ class Cart extends Model
         return $this->hasMany(CartLog::class)->orderBy('created_at');
     }
 
+    public function checkoutAbandonments(): HasMany
+    {
+        return $this->hasMany(CheckoutAbandonment::class, 'cart_id');
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class, 'cart_id');

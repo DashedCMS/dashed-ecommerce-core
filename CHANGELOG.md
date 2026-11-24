@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.225.0 - 2026-11-24
+
+### Added
+- Checkoutfouten worden per winkelwagen vastgelegd: bij een mislukte formuliercontrole slaat `CheckoutAbandonment` (reden `validation_failed`) nu per veld de regel, de melding en de ingevulde waarde op (max. 100 tekens, nooit wachtwoorden), plus het aantal pogingen en hoe vaak elk veld faalde. Eén rij per wagen per 30 minuten. Te zien in een nieuw tabblad "Checkoutfouten" bij de winkelwagen en in een lijst "Laatste gevallen" onder Statistieken → Checkout-uitval.
+- Mail (en Telegram/app) naar de beheerder als een klant vastloopt op een opvallende fout: alles behalve een vergeten verplicht veld, of drie keer hetzelfde veld. Hoogstens één keer per wagen per dag, verstuurd na de response. Instellingen bij Bestellingen: "Mail bij checkoutfouten" (standaard aan) en eigen ontvangers (leeg = de ontvangers van de bestelbevestiging). Mailtemplate "Klant loopt vast in de checkout (beheerder)".
+
+### Fixed
+- Een land op het klantaccount dat de checkout niet herkent (bijv. een e-mailadres dat de browser in het landveld zette) werd voorgevuld en blokkeerde elke bestelling op de landcontrole. De checkout valt nu terug op het afleverland (factuurland) of Nederland (afleverland), en een land met een `@` of cijfers wordt bij het opslaan van een gebruiker leeggemaakt (`UserCountryGuard`).
+
 ## v4.224.0 - 2026-11-24
 
 ### Added

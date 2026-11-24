@@ -154,6 +154,7 @@ class CartResource extends Resource
         return [
             ItemsRelationManager::class,
             \Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers\LogsRelationManager::class,
+            \Dashed\DashedEcommerceCore\Filament\Resources\CartResource\RelationManagers\CheckoutAbandonmentsRelationManager::class,
         ];
     }
 

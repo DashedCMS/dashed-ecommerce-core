@@ -56,6 +56,8 @@ class OrderSettingsPage extends Page
             $formData["notification_low_stock_emails_{$site['id']}"] = Customsetting::get('notification_low_stock_emails', $site['id']);
             $formData["notification_bcc_order_emails_{$site['id']}"] = Customsetting::get('notification_bcc_order_emails', $site['id']);
             $formData["revenue_alarm_enabled_{$site['id']}"] = (bool) Customsetting::get('revenue_alarm_enabled', $site['id'], true);
+            $formData["checkout_error_alert_enabled_{$site['id']}"] = (bool) Customsetting::get('checkout_error_alert_enabled', $site['id'], true);
+            $formData["notification_checkout_error_emails_{$site['id']}"] = Customsetting::get('notification_checkout_error_emails', $site['id']);
 
             $overridesForSite = Customsetting::get('admin_notify_per_order_origin', $site['id'], []);
             $overridesForSite = is_array($overridesForSite) ? $overridesForSite : [];
@@ -267,6 +269,18 @@ class OrderSettingsPage extends Page
                     ->label(__('Emails om alle bestel notificaties van de klant naar te sturen in BCC'))
                     ->placeholder(__('Voer een email in'))
                     ->reactive(),
+                Toggle::make("checkout_error_alert_enabled_{$site['id']}")
+                    ->label(__('Mail bij checkoutfouten'))
+                    ->helperText(__('Mail als een klant niet kan afrekenen door een opvallende formulierfout (bijv. een onbekend land, een verkeerd postcodeformaat of drie keer hetzelfde veld). Hoogstens één mail per winkelwagen per dag. Alle fouten staan ook bij de winkelwagen en onder Statistieken → Checkout-uitval.'))
+                    ->reactive()
+                    ->columnSpanFull(),
+                TagsInput::make("notification_checkout_error_emails_{$site['id']}")
+                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->label(__('Emails voor checkoutfouten'))
+                    ->helperText(__('Leeg = de emails voor de bevestigingsmail van een bestelling.'))
+                    ->placeholder(__('Voer een email in'))
+                    ->visible(fn ($get) => (bool) $get("checkout_error_alert_enabled_{$site['id']}"))
+                    ->columnSpanFull(),
                 Toggle::make("revenue_alarm_enabled_{$site['id']}")
                     ->label(__('Omzetalarm'))
                     ->helperText(__('Mail en melding als er drie uur lang duidelijk minder betaalde bestellingen binnenkomen dan normaal op dat moment van de week. Meestal betekent dat een kapotte checkout of betaalprovider.'))
@@ -435,6 +449,13 @@ class OrderSettingsPage extends Page
             }
             Customsetting::set('admin_notify_per_order_origin', $overrides, $site['id']);
             Customsetting::set('revenue_alarm_enabled', $this->form->getState()["revenue_alarm_enabled_{$site['id']}"] ? '1' : '0', $site['id']);
+            Customsetting::set('checkout_error_alert_enabled', ($formState["checkout_error_alert_enabled_{$site['id']}"] ?? true) ? '1' : '0', $site['id']);
+            $emails = array_values(array_filter(
+                $formState["notification_checkout_error_emails_{$site['id']}"] ?? [],
+                fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL),
+            ));
+            Customsetting::set('notification_checkout_error_emails', $emails, $site['id']);
+            $formState["notification_checkout_error_emails_{$site['id']}"] = $emails;
 
             Customsetting::set('cart_suggestions_enabled', $this->form->getState()["cart_suggestions_enabled_{$site['id']}"] ? '1' : '0', $site['id']);
             Customsetting::set('cart_suggestions_limit_cart', (string) ($this->form->getState()["cart_suggestions_limit_cart_{$site['id']}"] ?? 6), $site['id']);

@@ -132,6 +132,9 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
         // Opnieuw bestellen, verwijsprogramma en klantprofiel.
         \Dashed\DashedEcommerceCore\Support\CustomerLoyalty::boot();
 
+        // Geen e-mailadres of postcode als land op een klantaccount (blokkeerde de checkout).
+        \Dashed\DashedEcommerceCore\Support\UserCountryGuard::boot();
+
         // De productoverzichtspagina levert de SearchAction van het WebSite-schema (dashed-core).
         // Winkelwagen, afrekenen, bestellingen en verlanglijst horen nooit in de
         // index; gelezen door RobotsDecision in dashed-core.
@@ -371,6 +374,7 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderCancelledWithCreditMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminOrderCancelledMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminPaymentStartFailedMail::class)
+            ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminCheckoutErrorMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\AdminNewOrderReturnMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\OrderConfirmationForFulfillerMail::class)
             ->registerMailable(\Dashed\DashedEcommerceCore\Mail\FulfillmentStatus\FulfillmentStatusUnhandledMail::class)
