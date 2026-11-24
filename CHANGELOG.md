@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.223.0 - 2026-11-24
+
+### Added
+- De mobiele app koppelt een bestelling nu automatisch aan de ingelogde medewerker zodra die er actief mee aan de slag gaat terwijl er nog niemand is toegewezen: bij het wijzigen van de fulfilmentstatus, het inpakken (pick & pack), en het aanmaken, printen of downloaden van een label of factuur. Een bestaande toewijzing blijft ongemoeid (via `OrderController::autoAssignCurrentUser()` in de mobile-api, kolom `assigned_to_user_id`). Bulk-acties koppelen bewust niet. Alleen de app; het CMS verandert niet.
+
 ## v4.222.3 - 2026-11-24
 
 ### Fixed

@@ -207,6 +207,26 @@ class OrderController extends Controller
         return $this->detail($model);
     }
 
+    /**
+     * Koppelt de bestelling automatisch aan de ingelogde medewerker zodra die
+     * er actief mee aan de slag gaat (fulfilmentstatus wijzigen, inpakken, of
+     * een label/factuur aanmaken, printen of downloaden) terwijl er nog niemand
+     * is toegewezen. Een bestaande toewijzing blijft ongemoeid, en zonder
+     * ingelogde gebruiker gebeurt er niets.
+     */
+    private function autoAssignCurrentUser(Order $model, Request $request): void
+    {
+        $userId = $request->user()?->id;
+        if ($userId === null || $model->assigned_to_user_id !== null) {
+            return;
+        }
+
+        $model->forceFill(['assigned_to_user_id' => $userId])->save();
+
+        activity()->performedOn($model)->causedBy($request->user())
+            ->log('mobile-api: order automatisch toegewezen');
+    }
+
     public function update(Request $request, int $order): OrderResource
     {
         $model = Order::thisSite()->findOrFail($order);
@@ -595,13 +615,17 @@ class OrderController extends Controller
 
         activity()->performedOn($model)->causedBy($request->user())->withProperties($data)->log('mobile-api: fulfilment-status gewijzigd');
 
+        $this->autoAssignCurrentUser($model, $request);
+
         return $this->detail($model);
     }
 
     /** Factuur-PDF-URL (genereert 'm indien nodig). */
-    public function invoiceUrl(int $order): JsonResponse
+    public function invoiceUrl(Request $request, int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
+
+        $this->autoAssignCurrentUser($model, $request);
 
         return response()->json(['url' => $model->downloadInvoiceUrl()]);
     }
@@ -637,6 +661,11 @@ class OrderController extends Controller
                 'message' => $problem->cause,
                 'label_problem' => $problem->toArray(),
             ], 422);
+        }
+
+        // Alleen koppelen als er echt een label-PDF is (de medewerker handelt af).
+        if ($url) {
+            $this->autoAssignCurrentUser($model, $request);
         }
 
         return response()->json(['url' => $url]);
@@ -816,6 +845,8 @@ class OrderController extends Controller
             if ($setStatus !== '') {
                 $model->changeFulfillmentStatus($setStatus);
             }
+
+            $this->autoAssignCurrentUser($model, $request);
 
             return response()->json(['success' => true, 'provider' => $result['provider'], 'message' => $result['message']]);
         }
@@ -1434,6 +1465,8 @@ class OrderController extends Controller
 
         activity()->performedOn($model)->causedBy($request->user())->withProperties($data)->log('mobile-api: ' . strtolower($jobType->label()) . ' geprint');
 
+        $this->autoAssignCurrentUser($model, $request);
+
         return response()->json(['success' => true, 'message' => $jobType->label() . ' naar de printer gestuurd.']);
     }
 
@@ -1487,6 +1520,12 @@ class OrderController extends Controller
             return ['id' => $model->id, 'packed' => $packed];
         });
 
+        // Inpakken = de order afhandelen → koppel de medewerker als er nog niemand
+        // is toegewezen. Bij inpakken-ongedaan laten we de toewijzing met rust.
+        if ($packed) {
+            $this->autoAssignCurrentUser($model, $request);
+        }
+
         return $this->detail($model->fresh());
     }
 
@@ -1495,7 +1534,7 @@ class OrderController extends Controller
      * Dedup: maakt geen nieuwe job aan als er voor de order al een onafgeronde job
      * van dat type in de wachtrij staat — geen dubbele jobs.
      */
-    public function printDocuments(int $order): JsonResponse
+    public function printDocuments(Request $request, int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
         $queued = [];
@@ -1509,6 +1548,10 @@ class OrderController extends Controller
             && $this->activePrinterForType(\Dashed\DashedEcommerceCore\Enums\PrinterType::ShippingLabel)
             && $this->queueJobOnce($model, \Dashed\DashedEcommerceCore\Enums\PrintJobType::ShippingLabel)) {
             $queued[] = 'label';
+        }
+
+        if (! empty($queued)) {
+            $this->autoAssignCurrentUser($model, $request);
         }
 
         return response()->json([
