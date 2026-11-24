@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.222.3 - 2026-11-24
+
+### Fixed
+- Prijsgroepen en persoonlijke prijzen (B2B) stapelen niet meer met een globale korting (actiekorting zonder code, zoals Black Friday). Een groepskorting in procenten of bedrag en de per-klantprijzen in `dashed__product_user` rekenen nu vanaf de prijs zónder globale korting (`Product::priceWithoutGlobalDiscounts()`), niet meer vanaf de al verlaagde `current_price`. Bij 25% actiekorting en 25% B2B-korting kreeg een B2B-klant eerder 43,75% korting. Bestaande per-klantprijzen worden bij de volgende prijsherberekening (`updateProductPrices()`) rechtgezet.
+
 ## v4.222.2 - 2026-11-23
 
 ### Fixed

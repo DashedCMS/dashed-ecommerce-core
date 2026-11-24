@@ -775,7 +775,10 @@ class Product extends Model
         $this->saveQuietly();
 
         // 4) Pivot prijzen in BULK updaten (1 query)
-        $base = (float) $this->current_price;
+        // Persoonlijke prijzen rekenen vanaf de prijs zonder globale korting:
+        // een klant met eigen korting (B2B) krijgt die korting, niet ook nog
+        // een actiekorting erbovenop.
+        $base = max(0.01, (float) $currentPrice);
 
         DB::table('dashed__product_user')
             ->where('product_id', $this->id)
@@ -2091,7 +2094,9 @@ class Product extends Model
             return (float) $row->price;
         }
 
-        $base = (float) $this->getRawOriginal('current_price');
+        // Vanaf de prijs zonder globale korting, zodat de groepskorting niet
+        // stapelt met een actiekorting (Black Friday e.d.).
+        $base = $this->priceWithoutGlobalDiscounts();
 
         if ($row->discount_price !== null) {
             return max(0.01, $base - (float) $row->discount_price);
@@ -2102,6 +2107,23 @@ class Product extends Model
         }
 
         return null;
+    }
+
+    /**
+     * De verkoopprijs vóór globale kortingen (zoals calculatePrices() hem als
+     * basis neemt). current_price bevat de globale korting al.
+     */
+    public function priceWithoutGlobalDiscounts(): float
+    {
+        if ($this->is_bundle && $this->use_bundle_product_price) {
+            return (float) $this->bundleProducts()->sum('price');
+        }
+
+        if ($this->price !== null) {
+            return (float) $this->price;
+        }
+
+        return (float) $this->getRawOriginal('current_price');
     }
 
     public function displayPriceForUser(?User $user = null, ?float $overrideAmount = null): array

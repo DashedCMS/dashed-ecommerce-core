@@ -160,3 +160,40 @@ it('uses the group ex-vat flag when the user has none set', function () {
     // ex mode: secondary line carries the incl price, so it contains "incl"
     expect($display['secondary'])->toContain('incl');
 });
+
+it('does not stack the group discount on top of a global discount', function () {
+    $group = PriceGroup::create(['name' => 'B2B']);
+    $user = User::factory()->create(['price_group_id' => $group->id]);
+    $product = makeProduct(100.00);
+
+    // Globale korting van 25% actief: current_price verlaagd, discount_price is de doorgestreepte prijs.
+    DB::table('dashed__products')->where('id', $product->id)->update(['current_price' => 75.00, 'discount_price' => 100.00]);
+    $product = Product::find($product->id);
+
+    DB::table('dashed__product_price_group')->insert([
+        'price_group_id' => $group->id, 'product_id' => $product->id, 'discount_percentage' => 20,
+    ]);
+
+    expect((float) $product->priceForUser($user))->toBe(80.00);
+});
+
+it('calculates personal discount prices from the price before global discounts', function () {
+    $user = User::factory()->create(['has_custom_pricing' => true]);
+    $product = makeProduct(100.00);
+
+    DB::table('dashed__product_user')->insert([
+        'user_id' => $user->id, 'product_id' => $product->id, 'discount_percentage' => 20, 'price' => 80.00,
+    ]);
+
+    \Dashed\DashedEcommerceCore\Models\DiscountCode::withoutEvents(fn () => \Dashed\DashedEcommerceCore\Models\DiscountCode::create([
+        'name' => 'Actie', 'code' => 'ACTIE-' . uniqid(), 'site_ids' => ['default'], 'is_global_discount' => true,
+        'type' => 'percentage', 'discount_percentage' => 25, 'valid_for' => 'all',
+    ]));
+
+    $product->calculatePrices();
+    // Tweede ronde zoals een prijsjob tijdens de actie: current_price is dan al verlaagd.
+    Product::find($product->id)->calculatePrices();
+
+    expect((float) $product->fresh()->getRawOriginal('current_price'))->toBe(75.00)
+        ->and((float) DB::table('dashed__product_user')->where('user_id', $user->id)->where('product_id', $product->id)->value('price'))->toBe(80.00);
+});
