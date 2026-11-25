@@ -50,10 +50,10 @@ class CarrierApiLogResource extends Resource
         return __('Carrier-logboek');
     }
 
-    /** Contains addresses, so only admins and superadmins. */
+    /** Contains addresses, so only CMS users (superadmin or a linked role), never customers. */
     public static function isAllowed(): bool
     {
-        return in_array(auth()->user()?->role, ['admin', 'superadmin'], true);
+        return (bool) auth()->user()?->hasPanelAccess();
     }
 
     public static function canAccess(): bool
