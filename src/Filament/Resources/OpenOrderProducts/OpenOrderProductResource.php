@@ -8,6 +8,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
+use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Pages\ListOpenOrderProducts;
 use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables\OpenOrderProductsTable;
@@ -76,12 +77,13 @@ class OpenOrderProductResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         // Standaard scope: alleen orderproducten van openstaande bestellingen
-        // (niet afgehandeld of in behandeling, zoals de mobiele API), en
-        // zonder shipping/payment cost regels.
+        // (niet afgehandeld of in behandeling, zoals de mobiele API), alleen
+        // betaalde orders (Order::PAID_STATUSES, ook zoals de API; pending en
+        // geannuleerd vallen weg), en zonder shipping/payment cost regels.
         // SKU is gekwalificeerd zodat deze scope ook werkt wanneer een tab
         // de query joint met dashed__products (welke ook een sku-kolom heeft).
         return parent::getEloquentQuery()
-            ->whereHas('order', fn ($q) => $q->whereIn('fulfillment_status', static::OPEN_FULFILLMENT_STATUSES)->withRealInvoice())
+            ->whereHas('order', fn ($q) => $q->whereIn('fulfillment_status', static::OPEN_FULFILLMENT_STATUSES)->whereIn('status', Order::PAID_STATUSES)->withRealInvoice())
             ->where(function ($q) {
                 $q->whereNull('dashed__order_products.sku')
                     ->orWhereNotIn('dashed__order_products.sku', ['shipping_costs', 'payment_costs']);
