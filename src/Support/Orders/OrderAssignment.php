@@ -66,7 +66,7 @@ class OrderAssignment
      * Medewerker = account met paneelrechten (superadmin of minstens één
      * rol), zelfde regel als User::hasPanelAccess(). Eén query.
      */
-    private static function isStaff(int $userId): bool
+    public static function isStaff(int $userId): bool
     {
         return User::query()
             ->whereKey($userId)
@@ -92,6 +92,7 @@ class OrderAssignment
         }
 
         self::syncModel($order, ['assigned_to_user_id' => $userId, 'assigned_at' => $assignedAt]);
+        OrderPresence::markWorking((int) $order->getKey(), $userId);
 
         return true;
     }
@@ -119,6 +120,7 @@ class OrderAssignment
         }
 
         self::write($order, $userId, now());
+        OrderPresence::markWorking((int) $order->getKey(), $actorId ?? $userId);
 
         if ($actorId !== null && $actorId !== $userId) {
             OrderLog::createLog(
@@ -142,6 +144,10 @@ class OrderAssignment
         }
 
         self::write($order, null, null);
+
+        if ($userId !== null) {
+            OrderPresence::markWorking((int) $order->getKey(), $userId);
+        }
 
         OrderLog::createLog(orderId: $order->id, tag: 'order.assignment.released', userId: $userId);
     }

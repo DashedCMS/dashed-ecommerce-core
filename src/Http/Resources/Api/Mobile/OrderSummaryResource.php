@@ -7,6 +7,7 @@ namespace Dashed\DashedEcommerceCore\Http\Resources\Api\Mobile;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
+use Dashed\DashedEcommerceCore\Support\Orders\UserPayload;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
@@ -32,7 +33,7 @@ class OrderSummaryResource extends JsonResource
             'deadline_label' => $this->deadlineLabel(),
             'deadline_urgency' => $this->deadlineUrgency(),
             'assigned_user' => $this->assigned_to_user_id
-                ? ['id' => (int) $this->assigned_to_user_id, 'name' => optional($this->assignedUser)->name]
+                ? UserPayload::forId((int) $this->assigned_to_user_id, $this->assignedUser)
                 : null,
             'assigned_at' => $this->assigned_at?->toIso8601String(),
             'total' => $this->total !== null ? (float) $this->total : null,

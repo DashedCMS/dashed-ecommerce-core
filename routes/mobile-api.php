@@ -216,6 +216,7 @@ Route::prefix('api/v1')
         Route::post('orders/{order}/assign', [OrderController::class, 'assign'])->middleware('ability:orders.write');
         Route::delete('orders/{order}/assign', [OrderController::class, 'unassign'])->middleware('ability:orders.write');
         // "Bekijkt nu": de app pingt zolang een bestelling open staat (alleen cache).
+        Route::get('orders/{order}/presence', [OrderController::class, 'showPresence'])->middleware('ability:orders.read');
         Route::post('orders/{order}/presence', [OrderController::class, 'presence'])->middleware('ability:orders.read');
         Route::delete('orders/{order}/presence', [OrderController::class, 'leavePresence'])->middleware('ability:orders.read');
 

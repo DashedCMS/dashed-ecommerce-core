@@ -224,6 +224,22 @@ class DashedEcommerceCoreServiceProvider extends PackageServiceProvider
             \Dashed\DashedEcommerceCore\Listeners\LogSentOrderMail::class,
         );
 
+        // "Is ermee bezig": printstatus van een orderregel gewijzigd. De events
+        // komen uit de productiestroom; alleen luisteren als ze bestaan.
+        foreach ([
+            'Dashed\\DashedEcommerceCore\\Events\\Orders\\OrderProductProductionReady',
+            'Dashed\\DashedEcommerceCore\\Events\\Orders\\OrderProductProductionNotReady',
+            'Dashed\\DashedEcommerceCore\\Events\\OrderProductProductionReady',
+            'Dashed\\DashedEcommerceCore\\Events\\OrderProductProductionNotReady',
+        ] as $productionEvent) {
+            if (class_exists($productionEvent)) {
+                \Illuminate\Support\Facades\Event::listen(
+                    $productionEvent,
+                    \Dashed\DashedEcommerceCore\Listeners\Orders\MarkWorkingOnProductionChange::class,
+                );
+            }
+        }
+
         // Offertes: meldingen hangen aan events, zodat akkoord, afwijzing en
         // omzetten zelf niets van mails weten.
         \Illuminate\Support\Facades\Event::listen(

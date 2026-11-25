@@ -19,6 +19,7 @@ use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Mail\OrderNoteMail;
 use Dashed\DashedEcommerceCore\Models\ProcessedOperation;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
+use Dashed\DashedEcommerceCore\Support\Orders\UserPayload;
 use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Dashed\DashedEcommerceCore\Classes\OrderTotalsCalculator;
 use Dashed\DashedEcommerceCore\Support\Orders\OrderAssignment;
@@ -58,7 +59,7 @@ class OrderController extends Controller
         // product-preview en de assignee-badge in de lijst.
         // Plus what ParcelType needs for the verzendvorm per row (no N+1).
         $query = Order::thisSite()->with(array_merge(
-            ['orderProducts:id,order_id,product_id,name,quantity,sku,hidden_options', 'assignedUser:id,name'],
+            ['orderProducts:id,order_id,product_id,name,quantity,sku,hidden_options', 'assignedUser'],
             ParcelType::eagerLoads(),
         ));
         // Bijbestellingen per rij (aantal + hoofdorder) zonder N+1.
@@ -226,13 +227,24 @@ class OrderController extends Controller
         return $this->detail($model);
     }
 
-    /** "Bekijkt nu": de app pingt zolang de bestelling open staat. */
-    public function presence(Request $request, int $order): Response
+    /**
+     * "Bekijkt nu": de app pingt zolang de bestelling open staat en krijgt
+     * meteen terug wie er nog meer kijkt of mee bezig is (zonder de vrager).
+     */
+    public function presence(Request $request, int $order): JsonResponse
     {
         $model = Order::thisSite()->findOrFail($order);
         OrderPresence::ping((int) $model->id, (int) $request->user()->id);
 
-        return response()->noContent();
+        return response()->json(OrderPresence::presenceFor((int) $model->id, (int) $request->user()->id));
+    }
+
+    /** Wie kijkt mee en wie is ermee bezig, zonder de vrager. */
+    public function showPresence(Request $request, int $order): JsonResponse
+    {
+        $model = Order::thisSite()->findOrFail($order);
+
+        return response()->json(OrderPresence::presenceFor((int) $model->id, (int) $request->user()->id));
     }
 
     /** De app heeft de bestelling gesloten. */
@@ -254,6 +266,9 @@ class OrderController extends Controller
     private function autoAssignCurrentUser(Order $model, Request $request): void
     {
         $userId = $request->user()?->id;
+        if ($userId !== null) {
+            OrderPresence::markWorking((int) $model->id, (int) $userId);
+        }
         if ($userId === null || ! OrderAssignment::assignIfUnassigned($model, (int) $userId)) {
             return;
         }
@@ -1899,7 +1914,7 @@ class OrderController extends Controller
             'on_hold_reason' => $model->on_hold_reason,
             'on_hold_at' => optional($model->on_hold_at)->toIso8601String(),
             'on_hold_by' => $model->on_hold_by
-                ? ['id' => (int) $model->on_hold_by, 'name' => optional($model->onHoldByUser)->name]
+                ? UserPayload::forId((int) $model->on_hold_by, $model->onHoldByUser)
                 : null,
         ]]);
     }

@@ -41,7 +41,12 @@
                         @if($log->send_email_to_customer)
                             <div class="au-od-small au-od-muted">{{ __('Klant heeft een mail gehad van deze notitie') }}</div>
                         @endif
-                        <div class="au-od-small au-od-muted">{{ $log->user_id ? ($log->user->name ?? __('Systeem')) : __('Systeem') }}</div>
+                        <div class="au-od-small au-od-muted" style="display:flex;align-items:center;gap:6px;">
+                            @if($log->user_id && $log->user)
+                                @include('dashed-ecommerce-core::orders.partials.user-avatar', ['user' => $log->user, 'size' => 'sm'])
+                            @endif
+                            <span>{{ $log->user_id ? ($log->user->name ?? __('Systeem')) : __('Systeem') }}</span>
+                        </div>
                     </div>
                     <time class="au-od-when au-od-small au-od-muted" datetime="{{ $log->created_at->toIso8601String() }}">{{ $log->created_at->format('d-m-Y H:i') }}</time>
                 </li>

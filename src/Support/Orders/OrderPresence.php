@@ -2,13 +2,19 @@
 
 namespace Dashed\DashedEcommerceCore\Support\Orders;
 
+use Illuminate\Support\Carbon;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Facades\Cache;
+use Dashed\DashedEcommerceCore\Models\OrderLog;
 
 /**
  * "Bekijkt nu": wie heeft een bestelling open. Alleen in de cache, per
  * bestelling een lijst user_id => laatst gezien (unix-tijd). Een kijker telt
  * mee tot ACTIVE_SECONDS na zijn laatste ping.
+ *
+ * Daarnaast "is ermee bezig": wie in de laatste ACTIVE_SECONDS een
+ * schrijfactie op de bestelling deed (orderlog als medewerker, toewijzing,
+ * printstatus, label). Zelfde opslag, eigen cachesleutel.
  */
 class OrderPresence
 {
@@ -36,6 +42,85 @@ class OrderPresence
         }
 
         Cache::put(self::key($orderId), $seen, self::TTL_SECONDS);
+    }
+
+    /** "Is ermee bezig": deze medewerker deed net een schrijfactie op de bestelling. */
+    public static function markWorking(int $orderId, int $userId): void
+    {
+        if ($orderId <= 0 || $userId <= 0) {
+            return;
+        }
+
+        $seen = self::active(self::read($orderId, self::workingKey($orderId)));
+        $seen[$userId] = now()->getTimestamp();
+
+        Cache::put(self::workingKey($orderId), $seen, self::TTL_SECONDS);
+    }
+
+    /**
+     * Een orderlogregel van een medewerker telt als schrijfactie (zelfde
+     * medewerkerregel als OrderAssignment::assignFromLog). Systeemregels en
+     * regels van klanten tellen niet.
+     */
+    public static function markWorkingFromLog(OrderLog $log): void
+    {
+        if (! $log->order_id || ! $log->user_id || $log->is_system) {
+            return;
+        }
+
+        if (! OrderAssignment::isStaff((int) $log->user_id)) {
+            return;
+        }
+
+        self::markWorking((int) $log->order_id, (int) $log->user_id);
+    }
+
+    /** @return list<int> user-ids die in de laatste ACTIVE_SECONDS iets aan de bestelling deden */
+    public static function workingOn(int $orderId): array
+    {
+        return array_keys(self::active(self::read($orderId, self::workingKey($orderId))));
+    }
+
+    /**
+     * Kijkers en wie ermee bezig is, zonder de opgegeven gebruiker. Wie ermee
+     * bezig is staat niet ook nog bij de kijkers. Nieuwste eerst.
+     *
+     * @return array{viewers: list<array<string, mixed>>, working_on: list<array<string, mixed>>}
+     */
+    public static function presenceFor(int $orderId, ?int $excludeUserId = null): array
+    {
+        $working = self::active(self::read($orderId, self::workingKey($orderId)));
+        $viewing = array_diff_key(self::active(self::read($orderId)), $working);
+
+        if ($excludeUserId !== null) {
+            unset($working[$excludeUserId], $viewing[$excludeUserId]);
+        }
+
+        arsort($working);
+        arsort($viewing);
+
+        $ids = array_merge(array_keys($working), array_keys($viewing));
+        $users = $ids === [] ? collect() : User::whereKey($ids)->get()->keyBy('id');
+
+        $map = function (array $seen) use ($users): array {
+            $items = [];
+            foreach ($seen as $userId => $timestamp) {
+                $user = $users->get($userId);
+                if (! $user) {
+                    continue;
+                }
+                $items[] = array_merge(UserPayload::for($user), [
+                    'last_seen_at' => Carbon::createFromTimestamp((int) $timestamp)->toIso8601String(),
+                ]);
+            }
+
+            return $items;
+        };
+
+        return [
+            'viewers' => $map($viewing),
+            'working_on' => $map($working),
+        ];
     }
 
     /** @return list<int> user-ids die de bestelling nu open hebben */
@@ -71,10 +156,10 @@ class OrderPresence
     }
 
     /**
-     * Kijkers als {id, name}, zonder de opgegeven gebruiker. Eén cache-get;
+     * Kijkers als {id, name, avatar_url}, zonder de opgegeven gebruiker. Eén cache-get;
      * alleen als er kijkers zijn volgt een gebruikersquery.
      *
-     * @return list<array{id: int, name: ?string}>
+     * @return list<array{id: int, name: ?string, avatar_url: ?string}>
      */
     public static function otherViewers(int $orderId, ?int $excludeUserId): array
     {
@@ -86,7 +171,7 @@ class OrderPresence
 
         // name is een accessor op User (voor- + achternaam), geen kolom.
         return User::whereKey($ids)->get()
-            ->map(fn (User $user): array => ['id' => (int) $user->id, 'name' => $user->name])
+            ->map(fn (User $user): array => UserPayload::for($user))
             ->values()
             ->all();
     }
@@ -96,10 +181,15 @@ class OrderPresence
         return 'order-presence:' . $orderId;
     }
 
-    /** @return array<int, int> */
-    private static function read(int $orderId): array
+    public static function workingKey(int $orderId): string
     {
-        $seen = Cache::get(self::key($orderId));
+        return 'order-working:' . $orderId;
+    }
+
+    /** @return array<int, int> */
+    private static function read(int $orderId, ?string $key = null): array
+    {
+        $seen = Cache::get($key ?? self::key($orderId));
 
         return is_array($seen) ? $seen : [];
     }

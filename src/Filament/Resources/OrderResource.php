@@ -396,6 +396,13 @@ class OrderResource extends Resource
                     ->label(__('Toegewezen aan'))
                     ->getStateUsing(fn ($record): ?string => $record->assignedUser?->name
                         ?? (static::otherViewerNames($record) !== [] ? __('Niemand') : null))
+                    // Avatar voor de naam van de toegewezen medewerker.
+                    ->formatStateUsing(fn ($state, $record) => $record->assignedUser
+                        ? new \Illuminate\Support\HtmlString('<span style="display:inline-flex;align-items:center;gap:6px;">'
+                            . view('dashed-ecommerce-core::orders.partials.user-avatar', ['user' => $record->assignedUser, 'size' => 'sm'])->render()
+                            . '<span>' . e($state) . '</span></span>')
+                        : $state)
+                    ->html()
                     ->icon(fn ($record): ?string => static::otherViewerNames($record) !== [] ? 'heroicon-o-eye' : null)
                     ->iconColor('info')
                     ->tooltip(fn ($record): ?string => ($names = static::otherViewerNames($record)) !== []

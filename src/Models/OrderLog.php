@@ -5,6 +5,7 @@ namespace Dashed\DashedEcommerceCore\Models;
 use Dashed\DashedCore\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Dashed\DashedEcommerceCore\Support\Orders\OrderAssignment;
 
 class OrderLog extends Model
@@ -44,6 +45,8 @@ class OrderLog extends Model
         // wordt de eigenaar. Een fout hier mag de actie zelf nooit breken.
         static::created(function ($orderLog) {
             rescue(fn () => OrderAssignment::assignFromLog($orderLog), report: true);
+            // "Is ermee bezig": een logregel van een medewerker is een schrijfactie.
+            rescue(fn () => OrderPresence::markWorkingFromLog($orderLog), report: true);
         });
     }
 

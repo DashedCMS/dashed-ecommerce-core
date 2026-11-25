@@ -10,6 +10,7 @@ use Dashed\DashedEcommerceCore\Models\OrderLog;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Dashed\DashedEcommerceCore\Classes\ParcelType;
 use Dashed\DashedEcommerceCore\Classes\OrderAddOns\Display;
+use Dashed\DashedEcommerceCore\Support\Orders\UserPayload;
 use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Dashed\DashedEcommerceCore\Services\Shipping\LabelProblems\LabelProblemDetector;
 
@@ -43,7 +44,7 @@ class OrderResource extends JsonResource
             'on_hold_reason' => $this->on_hold_reason,
             'on_hold_at' => optional($this->on_hold_at)->toIso8601String(),
             'on_hold_by' => $this->on_hold_by
-                ? ['id' => (int) $this->on_hold_by, 'name' => optional($this->onHoldByUser)->name]
+                ? UserPayload::forId((int) $this->on_hold_by, $this->onHoldByUser)
                 : null,
             'ship_by_date' => $this->ship_by_date?->toDateString(),
             'deliver_by_date' => $this->deliver_by_date?->toDateString(),
@@ -51,7 +52,7 @@ class OrderResource extends JsonResource
             'deadline_label' => $this->deadlineLabel(),
             'deadline_urgency' => $this->deadlineUrgency(),
             'assigned_user' => $this->assigned_to_user_id
-                ? ['id' => (int) $this->assigned_to_user_id, 'name' => optional($this->assignedUser)->name]
+                ? UserPayload::forId((int) $this->assigned_to_user_id, $this->assignedUser)
                 : null,
             'assigned_at' => $this->assigned_at?->toIso8601String(),
             'created_at' => optional($this->created_at)->toIso8601String(),
@@ -220,6 +221,7 @@ class OrderResource extends JsonResource
                 'note' => $log->note,
                 'public_for_customer' => (bool) $log->public_for_customer,
                 'user_name' => $log->user_id ? ($userNames[$log->user_id] ?? null) : null,
+                'user' => $log->user_id ? UserPayload::forId((int) $log->user_id, $log->user) : null,
                 'created_at' => optional($log->created_at)->toIso8601String(),
             ];
         })->values()->all();

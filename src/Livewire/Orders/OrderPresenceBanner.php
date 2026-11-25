@@ -8,7 +8,7 @@ use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 
 /**
  * Balk op de orderpagina: aan wie de bestelling is toegewezen en welke collega's
- * hem nu ook open hebben. Eigen component, zodat de poll van 20 seconden alleen
+ * hem nu ook open hebben of er net iets mee deden ("is ermee bezig"). Eigen component, zodat de poll van 20 seconden alleen
  * deze balk ververst en niet de hele orderpagina (met open modals) opnieuw rendert.
  */
 class OrderPresenceBanner extends Component
@@ -37,10 +37,15 @@ class OrderPresenceBanner extends Component
     {
         $order = $this->order->fresh(['assignedUser']) ?? $this->order;
 
+        $presence = OrderPresence::presenceFor((int) $order->id, auth()->id() ? (int) auth()->id() : null);
+
         return view('dashed-ecommerce-core::orders.components.order-presence-banner', [
+            'assignedUser' => $order->assignedUser,
             'assignedTo' => $order->assigned_to_user_id ? ($order->assignedUser?->name ?? '-') : null,
             'assignedAt' => $order->assigned_at,
-            'otherViewers' => OrderPresence::otherViewerNames($order->id, auth()->id()),
+            // "Kijkt mee" en "is ermee bezig", zonder de ingelogde gebruiker.
+            'viewers' => $presence['viewers'],
+            'workingOn' => $presence['working_on'],
         ]);
     }
 }
