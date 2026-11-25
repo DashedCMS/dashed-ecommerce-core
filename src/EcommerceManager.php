@@ -12,6 +12,8 @@ class EcommerceManager
         'productPriceFields' => [],
         'productGroupHeaderActions' => [],
         'productGroupBulkActions' => [],
+        // Extra bulkacties op Openstaande bestellingen: ['key' => fn () => BulkAction::make(...)].
+        'openOrderProductBulkActions' => [],
         'customOrderFields' => [
 //            Example:
 //            'orderNumber' => [

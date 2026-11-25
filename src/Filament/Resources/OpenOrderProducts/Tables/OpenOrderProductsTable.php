@@ -2,18 +2,27 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables;
 
+use Filament\Actions\Action;
 use Filament\Tables\Table;
+use Filament\Actions\BulkAction;
+use Illuminate\Support\Collection;
+use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\TernaryFilter;
+use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
+use Filament\Notifications\Notification;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
+use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 
 class OpenOrderProductsTable
 {
@@ -65,6 +74,54 @@ class OpenOrderProductsTable
         };
     }
 
+    /** Of de tabel nu een gegroepeerde tab toont (één rij per product/productgroep). */
+    public static function isGrouped($livewire): bool
+    {
+        return in_array($livewire->activeTab ?? null, OpenOrderProductResource::GROUPED_TABS, true);
+    }
+
+    /**
+     * Zoeken over naam, gekozen opties, SKU en factuurnummer (zoals de mobiele
+     * API): elk woord moet ergens matchen. Werkt op de losse regels, dus ook in
+     * de gegroepeerde tabs (die pas daarna samenvoegen).
+     */
+    public static function applySearch(Builder $query, ?string $search): Builder
+    {
+        SmartSearch::apply($query, $search, [
+            'dashed__order_products.name',
+            'dashed__order_products.sku',
+            DB::raw(OrderProduct::extrasSearchSql('dashed__order_products.product_extras')),
+            DB::raw('(select search_orders.invoice_id from dashed__orders as search_orders where search_orders.id = dashed__order_products.order_id limit 1)'),
+        ]);
+
+        return $query;
+    }
+
+    /**
+     * Meldt de regels achter $records klaar (of weer niet klaar) en geeft het
+     * aantal gewijzigde regels terug. In een gegroepeerde tab zijn dat alle
+     * openstaande, nog niet klare regels van de gekozen producten.
+     */
+    public static function markLines($livewire, iterable $records, bool $ready): int
+    {
+        $user = auth()->user();
+        $user = $user instanceof User ? $user : null;
+        $changed = 0;
+
+        foreach ($livewire->openLinesForRecords($records) as $line) {
+            $changed += (int) ($ready ? $line->markProductionReady($user) : $line->markProductionNotReady($user));
+        }
+
+        Notification::make()
+            ->title($ready
+                ? trans_choice(':count regel klaar gemeld|:count regels klaar gemeld', $changed, ['count' => $changed])
+                : trans_choice(':count regel op niet klaar gezet|:count regels op niet klaar gezet', $changed, ['count' => $changed]))
+            ->success()
+            ->send();
+
+        return $changed;
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
@@ -96,16 +153,25 @@ class OpenOrderProductsTable
 
                         return self::imageUrlFor($record, $livewire->activeTab ?? null);
                     }),
+                // Kolommen per order (bestelling, on hold, origin, status, datum,
+                // klant, deadline) zijn in de gegroepeerde tabs verborgen: een
+                // rij bundelt daar meerdere orders, dus MIN(order_id) zou een
+                // willekeurige order tonen.
                 TextColumn::make('order.invoice_id')
                     ->label(__('Bestelling'))
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('product_id')
                     ->label(__('Product ID'))
                     ->toggleable()
-                    ->sortable(),
+                    ->sortable()
+                    // Op de productgroep-tab staat hier de productgroep-id.
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) !== 'grouped_product_group'),
                 IconColumn::make('order.is_priority')
                     ->label(__('Prioriteit'))
+                    ->state(fn ($record, $livewire): bool => static::isGrouped($livewire)
+                        ? (bool) $record->has_priority
+                        : (bool) $record->order?->is_priority)
                     ->boolean()
                     ->trueIcon('heroicon-s-star')
                     ->falseIcon('heroicon-o-minus-small')
@@ -121,7 +187,8 @@ class OpenOrderProductsTable
                     ->trueColor('warning')
                     ->falseColor('gray')
                     ->tooltip(fn ($record): ?string => $record->order?->on_hold_at ? ($record->order->on_hold_reason ?: __('On hold: niet uitleveren')) : null)
-                    ->toggleable(),
+                    ->toggleable()
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('name')
                     ->label(__('Productnaam'))
                     ->wrap()
@@ -134,22 +201,42 @@ class OpenOrderProductsTable
                             ->map(fn ($option) => ($option['name'] ?? '') . ': ' . ($option['value'] ?? ''))
                             ->implode(' | ');
                     })
-                    ->searchable(query: function (Builder $query, string $search): Builder {
-                        $like = '%' . $search . '%';
-
-                        return $query->where(fn (Builder $q) => $q
-                            ->where('dashed__order_products.name', 'like', $like)
-                            ->orWhereRaw(OrderProduct::extrasSearchSql('dashed__order_products.product_extras') . ' like ?', [$like]));
-                    })
                     ->sortable(),
                 TextColumn::make('sku')
                     ->label(__('SKU'))
                     ->toggleable()
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) !== 'grouped_product_group'),
                 TextColumn::make('quantity')
                     ->label(__('Aantal'))
+                    // Gegroepeerd: de som van de openstaande, nog niet klare regels.
+                    ->formatStateUsing(fn ($state): string => (string) (int) $state)
                     ->sortable(),
+                TextColumn::make('order_count')
+                    ->label(__('Bestellingen'))
+                    ->formatStateUsing(fn ($state): string => (string) (int) $state)
+                    ->sortable()
+                    ->visible(fn ($livewire): bool => static::isGrouped($livewire)),
+                TextColumn::make('production_ready_at')
+                    ->label(__('Klaar'))
+                    ->badge()
+                    ->getStateUsing(fn ($record): ?string => $record->production_ready_at ? __('Klaar') : null)
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->description(function ($record): ?string {
+                        if (! $record->production_ready_at) {
+                            return null;
+                        }
+
+                        $by = $record->production_ready_by ? $record->productionReadyBy?->name : null;
+
+                        return trim(($by ?: __('Onbekend')) . ', ' . $record->production_ready_at->format('d-m H:i'));
+                    })
+                    ->placeholder('-')
+                    ->sortable()
+                    ->toggleable()
+                    // Gegroepeerd telt alleen niet-klare regels, dus geen eigen klaar-status.
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('product.stock')
                     ->label(__('Voorraad'))
                     ->getStateUsing(function ($record) {
@@ -188,7 +275,10 @@ class OpenOrderProductsTable
                             'dashed__order_products.product_id'
                         )
                         ->orderBy('voorraad_join.stock', $direction)
-                        ->select('dashed__order_products.*')),
+                        ->select('dashed__order_products.*'))
+                    // Op de productgroep-tab is product_id de productgroep-id,
+                    // dus $record->product zou een willekeurig product zijn.
+                    ->visible(fn ($livewire): bool => ($livewire->activeTab ?? null) !== 'grouped_product_group'),
                 TextColumn::make('stock_status_at_order')
                     ->label(__('Voorraad bij besteldatum'))
                     ->badge()
@@ -207,7 +297,7 @@ class OpenOrderProductsTable
                     // Een gegroepeerde regel bundelt meerdere orders/orderregels,
                     // dus geen betekenisvolle per-regel voorraadstatus (net als de
                     // Deadline- en Klant-kolommen hieronder).
-                    ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('order.order_origin')
                     ->label(__('Order origin'))
                     ->badge()
@@ -220,7 +310,8 @@ class OpenOrderProductsTable
                             'dashed__order_products.order_id'
                         )
                         ->orderBy('order_origin_join.order_origin', $direction)
-                        ->select('dashed__order_products.*')),
+                        ->select('dashed__order_products.*'))
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('order.fulfillment_status')
                     ->label(__('Fulfillment status'))
                     ->badge()
@@ -231,7 +322,8 @@ class OpenOrderProductsTable
                         'in_treatment', 'ready_for_pickup' => 'info',
                         'shipped' => 'primary',
                         default => 'gray',
-                    }),
+                    })
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('deadline')
                     ->label(__('Deadline'))
                     ->toggleable()
@@ -253,20 +345,41 @@ class OpenOrderProductsTable
                     ->tooltip(fn ($record): ?string => $record->order?->deadlineLabel())
                     ->sortable(query: fn (Builder $query, string $direction) => static::orderByDeadline($query, $direction))
                     // Een gegroepeerde regel bundelt meerdere orders, dus geen eigen deadline.
-                    ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('order.name')
                     ->label(__('Klant'))
                     ->toggleable()
                     // Bij de gegroepeerde weergaven hoort geen klantnaam (een
                     // regel bundelt meerdere orders/klanten).
-                    ->visible(fn ($livewire): bool => ! in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)),
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('order.created_at')
                     ->label(__('Besteld op'))
                     ->dateTime('d-m-Y H:i')
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
             ])
-            ->defaultSort('order_id', 'desc')
+            // Per regel: nieuwste bestelling eerst; gegroepeerd: grootste aantal eerst.
+            ->defaultSort(fn (Builder $query, $livewire): Builder => $query->orderBy(
+                static::isGrouped($livewire) ? 'dashed__order_products.quantity' : 'dashed__order_products.order_id',
+                'desc',
+            ))
+            ->searchable()
+            ->searchUsing(fn (Builder $query, ?string $search): Builder => static::applySearch($query, $search))
             ->filters([
+                TernaryFilter::make('production_ready')
+                    ->label(__('Klaar'))
+                    ->placeholder(__('Alle regels'))
+                    ->trueLabel(__('Alleen klaar'))
+                    ->falseLabel(__('Alleen niet klaar'))
+                    // Standaard alleen wat nog gemaakt moet worden. De
+                    // gegroepeerde tabs tellen klaar-regels sowieso nooit mee.
+                    ->default(false)
+                    ->queries(
+                        true: fn (Builder $query) => $query->whereNotNull('dashed__order_products.production_ready_at'),
+                        false: fn (Builder $query) => $query->whereNull('dashed__order_products.production_ready_at'),
+                        blank: fn (Builder $query) => $query,
+                    ),
+
                 SelectFilter::make('deadline')
                     ->label(__('Deadline'))
                     ->options([
@@ -279,10 +392,11 @@ class OpenOrderProductsTable
 
                 SelectFilter::make('fulfillment_status')
                     ->label(__('Fulfillment status'))
-                    ->options(Orders::getFulfillmentStatusses())
+                    // Alleen openstaande statussen: de basisquery laat andere niet door.
+                    ->options(array_intersect_key(Orders::getFulfillmentStatusses(), array_flip(OpenOrderProductResource::OPEN_FULFILLMENT_STATUSES)))
                     ->multiple()
                     // Standaard "openstaand": nog niet afgehandeld én in behandeling.
-                    ->default(['unhandled', 'in_treatment'])
+                    ->default(OpenOrderProductResource::OPEN_FULFILLMENT_STATUSES)
                     ->query(function (Builder $query, array $data): Builder {
                         $values = array_values(array_filter((array) ($data['values'] ?? [])));
                         if (empty($values)) {
@@ -333,13 +447,13 @@ class OpenOrderProductsTable
                     ->falseLabel('Zonder opties')
                     ->queries(
                         true: fn (Builder $query) => $query
-                            ->whereNotNull('product_extras')
-                            ->whereRaw("JSON_VALID(product_extras) = 1")
-                            ->whereRaw("JSON_LENGTH(product_extras) > 0"),
+                            ->whereNotNull('dashed__order_products.product_extras')
+                            ->whereRaw("JSON_VALID(dashed__order_products.product_extras) = 1")
+                            ->whereRaw("JSON_LENGTH(dashed__order_products.product_extras) > 0"),
                         false: fn (Builder $query) => $query
                             ->where(fn (Builder $q) => $q
-                                ->whereNull('product_extras')
-                                ->orWhereRaw("JSON_VALID(product_extras) = 1 AND JSON_LENGTH(product_extras) = 0")),
+                                ->whereNull('dashed__order_products.product_extras')
+                                ->orWhereRaw("JSON_VALID(dashed__order_products.product_extras) = 1 AND JSON_LENGTH(dashed__order_products.product_extras) = 0")),
                         blank: fn (Builder $query) => $query,
                     ),
 
@@ -350,12 +464,12 @@ class OpenOrderProductsTable
                     ->falseLabel('Zonder product ID')
                     ->queries(
                         true: fn (Builder $query) => $query
-                            ->whereNotNull('product_id')
-                            ->where('product_id', '!=', 0),
+                            ->whereNotNull('dashed__order_products.product_id')
+                            ->where('dashed__order_products.product_id', '!=', 0),
                         false: fn (Builder $query) => $query
                             ->where(fn (Builder $q) => $q
-                                ->whereNull('product_id')
-                                ->orWhere('product_id', 0)),
+                                ->whereNull('dashed__order_products.product_id')
+                                ->orWhere('dashed__order_products.product_id', 0)),
                         blank: fn (Builder $query) => $query,
                     ),
 
@@ -407,11 +521,51 @@ class OpenOrderProductsTable
                         return $query->whereHas('product.productCategories', fn ($q) => $q->whereIn('dashed__product_categories.id', $data['values']));
                     }),
             ])
+            ->recordActions([
+                Action::make('markProductionReady')
+                    ->label(__('Markeer klaar'))
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->iconButton()
+                    ->tooltip(fn ($livewire): string => static::isGrouped($livewire)
+                        ? __('Alle openstaande regels van dit product klaar melden')
+                        : __('Markeer klaar'))
+                    ->requiresConfirmation(fn ($livewire): bool => static::isGrouped($livewire))
+                    ->visible(fn ($record, $livewire): bool => static::isGrouped($livewire) || ! $record->production_ready_at)
+                    ->action(fn ($record, $livewire) => static::markLines($livewire, [$record], true)),
+                Action::make('markProductionNotReady')
+                    ->label(__('Markeer niet klaar'))
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('gray')
+                    ->iconButton()
+                    ->tooltip(__('Markeer niet klaar'))
+                    ->visible(fn ($record, $livewire): bool => ! static::isGrouped($livewire) && (bool) $record->production_ready_at)
+                    ->action(fn ($record, $livewire) => static::markLines($livewire, [$record], false)),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make(array_merge([
+                    BulkAction::make('markProductionReady')
+                        ->label(__('Markeer klaar'))
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        ->action(fn (Collection $records, $livewire) => static::markLines($livewire, $records, true)),
+                    BulkAction::make('markProductionNotReady')
+                        ->label(__('Markeer niet klaar'))
+                        ->icon('heroicon-o-arrow-uturn-left')
+                        ->requiresConfirmation()
+                        ->deselectRecordsAfterCompletion()
+                        // Gegroepeerd bevat alleen niet-klare regels.
+                        ->visible(fn ($livewire): bool => ! static::isGrouped($livewire))
+                        ->action(fn (Collection $records, $livewire) => static::markLines($livewire, $records, false)),
+                ], OpenOrderProductResource::extraBulkActions())),
+            ])
             ->recordUrl(function ($record, $livewire) {
                 // In de grouped tabs is order_id een MIN() over meerdere
                 // orders, dus dat zou misleidend zijn — alleen linken op de
                 // per-orderregel-weergave.
-                if (in_array($livewire->activeTab ?? null, ['grouped', 'grouped_product_group'], true)) {
+                if (static::isGrouped($livewire)) {
                     return null;
                 }
 

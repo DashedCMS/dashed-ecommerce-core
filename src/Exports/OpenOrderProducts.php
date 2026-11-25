@@ -2,9 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Exports;
 
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\FromArray;
-use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 
 class OpenOrderProducts implements FromArray
@@ -59,19 +57,10 @@ class OpenOrderProducts implements FromArray
 
     private function groupedRows(): array
     {
-        // Spiegelt de tab-grouping query, maar wordt direct uitgevoerd zodat de
-        // export niet afhankelijk is van table state.
-        $base = OpenOrderProductResource::getEloquentQuery()->getQuery();
-        $base->orders = null;
-        $base->select([
-            DB::raw('MIN(dashed__order_products.product_id) as product_id'),
-            'dashed__order_products.sku',
-            DB::raw('MIN(dashed__order_products.name) as name'),
-            DB::raw('SUM(dashed__order_products.quantity) as quantity'),
-        ])->groupBy('dashed__order_products.product_id', 'dashed__order_products.sku')
-            ->orderByRaw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') desc');
-
-        return collect($base->get())
+        // Zelfde samenvoeging als de tab (OpenOrderProductResource::groupLines):
+        // per product, som van de openstaande, nog niet klare regels.
+        return OpenOrderProductResource::groupLines(OpenOrderProductResource::getEloquentQuery(), 'grouped')
+            ->get()
             ->map(fn ($r) => [
                 $r->product_id,
                 $r->name,
@@ -83,32 +72,11 @@ class OpenOrderProducts implements FromArray
 
     private function groupedByProductGroupRows(): array
     {
-        $base = OpenOrderProductResource::getEloquentQuery()->getQuery();
-        $base->orders = null;
-        $base->leftJoin(
-            'dashed__products',
-            'dashed__products.id',
-            '=',
-            'dashed__order_products.product_id'
-        );
-        $base->select([
-            DB::raw('dashed__products.product_group_id as product_group_id'),
-            DB::raw('SUM(dashed__order_products.quantity) as quantity'),
-        ])->groupBy('dashed__products.product_group_id')
-            ->orderByRaw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') desc');
-
-        $rows = collect($base->get());
-        $groupIds = $rows->pluck('product_group_id')->filter()->all();
-        $groupNames = ProductGroup::query()
-            ->whereIn('id', $groupIds)
-            ->get(['id', 'name'])
-            ->mapWithKeys(fn ($g) => [$g->id => $g->name])
-            ->all();
-
-        return $rows
+        return OpenOrderProductResource::groupLines(OpenOrderProductResource::getEloquentQuery(), 'grouped_product_group')
+            ->get()
             ->map(fn ($r) => [
-                $r->product_group_id ?? '',
-                $r->product_group_id ? ($groupNames[$r->product_group_id] ?? '#'.$r->product_group_id) : 'Geen productgroep',
+                $r->product_id ?: '',
+                $r->name,
                 (int) $r->quantity,
             ])
             ->toArray();

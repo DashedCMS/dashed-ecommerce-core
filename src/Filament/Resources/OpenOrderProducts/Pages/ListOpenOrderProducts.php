@@ -4,11 +4,11 @@ namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Pages;
 
 use Filament\Actions\Action;
 use Filament\Support\Enums\Width;
-use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Excel as ExcelType;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
@@ -23,88 +23,97 @@ class ListOpenOrderProducts extends ListRecords
 
     public function getTabs(): array
     {
+        // De gegroepeerde tabs passen de query hier bewust niet aan: het
+        // samenvoegen gebeurt pas in filterTableQuery(), ná filters en zoeken,
+        // zodat die op de losse regels werken en het aantal (som) klopt.
         return [
             'all' => Tab::make('Per orderregel')
                 ->modifyQueryUsing(fn (Builder $query): Builder => OpenOrderProductResource::priorityFirst($query)),
-            'grouped' => Tab::make('Gegroepeerd per product')
-                ->modifyQueryUsing(function (Builder $query): Builder {
-                    // Subquery die de grouped MIN/SUM resultaten levert.
-                    // Filament voegt later automatisch een `id desc` tiebreaker
-                    // toe op de outer query, daarom moeten we id, order_id,
-                    // deleted_at, created_at en updated_at meeselecteren zodat
-                    // de outer scopes (SoftDeletes) en eager-loads blijven werken.
-                    $inner = (clone $query)->getQuery();
-                    $inner->orders = null;
-                    $inner->select([
-                        DB::raw('MIN(dashed__order_products.id) as id'),
-                        DB::raw('MIN(dashed__order_products.order_id) as order_id'),
-                        'dashed__order_products.product_id',
-                        'dashed__order_products.sku',
-                        DB::raw('MIN(dashed__order_products.name) as name'),
-                        DB::raw('SUM(dashed__order_products.quantity) as quantity'),
-                        DB::raw('MIN(dashed__order_products.deleted_at) as deleted_at'),
-                        DB::raw('MIN(dashed__order_products.created_at) as created_at'),
-                        DB::raw('MAX(dashed__order_products.updated_at) as updated_at'),
-                        DB::raw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') as has_priority'),
-                    ])->groupBy('dashed__order_products.product_id', 'dashed__order_products.sku');
-
-                    return OrderProduct::query()
-                        ->fromSub($inner, 'dashed__order_products')
-                        ->orderByDesc('dashed__order_products.has_priority')
-                        ->with(['order', 'product']);
-                }),
-            'grouped_product_group' => Tab::make('Gegroepeerd per productgroep')
-                ->modifyQueryUsing(function (Builder $query): Builder {
-                    // Subquery die SUM(quantity) per product_group_id levert
-                    // door order_products -> products te joinen. Lege/null
-                    // product_group_ids komen samen onder een 'losse'-bucket
-                    // (NULL). De Productnaam-kolom toont de product_group naam
-                    // via JSON_UNQUOTE op de translatable kolom (huidige
-                    // locale, met fallback naar 'nl' en daarna de raw JSON).
-                    // Locale wordt gewhitelist op alfanumeriek om SQL-
-                    // injectie via een gemanipuleerde locale uit te sluiten.
-                    $locale = preg_replace('/[^a-zA-Z]/', '', (string) app()->getLocale()) ?: 'nl';
-
-                    $inner = (clone $query)->getQuery();
-                    $inner->orders = null;
-                    $inner->leftJoin(
-                        'dashed__products',
-                        'dashed__products.id',
-                        '=',
-                        'dashed__order_products.product_id'
-                    );
-                    $inner->leftJoin(
-                        'dashed__product_groups',
-                        'dashed__product_groups.id',
-                        '=',
-                        'dashed__products.product_group_id'
-                    );
-                    $inner->select([
-                        DB::raw('MIN(dashed__order_products.id) as id'),
-                        DB::raw('MIN(dashed__order_products.order_id) as order_id'),
-                        DB::raw('dashed__products.product_group_id as product_id'),
-                        DB::raw("'' as sku"),
-                        DB::raw(
-                            "COALESCE(
-                                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(dashed__product_groups.name, '$.\"".$locale."\"')), 'null'),
-                                NULLIF(JSON_UNQUOTE(JSON_EXTRACT(dashed__product_groups.name, '$.\"nl\"')), 'null'),
-                                dashed__product_groups.name,
-                                'Geen productgroep'
-                            ) as name"
-                        ),
-                        DB::raw('SUM(dashed__order_products.quantity) as quantity'),
-                        DB::raw('MIN(dashed__order_products.deleted_at) as deleted_at'),
-                        DB::raw('MIN(dashed__order_products.created_at) as created_at'),
-                        DB::raw('MAX(dashed__order_products.updated_at) as updated_at'),
-                        DB::raw('MAX(' . OpenOrderProductResource::PRIORITY_SQL . ') as has_priority'),
-                    ])->groupBy('dashed__products.product_group_id', 'dashed__product_groups.name');
-
-                    return OrderProduct::query()
-                        ->fromSub($inner, 'dashed__order_products')
-                        ->orderByDesc('dashed__order_products.has_priority')
-                        ->with(['order']);
-                }),
+            'grouped' => Tab::make('Gegroepeerd per product'),
+            'grouped_product_group' => Tab::make('Gegroepeerd per productgroep'),
         ];
+    }
+
+    public function isGroupedTab(): bool
+    {
+        return in_array($this->activeTab ?? null, OpenOrderProductResource::GROUPED_TABS, true);
+    }
+
+    /**
+     * Filters en zoeken op de losse regels; in een gegroepeerde tab daarna pas
+     * samenvoegen tot één rij per product of productgroep. Sorteren en pagineren
+     * (die Filament hierna toepast) werken dan op de samengevoegde rijen.
+     */
+    public function filterTableQuery(Builder $query): Builder
+    {
+        $query = parent::filterTableQuery($query);
+
+        if (! $this->isGroupedTab()) {
+            return $query;
+        }
+
+        return OpenOrderProductResource::groupLines($query, $this->activeTab)
+            ->with(['order', 'product']);
+    }
+
+    /**
+     * In een gegroepeerde tab zijn de geselecteerde sleutels MIN(id) van een
+     * groep. Die moeten op de samengevoegde rijen worden toegepast, niet op de
+     * regels (dan zou een groep na het deselecteren van zijn eerste regel
+     * gewoon met een nieuwe MIN(id) terugkomen).
+     */
+    public function getSelectedTableRecordsQuery(bool $shouldFetchSelectedRecords = true, ?int $chunkSize = null): Builder
+    {
+        if (! $this->isGroupedTab()) {
+            return parent::getSelectedTableRecordsQuery($shouldFetchSelectedRecords, $chunkSize);
+        }
+
+        $query = $this->getFilteredTableQuery();
+
+        return $this->isTrackingDeselectedTableRecords
+            ? $query->whereKeyNot($this->deselectedTableRecords)
+            : $query->whereKey($this->selectedTableRecords);
+    }
+
+    /** De regelquery met de actieve filters en zoekterm, zonder samenvoegen. */
+    public function getFilteredLineQuery(): Builder
+    {
+        $query = $this->getTable()->getQuery();
+        $this->applyFiltersToTableQuery($query);
+        $this->applySearchToTableQuery($query);
+
+        return $query;
+    }
+
+    /**
+     * De echte orderregels achter de gegeven tabelrijen. Per orderregel zijn
+     * dat de rijen zelf; in een gegroepeerde tab alle openstaande, nog niet
+     * klare regels van de gekozen producten/productgroepen die door de actieve
+     * filters en zoekterm komen. Bedoeld voor (app-)bulkacties.
+     *
+     * @return EloquentCollection<int, OrderProduct>
+     */
+    public function openLinesForRecords(iterable $records): EloquentCollection
+    {
+        $records = collect($records);
+
+        if (! $this->isGroupedTab()) {
+            return OrderProduct::query()
+                ->whereKey($records->map(fn ($record) => $record instanceof OrderProduct ? $record->getKey() : $record)->all())
+                ->with('order')
+                ->get();
+        }
+
+        $groupKeys = $records
+            ->map(fn ($record) => $record instanceof OrderProduct ? $record->getAttribute('group_key') : null)
+            ->reject(fn ($key) => $key === null)
+            ->unique()
+            ->values()
+            ->all();
+
+        return OpenOrderProductResource::linesInGroups($this->getFilteredLineQuery(), $this->activeTab, $groupKeys)
+            ->with('order')
+            ->get();
     }
 
     protected function getHeaderActions(): array

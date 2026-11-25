@@ -6,6 +6,12 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
 ### Added
 - Printstatus per orderregel: kolommen `production_ready_at` en `production_ready_by` op `dashed__order_products` (migratie `2026_11_26_100000`), `OrderProduct::markProductionReady()` / `markProductionNotReady()` (idempotent, met orderlog `order.product.production-ready` / `order.product.production-not-ready` en de events `OrderProductProductionReady` / `OrderProductProductionNotReady`), `PATCH api/v1/order-products/{id}/production-ready` (`{"ready": bool}`, `orders.write`), de velden `production_ready`, `production_ready_at` en `production_ready_by` (`{id, name, avatar_url}`) in `GET open-order-products` en de orderregels van `GET orders/{order}`, en een knop "Klaar"/"Niet klaar" per regel op de orderpagina in het CMS.
+- Openstaande bestellingen: kolom "Klaar" (wie en wanneer), rij- en bulkacties "Markeer klaar" / "Markeer niet klaar" en filter "Klaar" (standaard alleen niet klaar). Gegroepeerd en de menuteller tellen klare regels nooit mee; "Markeer klaar" op een gegroepeerde rij meldt alle open regels van dat product.
+- Uitbreidingspunt `ecommerce()->builder('openOrderProductBulkActions', ['key' => fn () => BulkAction::make(...)])` voor extra bulkacties op Openstaande bestellingen; `$livewire->openLinesForRecords($records)` geeft de echte orderregels, ook in de gegroepeerde tabs.
+
+### Fixed
+- Openstaande bestellingen, "Gegroepeerd per product/productgroep": zoeken en filters werken nu. Samenvoegen gebeurt pas ná filters en zoeken (in `ListOpenOrderProducts::filterTableQuery()`), zodat het aantal de som is van de openstaande regels die door filter en zoekterm komen; voorheen werden filters op de al samengevoegde rij toegepast (op `MIN(order_id)`), crashte zoeken op de opties (`product_extras` ontbrak in de subquery) en telden verwijderde regels mee (SoftDeletes-scope viel weg door `getQuery()`). Eén rij per product (niet meer per product + SKU), sorteren op aantal sorteert op die som, en de Excel-export gebruikt dezelfde samenvoeging. Kolommen per order (bestelling, origin, status, datum, klant) zijn in de gegroepeerde tabs verborgen; nieuw is "Bestellingen" (aantal orders). Productgroep-tab toont geen voorraad/SKU van een willekeurig product meer.
+- Openstaande bestellingen toont nu ook orders "in behandeling" (basisquery `OPEN_FULFILLMENT_STATUSES` = unhandled + in_treatment, zoals de mobiele API); het statusfilter stond daar standaard al op, maar de basisquery liet ze nooit door.
 
 ## v4.229.0 - 2026-11-25
 
