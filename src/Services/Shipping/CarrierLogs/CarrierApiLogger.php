@@ -3,10 +3,10 @@
 namespace Dashed\DashedEcommerceCore\Services\Shipping\CarrierLogs;
 
 use Throwable;
+use GuzzleHttp\Promise\Create;
 use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Promise\Create;
 use Dashed\DashedEcommerceCore\Models\CarrierApiLog;
 
 /**

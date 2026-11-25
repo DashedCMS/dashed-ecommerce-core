@@ -11,8 +11,8 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
-use Dashed\DashedEcommerceCore\Classes\OrderProductStock;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
+use Dashed\DashedEcommerceCore\Classes\OrderProductStock;
 
 class OrderProductsList extends Component implements HasSchemas
 {
