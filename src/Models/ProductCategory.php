@@ -129,6 +129,16 @@ class ProductCategory extends Model
         return url($url);
     }
 
+    /**
+     * Een categorie zonder subcategorieën en zonder producten is een lege pagina; met precies één product is
+     * zijn URL die van het product (zie getUrl()), dat al in de sitemap staat. Beide horen er niet in.
+     */
+    public function showInSitemap(): bool
+    {
+        // Tellen in de database: een grote categorie heeft duizenden producten.
+        return $this->childs()->exists() || $this->products()->limit(2)->count() > 1;
+    }
+
     public function getUrl($locale = null)
     {
         $originalLocale = app()->getLocale();

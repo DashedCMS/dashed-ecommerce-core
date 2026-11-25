@@ -2,6 +2,15 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.229.0 - 2026-11-25
+
+### Added
+- `Product::canonicalUrl()`: een variant van een groep met `only_show_parent_product` wijst met zijn canonical (en hreflang) naar de groep en staat niet meer los in de sitemap. De variantpagina blijft bereikbaar voor feeds en oude links. Werkt met dashed-core >= 4.128.
+- `ProductCategory::showInSitemap()`: een categorie zonder subcategorieën met 0 of 1 product staat niet meer in de sitemap (leeg, of de URL is die van het ene product).
+
+### Changed
+- Productschema: verzending en retourbeleid staan in een ProductGroup volledig bij de eerste variant (met `@id`), de andere varianten verwijzen ernaar. Op een groep met 92 varianten ging het JSON-LD-blok van 248 KB naar 114 KB.
+
 ## v4.228.0 - 2026-11-25
 
 ### Added

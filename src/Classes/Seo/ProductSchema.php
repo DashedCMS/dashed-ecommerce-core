@@ -170,9 +170,58 @@ class ProductSchema
             $node->setProperty('variesBy', $variesBy);
         }
 
+        self::shareOfferPolicies($variantNodes, strtok($url, '#'));
         $node->setProperty('hasVariant', $variantNodes);
 
         return $node;
+    }
+
+    /**
+     * Verzending en retourbeleid zijn voor alle varianten gelijk (één keer berekend in shared()). De eerste
+     * variant krijgt ze volledig met een @id, de rest verwijst daarnaar. Bij 92 varianten scheelde dat ruim
+     * 170 KB HTML (Lovora, /producten/myraka, 25-11-2026).
+     *
+     * @param  list<BaseType>  $variantNodes
+     */
+    protected static function shareOfferPolicies(array $variantNodes, string $baseUrl): void
+    {
+        $references = [];
+
+        foreach (array_values($variantNodes) as $index => $variantNode) {
+            $offer = $variantNode->getProperty('offers');
+            if (! $offer instanceof BaseType) {
+                continue;
+            }
+
+            foreach (['shippingDetails' => 'shipping', 'hasMerchantReturnPolicy' => 'return-policy'] as $property => $name) {
+                $value = $offer->getProperty($property);
+                if (! $value) {
+                    continue;
+                }
+
+                if (! array_key_exists($property, $references)) {
+                    $nodes = is_array($value) ? array_values($value) : [$value];
+                    $ids = [];
+                    foreach ($nodes as $n => $policy) {
+                        if (! $policy instanceof BaseType) {
+                            $ids = null;
+
+                            break;
+                        }
+                        $id = $baseUrl . '#' . $name . (is_array($value) ? '-' . ($n + 1) : '');
+                        $policy->setProperty('@id', $id);
+                        $ids[] = ['@id' => $id];
+                    }
+                    $references[$property] = $ids === null ? null : (is_array($value) ? $ids : $ids[0]);
+
+                    continue;
+                }
+
+                if ($references[$property] !== null) {
+                    $offer->setProperty($property, $references[$property]);
+                }
+            }
+        }
     }
 
     /**

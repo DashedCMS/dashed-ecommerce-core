@@ -593,6 +593,22 @@ class Product extends Model
         return $images;
     }
 
+    /**
+     * Een variant van een groep die alleen als groep getoond wordt (`only_show_parent_product`) wijst met zijn
+     * canonical naar de groep: de variantpagina blijft bereikbaar (feeds, oude links), maar telt niet als eigen
+     * pagina. Gebruikt door dashed-core voor canonical, hreflang en sitemap. Null = de pagina zelf.
+     */
+    public function canonicalUrl(?string $locale = null): ?string
+    {
+        if (! $this->productGroup || ! $this->productGroup->only_show_parent_product) {
+            return null;
+        }
+
+        $url = (string) $this->productGroup->getUrl($locale ?: app()->getLocale());
+
+        return $url === '' ? null : $url;
+    }
+
     public function getUrl($locale = null, $forceOwnUrl = false)
     {
         if (! $locale) {
