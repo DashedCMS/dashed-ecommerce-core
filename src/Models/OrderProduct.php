@@ -278,10 +278,30 @@ class OrderProduct extends Model
         }
 
         $by ??= self::currentProductionUser();
+        $at = now();
 
-        $this->production_ready_at = now();
-        $this->production_ready_by = $by?->id;
-        $this->save();
+        // Conditional update so a double tap or app + CMS at the same time
+        // only changes the row (and logs/dispatches) once.
+        $changed = static::query()
+            ->whereKey($this->getKey())
+            ->whereNull('production_ready_at')
+            ->update([
+                'production_ready_at' => $at,
+                'production_ready_by' => $by?->id,
+                'updated_at' => $at,
+            ]);
+
+        if ($changed !== 1) {
+            $this->refreshProductionState();
+
+            return false;
+        }
+
+        $this->forceFill([
+            'production_ready_at' => $at,
+            'production_ready_by' => $by?->id,
+            'updated_at' => $at,
+        ])->syncOriginal();
         $this->setRelation('productionReadyBy', $by);
 
         OrderLog::createLog(
@@ -307,10 +327,28 @@ class OrderProduct extends Model
         }
 
         $by ??= self::currentProductionUser();
+        $at = now();
 
-        $this->production_ready_at = null;
-        $this->production_ready_by = null;
-        $this->save();
+        $changed = static::query()
+            ->whereKey($this->getKey())
+            ->whereNotNull('production_ready_at')
+            ->update([
+                'production_ready_at' => null,
+                'production_ready_by' => null,
+                'updated_at' => $at,
+            ]);
+
+        if ($changed !== 1) {
+            $this->refreshProductionState();
+
+            return false;
+        }
+
+        $this->forceFill([
+            'production_ready_at' => null,
+            'production_ready_by' => null,
+            'updated_at' => $at,
+        ])->syncOriginal();
         $this->setRelation('productionReadyBy', null);
 
         OrderLog::createLog(
@@ -343,6 +381,19 @@ class OrderProduct extends Model
                 'avatar_url' => $user->avatar_url ?? null,
             ] : null,
         ];
+    }
+
+    /** Sync a stale in-memory model with the stored print status after a lost race. */
+    private function refreshProductionState(): void
+    {
+        $fresh = static::query()->whereKey($this->getKey())->first(['production_ready_at', 'production_ready_by']);
+
+        if (! $fresh) {
+            return;
+        }
+
+        $this->setRawAttributes(array_merge($this->getAttributes(), $fresh->getAttributes()), true);
+        $this->unsetRelation('productionReadyBy');
     }
 
     private static function currentProductionUser(): ?User
