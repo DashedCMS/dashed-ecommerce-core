@@ -1795,6 +1795,11 @@ MARKDOWN,
             $schedule->command(\Dashed\DashedEcommerceCore\Commands\SyncMetaAudiencesCommand::class, ['--full'])
                 ->weeklyOn(0, $spreadAt('05:15', 'meta-audiences-full'))
                 ->withoutOverlapping();
+            // Carrier-logboek: rows older than CarrierApiLog::RETENTION_DAYS (60) days go.
+            $schedule->command('model:prune', ['--model' => [\Dashed\DashedEcommerceCore\Models\CarrierApiLog::class]])
+                ->dailyAt($spreadAt('03:40', 'prune-carrier-api-logs'))
+                ->name('dashed:prune-carrier-api-logs')
+                ->withoutOverlapping();
         });
 
         // Register the v1 recommendation strategy stack. Each strategy is
@@ -1881,6 +1886,7 @@ MARKDOWN,
         Livewire::component('order-attribution-information-list', AttributionInformationList::class);
         Livewire::component('order-view-statusses', ViewStatusses::class);
         Livewire::component('order-label-problem-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\LabelProblemBanner::class);
+        Livewire::component('order-carrier-api-logs', \Dashed\DashedEcommerceCore\Livewire\Orders\CarrierApiLogsList::class);
         Livewire::component('order-add-on-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\OrderAddOnBanner::class);
         Livewire::component('order-presence-banner', \Dashed\DashedEcommerceCore\Livewire\Orders\OrderPresenceBanner::class);
         Livewire::component('order-create-track-and-trace', CreateTrackAndTrace::class);

@@ -125,6 +125,7 @@
                 @include('dashed-ecommerce-core::orders.partials.order-returns', ['record' => $record])
 
                 @livewire('order-logs-list', ['order' => $record])
+                @livewire('order-carrier-api-logs', ['order' => $record], key('order-carrier-api-logs-'.$record->id))
             </div>
 
             <div class="au-od-col">
