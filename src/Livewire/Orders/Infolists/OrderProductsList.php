@@ -114,7 +114,7 @@ class OrderProductsList extends Component implements HasSchemas
      * Printstatus van een regel voor de "Klaar"/"Niet klaar"-knop; null voor
      * kostenregels en verwijderde regels.
      *
-     * @return array{id: int, ready: bool, by: ?string, at: ?string}|null
+     * @return array{id: int, ready: bool, by: ?string, user: mixed, at: ?string}|null
      */
     private function productionLine(OrderProduct $orderProduct): ?array
     {
@@ -126,6 +126,7 @@ class OrderProductsList extends Component implements HasSchemas
             'id' => $orderProduct->id,
             'ready' => $orderProduct->isProductionReady(),
             'by' => $orderProduct->production_ready_by ? $orderProduct->productionReadyBy?->name : null,
+            'user' => $orderProduct->production_ready_by ? $orderProduct->productionReadyBy : null,
             'at' => $orderProduct->production_ready_at?->timezone(config('app.timezone'))->format('d-m-Y H:i'),
         ];
     }

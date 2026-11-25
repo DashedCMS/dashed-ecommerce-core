@@ -36,7 +36,12 @@
                                         {{ $line['production']['ready'] ? __('Klaar') : __('Niet klaar') }}
                                     </x-filament::button>
                                     @if($line['production']['ready'])
-                                        <span class="au-od-muted">{{ trim(($line['production']['by'] ?? '') . ' ' . ($line['production']['at'] ?? '')) }}</span>
+                                        <span class="au-od-muted" style="display:inline-flex;align-items:center;gap:6px;">
+                                            @if($line['production']['user'] ?? null)
+                                                @include('dashed-ecommerce-core::orders.partials.user-avatar', ['user' => $line['production']['user'], 'size' => 'sm'])
+                                            @endif
+                                            {{ trim(($line['production']['by'] ?? '') . ' ' . ($line['production']['at'] ?? '')) }}
+                                        </span>
                                     @endif
                                 </div>
                             @endif

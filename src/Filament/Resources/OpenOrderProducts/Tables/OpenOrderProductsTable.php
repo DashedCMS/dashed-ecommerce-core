@@ -11,6 +11,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\TernaryFilter;
@@ -223,14 +224,19 @@ class OpenOrderProductsTable
                     ->getStateUsing(fn ($record): ?string => $record->production_ready_at ? __('Klaar') : null)
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
-                    ->description(function ($record): ?string {
+                    ->description(function ($record): ?HtmlString {
                         if (! $record->production_ready_at) {
                             return null;
                         }
 
-                        $by = $record->production_ready_by ? $record->productionReadyBy?->name : null;
+                        // productionReadyBy is eager loaded; avatar_url doet geen query.
+                        $user = $record->production_ready_by ? $record->productionReadyBy : null;
+                        $text = trim(($user?->name ?: __('Onbekend')) . ', ' . $record->production_ready_at->format('d-m H:i'));
+                        $avatar = $user
+                            ? view('dashed-ecommerce-core::orders.partials.user-avatar', ['user' => $user, 'size' => 'sm'])->render()
+                            : '';
 
-                        return trim(($by ?: __('Onbekend')) . ', ' . $record->production_ready_at->format('d-m H:i'));
+                        return new HtmlString('<span style="display:inline-flex;align-items:center;gap:6px;">' . $avatar . e($text) . '</span>');
                     })
                     ->placeholder('-')
                     ->sortable()
