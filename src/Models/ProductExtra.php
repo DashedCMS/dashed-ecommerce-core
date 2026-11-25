@@ -255,6 +255,15 @@ class ProductExtra extends Model
                     Toggle::make('skip_stock')
                         ->label(__('Voorraad niet aanpassen als deze optie gekozen wordt'))
                         ->helperText(__('De voorraad van het product wordt niet afgeboekt bij een bestelling en niet teruggeboekt bij een annulering of retour. Het aantal verkopen blijft wel gewoon meetellen, en het product blijft onbestelbaar als het op is.')),
+                    TextInput::make('extra_delivery_days')
+                        ->label(__('Extra levertijd (werkdagen)'))
+                        ->helperText(__('Komt bovenop de levertijd van het product als de klant deze optie kiest. Bij meer opties telt de langste.'))
+                        ->numeric()
+                        ->integer()
+                        ->default(0)
+                        ->minValue(0)
+                        ->maxValue(60)
+                        ->dehydrateStateUsing(fn ($state): int => max(0, (int) $state)),
                 ])
                 ->columnSpan(2),
         ];

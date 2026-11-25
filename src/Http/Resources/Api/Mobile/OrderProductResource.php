@@ -34,6 +34,8 @@ class OrderProductResource extends JsonResource
             // Was deze regel op voorraad op besteldatum? 'in_stock' / 'out_of_stock'
             // / null (onbekend of geen voorraadbeheer; de app toont null niet).
             'stock_status_at_order' => $this->stock_status_at_order,
+            // Huidige voorraad van het product (voorraad min gereserveerd), null zonder voorraadbeheer.
+            'stock_quantity' => \Dashed\DashedEcommerceCore\Classes\OrderProductStock::currentQuantity($this->resource),
             'fulfillment_provider' => $this->fulfillment_provider,
             'send_to_fulfiller' => (bool) $this->send_to_fulfiller,
             'added_via' => $this->added_via,

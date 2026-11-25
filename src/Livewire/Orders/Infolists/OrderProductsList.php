@@ -11,6 +11,7 @@ use Dashed\DashedEcommerceCore\Models\Order;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
+use Dashed\DashedEcommerceCore\Classes\OrderProductStock;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 
 class OrderProductsList extends Component implements HasSchemas
@@ -68,7 +69,7 @@ class OrderProductsList extends Component implements HasSchemas
                 ];
             }
             if ($orderProduct->stock_status_at_order === OrderProduct::STOCK_STATUS_IN_STOCK) {
-                $badges[] = ['label' => 'Op voorraad', 'color' => 'success'];
+                $badges[] = ['label' => OrderProductStock::badgeLabel($orderProduct), 'color' => 'success'];
             } elseif ($orderProduct->stock_status_at_order === OrderProduct::STOCK_STATUS_OUT_OF_STOCK) {
                 $badges[] = ['label' => 'Niet op voorraad', 'color' => 'danger'];
             }

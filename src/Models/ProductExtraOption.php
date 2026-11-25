@@ -24,10 +24,12 @@ class ProductExtraOption extends Model
         'price',
         'calculate_only_1_quantity',
         'skip_stock',
+        'extra_delivery_days',
     ];
 
     protected $casts = [
         'skip_stock' => 'boolean',
+        'extra_delivery_days' => 'integer',
     ];
 
     public $translatable = [
@@ -39,6 +41,29 @@ class ProductExtraOption extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults();
+    }
+
+    /** Extra working days of lead time when this option is chosen (0 = none). */
+    public function extraDeliveryDays(): int
+    {
+        return max(0, (int) ($this->extra_delivery_days ?? 0));
+    }
+
+    /**
+     * The largest extra lead time over the given option ids (0 when none). Non-numeric ids, such as
+     * 'product-extra-12' for a text field, are ignored. Deleted options still count: an order keeps its promise.
+     *
+     * @param  iterable<mixed>  $optionIds
+     */
+    public static function maxExtraDeliveryDaysFor(iterable $optionIds): int
+    {
+        $ids = collect($optionIds)->filter(fn ($id) => is_numeric($id))->map(fn ($id) => (int) $id)->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return 0;
+        }
+
+        return max(0, (int) static::withTrashed()->whereIn('id', $ids)->max('extra_delivery_days'));
     }
 
     public function productExtra()
