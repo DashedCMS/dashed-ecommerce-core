@@ -2,6 +2,7 @@
 
 namespace Dashed\DashedEcommerceCore\Models;
 
+use Dashed\DashedCore\Models\User;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -11,6 +12,8 @@ use Dashed\DashedEcommerceCore\Classes\TaxHelper;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderProductProductionReady;
+use Dashed\DashedEcommerceCore\Events\Orders\OrderProductProductionNotReady;
 use Dashed\DashedEcommerceCore\Database\Factories\OrderProductFactory;
 
 class OrderProduct extends Model
@@ -51,6 +54,8 @@ class OrderProduct extends Model
         'hidden_options' => 'array',
         'returned_quantity' => 'integer',
         'skip_stock' => 'boolean',
+        'production_ready_at' => 'datetime',
+        'production_ready_by' => 'integer',
     ];
 
     protected static function newFactory(): OrderProductFactory
@@ -250,5 +255,100 @@ class OrderProduct extends Model
     public function fulfillmentCompany(): BelongsTo
     {
         return $this->belongsTo(FulfillmentCompany::class, 'fulfillment_provider');
+    }
+
+    public function productionReadyBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'production_ready_by');
+    }
+
+    public function isProductionReady(): bool
+    {
+        return $this->production_ready_at !== null;
+    }
+
+    /**
+     * Meld de regel als klaar (geprint/geproduceerd). Idempotent: een regel
+     * die al klaar is houdt zijn tijd en melder en vuurt geen tweede event.
+     */
+    public function markProductionReady(?User $by = null): bool
+    {
+        if ($this->isProductionReady()) {
+            return false;
+        }
+
+        $by ??= self::currentProductionUser();
+
+        $this->production_ready_at = now();
+        $this->production_ready_by = $by?->id;
+        $this->save();
+        $this->setRelation('productionReadyBy', $by);
+
+        OrderLog::createLog(
+            orderId: $this->order_id,
+            tag: 'order.product.production-ready',
+            note: $this->name . ' is klaar gemeld',
+            userId: $by?->id,
+        );
+
+        OrderProductProductionReady::dispatch($this, $by);
+
+        return true;
+    }
+
+    /**
+     * Zet de regel terug op niet klaar. Idempotent: een regel die niet klaar
+     * is blijft ongemoeid en vuurt geen event.
+     */
+    public function markProductionNotReady(?User $by = null): bool
+    {
+        if (! $this->isProductionReady()) {
+            return false;
+        }
+
+        $by ??= self::currentProductionUser();
+
+        $this->production_ready_at = null;
+        $this->production_ready_by = null;
+        $this->save();
+        $this->setRelation('productionReadyBy', null);
+
+        OrderLog::createLog(
+            orderId: $this->order_id,
+            tag: 'order.product.production-not-ready',
+            note: $this->name . ' is weer op niet klaar gezet',
+            userId: $by?->id,
+        );
+
+        OrderProductProductionNotReady::dispatch($this, $by);
+
+        return true;
+    }
+
+    /**
+     * Vaste vorm van de printstatus voor API-payloads.
+     *
+     * @return array{production_ready: bool, production_ready_at: ?string, production_ready_by: ?array{id: int, name: ?string, avatar_url: ?string}}
+     */
+    public function productionReadyPayload(): array
+    {
+        $user = $this->production_ready_by ? $this->productionReadyBy : null;
+
+        return [
+            'production_ready' => $this->isProductionReady(),
+            'production_ready_at' => $this->production_ready_at?->toIso8601String(),
+            'production_ready_by' => $user ? [
+                'id' => $user->id,
+                'name' => $user->name,
+                'avatar_url' => $user->avatar_url ?? null,
+            ] : null,
+        ];
+    }
+
+    private static function currentProductionUser(): ?User
+    {
+        $user = auth()->user();
+
+        return $user instanceof User ? $user : null;
     }
 }
