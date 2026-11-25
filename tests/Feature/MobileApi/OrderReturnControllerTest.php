@@ -45,7 +45,7 @@ function makeReturn(array $returnAttributes = [], string $siteId = 'site', int $
 }
 
 it('lists returns for the active site, newest first, filtered by status', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $req = makeReturn()['return'];
     $handled = makeReturn(['status' => OrderReturn::STATUS_HANDLED])['return'];
@@ -62,7 +62,7 @@ it('lists returns for the active site, newest first, filtered by status', functi
 });
 
 it('shows a return with lines and status label', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = makeReturn()['return'];
 
     $res = $this->getJson("/api/v1/returns/{$return->id}", ['X-Site-Id' => 'site']);
@@ -77,7 +77,7 @@ it('shows a return with lines and status label', function () {
 });
 
 it('returns 404 for a return on another site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $other = makeReturn([], 'other')['return'];
 
     $this->getJson("/api/v1/returns/{$other->id}", ['X-Site-Id' => 'site'])->assertNotFound();
@@ -85,7 +85,7 @@ it('returns 404 for a return on another site', function () {
 
 it('approves a requested return and sends the approval mail', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = makeReturn()['return'];
 
     $res = $this->postJson("/api/v1/returns/{$return->id}/approve", ['admin_note' => 'Akkoord'], ['X-Site-Id' => 'site']);
@@ -95,7 +95,7 @@ it('approves a requested return and sends the approval mail', function () {
 });
 
 it('rejects approving a non-requested return', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = makeReturn(['status' => OrderReturn::STATUS_HANDLED])['return'];
 
     $this->postJson("/api/v1/returns/{$return->id}/approve", [], ['X-Site-Id' => 'site'])->assertStatus(422);
@@ -103,7 +103,7 @@ it('rejects approving a non-requested return', function () {
 
 it('requires a reason to reject', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = makeReturn()['return'];
 
     $this->postJson("/api/v1/returns/{$return->id}/reject", [], ['X-Site-Id' => 'site'])->assertStatus(422);
@@ -114,7 +114,7 @@ it('requires a reason to reject', function () {
 });
 
 it('handles a return: status handled, and restock bumps returned_quantity when opted in', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     ['return' => $return, 'orderProduct' => $op] = makeReturn(['status' => OrderReturn::STATUS_APPROVED]);
 
     $res = $this->postJson("/api/v1/returns/{$return->id}/handle", ['restock' => true, 'refund' => false], ['X-Site-Id' => 'site']);
@@ -125,7 +125,7 @@ it('handles a return: status handled, and restock bumps returned_quantity when o
 });
 
 it('handles a return without restock and leaves returned_quantity untouched', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     ['return' => $return, 'orderProduct' => $op] = makeReturn(['status' => OrderReturn::STATUS_APPROVED]);
 
     $this->postJson("/api/v1/returns/{$return->id}/handle", [], ['X-Site-Id' => 'site'])->assertOk();
@@ -135,21 +135,21 @@ it('handles a return without restock and leaves returned_quantity untouched', fu
 
 it('rejects write actions without the orders.write ability', function () {
     // Een niet-geprivilegieerde gebruiker (geen rollen) heeft geen orders.write.
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
     $return = makeReturn()['return'];
 
     $this->postJson("/api/v1/returns/{$return->id}/approve", [], ['X-Site-Id' => 'site'])->assertStatus(403);
 });
 
 it('returns 404 for a label when none is present', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = makeReturn()['return'];
 
     $this->getJson("/api/v1/returns/{$return->id}/label", ['X-Site-Id' => 'site'])->assertNotFound();
 });
 
 it('returns email defaults for the compose sheet', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $res = $this->getJson('/api/v1/returns/email-defaults', ['X-Site-Id' => 'site']);
 
@@ -161,7 +161,7 @@ it('returns email defaults for the compose sheet', function () {
 
 it('sends a custom email to the customer and logs it', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     ['return' => $return, 'order' => $order] = makeReturn();
 
     $res = $this->postJson("/api/v1/returns/{$return->id}/email", [
@@ -178,7 +178,7 @@ it('sends a custom email to the customer and logs it', function () {
 
 it('requires subject and message to send an email', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = makeReturn()['return'];
 
     $this->postJson("/api/v1/returns/{$return->id}/email", ['subject' => 'x'], ['X-Site-Id' => 'site'])->assertStatus(422);
@@ -187,7 +187,7 @@ it('requires subject and message to send an email', function () {
 });
 
 it('gates sending an email behind orders.write', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
     $return = makeReturn()['return'];
 
     $this->postJson("/api/v1/returns/{$return->id}/email", ['subject' => 'x', 'message' => 'y'], ['X-Site-Id' => 'site'])->assertStatus(403);

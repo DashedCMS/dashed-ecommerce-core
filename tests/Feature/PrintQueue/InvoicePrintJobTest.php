@@ -36,7 +36,7 @@ function makeInvoicePrintOrder(string $siteId = 'site', array $overrides = []): 
 }
 
 it('creates an Invoice PrintJob via OrderController::print with type=invoice', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     Printer::factory()->create(['type' => PrinterType::PackingSlip, 'is_active' => true]);
     $order = makeInvoicePrintOrder();

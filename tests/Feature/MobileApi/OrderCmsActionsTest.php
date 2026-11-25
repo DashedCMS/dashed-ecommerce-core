@@ -19,7 +19,7 @@ function makeCmsActionOrder(array $attributes = [], string $siteId = 'site'): Or
 
 it('verstuurt een bevestigingsmail naar het opgegeven adres', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeCmsActionOrder();
 
     $res = $this->postJson("/api/v1/orders/{$order->id}/send-confirmation", [
@@ -31,7 +31,7 @@ it('verstuurt een bevestigingsmail naar het opgegeven adres', function () {
 
 it('valt terug op het order-e-mailadres als er geen adres is meegestuurd', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeCmsActionOrder();
 
     $this->postJson("/api/v1/orders/{$order->id}/send-confirmation", [], ['X-Site-Id' => 'site'])
@@ -41,7 +41,7 @@ it('valt terug op het order-e-mailadres als er geen adres is meegestuurd', funct
 
 it('genereert de factuur opnieuw voor een order met een echte factuur', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeCmsActionOrder();
 
     $this->postJson("/api/v1/orders/{$order->id}/regenerate-invoice", [], ['X-Site-Id' => 'site'])
@@ -51,7 +51,7 @@ it('genereert de factuur opnieuw voor een order met een echte factuur', function
 
 it('weigert factuur-regeneratie op een proforma-order', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeCmsActionOrder(['invoice_id' => 'PROFORMA']);
 
     $this->postJson("/api/v1/orders/{$order->id}/regenerate-invoice", [], ['X-Site-Id' => 'site'])

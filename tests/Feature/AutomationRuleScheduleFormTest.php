@@ -20,7 +20,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\C
  * ongeacht test-volgorde.
  */
 beforeEach(function () {
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['is_superadmin' => true]);
     test()->actingAs($user, 'sanctum');
 });
 

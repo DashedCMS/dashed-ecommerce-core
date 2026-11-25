@@ -6,7 +6,7 @@ use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Filament\Pages\Settings\DoelenSettingsPage;
 
 it('persists revenue and orders targets for all periods', function () {
-    $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     Livewire::test(DoelenSettingsPage::class)
         ->fillForm([
@@ -28,7 +28,7 @@ it('persists revenue and orders targets for all periods', function () {
 });
 
 it('loads existing targets into the form and treats empty as zero', function () {
-    $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     Customsetting::set('dashboard_revenue_target_month', 9999, 'site');
 
     Livewire::test(DoelenSettingsPage::class)

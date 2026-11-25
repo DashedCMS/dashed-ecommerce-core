@@ -26,7 +26,7 @@ function makeOrderWithProducts(array $attributes, array $products): Order
 }
 
 it('includes ordered products (name x quantity) in the order list', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     makeOrderWithProducts([], [['Testproduct A', 2], ['Testproduct B', 1]]);
 
     $res = $this->getJson('/api/v1/orders', ['X-Site-Id' => 'site']);
@@ -39,7 +39,7 @@ it('includes ordered products (name x quantity) in the order list', function () 
 });
 
 it('filters retour_status "unhandled" to orders with a return that is not handled', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $waiting = makeOrderWithProducts(['retour_status' => 'waiting_for_return'], [['P', 1]]);
     $returned = makeOrderWithProducts(['retour_status' => 'returned'], [['P', 1]]);
@@ -56,7 +56,7 @@ it('filters retour_status "unhandled" to orders with a return that is not handle
 });
 
 it('filters retour_status "handled" directly on the column', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $handled = makeOrderWithProducts(['retour_status' => 'handled'], [['P', 1]]);
     makeOrderWithProducts(['retour_status' => 'waiting_for_return'], [['P', 1]]);

@@ -7,7 +7,7 @@ use Dashed\DashedCore\Models\User;
  * user-accounts met hun id terug (i.t.t. de e-mail-aggregatie van /customers).
  */
 it('zoekt klant-accounts op naam en geeft de user-id terug', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $klant = User::factory()->create(['first_name' => 'Vera', 'last_name' => 'Jansen', 'email' => 'vera@example.com']);
     User::factory()->create(['first_name' => 'Piet', 'last_name' => 'Klaassen', 'email' => 'piet@example.com']);
 
@@ -20,7 +20,7 @@ it('zoekt klant-accounts op naam en geeft de user-id terug', function () {
 });
 
 it('geeft een lege lijst bij een te korte zoekterm', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $this->getJson('/api/v1/customers/accounts?search=a', ['X-Site-Id' => 'default'])
         ->assertOk()

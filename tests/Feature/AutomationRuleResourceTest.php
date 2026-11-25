@@ -18,7 +18,7 @@ use Dashed\DashedEcommerceCore\Filament\Resources\AutomationRuleResource\Pages\C
  */
 function actingAsCmsAdmin(): User
 {
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['is_superadmin' => true]);
     test()->actingAs($user, 'sanctum');
 
     return $user;

@@ -49,6 +49,6 @@ class InvoiceAccess
             return true;
         }
 
-        return in_array($user->role, ['superadmin', 'admin'], true) || $user->roles()->exists();
+        return $user->hasPanelAccess();
     }
 }

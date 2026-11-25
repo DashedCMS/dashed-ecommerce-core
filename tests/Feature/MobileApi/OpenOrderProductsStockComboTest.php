@@ -46,7 +46,7 @@ function stockComboLine(string $name, ?Product $product, int $qty, ?string $atOr
 }
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     // A: 2 + 1 open en al afgeboekt, voorraad nu -1 → fysiek 2: oudste regel gedekt, nieuwste niet.
     $a = stockComboProduct('Alpha', ['stock' => -1]);

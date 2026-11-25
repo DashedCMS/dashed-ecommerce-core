@@ -11,7 +11,7 @@ beforeEach(function () {
     Mail::fake();
     Queue::fake();
     registerMobileSites();
-    $user = User::create(['first_name' => 'A', 'email' => 'api-' . uniqid() . '@x.nl', 'password' => bcrypt('x'), 'role' => 'admin']);
+    $user = User::create(['first_name' => 'A', 'email' => 'api-' . uniqid() . '@x.nl', 'password' => bcrypt('x'), 'is_superadmin' => true]);
     Sanctum::actingAs($user, ['orders.read', 'orders.write']);
 });
 

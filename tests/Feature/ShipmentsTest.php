@@ -31,7 +31,7 @@ function makeShipmentOrder(string $siteId = 'site', array $overrides = []): Orde
 }
 
 it('aggregates shipments from both carriers for the active site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = makeShipmentOrder();
 
@@ -73,7 +73,7 @@ it('aggregates shipments from both carriers for the active site', function () {
 });
 
 it('filters shipments by carrier', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = makeShipmentOrder();
     VeloydOrder::create(['order_id' => $order->id, 'shipment_id' => 'V-1', 'carrier' => 'PostNL', 'status' => 'shipped']);
@@ -87,7 +87,7 @@ it('filters shipments by carrier', function () {
 });
 
 it('filters shipments by is_return', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = makeShipmentOrder();
     VeloydOrder::create(['order_id' => $order->id, 'shipment_id' => 'V-1', 'carrier' => 'PostNL', 'status' => 'shipped', 'is_return' => false]);
@@ -102,7 +102,7 @@ it('filters shipments by is_return', function () {
 });
 
 it('scopes shipments to the active site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $mine = makeShipmentOrder('site');
     $other = makeShipmentOrder('other');
@@ -118,13 +118,13 @@ it('scopes shipments to the active site', function () {
 });
 
 it('rejects shipments without the orders.read ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
 
     $this->getJson('/api/v1/shipments', ['X-Site-Id' => 'site'])->assertStatus(403);
 });
 
 it('wires the return-label route, gated by orders.write, with a structured error when no carrier is known', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = makeShipmentOrder();
 
@@ -137,7 +137,7 @@ it('wires the return-label route, gated by orders.write, with a structured error
 });
 
 it('rejects the return-label action without the orders.write ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
 
     $order = makeShipmentOrder();
 

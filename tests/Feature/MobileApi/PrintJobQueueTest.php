@@ -10,7 +10,7 @@ use Dashed\DashedEcommerceCore\Enums\PrintJobStatus;
  * (pariteit met de Filament PrintJobResource-acties).
  */
 it('print-jobs: lijst toont de wachtrij met order en statusfilter', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = Order::create([
         'site_id' => 'site',
@@ -34,7 +34,7 @@ it('print-jobs: lijst toont de wachtrij met order en statusfilter', function () 
 });
 
 it('print-jobs: retry zet een mislukte taak terug in de wachtrij, cancel annuleert', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $failed = PrintJob::create(['type' => 'packing_slip', 'status' => PrintJobStatus::Failed, 'error_message' => 'x', 'attempts' => 2]);
 

@@ -9,7 +9,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
  * priority-filter op de orderlijst.
  */
 it('orders: prioriteit togglen, zien in de lijst en erop filteren', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $a = Order::create(['site_id' => 'site', 'email' => 'a@example.com', 'invoice_id' => 'INV-A' . uniqid(), 'status' => 'paid']);
     $b = Order::create(['site_id' => 'site', 'email' => 'b@example.com', 'invoice_id' => 'INV-B' . uniqid(), 'status' => 'paid']);
@@ -36,7 +36,7 @@ it('orders: prioriteit togglen, zien in de lijst en erop filteren', function () 
 });
 
 it('open-order-products: prioriteit-orders staan altijd bovenaan', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     // Nieuwste order zónder prioriteit, oudere mét — prioriteit moet winnen
     // van de standaard-sortering (nieuwste eerst).

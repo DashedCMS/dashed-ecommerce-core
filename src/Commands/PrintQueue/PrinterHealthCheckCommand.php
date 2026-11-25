@@ -76,6 +76,6 @@ class PrinterHealthCheckCommand extends Command
      */
     private function resolveAdmins(): \Illuminate\Support\Collection
     {
-        return User::query()->whereIn('role', ['admin', 'superadmin'])->get();
+        return User::query()->panelUsers()->get();
     }
 }

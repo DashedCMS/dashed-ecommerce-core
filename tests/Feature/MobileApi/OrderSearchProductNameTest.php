@@ -25,7 +25,7 @@ function makeOrderWithProductName(string $productName): Order
 }
 
 it('order search matches on ordered product name (multi-term AND)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $hit = makeOrderWithProductName('Japandi Hond - Zwart - 5CM');
     $miss = makeOrderWithProductName('Losse vaas - 20CM - Blauw');

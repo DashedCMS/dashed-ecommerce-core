@@ -11,7 +11,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
  * verdwenen en een origin-filter (bv. POS) onterecht 0 resultaten gaf.
  */
 it('open-order-products: toont regels zonder sku bij een origin-filter', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = Order::create([
         'site_id' => 'site',
@@ -38,7 +38,7 @@ it('open-order-products: toont regels zonder sku bij een origin-filter', functio
 });
 
 it('open-order-products: sluit cost-regels (shipping/payment) nog steeds uit', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = Order::create([
         'site_id' => 'site',

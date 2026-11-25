@@ -52,7 +52,7 @@ function approvedReturn(string $siteId = 'default'): OrderReturn
 }
 
 it('sluit een goedgekeurde retour zonder creditering (met reden)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = approvedReturn();
 
     $this->postJson("/api/v1/returns/{$return->id}/close", ['reason' => 'Coulance'], ['X-Site-Id' => 'default'])
@@ -64,14 +64,14 @@ it('sluit een goedgekeurde retour zonder creditering (met reden)', function () {
 });
 
 it('weigert sluiten zonder reden (422)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = approvedReturn();
 
     $this->postJson("/api/v1/returns/{$return->id}/close", [], ['X-Site-Id' => 'default'])->assertStatus(422);
 });
 
 it('weigert sluiten van een niet-goedgekeurde retour (422)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     [$order, $op] = paidOrderWithProduct();
     $return = OrderReturn::create(['order_id' => $order->id, 'site_id' => 'default', 'email' => 'k@e.nl', 'status' => OrderReturn::STATUS_REQUESTED, 'requested_at' => now()]);
 
@@ -80,7 +80,7 @@ it('weigert sluiten van een niet-goedgekeurde retour (422)', function () {
 
 it('registreert een terugbetaling op een verwerkte retour met creditorder', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = approvedReturn();
     // Handmatig de verwerkte-staat opbouwen (ReturnProcessor/creditorder-flow is te
     // zwaar voor de harness): een creditorder van -20 koppelen en op 'handled' zetten.
@@ -96,7 +96,7 @@ it('registreert een terugbetaling op een verwerkte retour met creditorder', func
 });
 
 it('weigert een terugbetaling boven het terugbetaalbare bedrag (422)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = approvedReturn();
     $credit = Order::create(['site_id' => 'default', 'email' => 'klant@example.com', 'invoice_id' => 'CREDIT-' . strtoupper(uniqid()), 'status' => 'return', 'total' => -20.00]);
     $return->update(['status' => OrderReturn::STATUS_HANDLED, 'handled_at' => now(), 'credit_order_id' => $credit->id]);
@@ -105,7 +105,7 @@ it('weigert een terugbetaling boven het terugbetaalbare bedrag (422)', function 
 });
 
 it('geeft terugbetaal-methodes terug (incl. Bankoverschrijving en Contant)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $methods = $this->getJson('/api/v1/returns/refund-methods', ['X-Site-Id' => 'default'])->assertOk()->json('methods');
     expect($methods)->toContain('Bankoverschrijving')->toContain('Contant');
@@ -113,7 +113,7 @@ it('geeft terugbetaal-methodes terug (incl. Bankoverschrijving en Contant)', fun
 
 it('plaatst een admin-antwoord in de thread en mailt de klant', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $return = approvedReturn();
 
     $res = $this->postJson("/api/v1/returns/{$return->id}/reply", ['message' => 'We hebben je pakket ontvangen.'], ['X-Site-Id' => 'default']);
@@ -123,7 +123,7 @@ it('plaatst een admin-antwoord in de thread en mailt de klant', function () {
 });
 
 it('toont retourneerbare regels + actieve redenen voor een order', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     [$order, $op] = paidOrderWithProduct(qty: 3, returned: 1);
     ReturnReason::create(['site_id' => 'default', 'label' => ['nl' => 'Beschadigd', 'en' => 'Damaged'], 'is_active' => true, 'sort_order' => 1]);
 
@@ -135,7 +135,7 @@ it('toont retourneerbare regels + actieve redenen voor een order', function () {
 
 it('meldt als beheerder een nieuwe RMA-retour aan (direct goedgekeurd)', function () {
     Mail::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     [$order, $op] = paidOrderWithProduct(qty: 3);
 
     $res = $this->postJson("/api/v1/orders/{$order->id}/register-return", [

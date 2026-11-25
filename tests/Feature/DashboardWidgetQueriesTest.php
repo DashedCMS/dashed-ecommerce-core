@@ -67,7 +67,7 @@ function runWidget(object $widget, string $method): array
 }
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     Cache::flush();
 });
 

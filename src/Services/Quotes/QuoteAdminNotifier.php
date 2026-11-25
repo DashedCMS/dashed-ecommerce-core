@@ -24,7 +24,7 @@ class QuoteAdminNotifier
     public static function answered(Quote $quote): void
     {
         rescue(function () use ($quote) {
-            $admins = User::query()->whereIn('role', ['admin', 'superadmin'])->get();
+            $admins = User::query()->panelUsers()->get();
 
             if ($admins->isNotEmpty()) {
                 Notification::send($admins, new QuoteAnsweredNotification($quote));

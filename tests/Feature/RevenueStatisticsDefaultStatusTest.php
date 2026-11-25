@@ -18,7 +18,7 @@ function makeRevenueOrder(string $status, float $total): Order
 }
 
 it('telt standaard alleen orders met betalingsverplichting in de omzet', function () {
-    $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     makeRevenueOrder('paid', 100);
     makeRevenueOrder('cancelled', 999);

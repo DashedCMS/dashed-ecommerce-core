@@ -22,7 +22,7 @@ function makeDiscountCode(array $attributes = []): DiscountCode
 }
 
 it('lists only discount codes for the active site, newest first', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $first = makeDiscountCode(['name' => 'Eerste']);
     $second = makeDiscountCode(['name' => 'Tweede']);
@@ -37,7 +37,7 @@ it('lists only discount codes for the active site, newest first', function () {
 });
 
 it('filters the list by search on name and code', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     makeDiscountCode(['name' => 'Zomeractie', 'code' => 'ZOMER']);
     makeDiscountCode(['name' => 'Winteractie', 'code' => 'WINTER']);
@@ -50,7 +50,7 @@ it('filters the list by search on name and code', function () {
 });
 
 it('creates a percentage discount code', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $response = $this->postJson('/api/v1/discounts', [
         'name' => 'Nieuwe korting',
@@ -73,7 +73,7 @@ it('creates a percentage discount code', function () {
 });
 
 it('creates an amount discount code', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $response = $this->postJson('/api/v1/discounts', [
         'name' => 'Tientje',
@@ -89,7 +89,7 @@ it('creates an amount discount code', function () {
 });
 
 it('rejects a duplicate code', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     makeDiscountCode(['code' => 'DUPLICATE']);
 
     $this->postJson('/api/v1/discounts', [
@@ -103,7 +103,7 @@ it('rejects a duplicate code', function () {
 });
 
 it('rejects a percentage above 100', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $this->postJson('/api/v1/discounts', [
         'name' => 'Teveel',
@@ -116,7 +116,7 @@ it('rejects a percentage above 100', function () {
 });
 
 it('requires stock when use_stock is true', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $this->postJson('/api/v1/discounts', [
         'name' => 'Voorraad',
@@ -130,7 +130,7 @@ it('requires stock when use_stock is true', function () {
 });
 
 it('updates a discount code', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $code = makeDiscountCode(['name' => 'Oud', 'code' => 'OUD']);
 
     $response = $this->putJson("/api/v1/discounts/{$code->id}", [
@@ -148,7 +148,7 @@ it('updates a discount code', function () {
 });
 
 it('deletes a discount code', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $code = makeDiscountCode();
 
     $this->deleteJson("/api/v1/discounts/{$code->id}", [], ['X-Site-Id' => 'site'])
@@ -159,7 +159,7 @@ it('deletes a discount code', function () {
 });
 
 it('does not find a discount code from another site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $code = makeDiscountCode(['site_ids' => ['other']]);
 
     $this->getJson("/api/v1/discounts/{$code->id}", ['X-Site-Id' => 'site'])
@@ -167,7 +167,7 @@ it('does not find a discount code from another site', function () {
 });
 
 it('rejects discount writes without the discounts.write ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
 
     $this->postJson('/api/v1/discounts', [
         'name' => 'Nope',

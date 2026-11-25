@@ -37,7 +37,7 @@ function makeStockProduct(int $stock = 10): Product
 }
 
 it('applies a stock update with an op_id only once on replay', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $product = makeStockProduct(10);
 
     $opId = 'op-' . uniqid();
@@ -65,7 +65,7 @@ it('applies a stock update with an op_id only once on replay', function () {
 });
 
 it('applies every stock update when no op_id is provided', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $product = makeStockProduct(10);
 
     $this->putJson("/api/v1/products/{$product->id}", ['stock' => 30], ['X-Site-Id' => 'site'])

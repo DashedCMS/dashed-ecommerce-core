@@ -8,7 +8,7 @@ use Dashed\DashedCore\Models\User;
  * uit de per-order actielijst te houden, niet uit de catalogus).
  */
 it('lists the seven sequenceable fulfil steps regardless of visible, with a filled status select', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $res = $this->getJson('/api/v1/order-actions/catalog', ['X-Site-Id' => 'site']);
 
@@ -33,7 +33,7 @@ it('lists the seven sequenceable fulfil steps regardless of visible, with a fill
 });
 
 it('exposes key/label/group/icon for every catalog entry', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $res = $this->getJson('/api/v1/order-actions/catalog', ['X-Site-Id' => 'site']);
 

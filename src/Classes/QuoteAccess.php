@@ -67,6 +67,6 @@ class QuoteAccess
             return false;
         }
 
-        return in_array($user->role, ['superadmin', 'admin'], true) || $user->roles()->exists();
+        return $user->hasPanelAccess();
     }
 }

@@ -27,7 +27,7 @@ function makeDupProduct(): Product
 
 it('dupliceert een product tot een nieuw product met purchases 0 en een nieuw sku', function () {
     Queue::fake();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $source = makeDupProduct();
 
     $res = $this->postJson("/api/v1/products/{$source->id}/duplicate", [], ['X-Site-Id' => 'site'])
@@ -44,7 +44,7 @@ it('dupliceert een product tot een nieuw product met purchases 0 en een nieuw sk
 
 it('vereist het products.write-recht voor dupliceren', function () {
     Queue::fake();
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
     $source = makeDupProduct();
 
     $this->postJson("/api/v1/products/{$source->id}/duplicate", [], ['X-Site-Id' => 'site'])
@@ -53,7 +53,7 @@ it('vereist het products.write-recht voor dupliceren', function () {
 
 it('geeft de mutatielog van een product terug', function () {
     Queue::fake();
-    $me = User::factory()->create(['role' => 'admin']);
+    $me = User::factory()->create(['is_superadmin' => true]);
     $this->actingAs($me, 'sanctum');
     $source = makeDupProduct();
 

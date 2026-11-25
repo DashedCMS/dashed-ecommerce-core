@@ -9,7 +9,7 @@ use Dashed\DashedCore\Models\User;
  * én sequenceable is (dezelfde notie als het catalog-endpoint, Task 2).
  */
 it('returns the default sequence when nothing is stored', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $keys = array_column($this->getJson('/api/v1/settings/fulfil-flow', ['X-Site-Id' => 'site'])->json('steps'), 'key');
 
@@ -17,7 +17,7 @@ it('returns the default sequence when nothing is stored', function () {
 });
 
 it('stores a valid sequence and reads it back', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $steps = [['key' => 'print_label', 'params' => []], ['key' => 'mark_packed', 'params' => []]];
     $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => $steps], ['X-Site-Id' => 'site'])->assertOk();
@@ -27,14 +27,14 @@ it('stores a valid sequence and reads it back', function () {
 });
 
 it('rejects a non-sequenceable or unknown key with 422', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => [['key' => 'cancel']]], ['X-Site-Id' => 'site'])->assertStatus(422);
     $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => [['key' => 'zzz']]], ['X-Site-Id' => 'site'])->assertStatus(422);
 });
 
 it('accepts an empty steps array (the button then does nothing)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $res = $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => []], ['X-Site-Id' => 'site']);
 
@@ -42,7 +42,7 @@ it('accepts an empty steps array (the button then does nothing)', function () {
 });
 
 it('round-trips an explicitly stored empty sequence on the next GET', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $this->putJson('/api/v1/settings/fulfil-flow', ['steps' => []], ['X-Site-Id' => 'site'])->assertOk();
 
@@ -52,7 +52,7 @@ it('round-trips an explicitly stored empty sequence on the next GET', function (
 });
 
 it('reindexes a sparse/associative steps payload into a proper JSON list', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     // Sparse keys ("0" and "2") mimic a client that removed a middle step
     // and re-sent without reindexing, or a form-encoded PUT.

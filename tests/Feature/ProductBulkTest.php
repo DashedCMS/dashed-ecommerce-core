@@ -32,7 +32,7 @@ function makeBulkProduct(array $over = []): Product
 
 function actAsAdmin(): void
 {
-    test()->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    test()->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 }
 
 it('zet meerdere producten in één keer op verborgen', function () {
@@ -100,7 +100,7 @@ it('markeert onbekende / andere-site producten als mislukt', function () {
 
 it('vereist het products.write-recht', function () {
     Queue::fake();
-    test()->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    test()->actingAs(User::factory()->create(), 'sanctum');
 
     test()->postJson('/api/v1/products/bulk', [
         'ids' => [1], 'action' => 'visibility', 'value' => false,

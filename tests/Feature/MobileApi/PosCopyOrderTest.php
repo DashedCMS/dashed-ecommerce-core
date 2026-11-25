@@ -6,7 +6,9 @@ use Dashed\DashedEcommerceCore\Models\POSCart;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 
 it('kopieert een order naar de kassa-cart', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
+    // De kassa in de app vraagt, net als in het CMS, pos_enabled op de site.
+    \Dashed\DashedCore\Models\Customsetting::set('pos_enabled', true);
 
     $order = Order::create([
         'site_id' => 'site',
@@ -37,7 +39,9 @@ it('kopieert een order naar de kassa-cart', function () {
 });
 
 it('geeft 404 als de kassa-sessie niet bestaat', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
+    // De kassa in de app vraagt, net als in het CMS, pos_enabled op de site.
+    \Dashed\DashedCore\Models\Customsetting::set('pos_enabled', true);
     $order = Order::create(['site_id' => 'site', 'email' => 'a@b.nl', 'status' => 'paid']);
 
     $this->postJson('/api/v1/point-of-sale/copy-order-to-cart', [

@@ -52,7 +52,7 @@ function bindFakeMediaHelper(): void
 
 it('creates a product with name, price and an uploaded image', function () {
     bindFakeMediaHelper();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $response = $this->postJson('/api/v1/products', [
         'name' => 'Test product',
@@ -79,7 +79,7 @@ it('creates a product with name, price and an uploaded image', function () {
 
 it('updates a product price and appends an image', function () {
     bindFakeMediaHelper();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $group = ProductGroup::create([
         'name' => ['en' => 'Group'], 'slug' => ['en' => 'group-' . uniqid()],
@@ -111,7 +111,7 @@ it('updates a product price and appends an image', function () {
 
 it('rejects product writes without the products.write ability', function () {
     bindFakeMediaHelper();
-    $user = User::factory()->create(['role' => 'customer']);
+    $user = User::factory()->create();
     $this->actingAs($user, 'sanctum');
 
     $this->postJson('/api/v1/products', [
@@ -122,7 +122,7 @@ it('rejects product writes without the products.write ability', function () {
 
 it('validates required fields on create', function () {
     bindFakeMediaHelper();
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $this->postJson('/api/v1/products', [
         // name + price ontbreken

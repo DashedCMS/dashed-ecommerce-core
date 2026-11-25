@@ -6,7 +6,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueCards;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\RevenueChart;
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 });
 
 it('toont de grafiek zonder gegevens zonder eruit te klappen', function () {

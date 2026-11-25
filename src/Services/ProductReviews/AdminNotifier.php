@@ -19,7 +19,7 @@ class AdminNotifier
 {
     public static function notify(string $title, string $body, ?string $url = null, ?string $siteId = null): void
     {
-        foreach (User::query()->whereIn('role', ['admin', 'superadmin'])->get() as $admin) {
+        foreach (User::query()->panelUsers()->get() as $admin) {
             rescue(fn () => Notification::make()
                 ->title($title)
                 ->body($body)

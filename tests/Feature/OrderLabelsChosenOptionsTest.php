@@ -22,7 +22,7 @@ it('returns chosen_options with mapped basis fields and readable extra options',
         $this->markTestSkipped('dashed-ecommerce-myparcel is niet geladen in deze testomgeving.');
     }
 
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     // labels() bouwt ook de 'providers'-lijst op (labelProviders()), die de
     // API-sleutel via MyParcel::apiKey() met een strict `string`-returntype
@@ -71,7 +71,7 @@ it('never errors and only shows the basis fields when options is null (legacy re
         $this->markTestSkipped('dashed-ecommerce-myparcel is niet geladen in deze testomgeving.');
     }
 
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     // labels() bouwt ook de 'providers'-lijst op (labelProviders()), die de
     // API-sleutel via MyParcel::apiKey() met een strict `string`-returntype

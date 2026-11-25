@@ -255,17 +255,17 @@ class OrderSettingsPage extends Page
                     ->state('Stel extra opties in voor de notificaties.')
                     ->columnSpan(2),
                 TagsInput::make("notification_invoice_emails_{$site['id']}")
-                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->suggestions(User::query()->panelUsers()->pluck('email')->toArray())
                     ->label(__('Emails om de bevestigingsmail van een bestelling naar te sturen'))
                     ->placeholder(__('Voer een email in'))
                     ->reactive(),
                 TagsInput::make("notification_low_stock_emails_{$site['id']}")
-                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->suggestions(User::query()->panelUsers()->pluck('email')->toArray())
                     ->label(__('Emails om de notificaties van lage voorraad naartoe te sturen'))
                     ->placeholder(__('Voer een email in'))
                     ->reactive(),
                 TagsInput::make("notification_bcc_order_emails_{$site['id']}")
-                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->suggestions(User::query()->panelUsers()->pluck('email')->toArray())
                     ->label(__('Emails om alle bestel notificaties van de klant naar te sturen in BCC'))
                     ->placeholder(__('Voer een email in'))
                     ->reactive(),
@@ -275,7 +275,7 @@ class OrderSettingsPage extends Page
                     ->reactive()
                     ->columnSpanFull(),
                 TagsInput::make("notification_checkout_error_emails_{$site['id']}")
-                    ->suggestions(User::where('role', 'admin')->pluck('email')->toArray())
+                    ->suggestions(User::query()->panelUsers()->pluck('email')->toArray())
                     ->label(__('Emails voor checkoutfouten'))
                     ->helperText(__('Leeg = de emails voor de bevestigingsmail van een bestelling.'))
                     ->placeholder(__('Voer een email in'))

@@ -23,7 +23,7 @@ function noteOrder(): Order
 }
 
 it('order-notitie: mailt de klant bij publiek + e-mailoptie', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = noteOrder();
 
     $res = $this->postJson("/api/v1/orders/{$order->id}/notes", [
@@ -38,7 +38,7 @@ it('order-notitie: mailt de klant bij publiek + e-mailoptie', function () {
 });
 
 it('order-notitie: mailt NIET bij een interne (niet-publieke) notitie', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = noteOrder();
 
     $this->postJson("/api/v1/orders/{$order->id}/notes", [

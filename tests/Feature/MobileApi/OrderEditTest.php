@@ -41,7 +41,7 @@ function makeEditableOrder(array $attributes = [], string $siteId = 'site'): Ord
 }
 
 it('bewerkt klant- en adresgegevens van een order', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder();
 
     $res = $this->patchJson("/api/v1/orders/{$order->id}/details", [
@@ -60,7 +60,7 @@ it('bewerkt klant- en adresgegevens van een order', function () {
 });
 
 it('bewerkt factuuradres en bedrijfsgegevens onafhankelijk van het verzendadres', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder();
 
     $res = $this->patchJson("/api/v1/orders/{$order->id}/details", [
@@ -85,7 +85,7 @@ it('bewerkt factuuradres en bedrijfsgegevens onafhankelijk van het verzendadres'
 });
 
 it('valideert email en weigert onbekende velden niet stilzwijgend te accepteren als leeg', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder();
 
     $this->patchJson("/api/v1/orders/{$order->id}/details", [
@@ -94,7 +94,7 @@ it('valideert email en weigert onbekende velden niet stilzwijgend te accepteren 
 });
 
 it('returns 404 voor een order op een andere site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $other = makeEditableOrder([], 'other');
 
     $this->patchJson("/api/v1/orders/{$other->id}/details", [
@@ -103,7 +103,7 @@ it('returns 404 voor een order op een andere site', function () {
 });
 
 it('weigert bewerken zonder de orders.write ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
     $order = makeEditableOrder();
 
     $this->patchJson("/api/v1/orders/{$order->id}/details", [
@@ -112,7 +112,7 @@ it('weigert bewerken zonder de orders.write ability', function () {
 });
 
 it('geeft een breakdown-preview terug voor een bewerkbare order zonder de order te muteren', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder(); // status 'paid' → is_modifiable true, in_place false (al betaald)
     $orderProduct = OrderProduct::create([
         'order_id' => $order->id,
@@ -154,7 +154,7 @@ it('geeft een breakdown-preview terug voor een bewerkbare order zonder de order 
 });
 
 it('leidt de regelkorting af van het bronorderproduct in de preview', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder();
     $orderProduct = OrderProduct::create([
         'order_id' => $order->id,
@@ -183,7 +183,7 @@ it('leidt de regelkorting af van het bronorderproduct in de preview', function (
 });
 
 it('valideert de regels van een modify-preview', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder();
 
     $this->postJson("/api/v1/orders/{$order->id}/modify/preview", [
@@ -192,7 +192,7 @@ it('valideert de regels van een modify-preview', function () {
 });
 
 it('returns 404 voor een modify-preview op een order van een andere site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $other = makeEditableOrder([], 'other');
 
     $this->postJson("/api/v1/orders/{$other->id}/modify/preview", [
@@ -203,7 +203,7 @@ it('returns 404 voor een modify-preview op een order van een andere site', funct
 });
 
 it('weigert een modify-preview zonder de orders.write ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
     $order = makeEditableOrder();
 
     $this->postJson("/api/v1/orders/{$order->id}/modify/preview", [
@@ -214,7 +214,7 @@ it('weigert een modify-preview zonder de orders.write ability', function () {
 });
 
 it('past een productwijziging in-place toe voor een onbetaalde, bewerkbare order', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     fakeOrderModificationEvents();
     // Onbetaald, geen echt factuurnummer, geen geslaagde betaling → canModifyInPlace() true.
     $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
@@ -254,7 +254,7 @@ it('past een productwijziging in-place toe voor een onbetaalde, bewerkbare order
 });
 
 it('vervangt een betaalde order door een nieuwe met creditorder bij een productwijziging', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     fakeOrderModificationEvents();
     // Al betaald met een echt factuurnummer → canModifyInPlace() false, isModifiable() true.
     $order = makeEditableOrder(['status' => 'paid']);
@@ -299,7 +299,7 @@ it('vervangt een betaalde order door een nieuwe met creditorder bij een productw
 });
 
 it('weigert een modify voor een order die niet meer bewerkbaar is', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder(['status' => 'cancelled']);
 
     $res = $this->patchJson("/api/v1/orders/{$order->id}/modify", [
@@ -312,7 +312,7 @@ it('weigert een modify voor een order die niet meer bewerkbaar is', function () 
 });
 
 it('returns 404 bij modify van een order op een andere site', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $other = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA'], 'other');
 
     $this->patchJson("/api/v1/orders/{$other->id}/modify", [
@@ -323,7 +323,7 @@ it('returns 404 bij modify van een order op een andere site', function () {
 });
 
 it('weigert modify zonder de orders.write ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
     $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
 
     $this->patchJson("/api/v1/orders/{$order->id}/modify", [
@@ -334,7 +334,7 @@ it('weigert modify zonder de orders.write ability', function () {
 });
 
 it('weigert een order_product_id die bij een andere order hoort in de modify-preview', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeEditableOrder();
     $other = makeEditableOrder();
     $foreignOrderProduct = OrderProduct::create([
@@ -362,7 +362,7 @@ it('weigert een order_product_id die bij een andere order hoort in de modify-pre
 });
 
 it('weigert een order_product_id die bij een andere order hoort bij modify', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     fakeOrderModificationEvents();
     $order = makeEditableOrder(['status' => 'pending', 'invoice_id' => 'PROFORMA']);
     $other = makeEditableOrder();

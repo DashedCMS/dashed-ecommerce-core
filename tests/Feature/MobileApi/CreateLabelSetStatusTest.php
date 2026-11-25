@@ -9,7 +9,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderController;
  * tegen de echte statussen en mag nooit als provider-override doorlekken.
  */
 it('create-label: weigert een onbekende set_fulfillment_status', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = Order::create([
         'site_id' => 'site',

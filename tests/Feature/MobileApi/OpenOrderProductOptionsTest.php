@@ -9,7 +9,7 @@ use Dashed\DashedEcommerceCore\Models\OrderProduct;
  * één regel — zelfde formaat als de Filament-kolom: "Naam: Waarde | Naam: Waarde".
  */
 it('open-order-products: geeft productopties mee als options-regel', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = Order::create([
         'site_id' => 'site',
@@ -48,7 +48,7 @@ it('open-order-products: geeft productopties mee als options-regel', function ()
 });
 
 it('open-order-products: zoekt ook op productopties (naam en waarde, ook met accenten)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $order = Order::create([
         'site_id' => 'site',

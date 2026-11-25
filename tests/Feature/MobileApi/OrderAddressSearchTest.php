@@ -24,7 +24,7 @@ function searchOrderIds(object $test, string $q): array
 }
 
 it('vindt een order op straat, postcode en plaats', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $hit = seedOrder(['first_name' => 'Anna', 'street' => 'Kerkstraat', 'house_nr' => '12', 'zip_code' => '2611AB', 'city' => 'Delft']);
     $miss = seedOrder(['first_name' => 'Bram', 'street' => 'Molenweg', 'zip_code' => '9999ZZ', 'city' => 'Assen']);
 
@@ -34,7 +34,7 @@ it('vindt een order op straat, postcode en plaats', function () {
 });
 
 it('vindt een order op het factuuradres', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $hit = seedOrder(['invoice_city' => 'Groningen', 'invoice_zip_code' => '9711LM']);
 
     expect(searchOrderIds($this, 'Groningen'))->toContain($hit->id);
@@ -42,7 +42,7 @@ it('vindt een order op het factuuradres', function () {
 });
 
 it('houdt multi-term AND aan (adres + naam samen)', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $hit = seedOrder(['first_name' => 'Anna', 'city' => 'Delft']);
     $miss = seedOrder(['first_name' => 'Anna', 'city' => 'Assen']);
 

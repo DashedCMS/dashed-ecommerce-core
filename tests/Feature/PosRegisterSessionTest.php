@@ -53,7 +53,9 @@ function makePaidPosOrder(float $total, PaymentMethod $method, string $siteId = 
 }
 
 it('opens a day, computes a per-method summary and closes with the correct difference', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
+    // De kassa in de app vraagt, net als in het CMS, pos_enabled op de site.
+    \Dashed\DashedCore\Models\Customsetting::set('pos_enabled', true);
     $headers = ['X-Site-Id' => 'site'];
 
     $cash = makePaymentMethod(true, 'Contant');
@@ -108,7 +110,9 @@ it('opens a day, computes a per-method summary and closes with the correct diffe
 });
 
 it('returns the already-open session when opening twice', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
+    // De kassa in de app vraagt, net als in het CMS, pos_enabled op de site.
+    \Dashed\DashedCore\Models\Customsetting::set('pos_enabled', true);
     $headers = ['X-Site-Id' => 'site'];
 
     $first = $this->postJson('/api/v1/point-of-sale/open-day', ['opening_float' => 100], $headers);
@@ -126,7 +130,9 @@ it('returns the already-open session when opening twice', function () {
 });
 
 it('returns 404 for day-summary when no session is open', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
+    // De kassa in de app vraagt, net als in het CMS, pos_enabled op de site.
+    \Dashed\DashedCore\Models\Customsetting::set('pos_enabled', true);
 
     $this->getJson('/api/v1/point-of-sale/day-summary', ['X-Site-Id' => 'site'])
         ->assertStatus(404)
@@ -134,7 +140,7 @@ it('returns 404 for day-summary when no session is open', function () {
 });
 
 it('rejects open-day without the pos.use ability', function () {
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
 
     $this->postJson('/api/v1/point-of-sale/open-day', ['opening_float' => 50], ['X-Site-Id' => 'site'])
         ->assertStatus(403);

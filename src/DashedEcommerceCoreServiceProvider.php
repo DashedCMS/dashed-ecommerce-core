@@ -2166,14 +2166,33 @@ MARKDOWN,
             $mobileApi->registerCapability('ecommerce', ['version' => $version]);
 
             $mobileApi->registerAbilities(['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use']);
-            $mobileApi->registerRoleAbilities([
-                'eigenaar' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use'],
-                'admin' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use'],
-                'shopbeheerder' => ['products.read', 'products.write', 'orders.read', 'orders.write', 'discounts.read', 'discounts.write', 'pos.use'],
-                'kassamedewerker' => ['products.read', 'orders.read', 'discounts.read', 'pos.use'],
-                'support-agent' => ['orders.read'],
-                'read-only' => ['products.read', 'orders.read', 'discounts.read'],
-            ]);
+            // De app volgt de CMS-rechten: elke app-ability leunt op de
+            // permissie van het bijbehorende scherm in het CMS. Routes waar
+            // het CMS strenger is (statistieken, retouren, klantaccounts,
+            // kassa, verkoopdoelen) vragen daarbovenop een eigen can:-check,
+            // zie routes/mobile-api.php.
+            if (method_exists($mobileApi, 'registerAbilityPermissions')) {
+                $mobileApi->registerAbilityPermissions([
+                    'products.read' => 'view_product',
+                    'products.write' => 'edit_product',
+                    'orders.read' => 'view_order',
+                    'orders.write' => 'edit_order',
+                    'discounts.read' => 'view_discount_code',
+                    'discounts.write' => 'edit_discount_code',
+                    'pos.use' => 'view_pos',
+                ]);
+            }
+
+            // Dagoverzicht in de app: de secties met omzet en bestellingen
+            // alleen voor wie in het CMS bestellingen mag zien.
+            if (method_exists($mobileApi, 'registerSummarySectionPermissions')) {
+                $mobileApi->registerSummarySectionPermissions([
+                    \Dashed\DashedEcommerceCore\Services\Summary\RevenueSummaryContributor::key() => 'view_order',
+                    \Dashed\DashedEcommerceCore\Services\Summary\AbandonedCartSummaryContributor::key() => 'view_order',
+                    \Dashed\DashedEcommerceCore\Services\Summary\OrderFlowSummaryContributor::key() => 'view_order',
+                    \Dashed\DashedEcommerceCore\Services\Summary\CustomerMatchSummaryContributor::key() => 'view_order',
+                ]);
+            }
 
             // App-notificatietypes waar een gebruiker per stuk voor kan kiezen.
             // method_exists-guard: een oudere mobile-api zonder deze methode mag
@@ -2317,7 +2336,9 @@ MARKDOWN,
                     }
 
                     return implode("\n", $lines);
-                });
+                    // Omzet, bestellingen en voorraad: alleen met view_order in
+                    // de context (een oudere mobile-api negeert dit argument).
+                }, 'view_order');
             }
 
             // Globaal zoeken: orders / producten / klanten. Elke provider hergebruikt

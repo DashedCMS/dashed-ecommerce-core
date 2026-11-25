@@ -96,7 +96,7 @@ it('registers notify_app with title/body/ability fields, defaulting ability to o
 // ── Regression: visible=>false blijft de losse endpoint blokkeren ──────────
 
 it('still 422s a direct POST to a hidden fulfilment action, even though it now has a handle', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeAutomatableOrder();
 
     $res = $this->postJson("/api/v1/orders/{$order->id}/actions/mark_packed", [], ['X-Site-Id' => 'site']);
@@ -106,7 +106,7 @@ it('still 422s a direct POST to a hidden fulfilment action, even though it now h
 });
 
 it('exposes automatable on the actions() endpoint, and keeps the seven fulfilment steps out of the per-order list', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $order = makeAutomatableOrder();
 
     $res = $this->getJson("/api/v1/orders/{$order->id}/actions", ['X-Site-Id' => 'site']);
@@ -342,7 +342,7 @@ it('mark_paid marks the order as paid via Order::markAsPaid', function () {
 it('notify_app sends a push via NotificationCenter, routed to the order', function () {
     Http::fake();
 
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['is_superadmin' => true]);
     DeviceToken::create([
         'user_id' => $user->id,
         'platform' => 'ios',

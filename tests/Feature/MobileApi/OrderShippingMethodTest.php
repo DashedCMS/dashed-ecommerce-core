@@ -10,7 +10,7 @@ use Dashed\DashedEcommerceCore\Models\ShippingMethod;
  * (shipping_method), zoals de Filament ViewOrder-pagina die ook toont.
  */
 it('order-detail: bevat de verzendmethode-naam', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $zone = ShippingZone::create(['site_id' => 'site', 'name' => ['nl' => 'Nederland']]);
     $method = ShippingMethod::create([

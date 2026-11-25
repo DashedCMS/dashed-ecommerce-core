@@ -24,7 +24,7 @@ it('includes provider extra fields (group: extra) alongside the basis selects (g
         $this->markTestSkipped('dashed-ecommerce-myparcel is niet geladen in deze testomgeving.');
     }
 
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     Customsetting::set('my_parcel_api_key', 'dummy-key-voor-test', 'site');
 

@@ -17,7 +17,7 @@ function onHoldOrder(array $attrs = []): Order
 }
 
 it('zet een bestelling on hold met reden en haalt hem er weer af', function () {
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['is_superadmin' => true]);
     $this->actingAs($user, 'sanctum');
     $order = onHoldOrder();
 
@@ -40,7 +40,7 @@ it('zet een bestelling on hold met reden en haalt hem er weer af', function () {
 });
 
 it('filtert orders en open orderregels op on hold', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $held = onHoldOrder(['fulfillment_status' => 'unhandled']);
     $held->putOnHold('Adres klopt niet');
     $free = onHoldOrder(['fulfillment_status' => 'unhandled']);

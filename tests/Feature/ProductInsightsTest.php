@@ -62,7 +62,7 @@ function makeInsightSale(Product $product, int $quantity, ?\Carbon\Carbon $when 
 }
 
 it('returns top sellers ordered by total_purchases desc', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $low = makeInsightProduct(['total_purchases' => 3]);
     $high = makeInsightProduct(['total_purchases' => 50]);
@@ -80,7 +80,7 @@ it('returns top sellers ordered by total_purchases desc', function () {
 });
 
 it('returns slow movers (lowest sellers with stock) ascending', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $slow = makeInsightProduct(['total_purchases' => 1, 'stock' => 5]);
     $fast = makeInsightProduct(['total_purchases' => 99, 'stock' => 5]);
@@ -99,7 +99,7 @@ it('returns slow movers (lowest sellers with stock) ascending', function () {
 });
 
 it('computes margin as current_price - purchase_price and skips null cost', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $a = makeInsightProduct(['price' => 30, 'current_price' => 30, 'purchase_price' => 10]); // margin 20
     $b = makeInsightProduct(['price' => 50, 'current_price' => 50, 'purchase_price' => 40]); // margin 10
@@ -118,7 +118,7 @@ it('computes margin as current_price - purchase_price and skips null cost', func
 });
 
 it('lists dead stock (stocked, zero in-period sales) and excludes products sold in period', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $dead = makeInsightProduct(['stock' => 7]);
     $soldInPeriod = makeInsightProduct(['stock' => 7]);
@@ -142,7 +142,7 @@ it('lists dead stock (stocked, zero in-period sales) and excludes products sold 
 });
 
 it('rejects insights without the dashboard.read ability', function () {
-    $user = User::factory()->create(['role' => 'customer']);
+    $user = User::factory()->create();
     $this->actingAs($user, 'sanctum');
 
     $this->getJson('/api/v1/insights/products?metric=top', ['X-Site-Id' => 'site'])

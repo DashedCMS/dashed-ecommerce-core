@@ -34,7 +34,7 @@ class ExpireQuotesCommand extends Command
         if ($expired->isNotEmpty()) {
             // Een verzamelmelding, geen mail per offerte: bij een opruimronde
             // na een stilgevallen scheduler zouden dat er tientallen zijn.
-            $admins = User::query()->whereIn('role', ['admin', 'superadmin'])->get();
+            $admins = User::query()->panelUsers()->get();
 
             foreach ($admins as $admin) {
                 FilamentNotification::make()

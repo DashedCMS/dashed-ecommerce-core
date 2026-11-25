@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.227.0 - 2026-11-25
+
+### Changed
+- De app volgt de CMS-rechten: `products.*`, `orders.*`, `discounts.*` en `pos.use` worden afgeleid van `view_product`/`edit_product`, `view_order`/`edit_order`, `view_discount_code`/`edit_discount_code` en `view_pos`. App-routes waar het CMS strenger is hebben een eigen check: statistieken (`view_statistics`), klantaccounts (`view_user`), retouren (`view_order_return`/`edit_order_return`), kortingscode verwijderen (`delete_discount_code`), verkoopdoelen en de kassa (`view_pos` plus `pos_enabled`). Ontvangerlijsten en de preview gebruiken toegang tot het CMS in plaats van de oude rolwaarden (vereist dashed-core ^4.124).
+
 ## v4.226.1 - 2026-11-25
 
 ### Fixed

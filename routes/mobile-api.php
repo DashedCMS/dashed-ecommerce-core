@@ -18,6 +18,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\SalesAnalysisController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\AutomationRuleController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\ProductInsightsController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\DashboardTargetsController;
+use Dashed\DashedEcommerceCore\Middleware\EnsureMobilePosAccess;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductController;
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
@@ -70,7 +71,8 @@ $posActions = [
 Route::prefix('api/v1')
     ->middleware(['auth:sanctum', 'mobile.site'])
     ->group(function () use ($posActions): void {
-        Route::prefix('point-of-sale')->middleware('ability:pos.use')->group(function () use ($posActions): void {
+        // Kassa: zelfde regel als in het CMS, view_pos én pos_enabled op de site.
+        Route::prefix('point-of-sale')->middleware(['ability:pos.use', EnsureMobilePosAccess::class])->group(function () use ($posActions): void {
             foreach ($posActions as $path => $action) {
                 Route::post($path, [PointOfSaleApiController::class, $action]);
             }
@@ -100,18 +102,20 @@ Route::prefix('api/v1')
         Route::post('products/{product}/duplicate', [ProductController::class, 'duplicate'])->middleware('ability:products.write');
         Route::get('products/{product}/activity', [ProductController::class, 'activity'])->middleware('ability:products.read');
 
-        Route::get('statistics/sales-analysis', [SalesAnalysisController::class, 'index'])->middleware('ability:dashboard.read');
-        Route::get('statistics/channel-breakdown', [SalesAnalysisController::class, 'channelBreakdown'])->middleware('ability:dashboard.read');
+        // Statistieken en inzichten: in het CMS alleen met view_statistics.
+        Route::get('statistics/sales-analysis', [SalesAnalysisController::class, 'index'])->middleware(['ability:dashboard.read', 'can:view_statistics']);
+        Route::get('statistics/channel-breakdown', [SalesAnalysisController::class, 'channelBreakdown'])->middleware(['ability:dashboard.read', 'can:view_statistics']);
 
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
 
-        Route::get('insights/products', [ProductInsightsController::class, 'index'])->middleware('ability:dashboard.read');
-        Route::get('insights', [InsightsController::class, 'index'])->middleware('ability:dashboard.read');
+        Route::get('insights/products', [ProductInsightsController::class, 'index'])->middleware(['ability:dashboard.read', 'can:view_statistics']);
+        Route::get('insights', [InsightsController::class, 'index'])->middleware(['ability:dashboard.read', 'can:view_statistics']);
 
         // Per-site dashboard-doelen (omzet/bestellingen) per periode instellen.
-        // Een management-actie → gegate met de admin-write ability die de
-        // ecommerce-routes voor schrijfacties gebruiken.
-        Route::put('dashboard/targets', [DashboardTargetsController::class, 'update'])->middleware('ability:orders.write');
+        // Een management-actie: orders.write plus het recht op het
+        // instellingenscherm Verkoopdoelen in het CMS (registerSettingsPage
+        // leidt die naam af van 'Verkoopdoelen').
+        Route::put('dashboard/targets', [DashboardTargetsController::class, 'update'])->middleware(['ability:orders.write', 'can:view_settings_verkoopdoelen']);
 
         // Kortingscodes (focus-set CRUD). Eigen abilities discounts.read/write,
         // afgeleid van dezelfde rollen die products.* krijgen.
@@ -119,7 +123,7 @@ Route::prefix('api/v1')
         Route::get('discounts/{id}', [DiscountController::class, 'show'])->middleware('ability:discounts.read');
         Route::post('discounts', [DiscountController::class, 'store'])->middleware('ability:discounts.write');
         Route::put('discounts/{id}', [DiscountController::class, 'update'])->middleware('ability:discounts.write');
-        Route::delete('discounts/{id}', [DiscountController::class, 'destroy'])->middleware('ability:discounts.write');
+        Route::delete('discounts/{id}', [DiscountController::class, 'destroy'])->middleware(['ability:discounts.write', 'can:delete_discount_code']);
 
         // Automatiseringsregels: lezen met orders.read, de aan/uit-schakelaar met
         // orders.write — dezelfde rechten als de order-acties die deze regels
@@ -129,7 +133,8 @@ Route::prefix('api/v1')
         Route::get('automation-rule-runs', [AutomationRuleController::class, 'runs'])->middleware('ability:orders.read');
 
         Route::get('customers', [CustomerController::class, 'index'])->middleware('ability:orders.read');
-        Route::get('customers/accounts', [CustomerController::class, 'accounts'])->middleware('ability:orders.read');
+        // Klantaccounts zijn gebruikers: in het CMS alleen met view_user.
+        Route::get('customers/accounts', [CustomerController::class, 'accounts'])->middleware(['ability:orders.read', 'can:view_user']);
         Route::get('customers/profile', [CustomerController::class, 'profile'])->middleware('ability:orders.read');
         Route::get('customers/annotation', [CustomerController::class, 'annotation'])->middleware('ability:orders.read');
         Route::put('customers/annotation', [CustomerController::class, 'saveAnnotation'])->middleware('ability:orders.write');
@@ -187,20 +192,21 @@ Route::prefix('api/v1')
         Route::get('settings/fulfil-flow', [OrderController::class, 'fulfilFlow'])->middleware('ability:orders.read');
         Route::put('settings/fulfil-flow', [OrderController::class, 'saveFulfilFlow'])->middleware('ability:orders.write');
 
-        // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write.
-        Route::get('returns', [OrderReturnController::class, 'index'])->middleware('ability:orders.read');
+        // Retouren (RMA-workflow). Lezen met orders.read, acties met orders.write,
+        // en daarbovenop de rechten van de retourlijst in het CMS.
+        Route::get('returns', [OrderReturnController::class, 'index'])->middleware(['ability:orders.read', 'can:view_order_return']);
         // Vóór de {orderReturn}-wildcard, anders worden 'email-defaults' / 'refund-methods' als id opgevat.
-        Route::get('returns/email-defaults', [OrderReturnController::class, 'emailDefaults'])->middleware('ability:orders.read');
-        Route::get('returns/refund-methods', [OrderReturnController::class, 'refundMethods'])->middleware('ability:orders.read');
-        Route::get('returns/{orderReturn}', [OrderReturnController::class, 'show'])->middleware('ability:orders.read');
-        Route::get('returns/{orderReturn}/label', [OrderReturnController::class, 'label'])->middleware('ability:orders.read');
-        Route::post('returns/{orderReturn}/approve', [OrderReturnController::class, 'approve'])->middleware('ability:orders.write');
-        Route::post('returns/{orderReturn}/reject', [OrderReturnController::class, 'reject'])->middleware('ability:orders.write');
-        Route::post('returns/{orderReturn}/handle', [OrderReturnController::class, 'handle'])->middleware('ability:orders.write');
-        Route::post('returns/{orderReturn}/close', [OrderReturnController::class, 'close'])->middleware('ability:orders.write');
-        Route::post('returns/{orderReturn}/refund', [OrderReturnController::class, 'registerRefund'])->middleware('ability:orders.write');
-        Route::post('returns/{orderReturn}/reply', [OrderReturnController::class, 'reply'])->middleware('ability:orders.write');
-        Route::post('returns/{orderReturn}/email', [OrderReturnController::class, 'sendEmail'])->middleware('ability:orders.write');
+        Route::get('returns/email-defaults', [OrderReturnController::class, 'emailDefaults'])->middleware(['ability:orders.read', 'can:view_order_return']);
+        Route::get('returns/refund-methods', [OrderReturnController::class, 'refundMethods'])->middleware(['ability:orders.read', 'can:view_order_return']);
+        Route::get('returns/{orderReturn}', [OrderReturnController::class, 'show'])->middleware(['ability:orders.read', 'can:view_order_return']);
+        Route::get('returns/{orderReturn}/label', [OrderReturnController::class, 'label'])->middleware(['ability:orders.read', 'can:view_order_return']);
+        Route::post('returns/{orderReturn}/approve', [OrderReturnController::class, 'approve'])->middleware(['ability:orders.write', 'can:edit_order_return']);
+        Route::post('returns/{orderReturn}/reject', [OrderReturnController::class, 'reject'])->middleware(['ability:orders.write', 'can:edit_order_return']);
+        Route::post('returns/{orderReturn}/handle', [OrderReturnController::class, 'handle'])->middleware(['ability:orders.write', 'can:edit_order_return']);
+        Route::post('returns/{orderReturn}/close', [OrderReturnController::class, 'close'])->middleware(['ability:orders.write', 'can:edit_order_return']);
+        Route::post('returns/{orderReturn}/refund', [OrderReturnController::class, 'registerRefund'])->middleware(['ability:orders.write', 'can:edit_order_return']);
+        Route::post('returns/{orderReturn}/reply', [OrderReturnController::class, 'reply'])->middleware(['ability:orders.write', 'can:edit_order_return']);
+        Route::post('returns/{orderReturn}/email', [OrderReturnController::class, 'sendEmail'])->middleware(['ability:orders.write', 'can:edit_order_return']);
 
         // Printerbeheer (netwerk-printers voor pakbon/label). Printen zelf loopt via
         // de print-queue + de daemon op de Pi/NAS.
@@ -214,7 +220,7 @@ Route::prefix('api/v1')
         Route::delete('orders/{order}/presence', [OrderController::class, 'leavePresence'])->middleware('ability:orders.read');
 
         // Print-wachtrij (CMS Print queue): bekijken + retry/cancel per taak.
-        Route::get('print-jobs', [PrintJobController::class, 'index'])->middleware('ability:orders.write');
+        Route::get('print-jobs', [PrintJobController::class, 'index'])->middleware('ability:orders.read');
         Route::post('print-jobs/{id}/retry', [PrintJobController::class, 'retry'])->middleware('ability:orders.write');
         Route::post('print-jobs/{id}/cancel', [PrintJobController::class, 'cancel'])->middleware('ability:orders.write');
         Route::get('printers', [PrinterController::class, 'index'])->middleware('ability:orders.write');

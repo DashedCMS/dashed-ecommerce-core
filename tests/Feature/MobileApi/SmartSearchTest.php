@@ -25,7 +25,7 @@ function makeOpenOrderProduct(string $productName): OrderProduct
 }
 
 it('open-order-products: smart multi-term search matches non-adjacent words', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $hit = makeOpenOrderProduct('Familie beeldjes - 15CM - Papa & mama met 4 kinderen - Bruin');
     makeOpenOrderProduct('Losse vaas - 20CM - Blauw');
@@ -42,7 +42,7 @@ it('open-order-products: smart multi-term search matches non-adjacent words', fu
 });
 
 it('open-order-products: single-term search still works', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
     $hit = makeOpenOrderProduct('Familie beeldjes - 15CM - 4 kinderen');
 
     $res = $this->getJson('/api/v1/open-order-products?search=kinderen', ['X-Site-Id' => 'site']);

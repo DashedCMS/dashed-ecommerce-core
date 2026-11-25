@@ -114,11 +114,11 @@ class ProductVariant extends Model
 
     public function scopePublicShowable($query, bool $overridePublic = false)
     {
-        if (auth()->check() && auth()->user()->role == 'admin' && $overridePublic) {
+        // Een beheerder mag ongepubliceerde varianten voorvertonen.
+        if (auth()->check() && auth()->user()->hasPanelAccess() && $overridePublic) {
             return;
         }
 
-        //        if (auth()->guest() || (auth()->check() && auth()->user()->role !== 'admin' && $overridePublic)) {
         $query
             ->public()
             ->thisSite()

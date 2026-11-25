@@ -29,7 +29,7 @@ function openOrderWithStatus(string $fulfillment): OrderProduct
 }
 
 it('open-order-products: toont standaard unhandled én in_treatment, niet handled', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $unhandled = openOrderWithStatus('unhandled');
     $inTreatment = openOrderWithStatus('in_treatment');
@@ -43,7 +43,7 @@ it('open-order-products: toont standaard unhandled én in_treatment, niet handle
 });
 
 it('open-order-products: een expliciete status filtert exact', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $unhandled = openOrderWithStatus('unhandled');
     $inTreatment = openOrderWithStatus('in_treatment');

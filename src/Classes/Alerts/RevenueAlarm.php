@@ -140,7 +140,7 @@ class RevenueAlarm
             rescue(fn () => Mail::to($email)->send(new NotificationMail(implode(' ', $lines), $title)), report: false);
         }
 
-        foreach (User::query()->whereIn('role', ['admin', 'superadmin'])->get() as $admin) {
+        foreach (User::query()->panelUsers()->get() as $admin) {
             FilamentNotification::make()
                 ->title($title)
                 ->body($body)

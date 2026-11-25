@@ -28,7 +28,7 @@ function makeRule(array $overrides = []): AutomationRule
 
 function actingAsAdmin(): User
 {
-    $user = User::factory()->create(['role' => 'admin']);
+    $user = User::factory()->create(['is_superadmin' => true]);
     test()->actingAs($user, 'sanctum');
 
     return $user;
@@ -384,7 +384,7 @@ it('only lists runs of the active site', function () {
 
 it('gates reading behind orders.read and the switch behind orders.write', function () {
     // Een niet-geprivilegieerde gebruiker (geen rollen) heeft geen orders.*.
-    $this->actingAs(User::factory()->create(['role' => 'customer']), 'sanctum');
+    $this->actingAs(User::factory()->create(), 'sanctum');
 
     $rule = makeRule(['is_active' => true]);
 

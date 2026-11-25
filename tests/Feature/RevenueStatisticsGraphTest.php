@@ -24,7 +24,7 @@ function makeGraphOrder(string $createdAt, float $total): Order
 }
 
 beforeEach(function () {
-    $this->actingAs(User::factory()->create(['role' => 'superadmin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 });
 
 it('verdeelt de omzet over de stappen van de grafiek', function () {

@@ -29,8 +29,10 @@ function posLine(string $identifier, float $single, int $qty = 1, float $vat = 2
 /** Ingelogde kassamedewerker (admin, sanctum) — pos_carts.user_id verwijst naar users. */
 function posCashier($test): User
 {
-    $cashier = User::factory()->create(['role' => 'admin']);
+    $cashier = User::factory()->create(['is_superadmin' => true]);
     $test->actingAs($cashier, 'sanctum');
+    // De kassa in de app vraagt, net als in het CMS, pos_enabled op de site.
+    \Dashed\DashedCore\Models\Customsetting::set('pos_enabled', true);
 
     return $cashier;
 }

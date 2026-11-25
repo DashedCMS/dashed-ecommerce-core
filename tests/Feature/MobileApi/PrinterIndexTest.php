@@ -18,7 +18,7 @@ function printersIndex(object $test): \Illuminate\Testing\TestResponse
 }
 
 it('geeft een gepairde printer terug met is_paired true', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $printer = Printer::factory()->create(['name' => 'Pi pakbon', 'type' => PrinterType::PackingSlip]);
     $printer->forceFill(['plain_token' => 'plain-text-token-value'])->save();
@@ -30,7 +30,7 @@ it('geeft een gepairde printer terug met is_paired true', function () {
 });
 
 it('laat de lijst niet crashen op een onleesbaar (niet te decrypten) token', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $ok = Printer::factory()->create(['name' => 'Goede printer']);
     $broken = Printer::factory()->create(['name' => 'Kapotte printer']);
@@ -49,7 +49,7 @@ it('laat de lijst niet crashen op een onleesbaar (niet te decrypten) token', fun
 });
 
 it('laat de lijst niet crashen op een onbekende type-waarde', function () {
-    $this->actingAs(User::factory()->create(['role' => 'admin']), 'sanctum');
+    $this->actingAs(User::factory()->create(['is_superadmin' => true]), 'sanctum');
 
     $printer = Printer::factory()->create(['name' => 'Legacy type']);
     DB::table('dashed__printers')->where('id', $printer->id)->update(['type' => 'legacy_bogus']);

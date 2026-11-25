@@ -63,18 +63,14 @@ class OrderAssignment
     }
 
     /**
-     * Medewerker = account met paneelrechten, zelfde regel als
-     * User::mustLoginViaPanel(): een rol anders dan customer of een
-     * toegekende rol. Eén query.
+     * Medewerker = account met paneelrechten (superadmin of minstens één
+     * rol), zelfde regel als User::hasPanelAccess(). Eén query.
      */
     private static function isStaff(int $userId): bool
     {
         return User::query()
             ->whereKey($userId)
-            ->where(fn ($query) => $query
-                ->whereNull('role')
-                ->orWhere('role', '!=', 'customer')
-                ->orWhereHas('roles'))
+            ->panelUsers()
             ->exists();
     }
 

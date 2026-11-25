@@ -133,7 +133,8 @@ class CheckLowStock extends Command
                     'count' => $count,
                     'product_ids' => $products->pluck('id')->values()->all(),
                 ])
-                ->toAbility('products.write')
+                // Zelfde recht als het meldingstype stock.low (products.read).
+                ->toAbility('products.read')
                 ->send();
         } catch (Throwable $e) {
             report($e);
