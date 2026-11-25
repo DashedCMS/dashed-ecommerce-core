@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.230.0 - 2026-11-25
 
 ### Added
 - Printstatus per orderregel: kolommen `production_ready_at` en `production_ready_by` op `dashed__order_products` (migratie `2026_11_26_100000`), `OrderProduct::markProductionReady()` / `markProductionNotReady()` (idempotent, met orderlog `order.product.production-ready` / `order.product.production-not-ready` en de events `OrderProductProductionReady` / `OrderProductProductionNotReady`), `PATCH api/v1/order-products/{id}/production-ready` (`{"ready": bool}`, `orders.write`), de velden `production_ready`, `production_ready_at` en `production_ready_by` (`{id, name, avatar_url}`) in `GET open-order-products` en de orderregels van `GET orders/{order}`, en een knop "Klaar"/"Niet klaar" per regel op de orderpagina in het CMS.
