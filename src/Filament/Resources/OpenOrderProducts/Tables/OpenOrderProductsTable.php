@@ -2,26 +2,26 @@
 
 namespace Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Tables;
 
-use Filament\Actions\Action;
 use Filament\Tables\Table;
+use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Dashed\DashedCore\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Illuminate\Support\HtmlString;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Filters\TernaryFilter;
-use Dashed\DashedCore\Models\User;
 use Dashed\DashedEcommerceCore\Models\Order;
-use Filament\Notifications\Notification;
-use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Classes\Orders;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
+use Dashed\DashedEcommerceCore\Support\SmartSearch;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 

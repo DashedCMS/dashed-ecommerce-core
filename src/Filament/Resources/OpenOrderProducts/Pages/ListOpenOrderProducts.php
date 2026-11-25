@@ -8,11 +8,11 @@ use Maatwebsite\Excel\Facades\Excel;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Maatwebsite\Excel\Excel as ExcelType;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Exports\OpenOrderProducts;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 
 class ListOpenOrderProducts extends ListRecords

@@ -12,9 +12,9 @@ use Dashed\DashedEcommerceCore\Classes\TaxHelper;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductStockInformationJob;
+use Dashed\DashedEcommerceCore\Database\Factories\OrderProductFactory;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderProductProductionReady;
 use Dashed\DashedEcommerceCore\Events\Orders\OrderProductProductionNotReady;
-use Dashed\DashedEcommerceCore\Database\Factories\OrderProductFactory;
 
 class OrderProduct extends Model
 {
