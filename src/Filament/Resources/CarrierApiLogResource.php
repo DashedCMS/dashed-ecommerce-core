@@ -50,10 +50,10 @@ class CarrierApiLogResource extends Resource
         return __('Carrier-logboek');
     }
 
-    /** Same rule as the role management in dashed-core: only a superadmin. */
+    /** Contains addresses, so only admins and superadmins. */
     public static function isAllowed(): bool
     {
-        return auth()->user()?->role === 'superadmin';
+        return in_array(auth()->user()?->role, ['admin', 'superadmin'], true);
     }
 
     public static function canAccess(): bool
