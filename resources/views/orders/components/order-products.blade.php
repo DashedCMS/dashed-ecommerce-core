@@ -26,6 +26,20 @@
                             @if($line['extras'])
                                 <div class="au-od-small au-od-extras au-od-gap-top">{{ __('Extra opties') }}: {!! $line['extras'] !!}</div>
                             @endif
+                            @if($line['production'] ?? null)
+                                <div class="au-od-row au-od-gap-top au-od-small" wire:key="production-{{ $line['production']['id'] }}">
+                                    <x-filament::button size="xs" :color="$line['production']['ready'] ? 'success' : 'gray'"
+                                                        :icon="$line['production']['ready'] ? 'heroicon-o-check-circle' : 'heroicon-o-clock'"
+                                                        wire:click="toggleProductionReady({{ $line['production']['id'] }})"
+                                                        wire:loading.attr="disabled"
+                                                        :tooltip="$line['production']['ready'] ? __('Zet terug op niet klaar') : __('Meld als klaar')">
+                                        {{ $line['production']['ready'] ? __('Klaar') : __('Niet klaar') }}
+                                    </x-filament::button>
+                                    @if($line['production']['ready'])
+                                        <span class="au-od-muted">{{ trim(($line['production']['by'] ?? '') . ' ' . ($line['production']['at'] ?? '')) }}</span>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                         <div class="au-od-qty au-od-muted">{{ $line['quantity'] }}{{ __('x') }}</div>
                         <div class="au-od-price">

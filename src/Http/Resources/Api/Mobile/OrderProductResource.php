@@ -39,6 +39,8 @@ class OrderProductResource extends JsonResource
             'fulfillment_provider' => $this->fulfillment_provider,
             'send_to_fulfiller' => (bool) $this->send_to_fulfiller,
             'added_via' => $this->added_via,
+            // Printstatus: production_ready, production_ready_at, production_ready_by {id, name, avatar_url}.
+            ...$this->resource->productionReadyPayload(),
             'extras' => collect($this->product_extras ?: [])->map(function ($extra): array {
                 $row = [
                     'name' => $extra['name'] ?? null,

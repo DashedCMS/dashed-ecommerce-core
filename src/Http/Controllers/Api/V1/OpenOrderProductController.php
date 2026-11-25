@@ -282,8 +282,9 @@ class OpenOrderProductController extends Controller
 
         $products = $this->productMap($rows->pluck('product_id')->all());
         $deadlines = $this->deadlineMap($rows->pluck('order_id')->all());
+        $productionReady = $this->productionReadyMap($rows->pluck('id')->all());
 
-        $data = $rows->map(function ($r) use ($products, $deadlines): array {
+        $data = $rows->map(function ($r) use ($products, $deadlines, $productionReady): array {
             $p = $products[$r->product_id] ?? null;
             $d = $deadlines[$r->order_id] ?? [];
 
@@ -318,6 +319,9 @@ class OpenOrderProductController extends Controller
                 'deadline_source' => $d['deadline_source'] ?? null,
                 'deadline_label' => $d['deadline_label'] ?? null,
                 'deadline_urgency' => $d['deadline_urgency'] ?? null,
+                // Printstatus van de regel: production_ready, production_ready_at
+                // (ISO-8601) en production_ready_by {id, name, avatar_url}.
+                ...($productionReady[(int) $r->id] ?? (new OrderProduct())->productionReadyPayload()),
             ];
         })->all();
 
@@ -388,6 +392,26 @@ class OpenOrderProductController extends Controller
         }
 
         return $this->respond($data, $total, $perPage, $page);
+    }
+
+    /**
+     * Printstatus per orderregel-id, in één query met de melder eager geladen.
+     *
+     * @param  array<int, int|string>  $ids
+     * @return array<int, array<string, mixed>>
+     */
+    private function productionReadyMap(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return OrderProduct::query()
+            ->whereIn('id', $ids)
+            ->with('productionReadyBy')
+            ->get(['id', 'production_ready_at', 'production_ready_by'])
+            ->mapWithKeys(fn (OrderProduct $op): array => [$op->id => $op->productionReadyPayload()])
+            ->all();
     }
 
     /**

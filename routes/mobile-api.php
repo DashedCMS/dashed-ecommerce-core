@@ -23,6 +23,7 @@ use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OpenOrderProductControlle
 use Dashed\DashedEcommerceCore\Controllers\Api\PointOfSale\PointOfSaleApiController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\PosRegisterSessionController;
 use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\CheckoutAbandonmentController;
+use Dashed\DashedEcommerceCore\Http\Controllers\Api\V1\OrderProductProductionController;
 
 /**
  * Mobiele kassa: dezelfde PointOfSaleApiController als de web-kassa, maar onder
@@ -107,6 +108,8 @@ Route::prefix('api/v1')
         Route::get('statistics/channel-breakdown', [SalesAnalysisController::class, 'channelBreakdown'])->middleware(['ability:dashboard.read', 'can:view_statistics']);
 
         Route::get('open-order-products', [OpenOrderProductController::class, 'index'])->middleware('ability:orders.read');
+        // Printstatus per orderregel: {"ready": bool} meldt de regel klaar of weer niet klaar.
+        Route::patch('order-products/{orderProduct}/production-ready', [OrderProductProductionController::class, 'update'])->whereNumber('orderProduct')->middleware('ability:orders.write');
 
         Route::get('insights/products', [ProductInsightsController::class, 'index'])->middleware(['ability:dashboard.read', 'can:view_statistics']);
         Route::get('insights', [InsightsController::class, 'index'])->middleware(['ability:dashboard.read', 'can:view_statistics']);

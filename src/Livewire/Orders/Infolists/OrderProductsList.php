@@ -35,6 +35,7 @@ class OrderProductsList extends Component implements HasSchemas
     public function lines(): array
     {
         $lines = [];
+        $this->order->loadMissing('orderProducts.productionReadyBy');
 
         foreach ($this->order->orderProducts as $orderProduct) {
             $image = null;
@@ -102,10 +103,46 @@ class OrderProductsList extends Component implements HasSchemas
                 'quantity' => $orderProduct->quantity,
                 'price' => CurrencyHelper::formatPrice($orderProduct->price),
                 'original' => $orderProduct->discount > 0 ? CurrencyHelper::formatPrice($orderProduct->price + $orderProduct->discount) : null,
+                'production' => $this->productionLine($orderProduct),
             ];
         }
 
         return $lines;
+    }
+
+    /**
+     * Printstatus van een regel voor de "Klaar"/"Niet klaar"-knop; null voor
+     * kostenregels en verwijderde regels.
+     *
+     * @return array{id: int, ready: bool, by: ?string, at: ?string}|null
+     */
+    private function productionLine(OrderProduct $orderProduct): ?array
+    {
+        if ($orderProduct->trashed() || in_array($orderProduct->sku, ['shipping_costs', 'payment_costs'], true)) {
+            return null;
+        }
+
+        return [
+            'id' => $orderProduct->id,
+            'ready' => $orderProduct->isProductionReady(),
+            'by' => $orderProduct->production_ready_by ? $orderProduct->productionReadyBy?->name : null,
+            'at' => $orderProduct->production_ready_at?->timezone(config('app.timezone'))->format('d-m-Y H:i'),
+        ];
+    }
+
+    /** Meldt een regel klaar of weer niet klaar (wisselt de printstatus). */
+    public function toggleProductionReady(int $orderProductId): void
+    {
+        $orderProduct = $this->order->orderProducts()->whereKey($orderProductId)->firstOrFail();
+
+        if ($orderProduct->isProductionReady()) {
+            $orderProduct->markProductionNotReady();
+        } else {
+            $orderProduct->markProductionReady();
+        }
+
+        $this->order->unsetRelation('orderProducts');
+        $this->dispatch('refreshData');
     }
 
     /**
