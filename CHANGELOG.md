@@ -2,6 +2,20 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.228.0 - 2026-11-25
+
+### Added
+- Presence "mee bezig": `OrderPresence::markWorking()`, `workingOn()` en `presenceFor()`. Wie in de laatste 90 s iets op de order deed (orderlog van een medewerker, toewijzing, label, printstatus) staat apart van wie alleen meekijkt. De CMS-banner toont dat met avatars.
+- App-API: `GET api/v1/orders/{order}/presence` geeft `{viewers, working_on}` (elk `{id, name, avatar_url, last_seen_at}`). `POST .../presence` geeft hetzelfde object terug (was 204). Gebruikers in de order-API (`assigned_user`, `on_hold_by`, logs) hebben de vorm `{id, name, avatar_url}`.
+- Avatars bij de toewijzingskolom in de orderlijst en in de tijdlijn van de order.
+- Carrier-logboek: tabel `carrier_api_logs`, model `CarrierApiLog` (na 60 dagen opgeschoond, dagelijks `model:prune`), `CarrierApiLogger` (Http-middleware, `track()` en `record()`), lijst `/dashed/carrier-logboek` met filter "Alleen mislukt" en een kaart op de orderpagina. Alleen voor CMS-gebruikers.
+- Product-extra-opties: veld "Extra levertijd (werkdagen)" (`extra_delivery_days`, migratie `add_extra_delivery_days_to_product_extra_options`), plus `ProductExtraOption::extraDeliveryDays()` en `maxExtraDeliveryDaysFor()`.
+- Order view: de badge "Op voorraad" toont de huidige voorraad, bijv. "Op voorraad (12)". De mobile-API geeft per orderregel `stock_quantity`.
+- Pushes over orders en retouren dragen `data.url` naar de CMS-pagina (`AdminRecordUrl`).
+
+### Fixed
+- De push "bijbestelling los" werd nooit verstuurd (geen ontvangers); gaat nu naar `orders.read`.
+
 ## v4.227.0 - 2026-11-25
 
 ### Changed
