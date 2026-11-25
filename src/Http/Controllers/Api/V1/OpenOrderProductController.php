@@ -28,6 +28,16 @@ class OpenOrderProductController extends Controller
     private const OPEN_STATUSES = ['unhandled', 'in_treatment'];
 
     /**
+     * Groepssleutel per product, gelijk aan OpenOrderProductResource::PRODUCT_KEY_SQL:
+     * het catalogus-product, of voor losse regels zonder product SKU + naam. Niet
+     * op (product_id, sku), anders valt een product na een SKU-wijziging uiteen.
+     */
+    private const PRODUCT_KEY_SQL = "CASE WHEN op.product_id IS NOT NULL AND op.product_id <> 0 THEN CONCAT('p:', op.product_id) ELSE CONCAT('s:', COALESCE(op.sku, ''), '|', COALESCE(op.name, '')) END";
+
+    /** Waarden van het filter `production_ready`; standaard alleen wat nog gemaakt moet worden (zoals de CMS-pagina). */
+    private const PRODUCTION_READY_FILTERS = ['all', 'ready', 'not_ready'];
+
+    /**
      * Combinaties van voorraad bij bestellen en voorraad nu (filter `stock_combo`),
      * als [stock_status_at_order, now_in_stock]. De volgorde is ook de
      * sorteervolgorde van `sort=stock_combo`: eerst wat nu eindelijk leverbaar is.
@@ -48,11 +58,25 @@ class OpenOrderProductController extends Controller
 
         $base = $this->baseQuery($request, $siteId);
 
-        return match ($groupBy) {
-            'product' => $this->grouped($base, $request, $perPage, $page, 'product'),
-            'product_group' => $this->grouped($base, $request, $perPage, $page, 'product_group'),
-            default => $this->flat($base, $request, $perPage, $page),
-        };
+        if ($groupBy === 'product' || $groupBy === 'product_group') {
+            // Gegroepeerd telt klare regels nooit mee (gelijk aan groupLines() in het CMS).
+            $base->whereNull('op.production_ready_at');
+
+            return $this->grouped($base, $request, $perPage, $page, $groupBy);
+        }
+
+        // Per regel: `production_ready=all|ready|not_ready`, standaard not_ready.
+        $ready = (string) $request->query('production_ready', 'not_ready');
+        if (! in_array($ready, self::PRODUCTION_READY_FILTERS, true)) {
+            $ready = 'not_ready';
+        }
+        if ($ready === 'ready') {
+            $base->whereNotNull('op.production_ready_at');
+        } elseif ($ready === 'not_ready') {
+            $base->whereNull('op.production_ready_at');
+        }
+
+        return $this->flat($base, $request, $perPage, $page);
     }
 
     /**
@@ -167,6 +191,8 @@ class OpenOrderProductController extends Controller
             ->join('dashed__orders as o', 'o.id', '=', 'op.order_id')
             ->where('o.site_id', $siteId)
             ->whereNull('op.deleted_at')
+            // Verwijderde orders tellen niet mee (de CMS-pagina gaat via whereHas('order') met SoftDeletes).
+            ->whereNull('o.deleted_at')
             // Null-veilig: `sku NOT IN (...)` is in SQL onwaar voor NULL, dus zonder
             // deze OR-groep vielen regels zonder SKU (bv. losse kassa-/POS-items)
             // stil weg — gelijk aan de Filament-scope (OpenOrderProductResource).
@@ -337,11 +363,12 @@ class OpenOrderProductController extends Controller
         if ($mode === 'product') {
             $base->select([
                 DB::raw('MIN(op.id) as id'),
-                'op.product_id',
-                'op.sku',
+                DB::raw('MIN(op.product_id) as product_id'),
+                DB::raw('MIN(op.sku) as sku'),
                 DB::raw('MIN(op.name) as name'),
                 DB::raw('SUM(op.quantity) as quantity'),
-            ])->groupBy('op.product_id', 'op.sku');
+                DB::raw('COUNT(DISTINCT op.order_id) as order_count'),
+            ])->groupBy(DB::raw(self::PRODUCT_KEY_SQL));
         } else {
             // Per productgroep: join naar products voor de groep-id + naam.
             if (! $this->hasProductJoin($base)) {
@@ -353,11 +380,13 @@ class OpenOrderProductController extends Controller
                     DB::raw('p.product_group_id as product_group_id'),
                     DB::raw("COALESCE(NULLIF(JSON_UNQUOTE(JSON_EXTRACT(pg.name, '$.\"nl\"')), 'null'), pg.name, 'Geen productgroep') as name"),
                     DB::raw('SUM(op.quantity) as quantity'),
+                    DB::raw('COUNT(DISTINCT op.order_id) as order_count'),
                 ])->groupBy('p.product_group_id', 'pg.name');
         }
 
         $rows = $base->orderBy($orderColumn, $sortDir)->get();
         $total = $rows->count();
+        $totalQuantity = (int) $rows->sum(fn ($r): int => (int) $r->quantity);
         $paged = $rows->forPage($page, $perPage)->values();
 
         if ($mode === 'product') {
@@ -371,6 +400,7 @@ class OpenOrderProductController extends Controller
                     'name' => $r->name,
                     'sku' => $r->sku,
                     'quantity' => (int) $r->quantity,
+                    'order_count' => (int) $r->order_count,
                     'stock' => $p ? (int) $p['stock'] : null,
                     'image_url' => $p['image_url'] ?? null,
                 ];
@@ -385,13 +415,14 @@ class OpenOrderProductController extends Controller
                     'product_group_id' => $r->product_group_id ? (int) $r->product_group_id : null,
                     'name' => $r->name,
                     'quantity' => (int) $r->quantity,
+                    'order_count' => (int) $r->order_count,
                     'stock' => $g ? (int) $g['stock'] : null,
                     'image_url' => $g['image_url'] ?? null,
                 ];
             })->all();
         }
 
-        return $this->respond($data, $total, $perPage, $page);
+        return $this->respond($data, $total, $perPage, $page, $totalQuantity);
     }
 
     /**
