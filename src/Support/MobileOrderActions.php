@@ -308,6 +308,7 @@ class MobileOrderActions
                         ->title((string) ($data['title'] ?? ''))
                         ->body((string) ($data['body'] ?? ''))
                         ->route("/order/{$o->id}")
+                        ->data(['type' => 'order', 'id' => $o->id, 'url' => AdminRecordUrl::order($o)])
                         ->toAbility((string) ($data['ability'] ?? 'orders.read'))
                         ->send();
                 },
@@ -364,6 +365,7 @@ class MobileOrderActions
                         ->title($title !== '' ? $title : $defaultTitle)
                         ->body($body !== '' ? $body : $defaultBody)
                         ->route($route)
+                        ->data(array_filter(['type' => $subject instanceof Order ? 'order' : 'product', 'id' => $subject->getKey(), 'url' => $subject instanceof Order ? AdminRecordUrl::order($subject) : null]))
                         ->toAbility((string) ($data['ability'] ?? 'orders.read'))
                         ->send();
                 },

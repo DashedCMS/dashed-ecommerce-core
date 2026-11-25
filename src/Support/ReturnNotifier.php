@@ -58,7 +58,7 @@ class ReturnNotifier
                 ->title($title)
                 ->body($body)
                 ->route("/return/{$return->id}")
-                ->data(['type' => 'return', 'id' => $return->id])
+                ->data(['type' => 'return', 'id' => $return->id, 'url' => AdminRecordUrl::orderReturn($return)])
                 ->category($category)
                 ->toAbility('orders.read')
                 ->send();

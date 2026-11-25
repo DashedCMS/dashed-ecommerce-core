@@ -63,7 +63,7 @@ class LabelProblemNotifier
                 ->title(__('Label mislukt voor order :order', ['order' => $order->invoice_id ?: '#' . $order->id]))
                 ->body($cause)
                 ->route("/order/{$order->id}")
-                ->data(['type' => 'order', 'id' => $order->id])
+                ->data(['type' => 'order', 'id' => $order->id, 'url' => AdminRecordUrl::order($order)])
                 ->toAbility('orders.read')
                 ->send();
         } catch (Throwable $e) {
