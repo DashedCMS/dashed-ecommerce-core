@@ -356,10 +356,14 @@ final class Linker
         try {
             app($center)->push()
                 ->type('order.bijbestelling-los')
+                ->site($order->site_id)
                 ->title('Bijbestelling los verzenden: #' . Offer::orderNumber($order))
                 ->body("Hoorde bij #{$parentNumber}, maar {$reason}. Eigen label nodig.")
                 ->route('/order/' . $order->id)
                 ->data(['type' => 'admin', 'key' => 'order.bijbestelling-los', 'order_id' => $order->id, 'url' => \Dashed\DashedEcommerceCore\Support\AdminRecordUrl::order($order)])
+                // Without an explicit audience send() is a no-op: this type is not
+                // registered, so type() cannot supply an ability.
+                ->toAbility('orders.read')
                 ->send();
         } catch (Throwable $e) {
             report($e);
