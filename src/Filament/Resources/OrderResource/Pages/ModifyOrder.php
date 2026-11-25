@@ -157,17 +157,34 @@ class ModifyOrder extends Page implements HasSchemas
                                         ->all())
                                     ->getOptionLabelUsing(fn ($value) => Product::find($value)?->name)
                                     ->afterStateUpdated(function ($state, callable $set, Get $get) {
-                                        // De gekozen opties horen bij het oude product. Op een
-                                        // ander product betekenen ze niets meer, en hun toeslag
-                                        // zit niet in de nieuwe catalogusprijs die hieronder
-                                        // gezet wordt. Zonder dit blijven ze stilzwijgend aan de
-                                        // regel hangen en komen ze op de factuur terug.
-                                        $set('product_extras', []);
-
+                                        // De gekozen opties gaan mee naar het nieuwe product
+                                        // voor zover dat product dezelfde extra (of een extra
+                                        // met dezelfde naam en dezelfde keuze) kent; zo blijft
+                                        // bij een andere maat of variant "Kleur mama: Mokka"
+                                        // gewoon staan. Wat het nieuwe product niet kent valt
+                                        // weg en wordt gemeld, want op dat product betekent het
+                                        // niets. De toeslag van wat blijft telt mee in het
+                                        // nieuwe regeltotaal.
                                         $product = $state ? Product::find($state) : null;
-                                        if ($product) {
-                                            $set('name', $product->name);
-                                            $this->setLineTotalFromProduct($product, $get('quantity'), $set);
+
+                                        if (! $product) {
+                                            $set('product_extras', []);
+
+                                            return;
+                                        }
+
+                                        [$extras, $dropped] = self::extrasForNewProduct($get('product_extras') ?? [], $product);
+
+                                        $set('product_extras', $extras);
+                                        $set('name', $product->name);
+                                        $this->setLineTotalFromProduct($product, $get('quantity'), $set, $extras);
+
+                                        if ($dropped !== []) {
+                                            Notification::make()
+                                                ->warning()
+                                                ->title(__('Niet alle opties konden mee'))
+                                                ->body(__('Deze opties bestaan niet bij het nieuwe product: :opties', ['opties' => implode(', ', $dropped)]))
+                                                ->send();
                                         }
                                     })
                                     ->live()
@@ -486,15 +503,19 @@ class ModifyOrder extends Page implements HasSchemas
      * weergavevoorkeur) en is ongevoelig voor prijsgroep/custom-pricing van
      * de ingelogde gebruiker, dus voor elke beheerder identiek.
      */
-    protected function setLineTotalFromProduct(Product $product, mixed $quantity, callable $set): void
+    protected function setLineTotalFromProduct(Product $product, mixed $quantity, callable $set, array $extras = []): void
     {
         // current_price is nullable en wordt pas gevuld zodra
         // Product::calculatePrices() ooit gedraaid heeft. Zonder fallback
         // zou een product waarvoor dat nog niet gebeurd is een regeltotaal
         // van 0,00 opleveren; de ruwe price-kolom is de volgende beste basis.
         $unitPrice = $product->getRawOriginal('current_price') ?? $product->getRawOriginal('price');
-        $unitPrice = (float) $unitPrice;
         $quantity = max(1, (int) ($quantity ?? 1));
+
+        // Toeslagen van de meegenomen opties, zoals de winkelwagen ze rekent
+        // (Product::getShoppingCartItemPrice() stap 8). Omgerekend naar een
+        // stukstoeslag, zodat een procentuele code er ook overheen gaat.
+        $unitPrice = (float) $unitPrice + self::extrasSurcharge($extras, $quantity) / $quantity;
 
         // De catalogusprijs is de prijs vóór een kortingscode, terwijl dit veld
         // de prijs is die de klant betaalt. Draagt de order een procentuele
@@ -512,6 +533,117 @@ class ModifyOrder extends Page implements HasSchemas
 
         $set('price', $price);
         $set('discount', round($unitPrice * $quantity - $price, 2));
+    }
+
+    /**
+     * Neemt de gekozen opties van een regel mee naar een ander product.
+     *
+     * Een optie blijft als het nieuwe product dezelfde ProductExtra heeft
+     * (varianten in één groep delen die meestal), of anders een extra met
+     * dezelfde naam waarin dezelfde keuze bestaat. Een invulveld of tekstvak
+     * gaat mee naar dezelfde extra of een extra met dezelfde naam, met de
+     * ingevulde tekst. Naam, waarde en prijs komen van de extra op het nieuwe
+     * product, zodat de regel nooit iets beweert dat daar niet bestaat.
+     *
+     * @param  array<int, array<string, mixed>>  $extras  de formulierstaat
+     * @return array{0: array<int, array<string, mixed>>, 1: list<string>} meegenomen ingangen en de labels van wat wegviel
+     */
+    protected static function extrasForNewProduct(array $extras, Product $product): array
+    {
+        $available = $product->allProductExtras() ?? collect();
+        $byId = $available->keyBy('id');
+        $byName = $available->keyBy(fn ($extra) => self::matchKey($extra->name));
+
+        $kept = [];
+        $dropped = [];
+
+        foreach (array_values($extras) as $extra) {
+            $id = $extra['id'] ?? null;
+            $name = (string) ($extra['name'] ?? '');
+
+            if (is_numeric($id)) {
+                $oldOption = ProductExtraOption::withTrashed()->with('productExtra')->find($id);
+                $value = (string) ($oldOption?->value ?? ($extra['value'] ?? ''));
+                $target = ($oldOption ? $byId->get($oldOption->product_extra_id) : null)
+                    ?? $byName->get(self::matchKey($oldOption?->productExtra?->name ?? $name));
+                $option = $target?->productExtraOptions->first(fn ($candidate) => (int) $candidate->id === (int) $id)
+                    ?? $target?->productExtraOptions->first(fn ($candidate) => self::matchKey($candidate->value) === self::matchKey($value));
+
+                if (! $option) {
+                    $dropped[] = trim($name.': '.$value, ': ');
+
+                    continue;
+                }
+
+                $kept[] = [
+                    'id' => $option->id,
+                    'name' => (string) $target->name,
+                    'value' => (string) $option->value,
+                    'path' => '',
+                    'price' => (float) $option->priceForUser(),
+                ];
+
+                continue;
+            }
+
+            $extraId = (int) str((string) $id)->afterLast('product-extra-')->toString();
+            $target = $byId->get($extraId) ?? $byName->get(self::matchKey($name));
+
+            if (! $target) {
+                $dropped[] = $name !== '' ? $name : (string) ($extra['value'] ?? '');
+
+                continue;
+            }
+
+            $kept[] = [
+                'id' => 'product-extra-'.$target->id,
+                'name' => (string) $target->name,
+                'value' => (string) ($extra['value'] ?? ''),
+                'path' => (string) ($extra['path'] ?? ''),
+                'price' => (float) $target->priceForUser(),
+            ];
+        }
+
+        return [$kept, $dropped];
+    }
+
+    /**
+     * De toeslag van de opties voor de hele regel, met de rekenregel van de
+     * winkelwagen: optieprijs plus de basisprijs van de extra, per stuk of
+     * één keer bij calculate_only_1_quantity; een invulveld telt de
+     * basisprijs van zijn extra per stuk.
+     *
+     * @param  array<int, array<string, mixed>>  $extras
+     */
+    protected static function extrasSurcharge(array $extras, int $quantity): float
+    {
+        $total = 0.0;
+
+        foreach ($extras as $extra) {
+            $id = $extra['id'] ?? null;
+
+            if (is_numeric($id)) {
+                $option = ProductExtraOption::withTrashed()->with('productExtra')->find($id);
+
+                if (! $option) {
+                    continue;
+                }
+
+                $perEntry = (float) $option->priceForUser() + (float) ($option->productExtra?->priceForUser() ?? 0);
+                $total += $option->calculate_only_1_quantity ? $perEntry : $perEntry * $quantity;
+
+                continue;
+            }
+
+            $total += (float) ($extra['price'] ?? 0) * $quantity;
+        }
+
+        return round($total, 2);
+    }
+
+    private static function matchKey(mixed $text): string
+    {
+        return mb_strtolower(trim((string) $text));
     }
 
     /**

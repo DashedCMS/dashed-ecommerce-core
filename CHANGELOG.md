@@ -2,7 +2,7 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
-## Unreleased
+## v4.226.0 - 2026-11-25
 
 ### Added
 - Bestellingen worden automatisch toegewezen aan de eerste medewerker die er iets mee doet: elke orderlogregel van een medewerker zet `assigned_to_user_id`, ook vanuit de app. Een bestaande toewijzing wordt nooit automatisch overschreven. Nieuwe kolom `assigned_at` met het moment van toewijzen.
@@ -13,6 +13,9 @@ All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 - Overnemen en vrijgeven in het CMS: een balk op de bestelling toont wie hem heeft, met knoppen "Overnemen" en "Vrijgeven". Beide komen in de orderlog (`order.assignment.taken-over` / `order.assignment.released`; wijst iemand een ander toe via de app, dan `order.assignment.assigned` met de nieuwe eigenaar als notitie) en leiden zelf niet tot een nieuwe automatische toewijzing.
 - "Ook open bij": wie een bestelling nu open heeft (alleen in de cache, telt 90 seconden na de laatste ping). Zichtbaar als balk op de bestelling en als kolom in de bestellingenlijst.
 - Mobiele API: `assigned_at` in de lijst- en detailrespons, `viewers` (andere medewerkers die de bestelling open hebben, als `{id, name}`) in de detailrespons, `DELETE orders/{order}/assign` om vrij te geven en `POST`/`DELETE orders/{order}/presence` voor "bekijkt nu" (204). `POST orders/{order}/assign` en de automatische toewijzing bij app-acties lopen nu via `OrderAssignment`, zodat `assigned_at` en de orderlog worden gezet.
+
+### Changed
+- Bestelling wijzigen: kies je bij een regel een ander product (bijv. een andere maat of variant), dan blijven de gekozen opties nu staan in plaats van te verdwijnen. Een optie gaat mee als het nieuwe product dezelfde extra heeft, of een extra met dezelfde naam waarin dezelfde keuze bestaat; een invulveld of tekstvak gaat mee met de ingevulde tekst. Wat het nieuwe product niet kent valt weg met een melding. De toeslag van de meegenomen opties telt mee in het nieuwe regeltotaal.
 
 ## v4.225.2 - 2026-11-24
 
