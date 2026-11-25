@@ -203,6 +203,13 @@ class OrderProduct extends Model
             return null;
         }
 
+        // Een gekozen optie die de voorraad met rust laat (skip_stock) wordt
+        // voor de klant gemaakt, bijvoorbeeld een aparte kleur: dat exemplaar
+        // komt nooit van de plank, ook al ligt het product wel op voorraad.
+        if ($this->skip_stock) {
+            return self::STOCK_STATUS_OUT_OF_STOCK;
+        }
+
         $quantity = (int) $this->quantity;
 
         // Backorder/pre-order (zelfde check als is_pre_order): niet het hele

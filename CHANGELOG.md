@@ -2,6 +2,11 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.226.1 - 2026-11-25
+
+### Fixed
+- Een orderregel met een gekozen optie die de voorraad met rust laat (`skip_stock`, bijv. een aparte kleur die voor de klant gemaakt wordt) kreeg als voorraadstatus "op voorraad" zodra het product op de plank lag. Zo'n regel komt nooit van de plank: `OrderProduct::resolveStockStatusAtOrder()` geeft nu altijd "niet op voorraad" (rood in Openstaande bestellingen en op de bestelling).
+
 ## v4.226.0 - 2026-11-25
 
 ### Added
