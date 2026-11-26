@@ -26,15 +26,14 @@ use Dashed\DashedEcommerceCore\Classes\ShippingVat;
 use Dashed\DashedEcommerceCore\Models\DiscountCode;
 use Dashed\DashedEcommerceCore\Models\OrderPayment;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
-use Dashed\DashedEcommerceCore\Models\ProductExtra;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Mail\PaymentLinkMail;
 use Dashed\DashedEcommerceCore\Models\PaymentMethod;
 use Dashed\DashedEcommerceCore\Classes\PosCartExtras;
+use Dashed\DashedEcommerceCore\Classes\PosLineExtras;
 use Dashed\DashedEcommerceCore\Models\ShippingMethod;
 use Dashed\DashedEcommerceCore\Classes\CurrencyHelper;
 use Dashed\DashedEcommerceCore\Classes\ManualPaymentPin;
-use Dashed\DashedEcommerceCore\Models\ProductExtraOption;
 use Dashed\DashedEcommerceCore\Classes\ProformaOrderService;
 use Dashed\DashedEcommerceCore\Services\OnAccount\OnAccountOverride;
 use Dashed\DashedEcommerceCore\Services\Shipping\PosShippingAdvisor;
@@ -206,7 +205,9 @@ class PointOfSaleApiController extends Controller
         $vatTotal = round($vatTotal - $giftCardsVat, 2);
 
         $products = $posCart->products ?? [];
+        $lineExtras = new PosLineExtras();
         foreach ($products as &$product) {
+            $product = array_merge($product, $lineExtras->linePayload($product, $mode));
             $lineDisplay = VatDisplay::formatLinePrice(
                 (float) ($product['price'] ?? 0),
                 $product['vat_rate'] ?? 21,
@@ -518,6 +519,7 @@ class PointOfSaleApiController extends Controller
 
             return response()->json([
                 'products' => array_reverse($products ?? []),
+                ...$this->addedLineInfo($products),
                 'success' => true,
             ]);
         }
@@ -537,8 +539,11 @@ class PointOfSaleApiController extends Controller
 
         $products = $POSCart->products ?? [];
         foreach ($products as &$product) {
-            if (($product['id'] ?? null) == $selectedProduct->id) {
+            // Een regel met gekozen extra's is een eigen samenstelling: een
+            // nieuw exemplaar komt op een eigen regel.
+            if (! $productAlreadyInCart && ($product['id'] ?? null) == $selectedProduct->id && ! self::lineHasExtras($product)) {
                 $productAlreadyInCart = true;
+                $this->lastAddedIdentifier = $product['identifier'] ?? null;
 
                 $product['quantity'] = (int) ($product['quantity'] ?? 0) + 1;
 
@@ -549,10 +554,13 @@ class PointOfSaleApiController extends Controller
             }
         }
 
+        unset($product);
+
         if (! $productAlreadyInCart) {
+            $this->lastAddedIdentifier = Str::random();
             $products[] = [
                 'id' => $selectedProduct->id,
-                'identifier' => Str::random(),
+                'identifier' => $this->lastAddedIdentifier,
                 'name' => $selectedProduct->getTranslation('name', app()->getLocale()),
                 'image' => mediaHelper()->getSingleMedia($selectedProduct->firstImage, ['widen' => 300])->url ?? '',
                 'quantity' => 1,
@@ -623,6 +631,7 @@ class PointOfSaleApiController extends Controller
 
         return response()->json([
             'products' => array_reverse($products ?? []),
+            ...$this->addedLineInfo($products),
             'success' => true,
         ]);
     }
@@ -714,6 +723,207 @@ class PointOfSaleApiController extends Controller
 
         return response()->json([
             'products' => array_reverse($posCart->products),
+            'success' => true,
+        ]);
+    }
+
+    /** Regel die addProductToCart() als laatste aanvulde of toevoegde. */
+    protected ?string $lastAddedIdentifier = null;
+
+    protected static function lineHasExtras(array $product): bool
+    {
+        return PosCartExtras::selections((array) ($product['extra'] ?? [])) !== []
+            || PosCartExtras::textInputs($product) !== [];
+    }
+
+    /**
+     * Welke regel er net bij kwam en of de kassa meteen de opties moet
+     * vragen (het product heeft verplichte extra's die nog open staan).
+     */
+    protected function addedLineInfo(array $products): array
+    {
+        $line = collect($products)->first(fn ($p) => ($p['identifier'] ?? null) === $this->lastAddedIdentifier);
+        $payload = $line ? (new PosLineExtras())->linePayload($line) : null;
+
+        return [
+            'addedIdentifier' => $this->lastAddedIdentifier,
+            'hasExtrasAvailable' => (bool) ($payload['has_extras_available'] ?? false),
+            'needsExtras' => (bool) ($payload['has_required_extras_missing'] ?? false),
+        ];
+    }
+
+    /**
+     * De product-extra's die de kassa voor een product kan kiezen.
+     * Soorten en prijzen: zie PosLineExtras. Prijzen zijn incl. btw.
+     *
+     * Request: { productId }
+     * Response: { success, extras: [{ id, name, type, kind: select|multi|text,
+     *            required, price (alleen bij text), options: [{ id, name, price }] }] }
+     */
+    public function getProductExtras(Request $request): JsonResponse
+    {
+        $product = is_numeric($request->input('productId'))
+            ? Product::find((int) $request->input('productId'))
+            : null;
+
+        if (! $product) {
+            return response()->json(['success' => false, 'message' => 'Product niet gevonden'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'extras' => (new PosLineExtras())->describe($product),
+        ]);
+    }
+
+    /**
+     * Extra's van één kassaregel zetten (vervangt de hele keuze).
+     *
+     * Request: { posIdentifier, productIdentifier,
+     *            extras: { extraId: optionId | [optionId, ...] },
+     *            inputs: { extraId: tekst },
+     *            prices: { optionId | "input-{extraId}": prijs incl. btw per stuk | null } }
+     * Een ontbrekende of lege prijs = de prijs uit de database; prijzen zijn
+     * altijd incl. btw, ook als de kassa ex btw toont.
+     */
+    public function updateProductExtras(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'posIdentifier' => ['required', 'string'],
+            'productIdentifier' => ['required', 'string'],
+            'extras' => ['nullable', 'array'],
+            'inputs' => ['nullable', 'array'],
+            'prices' => ['nullable', 'array'],
+        ]);
+
+        $posCart = POSCart::where('identifier', $data['posIdentifier'])->first();
+        if (! $posCart) {
+            return response()->json(['success' => false, 'message' => 'Winkelwagen niet gevonden'], 404);
+        }
+
+        $products = $posCart->products ?? [];
+        $index = collect($products)->search(fn ($p) => ($p['identifier'] ?? null) === $data['productIdentifier']);
+        if ($index === false) {
+            return response()->json(['success' => false, 'message' => 'Regel niet gevonden'], 404);
+        }
+
+        $line = $products[$index];
+        $lineExtras = new PosLineExtras();
+        $available = ! empty($line['customProduct']) ? collect() : $lineExtras->available($lineExtras->product($line['id'] ?? null));
+
+        if ($available->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Dit product heeft geen opties'], 422);
+        }
+
+        $fail = fn (string $message) => response()->json(['success' => false, 'message' => $message], 422);
+
+        $extra = [];
+        $inputs = [];
+        $priceKeys = [];
+
+        foreach ((array) ($data['extras'] ?? []) as $extraId => $value) {
+            $productExtra = $available->get((int) $extraId);
+            $kind = $productExtra ? PosLineExtras::kindFor($productExtra->type) : null;
+            if (! $productExtra || $kind === 'text') {
+                return $fail('Onbekende optie voor dit product');
+            }
+
+            $optionIds = collect(is_array($value) ? $value : [$value])
+                ->filter(fn ($id) => $id !== null && $id !== '' && $id !== false)
+                ->values();
+
+            if ($optionIds->contains(fn ($id) => ! is_numeric($id) || ! $productExtra->productExtraOptions->contains('id', (int) $id))) {
+                return $fail('Kies een geldige optie voor ' . $productExtra->name);
+            }
+
+            $optionIds = $optionIds->map(fn ($id) => (int) $id)->unique()->values()->all();
+            if ($kind === 'select' && count($optionIds) > 1) {
+                return $fail('Kies één optie voor ' . $productExtra->name);
+            }
+
+            if ($optionIds) {
+                $extra[(int) $extraId] = count($optionIds) === 1 ? $optionIds[0] : $optionIds;
+                foreach ($optionIds as $optionId) {
+                    $priceKeys[] = (string) $optionId;
+                }
+            }
+        }
+
+        foreach ((array) ($data['inputs'] ?? []) as $extraId => $value) {
+            $productExtra = $available->get((int) $extraId);
+            if (! $productExtra || PosLineExtras::kindFor($productExtra->type) !== 'text') {
+                return $fail('Onbekend invulveld voor dit product');
+            }
+
+            $value = is_scalar($value) ? trim((string) $value) : '';
+            $error = $productExtra->textValueError($value);
+            if ($error === 'min') {
+                return $fail($productExtra->name . ' moet minimaal ' . $productExtra->min_length . ' tekens hebben');
+            }
+            if ($error === 'max') {
+                return $fail($productExtra->name . ' mag maximaal ' . $productExtra->max_length . ' tekens hebben');
+            }
+
+            if ($value !== '') {
+                $inputs[(int) $extraId] = $value;
+                $priceKeys[] = 'input-' . (int) $extraId;
+            }
+        }
+
+        foreach ($available as $productExtra) {
+            if (! $productExtra->required) {
+                continue;
+            }
+
+            $filled = PosLineExtras::kindFor($productExtra->type) === 'text'
+                ? isset($inputs[$productExtra->id])
+                : isset($extra[$productExtra->id]);
+
+            if (! $filled) {
+                return $fail(PosLineExtras::kindFor($productExtra->type) === 'text'
+                    ? 'Vul ' . $productExtra->name . ' in'
+                    : 'Kies een optie voor ' . $productExtra->name);
+            }
+        }
+
+        $prices = [];
+        foreach ((array) ($data['prices'] ?? []) as $key => $price) {
+            $key = (string) $key;
+            if ($price === null || $price === '' || ! in_array($key, $priceKeys, true)) {
+                continue;
+            }
+            if (! is_numeric($price) || (float) $price < 0) {
+                return $fail('Ongeldige prijs voor een optie');
+            }
+
+            $prices[$key] = round((float) $price, 2);
+        }
+
+        $line['extra'] = $extra;
+        $line['extra_inputs'] = $inputs;
+        $line['extra_prices'] = $prices;
+
+        // Teksten van een oudere "wagen naar kassa" stonden in options.options;
+        // vanaf nu alleen nog in extra_inputs.
+        if (isset($line['options']['options']) && is_array($line['options']['options'])) {
+            foreach (array_keys($line['options']['options']) as $key) {
+                if (str_starts_with((string) $key, 'product-extra-input-')) {
+                    unset($line['options']['options'][$key]);
+                }
+            }
+        }
+
+        $products[$index] = $line;
+        $posCart->products = array_values($products);
+        $posCart->save();
+
+        $mode = $posCart->prices_ex_vat ? 'ex' : 'incl';
+
+        return response()->json([
+            'products' => array_reverse(array_map(
+                fn (array $p) => array_merge($p, $lineExtras->linePayload($p, $mode)),
+                $posCart->products,
+            )),
             'success' => true,
         ]);
     }
@@ -1076,6 +1286,17 @@ class PointOfSaleApiController extends Controller
             ];
         }
 
+        $lineExtras = new PosLineExtras();
+        foreach ($products as $posItem) {
+            $missing = $lineExtras->missingRequired($posItem);
+            if ($missing) {
+                return [
+                    'success' => false,
+                    'message' => 'Kies eerst de verplichte opties voor ' . ($posItem['name'] ?? 'een product') . ': ' . implode(', ', $missing),
+                ];
+            }
+        }
+
         $shippingMethod = ShippingMethod::find($posCart->shipping_method_id);
 
         $discountCodeRecords = $posCart->appliedDiscountCodeRecords();
@@ -1358,9 +1579,6 @@ class PointOfSaleApiController extends Controller
             POSHelper::finishPaidOrder($order, $posCart);
         }
 
-        $extraOptionCache = [];
-        $extraCache = [];
-
         foreach (($totals['lines'] ?? []) as $line) {
             $orderProduct = new OrderProduct();
             $orderProduct->quantity = (int) $line['quantity'];
@@ -1372,28 +1590,13 @@ class PointOfSaleApiController extends Controller
             $orderProduct->price = (float) $line['line_total'];
             $orderProduct->discount = (float) $line['discount'];
 
-            $productExtras = [];
             $originalPosItem = collect($posCart->products ?? [])
                 ->first(fn ($p) => ($p['identifier'] ?? null) === ($line['source_identifier'] ?? null));
 
-            foreach (PosCartExtras::optionMap($originalPosItem['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
-                if (! isset($extraOptionCache[$productExtraOptionId])) {
-                    $extraOptionCache[$productExtraOptionId] = ProductExtraOption::find($productExtraOptionId);
-                }
-                $opt = $extraOptionCache[$productExtraOptionId];
-
-                if (! isset($extraCache[$productExtraId])) {
-                    $extraCache[$productExtraId] = ProductExtra::find($productExtraId);
-                }
-                $extra = $extraCache[$productExtraId];
-
-                $productExtras[] = [
-                    'id' => $productExtraOptionId,
-                    'name' => $extra?->name ?? ($opt?->productExtra?->name ?? ''),
-                    'value' => $opt?->value ?? '',
-                    'price' => (float) ($opt?->price ?? 0),
-                ];
-            }
+            // Opties en ingevulde teksten in het formaat van de webshop, met
+            // de prijs die de klant werkelijk betaalt (aangepast of uit de
+            // database).
+            $productExtras = $originalPosItem ? $lineExtras->orderRows($originalPosItem) : [];
 
             $orderProduct->product_extras = $productExtras;
             $orderProduct->save();
@@ -2250,9 +2453,21 @@ class PointOfSaleApiController extends Controller
         $options = $chosenProduct['options'] ?? [];
         $options['options'] = $options['options'] ?? [];
 
-        foreach (PosCartExtras::optionMap($chosenProduct['extra'] ?? []) as $productExtraId => $productExtraOptionId) {
-            $options['options'][(string) $productExtraOptionId] = [
+        foreach (PosCartExtras::selections($chosenProduct['extra'] ?? []) as $productExtraOptionIds) {
+            foreach ($productExtraOptionIds as $productExtraOptionId) {
+                $options['options'][(string) $productExtraOptionId] = [
+                    'quantity' => (int) ($chosenProduct['quantity'] ?? 1),
+                ];
+            }
+        }
+
+        // Ingevulde teksten tellen mee onder dezelfde sleutel als in de
+        // webshopwagen; getShoppingCartItemPrice() rekent dan de meerprijs
+        // van de extra per stuk.
+        foreach (PosCartExtras::textInputs($chosenProduct) as $productExtraId => $value) {
+            $options['options']['product-extra-input-' . $productExtraId] = [
                 'quantity' => (int) ($chosenProduct['quantity'] ?? 1),
+                'value' => $value,
             ];
         }
 
@@ -2460,6 +2675,8 @@ class PointOfSaleApiController extends Controller
             ? collect()
             : Product::with(['volumeDiscounts', 'productCategories'])->whereIn('id', $lineProductIds)->get()->keyBy('id');
 
+        $lineExtras = new PosLineExtras();
+
         foreach ($products as $chosenProduct) {
             $qty = (int) ($chosenProduct['quantity'] ?? 0);
             if ($qty < 1) {
@@ -2514,6 +2731,18 @@ class PointOfSaleApiController extends Controller
 
             if ($percentageDiscount) {
                 $lineWithDiscount = (float) Product::getShoppingCartItemPrice($item, $percentageDiscount);
+            }
+
+            // Een met de hand aangepaste prijs van een extra: het verschil met
+            // de databaseprijs (die getShoppingCartItemPrice al meerekende)
+            // komt erbij. Een procentuele code geldt er naar verhouding ook op.
+            if ($model && ! empty($chosenProduct['extra_prices'])) {
+                $extrasDelta = $lineExtras->overrideDelta($chosenProduct);
+                if ($extrasDelta != 0.0) {
+                    $ratio = $lineWithoutDiscount > 0 ? $lineWithDiscount / $lineWithoutDiscount : 1.0;
+                    $lineWithoutDiscount = max(0.0, $lineWithoutDiscount + $extrasDelta);
+                    $lineWithDiscount = max(0.0, $lineWithDiscount + $extrasDelta * $ratio);
+                }
             }
 
             $subtotal += $lineWithDiscount;

@@ -87,9 +87,10 @@ it('houdt de tekst en de meerprijs van een invulveld vast', function () {
     CartToPosService::copyIntoCart($posCart, $cart->fresh());
     $posCart = $posCart->fresh();
 
-    expect($posCart->products[0]['name'])->toBe('Ketting (Andere kleur: Zwart)')
+    expect($posCart->products[0]['name'])->toBe('Ketting')
         ->and($posCart->products[0]['extra'])->toBe([])
-        ->and($posCart->note)->toBe('Ketting - Andere kleur: Zwart');
+        ->and($posCart->products[0]['extra_inputs'])->toBe([$extra->id => 'Zwart'])
+        ->and($posCart->note)->toBeNull();
 
     $totals = app(PointOfSaleApiController::class)->calculatePosCartTotals($posCart);
     expect((float) $totals['subtotal'])->toBe(17.0);

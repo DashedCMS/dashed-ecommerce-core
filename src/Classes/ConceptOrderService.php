@@ -71,6 +71,7 @@ class ConceptOrderService
             $order->invoice_id = null;
             $order->save();
 
+            $lineExtras = new PosLineExtras();
             foreach ($products as $row) {
                 $quantity = max(1, (int) ($row['quantity'] ?? 1));
                 $lineTotal = (float) ($row['price'] ?? 0);
@@ -81,7 +82,7 @@ class ConceptOrderService
                     'quantity' => $quantity,
                     'price' => $lineTotal,
                     'vat_rate' => $vatRate,
-                    'product_extras' => $row['extra'] ?? [],
+                    'product_extras' => $lineExtras->orderRows($row),
                     'name' => $row['name'] ?? (isset($row['id']) ? (Product::find($row['id'])?->name ?? 'Product') : 'Product'),
                 ]);
             }
@@ -215,7 +216,8 @@ class ConceptOrderService
                 'price' => $lineTotal,
                 'priceFormatted' => CurrencyHelper::formatPrice($lineTotal),
                 'vat_rate' => (float) ($op->vat_rate ?? 21),
-                'extra' => PosCartExtras::optionMap(is_array($op->product_extras) ? $op->product_extras : []),
+                'extra' => PosCartExtras::storageMap(is_array($op->product_extras) ? $op->product_extras : []),
+                'extra_inputs' => PosCartExtras::textInputsFromOrderExtras(is_array($op->product_extras) ? $op->product_extras : []),
                 'customProduct' => ! $op->product_id,
             ];
         }

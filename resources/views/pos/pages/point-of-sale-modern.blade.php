@@ -265,6 +265,14 @@
                             </div>
                             <div class="flex-1 min-w-0 flex flex-col gap-1.5">
                                 <span class="text-sm leading-tight" x-html="product.name"></span>
+                                <template x-for="extra in (product.extras || [])" :key="extra.extra_id + '-' + (extra.option_id ?? 'tekst')">
+                                    <span class="text-xs text-neutral-500 dark:text-white/50 leading-tight">
+                                        <span x-text="extra.name + ': ' + extra.value"></span>
+                                        <span x-html="'(+ ' + extra.priceFormatted + ')'"></span>
+                                        <span x-show="extra.price_overridden" x-cloak class="italic" title="Prijs met de hand aangepast">aangepast</span>
+                                    </span>
+                                </template>
+                                <span x-show="product.has_required_extras_missing" x-cloak class="text-xs font-bold text-red-500">Kies eerst de verplichte opties</span>
                                 <div class="leading-tight">
                                     <s class="text-xs text-neutral-500 dark:text-white/40 mr-1" x-html="product.priceFormattedOriginal" x-show="product.priceFormattedOriginal" x-cloak title="Prijs zonder staffelkorting"></s>
                                     <span class="font-bold text-sm" x-html="product.priceFormattedPrimary ?? product.priceFormatted"></span>
@@ -282,6 +290,11 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
                                         </button>
                                     </div>
+                                    <button @click="openProductExtrasPopup(product)" x-show="product.has_extras_available" x-cloak x-bind:disabled="loading"
+                                        title="Opties"
+                                        class="pos-tool size-8 grid place-items-center rounded-lg bg-primary-500/15 text-primary-300 hover:bg-primary-500/30 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/></svg>
+                                    </button>
                                     <button @click="openChangeProductPricePopup(product)" x-bind:disabled="loading"
                                             title="Prijs aanpassen"
                                             class="pos-tool size-8 grid place-items-center rounded-lg bg-orange-500/15 text-orange-300 hover:bg-orange-500/30 transition-colors">

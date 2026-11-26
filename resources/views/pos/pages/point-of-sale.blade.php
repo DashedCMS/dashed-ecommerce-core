@@ -402,6 +402,14 @@
                             </div>
                             <div class="flex flex-col flex-wrap gap-1 flex-1">
                                 <span class="word-wrap text-sm" x-html="product.name"></span>
+                                <template x-for="extra in (product.extras || [])" :key="extra.extra_id + '-' + (extra.option_id ?? 'tekst')">
+                                    <span class="text-xs text-gray-500 leading-tight">
+                                        <span x-text="extra.name + ': ' + extra.value"></span>
+                                        <span x-html="'(+ ' + extra.priceFormatted + ')'"></span>
+                                        <span x-show="extra.price_overridden" x-cloak class="italic" title="Prijs met de hand aangepast">aangepast</span>
+                                    </span>
+                                </template>
+                                <span x-show="product.has_required_extras_missing" x-cloak class="text-xs font-bold text-red-600">Kies eerst de verplichte opties</span>
                                 <div class="flex flex-col leading-tight">
                                     <s class="text-xs text-gray-400" x-html="product.priceFormattedOriginal" x-show="product.priceFormattedOriginal" x-cloak title="Prijs zonder staffelkorting"></s>
                                     <span class="font-bold text-md word-wrap" x-html="product.priceFormattedPrimary ?? product.priceFormatted"></span>
@@ -439,6 +447,11 @@
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                   d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
                                         </svg>
+                                    </button>
+                                    <button @click="openProductExtrasPopup(product)" x-show="product.has_extras_available" x-cloak x-bind:disabled="loading"
+                                        title="Opties"
+                                        class="h-10 w-10 text-white transition-all duration-300 ease-in-out p-1 rounded-full flex items-center justify-center bg-primary-500 hover:bg-primary-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75"/></svg>
                                     </button>
                                     <button
                                         @click="openChangeProductPricePopup(product)"
@@ -599,6 +612,91 @@
                             Toevoegen
                         </button>
                     </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    {{-- Opties (product-extra's) van een kassaregel; zie openProductExtrasPopup()/saveProductExtras(). Prijzen incl. btw. --}}
+    <div
+        x-show="productExtrasPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 text-black">
+        <div class="absolute h-full w-full" @click="productExtrasPopup = false"></div>
+        <div class="bg-white rounded-lg p-8 grid gap-4 relative w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <div class="text-black cursor-pointer absolute top-2 right-2"
+                 @click="productExtrasPopup = false">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                     stroke="currentColor" class="size-10">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+            </div>
+            <p class="text-3xl font-bold pr-12">Opties</p>
+            <p class="text-sm text-gray-500" x-text="extrasLine ? extrasLine.name : ''"></p>
+            <form @submit.prevent="saveProductExtras()" class="grid gap-4">
+                <template x-for="extra in extrasDefinitions" :key="extra.id">
+                    <div class="grid gap-2">
+                        <p class="font-bold">
+                            <span x-text="extra.name"></span>
+                            <span x-show="extra.required" class="text-red-500">*</span>
+                        </p>
+
+                        <template x-if="extra.kind === 'select'">
+                            <div class="grid gap-2">
+                                <select x-model="extrasForm.extras[extra.id]" class="rounded-lg border border-gray-300 px-3 py-2 text-black">
+                                    <option value="">Geen keuze</option>
+                                    <template x-for="option in extra.options" :key="option.id">
+                                        <option :value="String(option.id)" :selected="String(option.id) === String(extrasForm.extras[extra.id])" x-text="option.name + ' (+ ' + formatEuro(option.price) + ')'"></option>
+                                    </template>
+                                </select>
+                                <label class="flex items-center gap-2 text-sm" x-show="extrasForm.extras[extra.id]">
+                                    <span class="text-gray-500">Prijs incl. btw</span>
+                                    <input type="number" step="0.01" min="0" class="rounded-lg border border-gray-300 px-3 py-2 text-black w-32"
+                                           x-model="extrasForm.prices[extrasForm.extras[extra.id]]"
+                                           :placeholder="extrasOptionPrice(extra, extrasForm.extras[extra.id]).toFixed(2)">
+                                </label>
+                            </div>
+                        </template>
+
+                        <template x-if="extra.kind === 'multi'">
+                            <div class="grid gap-2">
+                                <template x-for="option in extra.options" :key="option.id">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <label class="flex items-center gap-2 grow">
+                                            <input type="checkbox" class="rounded" :value="String(option.id)" x-model="extrasForm.extras[extra.id]">
+                                            <span x-text="option.name + ' (+ ' + formatEuro(option.price) + ')'"></span>
+                                        </label>
+                                        <input type="number" step="0.01" min="0" class="rounded-lg border border-gray-300 px-3 py-2 text-black w-32"
+                                               x-show="(extrasForm.extras[extra.id] || []).includes(String(option.id))"
+                                               x-model="extrasForm.prices[String(option.id)]"
+                                               :placeholder="Number(option.price).toFixed(2)"
+                                               title="Prijs incl. btw">
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template x-if="extra.kind === 'text'">
+                            <div class="grid gap-2">
+                                <textarea x-show="extra.type === 'textarea'" rows="3" class="rounded-lg border border-gray-300 px-3 py-2 text-black" x-model="extrasForm.inputs[extra.id]"></textarea>
+                                <input x-show="extra.type !== 'textarea'" type="text" class="rounded-lg border border-gray-300 px-3 py-2 text-black" x-model="extrasForm.inputs[extra.id]">
+                                <label class="flex items-center gap-2 text-sm" x-show="(extrasForm.inputs[extra.id] || '').trim() !== ''">
+                                    <span class="text-gray-500">Prijs incl. btw</span>
+                                    <input type="number" step="0.01" min="0" class="rounded-lg border border-gray-300 px-3 py-2 text-black w-32"
+                                           x-model="extrasForm.prices['input-' + extra.id]"
+                                           :placeholder="Number(extra.price || 0).toFixed(2)">
+                                </label>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <p class="text-xs text-gray-500">Laat een prijs leeg voor de standaardprijs.</p>
+                <div>
+                    <button type="submit" x-bind:disabled="loading"
+                            class="px-4 py-2 text-lg uppercase rounded-lg bg-primary-500 hover:bg-primary-700 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                        Opslaan
+                    </button>
                 </div>
             </form>
         </div>
@@ -2028,6 +2126,10 @@
         orderConfirmationPopup: false,
         chooseShippingMethodPopup: false,
         changeProductPricePopup: false,
+        productExtrasPopup: false,
+        extrasLine: null,
+        extrasDefinitions: [],
+        extrasForm: {extras: {}, inputs: {}, prices: {}},
         isFullscreen: false,
         pinTerminalStatusHandled: false,
         loading: false,
@@ -2568,6 +2670,7 @@
                 }
 
                 this.products = data.products;
+                this.openProductExtrasIfNeeded(data);
                 this.retrieveCart();
                 this.loading = false;
             } catch (error) {
@@ -2694,6 +2797,7 @@
                         });
                     } else {
                         this.products = data.products;
+                        this.openProductExtrasIfNeeded(data);
 
                         if (data.discountCode) {
                             this.discountCode = data.discountCode;
@@ -2887,6 +2991,169 @@
                     message: 'De korting kon niet worden verwijderd'
                 })
             }
+        },
+
+        formatEuro(amount) {
+            return new Intl.NumberFormat('nl-NL', {style: 'currency', currency: 'EUR'}).format(Number(amount || 0));
+        },
+
+        openProductExtrasIfNeeded(data) {
+            if (!data || !data.needsExtras || !data.addedIdentifier) {
+                return;
+            }
+
+            const line = (data.products || []).find(p => p.identifier === data.addedIdentifier);
+            if (line) {
+                this.openProductExtrasPopup(line);
+            }
+        },
+
+        {{-- Opties (product-extra's) van een kassaregel kiezen. Prijzen zijn altijd incl. btw. --}}
+        async openProductExtrasPopup(product) {
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.get-product-extras') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        productId: product.id,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message || 'De opties konden niet worden opgehaald',
+                    })
+                }
+
+                const form = {extras: {}, inputs: {}, prices: {}};
+                for (const extra of data.extras) {
+                    if (extra.kind === 'multi') {
+                        form.extras[extra.id] = [];
+                    } else if (extra.kind === 'select') {
+                        form.extras[extra.id] = '';
+                    } else {
+                        form.inputs[extra.id] = '';
+                    }
+                }
+
+                for (const chosen of (product.extras || [])) {
+                    const key = chosen.option_id ? String(chosen.option_id) : 'input-' + chosen.extra_id;
+                    if (!chosen.option_id) {
+                        form.inputs[chosen.extra_id] = chosen.value;
+                    } else if (Array.isArray(form.extras[chosen.extra_id])) {
+                        form.extras[chosen.extra_id].push(String(chosen.option_id));
+                    } else {
+                        form.extras[chosen.extra_id] = String(chosen.option_id);
+                    }
+                    if (chosen.price_overridden) {
+                        form.prices[key] = chosen.price;
+                    }
+                }
+
+                this.extrasLine = product;
+                this.extrasDefinitions = data.extras;
+                this.extrasForm = form;
+                this.productExtrasPopup = true;
+            } catch (error) {
+                $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De opties konden niet worden opgehaald'
+                })
+            }
+
+            this.loading = false;
+        },
+
+        extrasOptionPrice(extra, optionId) {
+            const option = (extra.options || []).find(o => String(o.id) === String(optionId));
+
+            return option ? option.price : 0;
+        },
+
+        async saveProductExtras() {
+            if (!this.extrasLine) {
+                return;
+            }
+
+            const extras = {};
+            const inputs = {};
+            const prices = {};
+            const chosenKeys = [];
+
+            for (const extra of this.extrasDefinitions) {
+                if (extra.kind === 'text') {
+                    const value = (this.extrasForm.inputs[extra.id] ?? '').toString();
+                    inputs[extra.id] = value;
+                    if (value.trim() !== '') {
+                        chosenKeys.push('input-' + extra.id);
+                    }
+                } else {
+                    const value = this.extrasForm.extras[extra.id];
+                    const ids = (Array.isArray(value) ? value : [value]).filter(id => id !== '' && id !== null && id !== undefined).map(id => Number(id));
+                    if (ids.length) {
+                        extras[extra.id] = extra.kind === 'multi' ? ids : ids[0];
+                        ids.forEach(id => chosenKeys.push(String(id)));
+                    }
+                }
+            }
+
+            for (const key of chosenKeys) {
+                const price = this.extrasForm.prices[key];
+                if (price !== '' && price !== null && price !== undefined) {
+                    prices[key] = Number(String(price).replace(',', '.'));
+                }
+            }
+
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.update-product-extras') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        productIdentifier: this.extrasLine.identifier,
+                        extras: extras,
+                        inputs: inputs,
+                        prices: prices,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message || 'De opties konden niet worden opgeslagen',
+                    })
+                }
+
+                this.products = data.products;
+                this.productExtrasPopup = false;
+                this.extrasLine = null;
+                this.retrieveCart();
+            } catch (error) {
+                $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De opties konden niet worden opgeslagen'
+                })
+            }
+
+            this.loading = false;
         },
 
         async openChangeProductPricePopup(product) {

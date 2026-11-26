@@ -89,7 +89,7 @@ class CartToPosService
     }
 
     /**
-     * @param  array<int, string>  $notes  Invulvelden die de kassa niet als extra kent, als regels voor de notitie.
+     * @param  array<int, string>  $notes  Regels voor de notitie (invulvelden staan sinds de kassa-extra's op de regel zelf).
      */
     public static function buildCartProducts(Cart $cart, array &$notes = []): array
     {
@@ -130,48 +130,31 @@ class CartToPosService
             foreach ((array) data_get($item->options, 'options', []) as $key => $option) {
                 if (is_numeric($key)) {
                     $chosenOptions[] = ['id' => (int) $key];
-                } elseif (str_contains((string) $key, 'product-extra-') && is_array($option)) {
-                    $inputs[(string) $key] = $option;
+                } elseif (is_array($option) && preg_match('/^product-extra-input-(\d+)$/', (string) $key, $m)) {
+                    $value = is_scalar($option['value'] ?? null) ? trim((string) $option['value']) : '';
+                    if ($value !== '') {
+                        $inputs[(int) $m[1]] = $value;
+                    }
                 }
             }
 
-            $name = $item->name ?: $product->getTranslation('name', app()->getLocale());
-            $row = [
+            // Ingevulde teksten gaan als extra_inputs mee: de kassa rekent er
+            // de meerprijs van en zet ze bij het afrekenen in de product_extras
+            // van de orderregel (en zo op de pakbon).
+            $products[] = [
                 'id' => $product->id,
                 'identifier' => (string) Str::random(),
-                'name' => $name,
+                'name' => $item->name ?: $product->getTranslation('name', app()->getLocale()),
                 'image' => $product->firstImage ? (mediaHelper()->getSingleMedia($product->firstImage, ['widen' => 300])->url ?? '') : '',
                 'quantity' => $quantity,
                 'singlePrice' => $unitPrice,
                 'price' => $unitPrice * $quantity,
                 'priceFormatted' => CurrencyHelper::formatPrice($unitPrice * $quantity),
                 'vat_rate' => (float) ($product->vat_rate ?? $product->tax_rate ?? 21),
-                'extra' => PosCartExtras::optionMap($chosenOptions),
+                'extra' => PosCartExtras::storageMap($chosenOptions),
+                'extra_inputs' => $inputs,
                 'customProduct' => false,
             ];
-
-            if ($inputs) {
-                // De kassa kent een invulveld niet als extra. De meerprijs
-                // blijft meetellen via 'options' (zelfde sleutels als de
-                // webshopwagen) en de tekst gaat mee in de regelnaam en de
-                // notitie, zodat hij op de bestelling en de pakbon staat.
-                $row['options'] = ['options' => $inputs];
-
-                $texts = [];
-                foreach ($inputs as $input) {
-                    $value = trim((string) (is_scalar($input['value'] ?? null) ? $input['value'] : ''));
-                    if ($value !== '') {
-                        $texts[] = trim((string) ($input['name'] ?? '')) . ': ' . $value;
-                    }
-                }
-
-                if ($texts) {
-                    $row['name'] = $name . ' (' . implode(', ', $texts) . ')';
-                    $notes[] = $name . ' - ' . implode(', ', $texts);
-                }
-            }
-
-            $products[] = $row;
         }
 
         return $products;

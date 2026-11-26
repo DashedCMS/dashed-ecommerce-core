@@ -30,6 +30,91 @@
             </form>
         </div>
     </div>
+    {{-- Opties (product-extra's) van een kassaregel; zie openProductExtrasPopup()/saveProductExtras(). Prijzen incl. btw. --}}
+    <div
+        x-show="productExtrasPopup"
+        x-cloak
+        x-transition.opacity.scale.origin
+        class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+        <div class="absolute h-full w-full" @click="productExtrasPopup = false"></div>
+        <div class="bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white border border-neutral-200 dark:border-white/10 rounded-2xl p-8 grid gap-4 relative w-full max-w-xl max-h-[90vh] overflow-y-auto">
+            <div class="text-neutral-500 dark:text-white/60 hover:text-white cursor-pointer absolute top-2 right-2"
+                 @click="productExtrasPopup = false">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                     stroke="currentColor" class="size-10">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+            </div>
+            <p class="text-3xl font-bold pr-12">Opties</p>
+            <p class="text-sm text-neutral-500 dark:text-white/50" x-text="extrasLine ? extrasLine.name : ''"></p>
+            <form @submit.prevent="saveProductExtras()" class="grid gap-4">
+                <template x-for="extra in extrasDefinitions" :key="extra.id">
+                    <div class="grid gap-2">
+                        <p class="font-bold">
+                            <span x-text="extra.name"></span>
+                            <span x-show="extra.required" class="text-red-500">*</span>
+                        </p>
+
+                        <template x-if="extra.kind === 'select'">
+                            <div class="grid gap-2">
+                                <select x-model="extrasForm.extras[extra.id]" class="rounded-xl border border-neutral-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2">
+                                    <option value="">Geen keuze</option>
+                                    <template x-for="option in extra.options" :key="option.id">
+                                        <option :value="String(option.id)" :selected="String(option.id) === String(extrasForm.extras[extra.id])" x-text="option.name + ' (+ ' + formatEuro(option.price) + ')'"></option>
+                                    </template>
+                                </select>
+                                <label class="flex items-center gap-2 text-sm" x-show="extrasForm.extras[extra.id]">
+                                    <span class="text-neutral-500 dark:text-white/50">Prijs incl. btw</span>
+                                    <input type="number" step="0.01" min="0" class="rounded-xl border border-neutral-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 w-32"
+                                           x-model="extrasForm.prices[extrasForm.extras[extra.id]]"
+                                           :placeholder="extrasOptionPrice(extra, extrasForm.extras[extra.id]).toFixed(2)">
+                                </label>
+                            </div>
+                        </template>
+
+                        <template x-if="extra.kind === 'multi'">
+                            <div class="grid gap-2">
+                                <template x-for="option in extra.options" :key="option.id">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <label class="flex items-center gap-2 grow">
+                                            <input type="checkbox" class="rounded" :value="String(option.id)" x-model="extrasForm.extras[extra.id]">
+                                            <span x-text="option.name + ' (+ ' + formatEuro(option.price) + ')'"></span>
+                                        </label>
+                                        <input type="number" step="0.01" min="0" class="rounded-xl border border-neutral-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 w-32"
+                                               x-show="(extrasForm.extras[extra.id] || []).includes(String(option.id))"
+                                               x-model="extrasForm.prices[String(option.id)]"
+                                               :placeholder="Number(option.price).toFixed(2)"
+                                               title="Prijs incl. btw">
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template x-if="extra.kind === 'text'">
+                            <div class="grid gap-2">
+                                <textarea x-show="extra.type === 'textarea'" rows="3" class="rounded-xl border border-neutral-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2" x-model="extrasForm.inputs[extra.id]"></textarea>
+                                <input x-show="extra.type !== 'textarea'" type="text" class="rounded-xl border border-neutral-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2" x-model="extrasForm.inputs[extra.id]">
+                                <label class="flex items-center gap-2 text-sm" x-show="(extrasForm.inputs[extra.id] || '').trim() !== ''">
+                                    <span class="text-neutral-500 dark:text-white/50">Prijs incl. btw</span>
+                                    <input type="number" step="0.01" min="0" class="rounded-xl border border-neutral-300 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 w-32"
+                                           x-model="extrasForm.prices['input-' + extra.id]"
+                                           :placeholder="Number(extra.price || 0).toFixed(2)">
+                                </label>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <p class="text-xs text-neutral-500 dark:text-white/50">Laat een prijs leeg voor de standaardprijs.</p>
+                <div>
+                    <button type="submit" x-bind:disabled="loading"
+                            class="px-4 py-2 text-lg uppercase rounded-xl bg-primary-500 hover:bg-primary-600 transition-all ease-in-out duration-300 text-white font-bold w-full">
+                        Opslaan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
     <div
         x-show="changeProductPricePopup"
         x-cloak

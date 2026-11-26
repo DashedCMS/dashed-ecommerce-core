@@ -65,6 +65,8 @@ $posActions = [
     'apply-gift-card' => 'applyGiftCard',
     'remove-gift-card' => 'removeGiftCard',
     'change-product-price' => 'changeProductPrice',
+    'get-product-extras' => 'getProductExtras',
+    'update-product-extras' => 'updateProductExtras',
     'send-proforma' => 'sendProforma',
     'set-prices-ex-vat' => 'setPricesExVat',
 ];

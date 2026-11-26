@@ -82,6 +82,10 @@
         orderConfirmationPopup: false,
         chooseShippingMethodPopup: false,
         changeProductPricePopup: false,
+        productExtrasPopup: false,
+        extrasLine: null,
+        extrasDefinitions: [],
+        extrasForm: {extras: {}, inputs: {}, prices: {}},
         isFullscreen: false,
         pinTerminalStatusHandled: false,
         loading: false,
@@ -626,6 +630,7 @@
                 }
 
                 this.products = data.products;
+                this.openProductExtrasIfNeeded(data);
                 this.retrieveCart();
                 this.loading = false;
             } catch (error) {
@@ -752,6 +757,7 @@
                         });
                     } else {
                         this.products = data.products;
+                        this.openProductExtrasIfNeeded(data);
 
                         let codeToApply = null;
                         if (data.discountCode) {
@@ -946,6 +952,169 @@
                     message: 'De korting kon niet worden verwijderd'
                 })
             }
+        },
+
+        formatEuro(amount) {
+            return new Intl.NumberFormat('nl-NL', {style: 'currency', currency: 'EUR'}).format(Number(amount || 0));
+        },
+
+        openProductExtrasIfNeeded(data) {
+            if (!data || !data.needsExtras || !data.addedIdentifier) {
+                return;
+            }
+
+            const line = (data.products || []).find(p => p.identifier === data.addedIdentifier);
+            if (line) {
+                this.openProductExtrasPopup(line);
+            }
+        },
+
+        {{-- Opties (product-extra's) van een kassaregel kiezen. Prijzen zijn altijd incl. btw. --}}
+        async openProductExtrasPopup(product) {
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.get-product-extras') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        productId: product.id,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message || 'De opties konden niet worden opgehaald',
+                    })
+                }
+
+                const form = {extras: {}, inputs: {}, prices: {}};
+                for (const extra of data.extras) {
+                    if (extra.kind === 'multi') {
+                        form.extras[extra.id] = [];
+                    } else if (extra.kind === 'select') {
+                        form.extras[extra.id] = '';
+                    } else {
+                        form.inputs[extra.id] = '';
+                    }
+                }
+
+                for (const chosen of (product.extras || [])) {
+                    const key = chosen.option_id ? String(chosen.option_id) : 'input-' + chosen.extra_id;
+                    if (!chosen.option_id) {
+                        form.inputs[chosen.extra_id] = chosen.value;
+                    } else if (Array.isArray(form.extras[chosen.extra_id])) {
+                        form.extras[chosen.extra_id].push(String(chosen.option_id));
+                    } else {
+                        form.extras[chosen.extra_id] = String(chosen.option_id);
+                    }
+                    if (chosen.price_overridden) {
+                        form.prices[key] = chosen.price;
+                    }
+                }
+
+                this.extrasLine = product;
+                this.extrasDefinitions = data.extras;
+                this.extrasForm = form;
+                this.productExtrasPopup = true;
+            } catch (error) {
+                $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De opties konden niet worden opgehaald'
+                })
+            }
+
+            this.loading = false;
+        },
+
+        extrasOptionPrice(extra, optionId) {
+            const option = (extra.options || []).find(o => String(o.id) === String(optionId));
+
+            return option ? option.price : 0;
+        },
+
+        async saveProductExtras() {
+            if (!this.extrasLine) {
+                return;
+            }
+
+            const extras = {};
+            const inputs = {};
+            const prices = {};
+            const chosenKeys = [];
+
+            for (const extra of this.extrasDefinitions) {
+                if (extra.kind === 'text') {
+                    const value = (this.extrasForm.inputs[extra.id] ?? '').toString();
+                    inputs[extra.id] = value;
+                    if (value.trim() !== '') {
+                        chosenKeys.push('input-' + extra.id);
+                    }
+                } else {
+                    const value = this.extrasForm.extras[extra.id];
+                    const ids = (Array.isArray(value) ? value : [value]).filter(id => id !== '' && id !== null && id !== undefined).map(id => Number(id));
+                    if (ids.length) {
+                        extras[extra.id] = extra.kind === 'multi' ? ids : ids[0];
+                        ids.forEach(id => chosenKeys.push(String(id)));
+                    }
+                }
+            }
+
+            for (const key of chosenKeys) {
+                const price = this.extrasForm.prices[key];
+                if (price !== '' && price !== null && price !== undefined) {
+                    prices[key] = Number(String(price).replace(',', '.'));
+                }
+            }
+
+            this.loading = true;
+            try {
+                let response = await fetch('{{ route('api.point-of-sale.update-product-extras') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                    },
+                    body: JSON.stringify({
+                        posIdentifier: this.posIdentifier,
+                        productIdentifier: this.extrasLine.identifier,
+                        extras: extras,
+                        inputs: inputs,
+                        prices: prices,
+                    })
+                });
+
+                let data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    this.loading = false;
+                    return $wire.dispatch('notify', {
+                        type: 'danger',
+                        message: data.message || 'De opties konden niet worden opgeslagen',
+                    })
+                }
+
+                this.products = data.products;
+                this.productExtrasPopup = false;
+                this.extrasLine = null;
+                this.retrieveCart();
+            } catch (error) {
+                $wire.dispatch('notify', {
+                    type: 'danger',
+                    message: 'De opties konden niet worden opgeslagen'
+                })
+            }
+
+            this.loading = false;
         },
 
         async openChangeProductPricePopup(product) {

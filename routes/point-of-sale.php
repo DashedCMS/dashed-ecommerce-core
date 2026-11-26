@@ -43,6 +43,10 @@ Route::group(
             ->name('api.point-of-sale.select-product');
         Route::post('/change-quantity', [PointOfSaleApiController::class, 'changeQuantity'])
             ->name('api.point-of-sale.change-quantity');
+        Route::post('/get-product-extras', [PointOfSaleApiController::class, 'getProductExtras'])
+            ->name('api.point-of-sale.get-product-extras');
+        Route::post('/update-product-extras', [PointOfSaleApiController::class, 'updateProductExtras'])
+            ->name('api.point-of-sale.update-product-extras');
         Route::post('/clear-products', [PointOfSaleApiController::class, 'clearProducts'])
             ->name('api.point-of-sale.clear-products');
         Route::post('/remove-discount', [PointOfSaleApiController::class, 'removeDiscount'])

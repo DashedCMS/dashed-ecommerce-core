@@ -2,6 +2,20 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.232.0 - 2026-11-26
+
+### Added
+- Product-extra's in de kassa (CMS en mobiele app): nieuwe kassa-acties `get-product-extras` (`{productId}` geeft `extras: [{id, name, type, kind: select|multi|text, required, price, options: [{id, name, price}]}]`, prijzen incl. btw, uploadvelden niet) en `update-product-extras` (`{posIdentifier, productIdentifier, extras: {extraId: optieId|[optieId]}, inputs: {extraId: tekst}, prices: {optieId|"input-{extraId}": prijs incl. btw}}`). Een lege prijs is de databaseprijs, een aangepaste prijs telt mee in regel, totaal en btw (procentuele code er naar verhouding op). Ook onder `api/v1/point-of-sale/*`.
+- Kassaregels in `update-cart` dragen `extras` (`[{extra_id, option_id, name, value, price, priceFormatted, price_overridden}]`), `has_extras_available` en `has_required_extras_missing`; `add-product` en `select-product` geven `addedIdentifier`, `hasExtrasAvailable` en `needsExtras` terug.
+- CMS-kassa (klassiek en modern): knop "Opties" per regel met een popup (keuzelijst, vinkjes of tekstveld, plus prijsveld per keuze), gekozen extra's onder de regelnaam, en de popup opent vanzelf bij een product met verplichte extra's.
+- `PosLineExtras` (soorten, prijzen, keuze en orderregels van kassa-extra's) en `PosCartExtras::selections()`, `storageMap()`, `textInputs()` en `textInputsFromOrderExtras()`; een kassaregel kan nu meerdere opties per extra dragen (`[extraId => [optieId, ...]]`).
+
+### Fixed
+- Ingevulde teksten (invulveld/tekstvak) op een kassaregel gingen bij afrekenen verloren: ze staan nu als `product-extra-input-{extraId}` in de `product_extras` van de orderregel, met de prijs die de klant betaalde. "Wagen naar kassa" en "Bestelling naar kassa" bewaren ze in `extra_inputs` in plaats van in de regelnaam en de notitie.
+- Afrekenen in de kassa weigert een regel waarvan een verplichte extra nog niet gekozen of ingevuld is.
+- Een geparkeerd kassaconcept schrijft de `product_extras` van zijn orderregels nu in het orderformaat in plaats van de kassa-map.
+- Een product dat opnieuw in de kassa komt, telt niet meer op bij een regel met gekozen extra's maar krijgt een eigen regel.
+
 ## v4.231.0 - 2026-11-26
 
 ### Added
