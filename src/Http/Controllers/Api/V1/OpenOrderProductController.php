@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
-use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +14,7 @@ use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedEcommerceCore\Models\OrderProduct;
 use Dashed\DashedEcommerceCore\Models\ProductGroup;
 use Dashed\DashedEcommerceCore\Support\SmartSearch;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 
 /**
  * Openstaande bestellingen op orderregel-niveau — gelijk aan de Filament-pagina
