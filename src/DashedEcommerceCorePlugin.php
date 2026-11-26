@@ -3,13 +3,12 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Filament\Panel;
-use Filament\Support\Facades\FilamentView;
-use Filament\View\PanelsRenderHook;
-use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Pages\ListOpenOrderProducts;
 use Filament\Actions\Action;
 use Filament\Contracts\Plugin;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Artisan;
 use Filament\Notifications\Notification;
+use Filament\Support\Facades\FilamentView;
 use Dashed\DashedEcommerceCore\Filament\Resources\CartResource;
 use Dashed\DashedEcommerceCore\Filament\Resources\OrderResource;
 use Dashed\DashedEcommerceCore\Exports\ExportFinancialReportPage;
@@ -79,6 +78,7 @@ use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\PaymentMethodPieChartWid
 use Dashed\DashedEcommerceCore\Filament\Widgets\Statistics\OrderAttributionStatsWidget;
 use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\OpenOrderProductResource;
 use Dashed\DashedEcommerceCore\Filament\Widgets\Revenue\MonthlyRevenueAndReturnLineChartStats;
+use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Pages\ListOpenOrderProducts;
 
 class DashedEcommerceCorePlugin implements Plugin
 {
