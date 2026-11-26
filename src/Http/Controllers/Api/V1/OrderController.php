@@ -159,9 +159,13 @@ class OrderController extends Controller
             $query->orderByDesc('created_at');
         }
 
-        return OrderSummaryResource::collection(
-            $query->paginate($perPage),
-        );
+        $orders = $query->paginate($perPage);
+        $request->attributes->set('order_presence', OrderPresence::presenceForMany(
+            $orders->getCollection()->pluck('id')->all(),
+            $request->user()?->id,
+        ));
+
+        return OrderSummaryResource::collection($orders);
     }
 
     /**

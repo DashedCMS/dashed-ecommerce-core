@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Dashed\DashedEcommerceCore\Http\Controllers\Api\V1;
 
 use Illuminate\Http\Request;
+use Dashed\DashedEcommerceCore\Support\Orders\OrderPresence;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -309,8 +310,9 @@ class OpenOrderProductController extends Controller
         $products = $this->productMap($rows->pluck('product_id')->all());
         $deadlines = $this->deadlineMap($rows->pluck('order_id')->all());
         $productionReady = $this->productionReadyMap($rows->pluck('id')->all());
+        $presence = OrderPresence::presenceForMany($rows->pluck('order_id')->all(), $request->user()?->id);
 
-        $data = $rows->map(function ($r) use ($products, $deadlines, $productionReady): array {
+        $data = $rows->map(function ($r) use ($products, $deadlines, $productionReady, $presence): array {
             $p = $products[$r->product_id] ?? null;
             $d = $deadlines[$r->order_id] ?? [];
 
@@ -348,6 +350,8 @@ class OpenOrderProductController extends Controller
                 // Printstatus van de regel: production_ready, production_ready_at
                 // (ISO-8601) en production_ready_by {id, name, avatar_url}.
                 ...($productionReady[(int) $r->id] ?? (new OrderProduct())->productionReadyPayload()),
+                // Wie de bestelling nu open heeft / ermee bezig is (zonder de vrager).
+                ...($presence[(int) $r->order_id] ?? ['viewers' => [], 'working_on' => []]),
             ];
         })->all();
 

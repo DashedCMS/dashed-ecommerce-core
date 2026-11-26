@@ -351,14 +351,22 @@ class OrderResource extends Resource
     }
 
     /**
-     * Namen van andere medewerkers die deze bestelling nu open hebben. Eén cache-get per
-     * bestelling (once() binnen het request); alleen bij kijkers volgt een gebruikersquery.
+     * Wie deze bestelling nu open heeft of ermee bezig is, zonder de ingelogde
+     * gebruiker. Eén cache-many per rij; alleen bij kijkers een gebruikersquery.
      *
-     * @return list<string>
+     * @return array{viewers: list<array<string, mixed>>, working_on: list<array<string, mixed>>}
      */
-    protected static function otherViewerNames(Order $order): array
+    public static function presenceForRow(int $orderId): array
     {
-        return once(fn (): array => OrderPresence::otherViewerNames($order->id, auth()->id()));
+        return once(fn (): array => OrderPresence::presenceForMany([$orderId], auth()->id())[$orderId]
+            ?? ['viewers' => [], 'working_on' => []]);
+    }
+
+    public static function hasPresence(int $orderId): bool
+    {
+        $presence = static::presenceForRow($orderId);
+
+        return $presence['viewers'] !== [] || $presence['working_on'] !== [];
     }
 
     public static function table(Table $table): Table
@@ -369,6 +377,8 @@ class OrderResource extends Resource
         }
 
         return $table
+            // Ververst "kijkt"/"bezig" en nieuwe orders zonder herladen.
+            ->poll('30s')
             ->columns([
                 IconColumn::make('is_priority')
                     ->label(__('Prioriteit'))
@@ -390,24 +400,24 @@ class OrderResource extends Resource
                     ->tooltip(fn ($record): ?string => $record->on_hold_at ? ($record->on_hold_reason ?: __('On hold')) : null)
                     ->sortable()
                     ->toggleable(),
-                // Toegewezen medewerker, met een oogje als een ander de bestelling nu open heeft
-                // (per rij één cache-get). Zonder toewijzing maar met kijkers staat er "Niemand".
+                // Toegewezen medewerker, en daaronder wie de bestelling nu open heeft
+                // ("kijkt") of ermee bezig is ("bezig"), met avatars. Per rij één
+                // cache-many; de tabel pollt, zodat dit vanzelf bijwerkt.
                 TextColumn::make('assignedUser.name')
                     ->label(__('Toegewezen aan'))
                     ->getStateUsing(fn ($record): ?string => $record->assignedUser?->name
-                        ?? (static::otherViewerNames($record) !== [] ? __('Niemand') : null))
-                    // Avatar voor de naam van de toegewezen medewerker.
-                    ->formatStateUsing(fn ($state, $record) => $record->assignedUser
-                        ? new \Illuminate\Support\HtmlString('<span style="display:inline-flex;align-items:center;gap:6px;">'
-                            . view('dashed-ecommerce-core::orders.partials.user-avatar', ['user' => $record->assignedUser, 'size' => 'sm'])->render()
-                            . '<span>' . e($state) . '</span></span>')
-                        : $state)
+                        ?? (static::hasPresence((int) $record->id) ? __('Niemand') : null))
+                    ->formatStateUsing(fn ($state, $record) => new \Illuminate\Support\HtmlString(
+                        '<span style="display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;">'
+                        . ($record->assignedUser
+                            ? '<span style="display:inline-flex;align-items:center;gap:6px;">'
+                                . view('dashed-ecommerce-core::orders.partials.user-avatar', ['user' => $record->assignedUser, 'size' => 'sm'])->render()
+                                . '<span>' . e($state) . '</span></span>'
+                            : '<span>' . e($state) . '</span>')
+                        . view('dashed-ecommerce-core::orders.partials.presence', ['presence' => static::presenceForRow((int) $record->id)])->render()
+                        . '</span>'
+                    ))
                     ->html()
-                    ->icon(fn ($record): ?string => static::otherViewerNames($record) !== [] ? 'heroicon-o-eye' : null)
-                    ->iconColor('info')
-                    ->tooltip(fn ($record): ?string => ($names = static::otherViewerNames($record)) !== []
-                        ? __('Nu open bij: :namen', ['namen' => implode(', ', $names)])
-                        : null)
                     ->placeholder('')
                     ->toggleable(),
                 TextColumn::make('invoice_id')

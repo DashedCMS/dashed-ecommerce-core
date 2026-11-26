@@ -126,6 +126,8 @@ class OpenOrderProductsTable
     public static function configure(Table $table): Table
     {
         return $table
+            // Ververst "kijkt"/"bezig" en de klaar-status van collega's.
+            ->poll('30s')
             ->columns([
                 ImageColumn::make('image')
                     ->label('')
@@ -161,6 +163,18 @@ class OpenOrderProductsTable
                 TextColumn::make('order.invoice_id')
                     ->label(__('Bestelling'))
                     ->sortable()
+                    ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
+                // Wie de bestelling van deze regel nu open heeft of ermee bezig is,
+                // zodat niemand tegelijk met een collega dezelfde order inpakt.
+                TextColumn::make('presence')
+                    ->label(__('Open bij'))
+                    ->state(fn ($record): ?string => OrderResource::hasPresence((int) $record->order_id) ? 'ja' : null)
+                    ->formatStateUsing(fn ($state, $record) => new HtmlString(
+                        view('dashed-ecommerce-core::orders.partials.presence', ['presence' => OrderResource::presenceForRow((int) $record->order_id)])->render()
+                    ))
+                    ->html()
+                    ->placeholder('')
+                    ->toggleable()
                     ->visible(fn ($livewire): bool => ! static::isGrouped($livewire)),
                 TextColumn::make('product_id')
                     ->label(__('Product ID'))

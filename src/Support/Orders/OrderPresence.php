@@ -123,6 +123,78 @@ class OrderPresence
         ];
     }
 
+    /**
+     * presenceFor() voor een hele lijst bestellingen (orderoverzicht, open
+     * orderregels): één cache-many en hoogstens één gebruikersquery. Alleen
+     * bestellingen met kijkers of iemand die ermee bezig is staan erin.
+     *
+     * @param  array<int>  $orderIds
+     * @return array<int, array{viewers: list<array<string, mixed>>, working_on: list<array<string, mixed>>}>
+     */
+    public static function presenceForMany(array $orderIds, ?int $excludeUserId = null): array
+    {
+        $orderIds = array_values(array_unique(array_filter(array_map('intval', $orderIds), fn (int $id) => $id > 0)));
+        if ($orderIds === []) {
+            return [];
+        }
+
+        $keys = [];
+        foreach ($orderIds as $orderId) {
+            $keys[] = self::key($orderId);
+            $keys[] = self::workingKey($orderId);
+        }
+        $cached = Cache::many($keys);
+
+        $perOrder = [];
+        $userIds = [];
+        foreach ($orderIds as $orderId) {
+            $rawWorking = $cached[self::workingKey($orderId)] ?? null;
+            $rawViewing = $cached[self::key($orderId)] ?? null;
+            $working = self::active(is_array($rawWorking) ? $rawWorking : []);
+            $viewing = array_diff_key(self::active(is_array($rawViewing) ? $rawViewing : []), $working);
+
+            if ($excludeUserId !== null) {
+                unset($working[$excludeUserId], $viewing[$excludeUserId]);
+            }
+            if ($working === [] && $viewing === []) {
+                continue;
+            }
+
+            arsort($working);
+            arsort($viewing);
+            $perOrder[$orderId] = [$viewing, $working];
+            array_push($userIds, ...array_keys($working), ...array_keys($viewing));
+        }
+
+        if ($perOrder === []) {
+            return [];
+        }
+
+        $users = User::whereKey(array_values(array_unique($userIds)))->get()->keyBy('id');
+        $map = function (array $seen) use ($users): array {
+            $items = [];
+            foreach ($seen as $userId => $timestamp) {
+                if ($user = $users->get($userId)) {
+                    $items[] = array_merge(UserPayload::for($user), [
+                        'last_seen_at' => Carbon::createFromTimestamp((int) $timestamp)->toIso8601String(),
+                    ]);
+                }
+            }
+
+            return $items;
+        };
+
+        $result = [];
+        foreach ($perOrder as $orderId => [$viewing, $working]) {
+            $entry = ['viewers' => $map($viewing), 'working_on' => $map($working)];
+            if ($entry['viewers'] !== [] || $entry['working_on'] !== []) {
+                $result[$orderId] = $entry;
+            }
+        }
+
+        return $result;
+    }
+
     /** @return list<int> user-ids die de bestelling nu open hebben */
     public static function viewers(int $orderId): array
     {

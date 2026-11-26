@@ -36,6 +36,9 @@ class OrderSummaryResource extends JsonResource
                 ? UserPayload::forId((int) $this->assigned_to_user_id, $this->assignedUser)
                 : null,
             'assigned_at' => $this->assigned_at?->toIso8601String(),
+            // Wie de bestelling nu open heeft / ermee bezig is (zonder de vrager).
+            // Alleen gevuld door OrderController::index() via een batch-opvraag.
+            ...$this->presencePayload($request),
             'total' => $this->total !== null ? (float) $this->total : null,
             'customer_name' => trim((string) ($this->first_name . ' ' . $this->last_name)) ?: $this->email,
             // Uit de withExists-subqueries in OrderController::index(); false als niet geladen
@@ -53,5 +56,16 @@ class OrderSummaryResource extends JsonResource
             // Bijbestellingen: add_on_orders_count (parent) en add_on_for (de bijbestelling zelf).
             'add_on' => Display::apiPayload($this->resource, false),
         ];
+    }
+
+    /** @return array<string, mixed> */
+    private function presencePayload(Request $request): array
+    {
+        $map = $request->attributes->get('order_presence');
+        if (! is_array($map)) {
+            return [];
+        }
+
+        return $map[(int) $this->id] ?? ['viewers' => [], 'working_on' => []];
     }
 }

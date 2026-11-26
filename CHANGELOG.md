@@ -2,6 +2,13 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.231.0 - 2026-11-26
+
+### Added
+- "Wie kijkt" in de lijsten: `OrderPresence::presenceForMany($orderIds, $excludeUserId)` haalt kijkers en wie ermee bezig is voor een hele lijst op (één `Cache::many`, hoogstens één gebruikersquery).
+- Mobiele API: `GET orders` en `GET open-order-products` (per regel) dragen per order `viewers` en `working_on` (`{id, name, avatar_url, last_seen_at}`, zonder de vrager).
+- CMS-orderlijst: onder "Toegewezen aan" pilletjes "<Voornaam> bezig" en "<Voornaam> kijkt" met avatars (partial `orders.partials.presence`), in plaats van alleen een oogje. Openstaande bestellingen: nieuwe kolom "Open bij" (per regel). Beide tabellen pollen elke 30 s.
+
 ## v4.230.0 - 2026-11-25
 
 ### Added
