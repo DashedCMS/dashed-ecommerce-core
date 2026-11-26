@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.232.1 - 2026-11-26
+
+- Open order products: lines marked ready no longer disappear from the list; they stay visible with a green gradient background. The "Klaar" filter now defaults to all lines.
+
 ## v4.232.0 - 2026-11-26
 
 ### Added

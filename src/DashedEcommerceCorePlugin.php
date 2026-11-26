@@ -3,6 +3,9 @@
 namespace Dashed\DashedEcommerceCore;
 
 use Filament\Panel;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Dashed\DashedEcommerceCore\Filament\Resources\OpenOrderProducts\Pages\ListOpenOrderProducts;
 use Filament\Actions\Action;
 use Filament\Contracts\Plugin;
 use Illuminate\Support\Facades\Artisan;
@@ -197,6 +200,16 @@ class DashedEcommerceCorePlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
+        // Groene achtergrond voor klaar gemelde regels bij Openstaande producten.
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::STYLES_AFTER,
+            fn (): string => '<style>'
+                . '.fi-ta-row.dashed-line-ready{background:linear-gradient(90deg,rgba(34,197,94,.22),rgba(34,197,94,.06))}'
+                . '.dark .fi-ta-row.dashed-line-ready{background:linear-gradient(90deg,rgba(34,197,94,.25),rgba(34,197,94,.05))}'
+                . '</style>',
+            scopes: ListOpenOrderProducts::class,
+        );
+
         // productPriceFields is registered in DashedEcommerceCoreServiceProvider::bootingPackage()
         // so it is available in every context (incl. the queued product import worker),
         // not only when a Filament panel boots.

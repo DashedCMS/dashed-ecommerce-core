@@ -128,6 +128,9 @@ class OpenOrderProductsTable
         return $table
             // Ververst "kijkt"/"bezig" en de klaar-status van collega's.
             ->poll('30s')
+            // Klaar gemelde regels blijven staan en krijgen een groene achtergrond
+            // (stijl in DashedEcommerceCorePlugin::boot()).
+            ->recordClasses(fn ($record): ?string => $record->production_ready_at ? 'dashed-line-ready' : null)
             ->columns([
                 ImageColumn::make('image')
                     ->label('')
@@ -391,9 +394,9 @@ class OpenOrderProductsTable
                     ->placeholder(__('Alle regels'))
                     ->trueLabel(__('Alleen klaar'))
                     ->falseLabel(__('Alleen niet klaar'))
-                    // Standaard alleen wat nog gemaakt moet worden. De
+                    // Standaard alle regels: klaar gemelde regels blijven zichtbaar
+                    // (groen), zodat ze niet uit de lijst verdwijnen. De
                     // gegroepeerde tabs tellen klaar-regels sowieso nooit mee.
-                    ->default(false)
                     ->queries(
                         true: fn (Builder $query) => $query->whereNotNull('dashed__order_products.production_ready_at'),
                         false: fn (Builder $query) => $query->whereNull('dashed__order_products.production_ready_at'),
