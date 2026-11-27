@@ -14,11 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedCore\Models\Concerns\IsVisitable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
 
