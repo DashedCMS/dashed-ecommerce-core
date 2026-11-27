@@ -10,10 +10,10 @@ use Dashed\DashedCore\Classes\RateLimits;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
-use Dashed\DashedEcommerceCore\Classes\CustomerPurchaseLimit;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
+use Dashed\DashedEcommerceCore\Classes\CustomerPurchaseLimit;
 use Dashed\DashedEcommerceCore\Services\Meta\AddToCartPayload;
 
 trait CartActions
