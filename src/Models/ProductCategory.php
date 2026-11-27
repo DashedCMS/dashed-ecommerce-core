@@ -18,6 +18,7 @@ use Dashed\DashedCore\Models\Concerns\HasCustomBlocks;
 use Dashed\DashedCore\Classes\Caching\CacheInvalidator;
 use Dashed\DashedEcommerceCore\Classes\ProductCategories;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductInformationJob;
 use Dashed\DashedEcommerceCore\Jobs\UpdateProductCategoriesInformationJob;
 
@@ -141,13 +142,11 @@ class ProductCategory extends Model
 
     public function getUrl($locale = null)
     {
-        $originalLocale = app()->getLocale();
-
         if (! $locale) {
             $locale = app()->getLocale();
         }
 
-        return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale, $originalLocale) {
+        return Cache::rememberForever('product-category-url-' . $this->id . '-' . $locale, function () use ($locale) {
             if (! $this->childs->count()) {
                 if ($this->products->count() == 1) {
                     return $this->products->first()->getUrl($locale);
@@ -156,27 +155,85 @@ class ProductCategory extends Model
                 }
             }
 
-            $url = $this->getTranslation('slug', $locale);
-            $parentCategory = $this->parent;
-            while ($parentCategory) {
-                $url = $parentCategory->getTranslation('slug', $locale) . '/' . $url;
-                $parentCategory = $parentCategory->parent;
-            }
-
-            app()->setLocale($locale);
-            $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
-            app()->setLocale($originalLocale);
-
-            if (! str($url)->startsWith('/')) {
-                $url = '/' . $url;
-            }
-
-            if ($locale != Locales::getFirstLocale()['id'] && ! str($url)->startsWith("/{$locale}")) {
-                $url = '/' . $locale . $url;
-            }
-
-            return $url;
+            return $this->getIndexUrl($locale);
         });
+    }
+
+    /**
+     * The address with the categories-slug prefix (/categories/parent/child, /de/kategorien/...), which getUrl()
+     * uses for a category with subcategories.
+     */
+    public function getIndexUrl($locale = null): string
+    {
+        $originalLocale = app()->getLocale();
+        $locale = $locale ?: $originalLocale;
+
+        $url = $this->getTranslation('slug', $locale);
+        $parentCategory = $this->parent;
+        while ($parentCategory) {
+            $url = $parentCategory->getTranslation('slug', $locale) . '/' . $url;
+            $parentCategory = $parentCategory->parent;
+        }
+
+        app()->setLocale($locale);
+        $url = Translation::get('categories-slug', 'slug', 'categories') . '/' . $url;
+        app()->setLocale($originalLocale);
+
+        if (! str($url)->startsWith('/')) {
+            $url = '/' . $url;
+        }
+
+        if ($locale != Locales::getFirstLocale()['id'] && ! str($url)->startsWith("/{$locale}")) {
+            $url = '/' . $locale . $url;
+        }
+
+        return $url;
+    }
+
+    /**
+     * resolveRoute() renders every category both with and without the categories-slug prefix, but getUrl() names
+     * only one of them. The other address answers with a 301 to the official one, keeping the query string
+     * (?page=2, filters), so search engines see a single page. When getUrl() points elsewhere (a category with
+     * exactly one product links to that product) nothing changes. Thrown as an HttpResponseException because
+     * FrontendController only passes views and 'pageNotFound' through from resolveRoute().
+     */
+    public function redirectToOfficialUrl(): void
+    {
+        if (! request()->isMethod('GET') && ! request()->isMethod('HEAD')) {
+            return;
+        }
+
+        $locale = app()->getLocale();
+        $official = static::normalizedPath($this->getUrl($locale));
+        $requested = static::normalizedPath(request()->getPathInfo());
+
+        if ($official === $requested) {
+            return;
+        }
+
+        // Only redirect between the two addresses resolveRoute() serves for this category: never to a product, a
+        // stale cached URL or a page this route does not render, so a redirect cannot loop.
+        $productsPath = static::normalizedPath($this->getProductsUrl($locale));
+        $indexPath = static::normalizedPath($this->getIndexUrl($locale));
+        $officialCandidates = [$productsPath];
+        if (Customsetting::get('product_category_index_page_enabled', null, true)) {
+            $officialCandidates[] = $indexPath;
+        }
+
+        if (! in_array($official, $officialCandidates, true) || ! in_array($requested, [$productsPath, $indexPath], true)) {
+            return;
+        }
+
+        $query = request()->getQueryString();
+
+        throw new HttpResponseException(redirect(url($official) . ($query ? '?' . $query : ''), 301));
+    }
+
+    protected static function normalizedPath(?string $url): string
+    {
+        $path = rawurldecode((string) parse_url((string) $url, PHP_URL_PATH));
+
+        return '/' . trim($path, '/');
     }
 
     public function hasChilds()
@@ -239,6 +296,8 @@ class ProductCategory extends Model
                 $productCategory = ProductCategory::thisSite()->slug($slugComponent)->where('parent_id', $productCategory->id)->first();
             }
             if (View::exists(config('dashed-core.site_theme', 'dashed') . '.categories.show') && $productCategory) {
+                $productCategory->redirectToOfficialUrl();
+
                 seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
                 seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
                 if ($productCategory->metadata && $productCategory->metadata->image) {
@@ -282,6 +341,8 @@ class ProductCategory extends Model
                         }
                     }
                     if (View::exists(config('dashed-core.site_theme', 'dashed') . '.categories.index') && $productCategory) {
+                        $productCategory->redirectToOfficialUrl();
+
                         seo()->metaData('metaTitle', $productCategory->metadata && $productCategory->metadata->title ? $productCategory->metadata->title : $productCategory->name);
                         seo()->metaData('metaDescription', $productCategory->metadata->description ?? '');
                         if ($productCategory->metadata && $productCategory->metadata->image) {

@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.232.4 - 2026-11-27
+
+- Product categories now have a single address. `resolveRoute()` rendered every category both with and without the categories-slug prefix (`/categories/a/b` and `/a/b`), so one of them was a duplicate page. The address that differs from `getUrl()` now answers with a 301 to it, keeping the query string (`?page=2`, filters) and the locale prefix (`/de/kategorien/...`). A category with exactly one product (whose `getUrl()` is the product) is left alone. New `ProductCategory::getIndexUrl()` (the prefixed address) and `redirectToOfficialUrl()`.
+
 ## v4.232.3 - 2026-11-27
 
 - Product and product group specifications (`showableCharacteristics()`) are now cached per locale. The cache key had no locale, so whichever language rendered first (e.g. the English page) was shown on every language's product page. New helpers `Product::forgetShowableCharacteristics()` and `ProductGroup::forgetShowableCharacteristics()` clear all locales (and the old key).
