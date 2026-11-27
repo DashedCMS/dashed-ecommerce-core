@@ -87,6 +87,48 @@ class CustomerPurchaseLimit
         return null;
     }
 
+    /**
+     * Hoeveel stuks van dit product er nog bij passen in de winkelwagen, of
+     * null als het product geen aankooplimiet heeft. Telt alle regels van het
+     * product mee (ook met andere opties) en, met limit_purchases_whole_group,
+     * alle varianten van de groep samen. Zo kan iemand niet eerst maat M en
+     * daarna maat L toevoegen en pas bij het afrekenen geweigerd worden.
+     *
+     * @param  iterable  $cartItems  items met ->model, ->qty en ->rowId
+     * @param  string|int|null  $exceptRowId  regel die niet meetelt (bij het wijzigen van zijn aantal)
+     */
+    public static function roomInCart(Product $product, iterable $cartItems, string|int|null $exceptRowId = null): ?int
+    {
+        if (! $product->limit_purchases_per_customer) {
+            return null;
+        }
+
+        $productIds = self::limitedProductIds($product);
+
+        $inCart = collect($cartItems)
+            ->filter(fn ($cartItem) => ($cartItem->model ?? null) instanceof Product
+                && $productIds->contains($cartItem->model->id)
+                && ($exceptRowId === null || (string) ($cartItem->rowId ?? '') !== (string) $exceptRowId))
+            ->sum(fn ($cartItem) => (int) ($cartItem->qty ?? 0));
+
+        return max(0, (int) $product->limit_purchases_per_customer_limit - $inCart);
+    }
+
+    /** Melding als er bij het toevoegen of ophogen meer in de winkelwagen zou komen dan de limiet. */
+    public static function cartLimitMessage(Product $product, string $cartType = 'cart'): string
+    {
+        if ($product->limit_purchases_whole_group && $product->productGroup) {
+            return Translation::get('purchase-limit-group-reached', 'checkout', 'Van :product: mag je maximaal :limit: stuk(s) bestellen, ongeacht de variant.', 'text', [
+                'product' => $product->productGroup->name,
+                'limit' => (int) $product->limit_purchases_per_customer_limit,
+            ]);
+        }
+
+        return Translation::get('product-only-x-purchase-per-customer', $cartType, 'You can only purchase :quantity: of this product', 'text', [
+            'quantity' => (int) $product->limit_purchases_per_customer_limit,
+        ]);
+    }
+
     /** Het product zelf, of alle varianten van de groep als de limiet daarvoor geldt. */
     public static function limitedProductIds(Product $product): Collection
     {

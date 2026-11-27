@@ -1814,6 +1814,17 @@ class CartHelper
         $product = $cartItem->product_id ? Product::find($cartItem->product_id) : null;
         $oldQuantity = (int) $cartItem->quantity;
 
+        // Aankooplimiet: ophogen mag niet boven de limiet uitkomen, ook niet
+        // samen met de andere regels of varianten van de groep.
+        $purchaseLimitMessage = null;
+        if ($product && $quantity > $oldQuantity) {
+            $roomInCart = CustomerPurchaseLimit::roomInCart($product, $this->getCartItems(), $cartItem->id);
+            if ($roomInCart !== null && $quantity > $roomInCart) {
+                $quantity = max($oldQuantity, $roomInCart);
+                $purchaseLimitMessage = CustomerPurchaseLimit::cartLimitMessage($product, static::$cartType);
+            }
+        }
+
         if ($cartItem->quantity > $quantity) {
             EcommerceActionLog::createLog('remove_from_cart', ($cartItem->quantity - $quantity), productId: $product?->id);
         } else {
@@ -1832,6 +1843,14 @@ class CartHelper
         );
 
         $this->updateData();
+
+        if ($purchaseLimitMessage) {
+            return [
+                'status' => 'danger',
+                'message' => $purchaseLimitMessage,
+                'dispatch' => $dispatch,
+            ];
+        }
 
         return [
             'status' => 'success',

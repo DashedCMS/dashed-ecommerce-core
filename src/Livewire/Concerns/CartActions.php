@@ -10,6 +10,7 @@ use Dashed\DashedCore\Classes\RateLimits;
 use Dashed\DashedCore\Models\Customsetting;
 use Dashed\DashedEcommerceCore\Models\Product;
 use Dashed\DashedTranslations\Models\Translation;
+use Dashed\DashedEcommerceCore\Classes\CustomerPurchaseLimit;
 use Dashed\DashedEcommerceCore\Classes\ShoppingCart;
 use Dashed\DashedEcommerceCore\Classes\ProductExtraFile;
 use Dashed\DashedEcommerceCore\Models\EcommerceActionLog;
@@ -397,6 +398,20 @@ trait CartActions
             return;
         }
 
+        // Aankooplimiet over alle regels van het product (en met
+        // limit_purchases_whole_group over alle varianten samen): niet meer
+        // toevoegen dan er nog past, anders kon maat M + maat L wel.
+        $purchaseLimitReached = false;
+        $roomInCart = CustomerPurchaseLimit::roomInCart($product, cartHelper()->getCartItems());
+        if ($roomInCart !== null && (int) $this->quantity > $roomInCart) {
+            if ($roomInCart <= 0) {
+                return $this->checkCart('danger', CustomerPurchaseLimit::cartLimitMessage($product, $this->cartType));
+            }
+
+            $this->quantity = $roomInCart;
+            $purchaseLimitReached = true;
+        }
+
         // MERGE: zelfde product + zelfde options + zelfde hidden options
         $cartItems = cartHelper()->getCartItems();
         foreach ($cartItems as $cartItem) {
@@ -447,6 +462,13 @@ trait CartActions
             );
 
             EcommerceActionLog::createLog('add_to_cart', (int) $this->quantity, productId: $product->id);
+        }
+
+        if ($purchaseLimitReached) {
+            $this->quantity = 1;
+            $this->fillPrices();
+
+            return $this->checkCart('danger', CustomerPurchaseLimit::cartLimitMessage($product, $this->cartType));
         }
 
         $quantity = (int) $this->quantity;

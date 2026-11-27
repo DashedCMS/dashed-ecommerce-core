@@ -11,6 +11,7 @@ use Dashed\DashedCore\Classes\RateLimits;
 use Dashed\DashedCore\Models\Customsetting;
 use Illuminate\Database\Eloquent\Collection;
 use Dashed\DashedEcommerceCore\Models\Product;
+use Dashed\DashedEcommerceCore\Classes\CustomerPurchaseLimit;
 use Dashed\DashedEcommerceCore\Classes\Products;
 use Dashed\DashedTranslations\Models\Translation;
 use Dashed\DashedEcommerceCore\Classes\VatDisplay;
@@ -1265,6 +1266,20 @@ trait ProductCartActions
             return;
         }
 
+        // Aankooplimiet over alle regels van het product (en met
+        // limit_purchases_whole_group over alle varianten samen): niet meer
+        // toevoegen dan er nog past, anders kon maat M + maat L wel.
+        $purchaseLimitReached = false;
+        $roomInCart = CustomerPurchaseLimit::roomInCart($product, cartHelper()->getCartItems());
+        if ($roomInCart !== null && (int) $this->quantity > $roomInCart) {
+            if ($roomInCart <= 0) {
+                return $this->checkCart('danger', CustomerPurchaseLimit::cartLimitMessage($product, $this->cartType));
+            }
+
+            $this->quantity = $roomInCart;
+            $purchaseLimitReached = true;
+        }
+
         // Merge check (same product + same options + same hiddenOptions)
         $cartItems = cartHelper()->getCartItems();
         foreach ($cartItems as $cartItem) {
@@ -1314,6 +1329,13 @@ trait ProductCartActions
                 quantity: (int) $this->quantity,
                 options: $attributes
             );
+        }
+
+        if ($purchaseLimitReached) {
+            $this->quantity = 1;
+            $this->hiddenOptions = [];
+
+            return $this->checkCart('danger', CustomerPurchaseLimit::cartLimitMessage($product, $this->cartType));
         }
 
         if ($this->addingBundle) {

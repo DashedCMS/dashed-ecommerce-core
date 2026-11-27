@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.232.2 - 2026-11-27
+
+- Purchase limit "Limiet geldt voor alle varianten samen" is now enforced in the cart, not only at checkout: adding size M and then size L (or raising a quantity in the cart) beyond the limit is refused or capped with a notification. The per-product limit now also counts all cart lines of that product (different options), not just the merged line.
+
 ## v4.232.1 - 2026-11-26
 
 - Open order products: lines marked ready no longer disappear from the list; they stay visible with a green gradient background. The "Klaar" filter now defaults to all lines.
