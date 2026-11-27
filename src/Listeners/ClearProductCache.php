@@ -24,6 +24,6 @@ class ClearProductCache
         foreach (Locales::getLocalesArray() as $key => $locale) {
             Cache::forget('product-' . $event->product->id . '-url-' . $key);
         }
-        Cache::forget("product-showable-characteristics-" . $event->product->id);
+        \Dashed\DashedEcommerceCore\Models\Product::forgetShowableCharacteristics($event->product->id);
     }
 }

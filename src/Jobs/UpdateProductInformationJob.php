@@ -232,7 +232,7 @@ class UpdateProductInformationJob implements ShouldQueue, ShouldBeUniqueUntilPro
             }
 
             // Cache clears
-            Cache::forget('product-showable-characteristics-' . $product->id);
+            Product::forgetShowableCharacteristics($product->id);
             foreach ($locales as $locale => $localeName) {
                 Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-yes');
                 Cache::forget('product-' . $product->id . '-url-' . $locale . '-force-no');
@@ -353,8 +353,7 @@ class UpdateProductInformationJob implements ShouldQueue, ShouldBeUniqueUntilPro
         // Cache clears (post-commit)
         Cache::forget('products-for-show-products-');
         Cache::forget('pos_products');
-        Cache::forget('product-group-showable-characteristics-' . $this->productGroup->id);
-        Cache::forget('product-group-showable-characteristics-without-filters-' . $this->productGroup->id);
+        ProductGroup::forgetShowableCharacteristics($this->productGroup->id);
 
         // Volume discounts
         foreach ($this->productGroup->volumeDiscounts as $volumeDiscount) {

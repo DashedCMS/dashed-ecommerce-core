@@ -12,6 +12,7 @@ use Dashed\DashedCore\Classes\Sites;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Facades\Cache;
+use Dashed\DashedCore\Classes\Locales;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Activity;
 use Filament\Forms\Components\DatePicker;
@@ -1393,9 +1394,23 @@ class Product extends Model
             || (bool) $this->productGroup?->is_digital;
     }
 
+    /** Per taal: namen en waarden van filters en kenmerken zijn vertaald. */
+    public static function showableCharacteristicsCacheKey(int $id, ?string $locale = null): string
+    {
+        return 'product-showable-characteristics-'.$id.'-'.($locale ?? app()->getLocale());
+    }
+
+    public static function forgetShowableCharacteristics(int $id): void
+    {
+        Cache::forget('product-showable-characteristics-'.$id);
+        foreach (array_keys(Locales::getLocalesArray()) as $locale) {
+            Cache::forget(self::showableCharacteristicsCacheKey($id, $locale));
+        }
+    }
+
     public function showableCharacteristics($withoutIds = [])
     {
-        return Cache::rememberForever('product-showable-characteristics-'.$this->id, function () use ($withoutIds) {
+        return Cache::rememberForever(self::showableCharacteristicsCacheKey($this->id), function () use ($withoutIds) {
             $characteristics = [];
 
             $activeFilters = $this->productGroup->activeProductFilters;

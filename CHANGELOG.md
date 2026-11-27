@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.232.3 - 2026-11-27
+
+- Product and product group specifications (`showableCharacteristics()`) are now cached per locale. The cache key had no locale, so whichever language rendered first (e.g. the English page) was shown on every language's product page. New helpers `Product::forgetShowableCharacteristics()` and `ProductGroup::forgetShowableCharacteristics()` clear all locales (and the old key).
+
 ## v4.232.2 - 2026-11-27
 
 - Purchase limit "Limiet geldt voor alle varianten samen" is now enforced in the cart, not only at checkout: adding size M and then size L (or raising a quantity in the cart) beyond the limit is refused or capped with a notification. The per-product limit now also counts all cart lines of that product (different options), not just the merged line.

@@ -407,9 +407,25 @@ class ProductGroup extends Model
         return $filters;
     }
 
+    /** Per taal: namen en waarden van filters en kenmerken zijn vertaald. */
+    public static function showableCharacteristicsCacheKey(int $id, bool $withoutFilters = false, ?string $locale = null): string
+    {
+        return 'product-group-showable-characteristics-'.($withoutFilters ? 'without-filters-' : '').$id.'-'.($locale ?? app()->getLocale());
+    }
+
+    public static function forgetShowableCharacteristics(int $id): void
+    {
+        Cache::forget('product-group-showable-characteristics-'.$id);
+        Cache::forget('product-group-showable-characteristics-without-filters-'.$id);
+        foreach (array_keys(Locales::getLocalesArray()) as $locale) {
+            Cache::forget(self::showableCharacteristicsCacheKey($id, false, $locale));
+            Cache::forget(self::showableCharacteristicsCacheKey($id, true, $locale));
+        }
+    }
+
     public function showableCharacteristics($withoutIds = [])
     {
-        return Cache::rememberForever("product-group-showable-characteristics-" . $this->id, function () use ($withoutIds) {
+        return Cache::rememberForever(self::showableCharacteristicsCacheKey($this->id), function () use ($withoutIds) {
             $characteristics = [];
 
             $activeFilters = $this->activeProductFilters;
@@ -469,7 +485,7 @@ class ProductGroup extends Model
 
     public function showableCharacteristicsWithoutFilters($withoutIds = [])
     {
-        return Cache::rememberForever("product-group-showable-characteristics-without-filters-" . $this->id, function () use ($withoutIds) {
+        return Cache::rememberForever(self::showableCharacteristicsCacheKey($this->id, true), function () use ($withoutIds) {
             $characteristics = [];
 
             $allProductCharacteristics = ProductCharacteristics::orderBy('order')->get();
