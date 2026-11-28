@@ -2,6 +2,10 @@
 
 All notable changes to `Dashed Ecommerce Core` will be documented in this file.
 
+## v4.232.5 - 2026-11-28
+
+- Open order products: the "Gegroepeerd per product" and "Gegroepeerd per productgroep" tabs failed on MariaDB with `1055 ... isn't in GROUP BY` (ONLY_FULL_GROUP_BY). MariaDB rejects a bare expression in the select even when the identical expression is in the GROUP BY (MySQL accepts it). The group key (and the product group id in `product_id`) are now selected as `MIN(...)`, which is the same value per group and valid on both.
+
 ## v4.232.4 - 2026-11-27
 
 - Product categories now have a single address. `resolveRoute()` rendered every category both with and without the categories-slug prefix (`/categories/a/b` and `/a/b`), so one of them was a duplicate page. The address that differs from `getUrl()` now answers with a 301 to it, keeping the query string (`?page=2`, filters) and the locale prefix (`/de/kategorien/...`). A category with exactly one product (whose `getUrl()` is the product) is left alone. New `ProductCategory::getIndexUrl()` (the prefixed address) and `redirectToOfficialUrl()`.

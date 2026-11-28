@@ -153,9 +153,12 @@ class OpenOrderProductResource extends Resource
             $key = 'COALESCE(grouped_products.product_group_id, 0)';
 
             $inner->select(array_merge($common, [
-                DB::raw($key . ' as group_key'),
+                // In MIN(): MariaDB (productie) weigert onder ONLY_FULL_GROUP_BY
+                // een kale expressie in de select, ook als die exact in de
+                // GROUP BY staat. Per groep is de waarde gelijk, MIN() verandert niets.
+                DB::raw('MIN(' . $key . ') as group_key'),
                 // De tabel en de foto lezen de productgroep-id uit product_id.
-                DB::raw($key . ' as product_id'),
+                DB::raw('MIN(' . $key . ') as product_id'),
                 DB::raw("'' as sku"),
                 DB::raw(
                     "MIN(COALESCE(
@@ -168,7 +171,8 @@ class OpenOrderProductResource extends Resource
             ]))->groupBy(DB::raw($key));
         } else {
             $inner->select(array_merge($common, [
-                DB::raw(static::PRODUCT_KEY_SQL . ' as group_key'),
+                // In MIN(): zie hierboven (MariaDB en ONLY_FULL_GROUP_BY).
+                DB::raw('MIN(' . static::PRODUCT_KEY_SQL . ') as group_key'),
                 DB::raw('MIN(dashed__order_products.product_id) as product_id'),
                 DB::raw('MIN(dashed__order_products.sku) as sku'),
                 DB::raw('MIN(dashed__order_products.name) as name'),
